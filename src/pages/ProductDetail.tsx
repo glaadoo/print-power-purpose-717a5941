@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
 import { priceFromBase } from "../lib/utils";
@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<any>(null);
   const [qty, setQty] = useState(1);
-  const [loading, setLoading] = useState(false);
   const { cause } = useCause();
   const { push } = useToast();
 
@@ -22,30 +22,18 @@ export default function ProductDetail() {
       .then(({ data }) => setProduct(data));
   }, [id]);
 
-  async function buy() {
+  function proceedToCheckout() {
     if (!cause) { 
       push({ title: "Pick a cause first", body: "Kenzie can help you choose." }); 
-      window.location.href = "/kenzie"; 
+      navigate("/kenzie"); 
       return; 
     }
     
-    setLoading(true);
+    if (!id) return;
     
-    // This will call the Stripe edge function (to be created)
-    const res = await fetch('/api/checkout/session', {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ productId: id, qty, causeId: cause.id })
+    navigate("/checkout", {
+      state: { productId: id, qty }
     });
-    
-    const data = await res.json();
-    setLoading(false);
-    
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      push({ title: "Checkout error", body: data.error || "Please try again." });
-    }
   }
 
   if (!product) return <main className="p-6 text-foreground">Loading…</main>;
@@ -81,11 +69,10 @@ export default function ProductDetail() {
       </div>
 
       <button 
-        onClick={buy} 
-        disabled={loading} 
-        className="mt-6 w-full rounded bg-primary text-primary-foreground py-2 disabled:opacity-60 hover:opacity-90 focus:ring-2 focus:ring-ring transition-opacity"
+        onClick={proceedToCheckout} 
+        className="mt-6 w-full rounded bg-primary text-primary-foreground py-2 hover:opacity-90 focus:ring-2 focus:ring-ring transition-opacity"
       >
-        {loading ? "Starting checkout…" : "Buy Now (Stripe Test)"}
+        Proceed to Checkout →
       </button>
     </main>
   );

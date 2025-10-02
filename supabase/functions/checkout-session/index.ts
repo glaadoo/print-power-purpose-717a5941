@@ -15,10 +15,10 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, qty, causeId } = await req.json();
+    const { productId, qty, causeId, donationCents = 0 } = await req.json();
 
     // Validate inputs
-    if (!productId || !qty || !causeId || qty < 1 || qty > 100) {
+    if (!productId || !qty || !causeId || qty < 1 || qty > 100 || donationCents < 0) {
       return new Response(
         JSON.stringify({ error: 'Invalid input parameters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -61,7 +61,7 @@ serve(async (req) => {
 
     // Calculate price server-side
     const unitPrice = priceFromBase(product.base_cost_cents);
-    const totalAmount = unitPrice * qty;
+    const totalAmount = (unitPrice * qty) + donationCents;
 
     // Initialize Stripe
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
@@ -101,21 +101,38 @@ serve(async (req) => {
     // Create Stripe Checkout Session
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'http://localhost:8080';
     
+    const lineItems = [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: product.name,
+            description: `Supporting: ${cause.name}`,
+          },
+          unit_amount: unitPrice,
+        },
+        quantity: qty,
+      },
+    ];
+
+    // Add donation as a separate line item if present
+    if (donationCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Additional Donation',
+            description: `Extra support for ${cause.name}`,
+          },
+          unit_amount: donationCents,
+        },
+        quantity: 1,
+      });
+    }
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: product.name,
-              description: `Supporting: ${cause.name}`,
-            },
-            unit_amount: unitPrice,
-          },
-          quantity: qty,
-        },
-      ],
+      line_items: lineItems,
       mode: 'payment',
       success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/cancel`,

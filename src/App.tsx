@@ -4,6 +4,7 @@ import Kenzie from "./pages/Kenzie";
 import Causes from "./pages/Causes";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
+import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import Cancel from "./pages/Cancel";
 
@@ -15,6 +16,7 @@ export default function App() {
       <Route path="/causes" element={<Causes />} />
       <Route path="/products" element={<Products />} />
       <Route path="/products/:id" element={<ProductDetail />} />
+      <Route path="/checkout" element={<Checkout />} />
       <Route path="/success" element={<Success />} />
       <Route path="/cancel" element={<Cancel />} />
     </Routes>
