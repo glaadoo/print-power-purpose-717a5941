@@ -2,86 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root { 
-  height: 100%; 
+/* Ensure full-height layout and no global filters */
+html, body, #root {
+  height: 100%;
   margin: 0;
   padding: 0;
 }
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Optional: soft overlay utility you can add on pages that need contrast */
+.bg-overlay-soft {
+  background: linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.06) 100%);
+}
 
-@layer base {
-  :root {
-    --background: 40 33% 94%;
-    --foreground: 30 15% 15%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 30 15% 15%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 15% 15%;
-
-    --primary: 30 15% 15%;
-    --primary-foreground: 40 33% 94%;
-
-    --secondary: 38 40% 88%;
-    --secondary-foreground: 30 15% 15%;
-
-    --muted: 38 40% 88%;
-    --muted-foreground: 30 10% 40%;
-
-    --accent: 45 90% 60%;
-    --accent-foreground: 30 15% 15%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 40 33% 94%;
-
-    --border: 40 20% 85%;
-    --input: 40 20% 85%;
-    --ring: 30 15% 15%;
-
-    --radius: 0.75rem;
+/* Reusable "glass" utilities if you want them on small cards/links */
+/* Reusable "glass" utilities */
+@layer utilities {
+  .glass {
+    @apply rounded-2xl shadow-2xl border border-black/10;
+    /* use explicit rgba so we can pick any opacity */
+    background-color: rgba(255,255,255,0.85);
   }
 
-  .dark {
-    --background: 30 15% 12%;
-    --foreground: 40 33% 94%;
+  /* Paws + typewriter utilities you already used */
+  @keyframes paw-slide {
+    0%   { transform: translateX(-10%); opacity: .0; }
+    10%  { opacity: .9; }
+    50%  { transform: translateX(50%); }
+    100% { transform: translateX(110%); opacity: .9; }
+  }
+  .paws-row { @apply text-2xl sm:text-3xl select-none; animation: paw-slide 3s ease-in-out infinite; }
+  .paws-muted { @apply opacity-60; }
 
-    --card: 30 15% 15%;
-    --card-foreground: 40 33% 94%;
+  .typewriter-nocaret { overflow: hidden; white-space: nowrap; animation: typing 1.6s steps(30, end) forwards; }
+  @keyframes typing { from { width: 0 } to { width: 100% } }
 
-    --popover: 30 15% 15%;
-    --popover-foreground: 40 33% 94%;
-
-    --primary: 40 33% 94%;
-    --primary-foreground: 30 15% 15%;
-
-    --secondary: 30 10% 22%;
-    --secondary-foreground: 40 33% 94%;
-
-    --muted: 30 10% 22%;
-    --muted-foreground: 40 20% 65%;
-
-    --accent: 45 90% 60%;
-    --accent-foreground: 30 15% 15%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 40 33% 94%;
-
-    --border: 30 10% 22%;
-    --input: 30 10% 22%;
-    --ring: 40 33% 80%;
+  .heading-fancy {
+    @apply font-extrabold tracking-tight;
+    background: linear-gradient(180deg, #111 0%, #222 60%, #444 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 2px 10px rgba(0,0,0,.08);
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .paws-row { animation: none !important; }
 }

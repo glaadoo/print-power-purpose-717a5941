@@ -1,41 +1,27 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import Layout from "../components/Layout";
+import GlassCard from "../components/GlassCard";
 import { useCause } from "../context/CauseContext";
 
 export default function Success() {
-  const [searchParams] = useSearchParams();
-  const { cause, clear } = useCause();
-  const [sessionId] = useState(searchParams.get("session_id"));
-
-  useEffect(() => {
-    // Clear the cause selection after successful payment
-    if (sessionId) {
-      const timer = setTimeout(() => clear(), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [sessionId, clear]);
+  const { cause } = useCause();
 
   return (
-    <main className="p-6 max-w-2xl mx-auto text-center">
-      <div className="bg-card border border-border rounded-lg p-8 mt-8">
-        <div className="text-6xl mb-4">🎉</div>
-        <h1 className="text-3xl font-bold text-foreground mb-3">Payment Successful!</h1>
-        {cause && (
-          <p className="text-lg text-muted-foreground mb-6">
-            Your donation is now live for <span className="font-semibold text-foreground">{cause.name}</span>!
-          </p>
-        )}
-        <p className="text-sm text-muted-foreground mb-8">
-          Thank you for supporting a great cause through Print Power Purpose.
+    <Layout title="Success">
+      <GlassCard className="text-center">
+        <h1 className="text-2xl font-bold">Payment successful</h1>
+        <p className="mt-2 text-gray-800">
+          {cause ? `Thanks for helping ${cause.name}!` : "Thanks for your support!"}
         </p>
-        
-        <a 
-          href="/products" 
-          className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-md font-medium hover:opacity-90 focus:ring-2 focus:ring-ring transition-opacity"
-        >
-          Back to Products
-        </a>
-      </div>
-    </main>
+
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <a href="/products" className="px-4 py-2 rounded bg-black text-white focus:ring-2">
+            Back to products
+          </a>
+          <a href="/causes" className="px-4 py-2 rounded border border-white/40 bg-white/20 backdrop-blur focus:ring-2">
+            See more causes
+          </a>
+        </div>
+      </GlassCard>
+    </Layout>
   );
 }
