@@ -6,10 +6,12 @@ export default function Layout({
   children,
   centered = true,
   showHeader = true,
+  title,
 }: {
   children: ReactNode;
   centered?: boolean;
   showHeader?: boolean;
+  title?: string;
 }) {
   const nav = useNavigate();
   const loc = useLocation();
