@@ -1,39 +1,66 @@
+// src/pages/Products.tsx
 import { useEffect, useState } from "react";
-import SelectedCauseBanner from "../components/SelectedCauseBanner";
-import Layout from "../components/Layout";
+import { Link } from "react-router-dom";
 import GlassCard from "../components/GlassCard";
+import Layout from "../components/Layout";
+// Prefer alias if configured; otherwise use relative path:
+// import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
-type Product = { id:string; name:string; base_cost_cents:number };
+type ProductRow = {
+  id: string;
+  name: string;
+  base_cost_cents: number;
+  image_url?: string | null;
+};
 
 export default function Products() {
-  const [items, setItems] = useState<Product[]|null>(null);
-  useEffect(()=>{ fetch("/api/catalog/products").then(r=>r.json()).then(d=>setItems(d.products||[])); },[]);
+  const [rows, setRows] = useState<ProductRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setErr(null);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) setErr(error.message);
+      else setRows((data as ProductRow[]) ?? []);
+      setLoading(false);
+    })();
+  }, []);
 
   return (
-    <Layout title="Products" centered={false}>
-      <div className="grid place-items-center">
-        <div className="w-full max-w-5xl">
-          <GlassCard>
-            <SelectedCauseBanner />
-            <h1 className="text-2xl font-bold mb-4">Products</h1>
+    // Layout centers the content like an "island" and shows the header on non-home routes
+    <Layout title="Products" /* header is shown by default on non-home pages */>
+      <GlassCard className="w-full max-w-3xl mx-auto">
+        <h1 className="text-2xl font-bold text-center mb-6">Products</h1>
 
-            {!items && <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({length:6}).map((_,i)=><div key={i} className="h-28 rounded bg-white/40 animate-pulse" />)}
-            </div>}
+        {loading && <p className="text-center">Loading products…</p>}
+        {err && (
+          <div className="border border-red-400 bg-red-50/70 text-red-900 p-3">
+            {err}
+          </div>
+        )}
 
-            {items && (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {items.map(p=>(
-                  <a key={p.id} href={`/products/${p.id}`} className="glass card-padding block hover:shadow-lg focus:ring-2">
-                    <div className="font-medium">{p.name}</div>
-                    <div className="text-sm text-gray-800">Base: ${(p.base_cost_cents/100).toFixed(2)}</div>
-                  </a>
-                ))}
-              </div>
-            )}
-          </GlassCard>
-        </div>
-      </div>
+        {!loading && !err && (
+          <div className="grid gap-4">
+            {rows.map((p) => (
+              <Link
+                key={p.id}
+                to={`/products/${p.id}`}
+                className="block px-4 py-3 border border-white/30 bg-white/40 text-center 
+                           font-bold text-black hover:bg-white/60 transition"
+              >
+                {p.name} — ${(p.base_cost_cents / 100).toFixed(2)}
+              </Link>
+            ))}
+          </div>
+        )}
+      </GlassCard>
     </Layout>
   );
 }

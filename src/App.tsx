@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 
@@ -19,7 +20,8 @@ function DebugBar() {
         color: "#fff",
         padding: "6px 10px",
         borderRadius: 8,
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        fontFamily:
+          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
         fontSize: 12,
       }}
     >
@@ -62,9 +64,12 @@ class RouteBoundary extends React.Component<
   }
 }
 
-/* ---------- Lazy imports with explicit logging ---------- */
+/* ---------- Lazy imports ---------- */
 
-function lazyPage<T extends { default: React.ComponentType<any> }>(label: string, loader: () => Promise<T>) {
+function lazyPage<T extends { default: React.ComponentType<any> }>(
+  label: string,
+  loader: () => Promise<T>
+) {
   return lazy(async () => {
     console.log(`[Lazy] start loading ${label}`);
     try {
@@ -89,46 +94,71 @@ const Dashboard       = lazyPage("Dashboard",       () => import("./pages/Dashbo
 const SelectSchool    = lazyPage("SelectSchool",    () => import("./pages/SelectSchool"));
 const SelectNonprofit = lazyPage("SelectNonprofit", () => import("./pages/SelectNonprofit"));
 const PersonalMission = lazyPage("PersonalMission", () => import("./pages/PersonalMission"));
+const Cart            = lazyPage("Cart",            () => import("./pages/Cart"));
+const Checkout        = lazyPage("Checkout",        () => import("./pages/Checkout")); // NEW
 
-/* ---------- Fallback UI while a page is loading ---------- */
+/* ---------- Fallback UI ---------- */
 
 function Loading({ label }: { label: string }) {
   console.log(`[Suspense] show fallback for ${label}`);
   return (
-    <div style={{
-      minHeight: "100vh", display: "grid", placeItems: "center",
-      fontFamily: "system-ui, sans-serif"
-    }}>
-      <div style={{ background: "rgba(255,255,255,.6)", padding: 24, borderRadius: 12, boxShadow: "0 10px 40px rgba(0,0,0,.2)" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          background: "rgba(255,255,255,.6)",
+          padding: 24,
+          borderRadius: 12,
+          boxShadow: "0 10px 40px rgba(0,0,0,.2)",
+        }}
+      >
         Loading {label}…
       </div>
     </div>
   );
 }
 
-/* ---------- NotFound route (catch-all) ---------- */
+/* ---------- NotFound ---------- */
 
 function NotFound() {
   const loc = useLocation();
   console.warn("[Router] 404 NotFound for path:", loc.pathname);
   return (
-    <div style={{
-      minHeight: "100vh", display: "grid", placeItems: "center",
-      fontFamily: "system-ui, sans-serif"
-    }}>
-      <div style={{ background: "rgba(255,255,255,.6)", padding: 24, borderRadius: 12, boxShadow: "0 10px 40px rgba(0,0,0,.2)" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          background: "rgba(255,255,255,.6)",
+          padding: 24,
+          borderRadius: 12,
+          boxShadow: "0 10px 40px rgba(0,0,0,.2)",
+        }}
+      >
         <h1>404 — No route matched</h1>
-        <p>path: <code>{loc.pathname}</code></p>
+        <p>
+          path: <code>{loc.pathname}</code>
+        </p>
         <p><Link to="/">Go Home</Link></p>
       </div>
     </div>
   );
 }
 
-/* ---------- App (diagnostic router) ---------- */
+/* ---------- App ---------- */
 
 export default function App() {
-  // Global safety net for unhandled errors
   useEffect(() => {
     const onError = (ev: ErrorEvent) => {
       console.error("[window.onerror]", ev.message, ev.error);
@@ -167,6 +197,26 @@ export default function App() {
             element={
               <RouteBoundary name="Dashboard">
                 <Dashboard />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Cart */}
+          <Route
+            path="/cart"
+            element={
+              <RouteBoundary name="Cart">
+                <Cart />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Checkout (NEW) */}
+          <Route
+            path="/checkout"
+            element={
+              <RouteBoundary name="Checkout">
+                <Checkout />
               </RouteBoundary>
             }
           />
@@ -247,7 +297,7 @@ export default function App() {
             }
           />
 
-          {/* Catch-all so you never get a blank page */}
+          {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

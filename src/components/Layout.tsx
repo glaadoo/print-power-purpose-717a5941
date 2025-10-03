@@ -1,13 +1,12 @@
+
 import { ReactNode } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 
 export default function Layout({
-  title,
   children,
   centered = true,
-  showHeader = true, // set false on Home if you like
+  showHeader = true,
 }: {
-  title?: string;
   children: ReactNode;
   centered?: boolean;
   showHeader?: boolean;
@@ -19,40 +18,44 @@ export default function Layout({
 
   return (
     <div className="relative">
-      {/* Hover-reveal header (not on Home) */}
       {showHoverHeader && (
-        <div className="fixed inset-x-0 top-0 z-40 group pointer-events-none">
+        <div className="fixed inset-x-0 top-0 z-40 group">
           <div className="h-3 w-full" />
           <header
-            className="
-              mx-auto w-[95%] sm:w-[90%] max-w-6xl
-              translate-y-[-90%] group-hover:translate-y-0 transition-transform duration-300
-              glass card-padding flex items-center justify-between pointer-events-auto
-              bg-white/35 backdrop-blur-xl
-            "
+            className="nav-rect mx-auto translate-y-[-90%] group-hover:translate-y-0 
+                       transition-transform duration-300 flex items-center justify-between px-4"
           >
-            <div className="flex items-center gap-3">
+            {/* Left actions */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => nav(-1)}
-                className="px-3 py-1.5 rounded-md border border-white/40 bg-white/30 hover:bg-white/40 focus:ring-2"
+                className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg"
               >
                 ← Back
               </button>
-              <Link
-                to="/dashboard"
-                className="px-3 py-1.5 rounded-md border border-white/40 bg-white/30 hover:bg-white/40 focus:ring-2"
-              >
-                Dashboard
+              <Link to="/" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">Home</Link>
+              <Link to="/products" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">Products</Link>
+              <Link to="/causes" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">Causes</Link>
+            </div>
+
+            {/* Right actions */}
+            <div className="flex items-center gap-3">
+              <Link to="/cart" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">
+                🧺 Cart
+              </Link>
+              <Link to="/donate" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">
+                ❤️ Donate
               </Link>
             </div>
-            <Link to="/" className="text-lg font-semibold">Print Power Purpose</Link>
           </header>
         </div>
       )}
 
-      {/* Main: full-screen center. Add a tiny top padding so a revealed header doesn't overlap. */}
-      <main className={`min-h-screen grid place-items-center px-4 ${showHoverHeader ? "pt-4" : ""}`}>
-        {/* Width guard; children (GlassCard) will sit centered like an island */}
+      <main
+        className={`min-h-screen ${centered ? "grid place-items-center" : ""} px-4 ${
+          showHoverHeader ? "pt-4" : ""
+        }`}
+      >
         <div className="w-full max-w-4xl">{children}</div>
       </main>
     </div>

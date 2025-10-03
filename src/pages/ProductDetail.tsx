@@ -1,59 +1,96 @@
+// src/pages/ProductDetail.tsx
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useToast } from "../ui/Toast";
-import { useCause } from "../context/CauseContext";
-import { priceFromBase } from "../lib/utils";
-import Layout from "../components/Layout";
+import { useParams, useNavigate } from "react-router-dom";
 import GlassCard from "../components/GlassCard";
+import Layout from "../components/Layout";
+import { supabase } from "@/integrations/supabase/client";
+
+type ProductRow = {
+  id: string;
+  name: string;
+  base_cost_cents: number;
+  description?: string | null;
+};
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const [product, setProduct] = useState<any>(null);
+  const nav = useNavigate();
+  const [product, setProduct] = useState<ProductRow | null>(null);
   const [qty, setQty] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const { cause } = useCause();
-  const { push } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
 
-  useEffect(()=>{
-    fetch("/api/catalog/products").then(r=>r.json()).then(d=>{
-      setProduct((d.products||[]).find((p:any)=>p.id===id));
-    });
-  },[id]);
+  // Fetch product by ID from Supabase
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      setLoading(true);
+      setErr(null);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) setErr(error.message);
+      else setProduct(data as ProductRow);
+      setLoading(false);
+    })();
+  }, [id]);
 
-  async function buy() {
-    if (!cause) { push({title:"Pick a cause first", body:"Choose a cause in Kenzie."}); window.location.href="/kenzie"; return; }
-    setLoading(true);
-    const res = await fetch("/api/checkout/session", {
-      method: "POST",
-      headers: {"content-type":"application/json"},
-      body: JSON.stringify({ productId: id, qty, causeId: cause.id })
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (data.url) window.location.href = data.url;
-    else push({title:"Checkout error", body:data.error || "Please try again."});
+  if (loading) {
+    return (
+      <Layout title="Product">
+        <GlassCard>
+          <p className="text-center">Loading product…</p>
+        </GlassCard>
+      </Layout>
+    );
   }
 
-  if (!product) return <Layout title="Product"><GlassCard>Loading…</GlassCard></Layout>;
-  const unit = priceFromBase(product.base_cost_cents);
+  if (err || !product) {
+    return (
+      <Layout title="Product">
+        <GlassCard>
+          <p className="text-center text-red-600">
+            {err || "Product not found"}
+          </p>
+        </GlassCard>
+      </Layout>
+    );
+  }
+
+  const price = product.base_cost_cents / 100;
 
   return (
-    <Layout title="Product">
-      <GlassCard>
-        <h1 className="text-2xl font-bold">{product.name}</h1>
-        <p className="text-sm text-gray-800 mt-1">Est. price: ${(unit/100).toFixed(2)}</p>
+    <Layout title={product.name}>
+      <GlassCard className="w-full max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold text-center mb-4">{product.name}</h1>
+        <p className="text-center mb-4">Price: ${price.toFixed(2)}</p>
 
-        <div className="mt-4 flex items-center gap-2">
-          <button onClick={()=>setQty(q=>Math.max(1,q-1))} className="w-9 h-9 border border-white/40 bg-white/20 rounded hover:bg-white/30">-</button>
-          <input value={qty} onChange={e=>setQty(Math.max(1, parseInt(e.target.value)||1))}
-                 className="w-16 text-center border border-white/40 rounded py-2 bg-white/20 backdrop-blur" aria-label="Quantity" />
-          <button onClick={()=>setQty(q=>q+1)} className="w-9 h-9 border border-white/40 bg-white/20 rounded hover:bg-white/30">+</button>
+        <div className="flex flex-col gap-3 items-center">
+          <label className="font-bold">Quantity</label>
+          <input
+            type="number"
+            min="1"
+            value={qty}
+            onChange={(e) => setQty(Number(e.target.value))}
+            className="border px-3 py-2 w-24 text-center"
+          />
+
+          <button
+            onClick={() => alert(`Added ${qty} ${product.name}(s) to cart`)}
+            className="btn-rect px-4 py-2 font-bold text-white bg-green-600 hover:bg-green-700"
+          >
+            Add to Cart
+          </button>
+
+          <button
+            onClick={() => nav("/checkout", { state: { productId: product.id, qty } })}
+            className="btn-rect px-4 py-2 font-bold text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Checkout
+          </button>
         </div>
-
-        <button onClick={buy} disabled={loading}
-                className="mt-6 w-full rounded bg-black text-white py-2 disabled:opacity-60 focus:ring-2">
-          {loading ? "Starting checkout…" : "Buy Now (Stripe Test)"}
-        </button>
       </GlassCard>
     </Layout>
   );

@@ -1,65 +1,72 @@
+// src/pages/Checkout.tsx
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
+import GlassCard from "../components/GlassCard";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
 import { priceFromBase } from "../lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+
+type ProductRow = {
+  id: string;
+  name: string;
+  base_cost_cents: number;
+};
 
 export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { cause } = useCause();
   const { push } = useToast();
-  
-  const { productId, qty } = location.state || {};
-  
-  const [product, setProduct] = useState<any>(null);
-  const [donation, setDonation] = useState(0);
+
+  // Passed from ProductDetail via navigate("/checkout", { state: { productId, qty } })
+  const { productId, qty } = (location.state as { productId?: string; qty?: number }) || {};
+
+  const [product, setProduct] = useState<ProductRow | null>(null);
+  const [donation, setDonation] = useState<number>(0); // cents
   const [loading, setLoading] = useState(false);
 
+  // Load product
   useEffect(() => {
-    if (!productId || !qty || !cause) {
-      push({ title: "Missing information", body: "Please select a product and cause first." });
-      navigate("/products");
-      return;
-    }
-    
-    supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single()
-      .then(({ data }) => {
-        if (data) setProduct(data);
-        else {
-          push({ title: "Product not found" });
-          navigate("/products");
-        }
-      });
+    (async () => {
+      if (!productId || !qty || !cause) {
+        push({ title: "Missing information", body: "Please select a product and cause first." });
+        navigate("/products");
+        return;
+      }
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", productId)
+        .single();
+
+      if (error || !data) {
+        push({ title: "Product not found" });
+        navigate("/products");
+        return;
+      }
+      setProduct(data as ProductRow);
+    })();
   }, [productId, qty, cause, navigate, push]);
 
   async function handlePayment() {
     if (!cause || !product) return;
-    
     setLoading(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke('checkout-session', {
-        body: { 
-          productId: product.id, 
-          qty, 
+      const { data, error } = await supabase.functions.invoke("checkout-session", {
+        body: {
+          productId: product.id,
+          qty,
           causeId: cause.id,
-          donationCents: donation 
-        }
+          donationCents: donation,
+        },
       });
-
       setLoading(false);
-
       if (error || !data?.url) {
         push({ title: "Checkout error", body: data?.error || "Please try again." });
         return;
       }
-
       window.location.href = data.url;
     } catch (err) {
       setLoading(false);
@@ -67,106 +74,120 @@ export default function Checkout() {
     }
   }
 
-  if (!product || !cause) return <main className="p-6 text-foreground">Loading…</main>;
-  
-  const unitPrice = priceFromBase(product.base_cost_cents);
-  const subtotal = unitPrice * qty;
+  if (!product || !cause) {
+    return (
+      <Layout title="Checkout">
+        <GlassCard className="w-full max-w-3xl mx-auto text-center">Loading…</GlassCard>
+      </Layout>
+    );
+  }
+
+  const unitPrice = priceFromBase(product.base_cost_cents); // cents
+  const subtotal = unitPrice * (qty || 1);
   const total = subtotal + donation;
 
   return (
-    <main className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Review Your Order</h1>
-      
-      <div className="bg-card border border-border rounded-lg p-6 mb-4">
-        <div className="space-y-4">
-          <div>
-            <div className="text-sm text-muted-foreground">Product</div>
-            <div className="font-medium text-card-foreground">{product.name}</div>
-          </div>
+    <Layout title="Checkout">
+      <GlassCard className="w-full max-w-3xl mx-auto">
+        <h1 className="text-2xl font-bold text-center mb-6 text-white drop-shadow-lg">
+          Review your order
+        </h1>
 
-          <div className="flex gap-8">
-            <div>
-              <div className="text-sm text-muted-foreground">Quantity</div>
-              <div className="font-medium text-card-foreground">{qty}</div>
-            </div>
-            
-            <div>
-              <div className="text-sm text-muted-foreground">Unit Price</div>
-              <div className="font-medium text-card-foreground">${(unitPrice / 100).toFixed(2)}</div>
-            </div>
+        {/* Order summary */}
+        <div className="space-y-4 mb-6">
+          <div className="flex justify-between">
+            <span className="text-white/90">Product</span>
+            <span className="font-semibold text-white drop-shadow">{product.name}</span>
           </div>
-
-          <div>
-            <div className="text-sm text-muted-foreground">Supporting</div>
-            <div className="font-medium text-card-foreground">{cause.name}</div>
+          <div className="flex justify-between">
+            <span className="text-white/90">Quantity</span>
+            <span className="font-semibold text-white drop-shadow">{qty}</span>
           </div>
-        </div>
-      </div>
-
-      <div className="bg-secondary/30 border border-border rounded-lg p-6 mb-4">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="text-2xl">🐾</div>
-          <div>
-            <div className="font-medium text-foreground">Kenzie says:</div>
-            <div className="text-sm text-muted-foreground">"Ready to complete your order?"</div>
+          <div className="flex justify-between">
+            <span className="text-white/90">Unit price</span>
+            <span className="font-semibold text-white drop-shadow">
+              ${(unitPrice / 100).toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-white/90">Supporting</span>
+            <span className="font-semibold text-white drop-shadow">{cause.name}</span>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="donation" className="text-sm font-medium text-foreground">
-            Optional Donation (USD)
+        {/* Optional donation */}
+        <div className="mb-6">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="text-2xl">🐾</div>
+            <div>
+              <div className="font-bold text-white drop-shadow">Kenzie says:</div>
+              <div className="text-white/90">
+                “Want to add an optional donation for {cause.name}?”
+              </div>
+            </div>
+          </div>
+
+          <label htmlFor="donation" className="block text-white/90 mb-1">
+            Donation (USD)
           </label>
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">$</span>
+            <span className="text-white/80">$</span>
             <input
               id="donation"
               type="number"
               min="0"
               step="0.01"
               value={donation / 100}
-              onChange={(e) => setDonation(Math.max(0, Math.round(parseFloat(e.target.value || '0') * 100)))}
-              className="flex-1 px-3 py-2 bg-background border border-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+              onChange={(e) =>
+                setDonation(Math.max(0, Math.round(parseFloat(e.target.value || "0") * 100)))
+              }
+              className="input-rect bg-white/30 text-black placeholder-black/60"
               placeholder="0.00"
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Add an extra donation to support {cause.name}
-          </p>
         </div>
-      </div>
 
-      <div className="bg-card border border-border rounded-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-muted-foreground">Subtotal</span>
-          <span className="text-card-foreground">${(subtotal / 100).toFixed(2)}</span>
-        </div>
-        {donation > 0 && (
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-muted-foreground">Donation</span>
-            <span className="text-card-foreground">${(donation / 100).toFixed(2)}</span>
+        {/* Totals */}
+        <div className="mb-6 space-y-2">
+          <div className="flex justify-between">
+            <span className="text-white/90">Subtotal</span>
+            <span className="font-semibold text-white drop-shadow">
+              ${(subtotal / 100).toFixed(2)}
+            </span>
           </div>
-        )}
-        <div className="border-t border-border my-3" />
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-foreground">Total</span>
-          <span className="font-bold text-xl text-foreground">${(total / 100).toFixed(2)}</span>
+          {donation > 0 && (
+            <div className="flex justify-between">
+              <span className="text-white/90">Donation</span>
+              <span className="font-semibold text-white drop-shadow">
+                ${(donation / 100).toFixed(2)}
+              </span>
+            </div>
+          )}
+          <div className="border-t border-white/40 my-2" />
+          <div className="flex justify-between">
+            <span className="font-bold text-white drop-shadow">Total</span>
+            <span className="font-extrabold text-white drop-shadow">
+              ${(total / 100).toFixed(2)}
+            </span>
+          </div>
         </div>
-      </div>
 
-      <button
-        onClick={handlePayment}
-        disabled={loading}
-        className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-md font-medium hover:opacity-90 focus:ring-2 focus:ring-ring focus:outline-none disabled:opacity-50 transition-opacity"
-      >
-        {loading ? "Processing..." : "Pay with Card →"}
-      </button>
+        {/* Actions */}
+        <button
+          onClick={handlePayment}
+          disabled={loading}
+          className="btn-rect w-full h-12 font-bold bg-green-600/90 hover:bg-green-600 text-white"
+        >
+          {loading ? "Processing…" : "Pay with Card →"}
+        </button>
 
-      <button
-        onClick={() => navigate(-1)}
-        className="w-full mt-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        ← Back
-      </button>
-    </main>
+        <button
+          onClick={() => navigate(-1)}
+          className="btn-rect w-full h-10 mt-3 font-bold text-white/90 hover:bg-white/10"
+        >
+          ← Back
+        </button>
+      </GlassCard>
+    </Layout>
   );
 }

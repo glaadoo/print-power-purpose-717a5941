@@ -12,7 +12,11 @@ export default function Home() {
     const t1 = setTimeout(() => setStep(1), 150);
     const t2 = setTimeout(() => setStep(2), 1850);
     const t3 = setTimeout(() => setStep(3), 3300);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, []);
 
   // Long row of paws to cover the whole width; staggered via inline style
@@ -75,10 +79,18 @@ export default function Home() {
                   className="w-full sm:w-96 rounded-md border border-white/40 bg-white/20 backdrop-blur px-3 py-2 focus:ring-2"
                   aria-label="Select purpose"
                 >
-                  <option value="" disabled>Select an option</option>
-                  <option value="school">School</option>
-                  <option value="nonprofit">Nonprofit</option>
-                  <option value="personal">Personal mission</option>
+                  <option value="" disabled className="text-black">
+                    Select an option
+                  </option>
+                  <option value="school" className="text-black">
+                    School
+                  </option>
+                  <option value="nonprofit" className="text-black">
+                    Nonprofit
+                  </option>
+                  <option value="personal" className="text-black">
+                    Personal mission
+                  </option>
                 </select>
               </div>
             )}
@@ -88,4 +100,3 @@ export default function Home() {
     </Layout>
   );
 }
-

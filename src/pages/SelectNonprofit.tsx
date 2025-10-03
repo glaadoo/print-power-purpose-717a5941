@@ -1,32 +1,38 @@
 import Layout from "../components/Layout";
 import GlassCard from "../components/GlassCard";
-import { useCause } from "../context/CauseContext";
+import { useNavigate } from "react-router-dom";
 
 const NONPROFITS = [
-  "Neighborhood Library Friends",
-  "Community Soccer Club",
-  "River Cleanup Alliance",
-  "Meals & Smiles Outreach",
+  "Red Cross Local Chapter",
+  "Community Food Bank",
+  "Neighborhood Animal Rescue",
+  "Green Earth Society",
 ];
 
 export default function SelectNonprofit() {
-  const { setCause } = useCause();
+  const nav = useNavigate();
 
   function choose(name: string) {
-    setCause({ id: "nonprofit-custom", name, summary: "Nonprofit printing project" });
-    window.location.href = "/products";
+    localStorage.setItem(
+      "selectedCause",
+      JSON.stringify({ type: "nonprofit", name })
+    );
+    nav("/products");
   }
 
   return (
-    <Layout title="Choose a Nonprofit">
-      <GlassCard>
-        <h1 className="text-2xl font-bold mb-4">Choose your nonprofit</h1>
-        <div className="grid gap-3">
+    <Layout title="Choose your nonprofit">
+      <GlassCard className="w-full max-w-3xl mx-auto">
+        <h2 className="text-2xl font-extrabold text-center mb-6 text-white drop-shadow-lg">
+          Choose your nonprofit
+        </h2>
+
+        <div className="flex flex-col gap-3">
           {NONPROFITS.map((n) => (
             <button
               key={n}
               onClick={() => choose(n)}
-              className="w-full text-left glass card-padding hover:shadow-lg focus:ring-2"
+              className="btn-rect text-lg font-bold"
             >
               {n}
             </button>
