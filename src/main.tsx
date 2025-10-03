@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { CauseProvider } from "./context/CauseContext";
 import { ToastProvider } from "./ui/Toast";
 

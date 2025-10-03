@@ -14,36 +14,93 @@ html, body, #root {
   background: linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.06) 100%);
 }
 
-/* Reusable "glass" utilities if you want them on small cards/links */
 /* Reusable "glass" utilities */
 @layer utilities {
   .glass {
     @apply rounded-2xl shadow-2xl border border-black/10;
-    /* use explicit rgba so we can pick any opacity */
+    /* Use explicit rgba so we can set any opacity granularity */
     background-color: rgba(255,255,255,0.85);
   }
 
-  /* Paws + typewriter utilities you already used */
+  /* Transparent rectangular button (no curves) */
+  .btn-rect {
+    @apply w-full h-11
+      bg-transparent text-white
+      border border-white/60
+      rounded-none
+      text-center font-medium
+      flex items-center justify-center
+      transition-colors duration-150
+      focus:outline-none focus:ring-2 focus:ring-white/70
+      hover:bg-white/10 active:bg-white/20;
+  }
+
+  /* Slightly stronger variant for primary actions if needed */
+  .btn-rect-primary {
+    @apply border-white/80 hover:bg-white/15;
+  }
+
+  /* Transparent rectangular input/select to match buttons */
+  .input-rect {
+    @apply w-full h-11
+      bg-transparent text-white
+      border border-white/60
+      rounded-none
+      px-3
+      focus:outline-none focus:ring-2 focus:ring-white/70;
+  }
+
+  /* Top navigation bar: transparent rectangle, no curves */
+  .nav-rect {
+    @apply w-[95%] max-w-6xl
+      bg-transparent
+      border border-white/60
+      rounded-none
+      px-3 py-2
+      backdrop-contrast-125;
+  }
+
+  /* Paws + typewriter utilities */
   @keyframes paw-slide {
     0%   { transform: translateX(-10%); opacity: .0; }
     10%  { opacity: .9; }
     50%  { transform: translateX(50%); }
     100% { transform: translateX(110%); opacity: .9; }
   }
-  .paws-row { @apply text-2xl sm:text-3xl select-none; animation: paw-slide 3s ease-in-out infinite; }
+
+  .paws-row {
+    @apply text-2xl select-none;
+    animation: paw-slide 3s ease-in-out infinite;
+  }
+
   .paws-muted { @apply opacity-60; }
 
-  .typewriter-nocaret { overflow: hidden; white-space: nowrap; animation: typing 1.6s steps(30, end) forwards; }
+  .typewriter-nocaret {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typing 1.6s steps(30, end) forwards;
+  }
+
   @keyframes typing { from { width: 0 } to { width: 100% } }
 
   .heading-fancy {
     @apply font-extrabold tracking-tight;
     background: linear-gradient(180deg, #111 0%, #222 60%, #444 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent; /* Safari fix */
     text-shadow: 0 2px 10px rgba(0,0,0,.08);
   }
 }
 
+/* Responsive adjustments (Tailwind can't @apply responsive variants directly) */
+@screen sm {
+  .nav-rect { @apply w-[90%]; }
+  .paws-row { @apply text-3xl; }
+}
+
+/* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .paws-row { animation: none !important; }
 }

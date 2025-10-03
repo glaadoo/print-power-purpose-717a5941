@@ -1,6 +1,6 @@
 import Layout from "../components/Layout";
 import GlassCard from "../components/GlassCard";
-import { useCause } from "../context/CauseContext";
+import { useNavigate } from "react-router-dom";
 
 const SCHOOLS = [
   "Lincoln High School",
@@ -10,23 +10,30 @@ const SCHOOLS = [
 ];
 
 export default function SelectSchool() {
-  const { setCause } = useCause();
+  const nav = useNavigate();
 
   function choose(name: string) {
-    setCause({ id: "school-custom", name, summary: "School printing project" });
-    window.location.href = "/products";
+    // Persist selected cause for later pages (Products, banner, etc.)
+    localStorage.setItem(
+      "selectedCause",
+      JSON.stringify({ type: "school", name })
+    );
+    nav("/products"); // go to catalog
   }
 
   return (
-    <Layout title="Choose a School">
-      <GlassCard>
-        <h1 className="text-2xl font-bold mb-4">Choose your school</h1>
-        <div className="grid gap-3">
+    <Layout title="Choose your school">
+      <GlassCard className="w-full max-w-3xl mx-auto">
+        <h2 className="text-2xl font-extrabold text-center mb-6 text-white drop-shadow-lg">
+          Choose your school
+        </h2>
+
+        <div className="flex flex-col gap-3">
           {SCHOOLS.map((s) => (
             <button
               key={s}
               onClick={() => choose(s)}
-              className="w-full text-left glass card-padding hover:shadow-lg focus:ring-2"
+              className="btn-rect text-lg font-bold"
             >
               {s}
             </button>
