@@ -6,7 +6,7 @@ import GlassCard from "../components/GlassCard";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
 import { priceFromBase } from "../lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 type ProductRow = {
   id: string;

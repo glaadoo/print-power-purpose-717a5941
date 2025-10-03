@@ -5,7 +5,7 @@ import GlassCard from "../components/GlassCard";
 import Layout from "../components/Layout";
 // Prefer alias if configured; otherwise use relative path:
 // import { supabase } from "../integrations/supabase/client";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 type ProductRow = {
   id: string;

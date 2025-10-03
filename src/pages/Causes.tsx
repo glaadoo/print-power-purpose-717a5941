@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import DonationBarometer from "../components/DonationBarometer";
 import { useCause } from "../context/CauseContext";
 import { useToast } from "../ui/Toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 type Cause = { 
   id: string; 
