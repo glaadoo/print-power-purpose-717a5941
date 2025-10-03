@@ -18,8 +18,8 @@ export default function Cart() {
 
   async function load() {
     setLoading(true);
-    const data = (await getCart()) as CartRow[];
-    setItems(data);
+    const data = await getCart();
+    setItems(data as any);
     setLoading(false);
   }
 
