@@ -5,7 +5,7 @@ import GlassCard from "../components/GlassCard";
 import Layout from "../components/Layout";
 // Prefer alias if configured; otherwise use relative path:
 // import { supabase } from "../integrations/supabase/client";
-// Supabase client is dynamically imported within useEffect to avoid early init errors
+import { supabase } from "@/integrations/supabase/client";
 
 type ProductRow = {
   id: string;
@@ -23,23 +23,13 @@ export default function Products() {
     (async () => {
       setLoading(true);
       setErr(null);
-      try {
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) setErr(error.message);
-        else setRows((data as ProductRow[]) ?? []);
-      } catch (e: any) {
-        console.error("[Products] Supabase init failed", e);
-        setErr(
-          e?.message ||
-            "Failed to initialize backend client. Please ensure environment variables are set."
-        );
-      } finally {
-        setLoading(false);
-      }
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) setErr(error.message);
+      else setRows((data as ProductRow[]) ?? []);
+      setLoading(false);
     })();
   }, []);
 
