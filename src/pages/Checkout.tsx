@@ -27,6 +27,14 @@ export default function Checkout() {
   const [donation, setDonation] = useState<number>(0); // cents
   const [loading, setLoading] = useState(false);
 
+  // Show error if payment was cancelled
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('payment') === 'cancelled') {
+      push({ title: "Payment cancelled", body: "Your payment was not completed. Please try again." });
+    }
+  }, [location.search, push]);
+
   // Load product
   useEffect(() => {
     (async () => {

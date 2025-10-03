@@ -135,7 +135,7 @@ serve(async (req) => {
       line_items: lineItems,
       mode: 'payment',
       success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/cancel`,
+      cancel_url: `${siteUrl}/checkout?payment=cancelled`,
       metadata: {
         order_id: order.id,
         cause_id: causeId,
