@@ -5,7 +5,7 @@ import Layout from "../components/Layout";
 import GlassCard from "../components/GlassCard";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 type ProductRow = {
   id: string;
