@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import GlassCard from "../components/GlassCard";
 import Layout from "../components/Layout";
 import { useCart } from "@/context/CartContext";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 
 type ProductRow = {
   id: string;
