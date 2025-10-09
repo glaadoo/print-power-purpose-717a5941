@@ -1,88 +1,238 @@
 // src/pages/Checkout.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import GlassCard from "../components/GlassCard";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
-import { priceFromBase } from "../lib/utils";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 
 type ProductRow = {
   id: string;
   name: string;
-  base_cost_cents: number;
+  priceCents?: number | null;
+  base_cost_cents?: number | null;
+  currency?: string | null;
+  imageUrl?: string | null;
 };
 
+const priceFromBase = (base?: number | null) =>
+  Math.max(100, Math.round((Number(base) || 0) * 1.6)); // simple markup fallback (>= $1.00)
+
+const LS_KEY = "ppp:checkout"; // { productId, qty, causeId, donationUsd }
+
+function getFromQuery() {
+  const sp = new URLSearchParams(window.location.search);
+  const productId = sp.get("productId") || undefined;
+  const qty = sp.get("qty") ? Number(sp.get("qty")) : undefined;
+  const causeId = sp.get("causeId") || undefined;
+  const donationUsd = sp.get("donationUsd") ? Number(sp.get("donationUsd")) : undefined;
+  return { productId, qty, causeId, donationUsd };
+}
+
+function getFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) || {};
+  } catch {
+    return {};
+  }
+}
+
 export default function Checkout() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { cause } = useCause();
-  const { push } = useToast();
+  const location = useLocation() as any;
 
-  // Passed from ProductDetail via navigate("/checkout", { state: { productId, qty } })
-  const { productId, qty } = (location.state as { productId?: string; qty?: number }) || {};
+  // Optional hooks (guarded)
+  const toast = (() => {
+    try {
+      return useToast();
+    } catch {
+      return { push: (_: any) => {} } as { push: (x: any) => void };
+    }
+  })();
+  const causeCtx = (() => {
+    try {
+      return useCause();
+    } catch {
+      return { cause: null as any };
+    }
+  })();
 
-  const [product, setProduct] = useState<ProductRow | null>(null);
-  const [donation, setDonation] = useState<number>(0); // cents
+  // Merge 1) location.state, 2) URL query, 3) localStorage, 4) CauseContext (last resort)
+  const merged = useMemo(() => {
+    const st = (location?.state ?? {}) as any;
+    const q = getFromQuery();
+    const ls = getFromLocalStorage();
+    const causeIdFromCtx =
+      (causeCtx as any)?.cause?.id || (causeCtx as any)?.cause?.causeId;
+
+    return {
+      productId: st.productId ?? q.productId ?? (ls as any).productId,
+      qty: Number(st.qty ?? q.qty ?? (ls as any).qty ?? 1),
+      causeId: st.causeId ?? q.causeId ?? (ls as any).causeId ?? causeIdFromCtx,
+      donationUsd: Number(
+        String(st.donationUsd ?? q.donationUsd ?? (ls as any).donationUsd ?? 0).replace(",", ".")
+      ),
+    };
+  }, [location, causeCtx]);
+
   const [loading, setLoading] = useState(false);
+  const [product, setProduct] = useState<ProductRow | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedCauseId, setSelectedCauseId] = useState<string | null>(null);
+  const [selectedCauseName, setSelectedCauseName] = useState<string | null>(null);
 
-  // Show error if payment was cancelled
+  // store donation locally in cents for the input
+  const [donation, setDonation] = useState<number>(
+    Math.max(0, Math.round(Number(merged.donationUsd || 0) * 100))
+  );
+
+  // Show toast if Stripe sent back ?payment=cancelled
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('payment') === 'cancelled') {
-      push({ title: "Payment cancelled", body: "Your payment was not completed. Please try again." });
-    }
-  }, [location.search, push]);
-
-  // Load product
-  useEffect(() => {
-    (async () => {
-      if (!productId || !qty || !cause) {
-        push({ title: "Missing information", body: "Please select a product and cause first." });
-        navigate("/products");
-        return;
-      }
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", productId)
-        .single();
-
-      if (error || !data) {
-        push({ title: "Product not found" });
-        navigate("/products");
-        return;
-      }
-      setProduct(data as ProductRow);
-    })();
-  }, [productId, qty, cause, navigate, push]);
-
-  async function handlePayment() {
-    if (!cause || !product) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("checkout-session", {
-        body: {
-          productId: product.id,
-          qty,
-          causeId: cause.id,
-          donationCents: donation,
-        },
+    if (params.get("payment") === "cancelled") {
+      toast.push?.({
+        title: "Payment cancelled",
+        body: "Your payment was not completed. Please try again.",
       });
-      setLoading(false);
-      if (error || !data?.url) {
-        push({ title: "Checkout error", body: data?.error || "Please try again." });
-        return;
+    }
+  }, [location.search, toast]);
+
+  // Fetch product & persist merged selection (refresh-proof). If no cause provided, auto-pick first.
+  useEffect(() => {
+    const { productId, qty, causeId, donationUsd } = merged;
+
+    // Persist latest selection
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ productId, qty, causeId, donationUsd }));
+    } catch {}
+
+    if (!productId) {
+      setError("Missing product. Please select a product first.");
+      return;
+    }
+    // If causeId missing, auto-select the first available cause
+    if (!causeId) {
+      (async () => {
+        const { data, error } = await supabase
+          .from("causes")
+          .select("id, name")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .single();
+        if (!error && data?.id) {
+          setSelectedCauseId(data.id);
+          setSelectedCauseName(data.name ?? null);
+          try {
+            localStorage.setItem(
+              LS_KEY,
+              JSON.stringify({ productId, qty, causeId: data.id, donationUsd })
+            );
+          } catch {}
+        } else {
+          setError("No causes available. Please add a cause.");
+        }
+      })();
+    } else {
+      setSelectedCauseId(String(causeId));
+    }
+    if (!qty || qty < 1) {
+      setError("Quantity must be at least 1.");
+      return;
+    }
+
+    supabase
+      .from("products")
+      .select("*")
+      .eq("id", productId)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data) {
+          setError("Product not found");
+          return;
+        }
+        setProduct(data as ProductRow);
+      });
+  }, [merged]);
+
+  // Create Stripe Checkout by calling your Edge Function directly (with required headers)
+  async function continueToCheckout() {
+    if (!product) return;
+    const causeIdForCheckout = selectedCauseId || merged.causeId;
+    if (!causeIdForCheckout) return;
+    setLoading(true);
+
+    // Final integer unit price in cents (Stripe requires >= 50)
+    const unitAmountCents =
+      Number(product.priceCents || 0) > 0
+        ? Math.max(50, Math.round(Number(product.priceCents)))
+        : Math.max(50, priceFromBase(product.base_cost_cents));
+
+     const payload = {
+       productId: product.id,
+       qty: Number(merged.qty || 1),
+       causeId: causeIdForCheckout,
+       donationCents: donation,
+     };
+
+    const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-session`;
+    const supaAnon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
+
+    try {
+      const r = await fetch(fnUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // REQUIRED for Supabase Edge Functions that expect JWT
+          "apikey": supaAnon,
+          "Authorization": `Bearer ${supaAnon}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const txt = await r.text(); // read raw so we can surface errors
+      if (!r.ok) {
+        console.error("[checkout-session FAILED]", r.status, txt);
+        throw new Error(txt || `HTTP ${r.status}`);
       }
-      window.location.href = data.url;
-    } catch (err) {
+
+      const { url } = JSON.parse(txt || "{}");
+      if (!url) {
+        console.error("[checkout-session MISSING URL]", txt);
+        throw new Error("Stripe did not return a URL");
+      }
+
+      window.location.href = url; // Redirect to Stripe Hosted Checkout
+    } catch (e: any) {
+      console.error(e);
+      alert(`Checkout error. ${e?.message || "Please try again."}`);
+    } finally {
       setLoading(false);
-      push({ title: "Checkout error", body: "Please try again." });
     }
   }
 
-  if (!product || !cause) {
+  // ---- UI ----
+  if (error) {
+    return (
+      <Layout title="Checkout">
+        <GlassCard className="w-full max-w-3xl mx-auto text-center">
+          <p className="text-red-600">{error}</p>
+          <div className="text-center mt-4 flex gap-3 justify-center">
+            <button className="btn-rect" onClick={() => navigate("/products")}>
+              Back to products
+            </button>
+            <button className="btn-rect" onClick={() => navigate("/causes")}>
+              Pick a cause
+            </button>
+          </div>
+        </GlassCard>
+      </Layout>
+    );
+  }
+
+  if (!product || !(selectedCauseId || merged.causeId)) {
     return (
       <Layout title="Checkout">
         <GlassCard className="w-full max-w-3xl mx-auto text-center">Loading…</GlassCard>
@@ -90,8 +240,12 @@ export default function Checkout() {
     );
   }
 
-  const unitPrice = priceFromBase(product.base_cost_cents); // cents
-  const subtotal = unitPrice * (qty || 1);
+  const qty = Number(merged.qty || 1);
+  const unitPrice =
+    Number(product.priceCents || 0) > 0
+      ? Math.max(50, Math.round(Number(product.priceCents)))
+      : Math.max(50, priceFromBase(product.base_cost_cents));
+  const subtotal = unitPrice * qty;
   const total = subtotal + donation;
 
   return (
@@ -119,7 +273,9 @@ export default function Checkout() {
           </div>
           <div className="flex justify-between">
             <span className="text-white/90">Supporting</span>
-            <span className="font-semibold text-white drop-shadow">{cause.name}</span>
+            <span className="font-semibold text-white drop-shadow">
+              {selectedCauseName || causeCtx?.cause?.name || merged.causeId}
+            </span>
           </div>
         </div>
 
@@ -130,7 +286,7 @@ export default function Checkout() {
             <div>
               <div className="font-bold text-white drop-shadow">Kenzie says:</div>
               <div className="text-white/90">
-                “Want to add an optional donation for {cause.name}?”
+                “Want to add an optional donation for {causeCtx?.cause?.name || "this cause"}?”
               </div>
             </div>
           </div>
@@ -145,7 +301,7 @@ export default function Checkout() {
               type="number"
               min="0"
               step="0.01"
-              value={donation / 100}
+              value={(donation / 100).toString()}
               onChange={(e) =>
                 setDonation(Math.max(0, Math.round(parseFloat(e.target.value || "0") * 100)))
               }
@@ -182,11 +338,11 @@ export default function Checkout() {
 
         {/* Actions */}
         <button
-          onClick={handlePayment}
+          onClick={continueToCheckout}
           disabled={loading}
           className="btn-rect w-full h-12 font-bold bg-green-600/90 hover:bg-green-600 text-white"
         >
-          {loading ? "Processing…" : "Pay with Card →"}
+          {loading ? "Processing…" : "Continue to checkout →"}
         </button>
 
         <button
@@ -199,3 +355,4 @@ export default function Checkout() {
     </Layout>
   );
 }
+

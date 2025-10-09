@@ -1,24 +1,40 @@
 import Layout from "../components/Layout";
 import GlassCard from "../components/GlassCard";
+import { Link } from "react-router-dom";
 
 export default function Cancel() {
   return (
     <Layout title="Payment cancelled">
       <GlassCard className="text-center">
-        <h1 className="text-2xl font-bold">Payment cancelled</h1>
-        <p className="mt-2 text-gray-800">
-          No charge was made. You can pick another product or try again.
+        <h1 className="text-2xl font-bold mb-2">Payment cancelled</h1>
+        <p className="text-gray-800">
+          No charge was made. You can try again or choose a different product.
         </p>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <a href="/products" className="px-4 py-2 rounded bg-black text-white focus:ring-2">
+          <Link
+            to="/checkout"
+            className="btn-rect bg-green-600/90 hover:bg-green-600 text-white"
+          >
+            Try again
+          </Link>
+
+          <Link
+            to="/products"
+            className="btn-rect border border-white/40 bg-white/20 backdrop-blur hover:bg-white/30"
+          >
             Back to products
-          </a>
-          <a href="/kenzie" className="px-4 py-2 rounded border border-white/40 bg-white/20 backdrop-blur focus:ring-2">
+          </Link>
+
+          <Link
+            to="/kenzie"
+            className="btn-rect border border-white/40 bg-white/20 backdrop-blur hover:bg-white/30"
+          >
             Choose a cause
-          </a>
+          </Link>
         </div>
       </GlassCard>
     </Layout>
   );
 }
+
