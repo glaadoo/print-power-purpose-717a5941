@@ -177,8 +177,10 @@ export default function Checkout() {
        donationCents: donation,
      };
 
-    const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/checkout-session`;
-    const supaAnon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
+    const fnUrl = `${import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co"}/functions/v1/checkout-session`;
+    const supaAnon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
+      import.meta.env.VITE_SUPABASE_ANON_KEY ||
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw";
 
     try {
       const r = await fetch(fnUrl, {
