@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 // Store a per-browser cart session id in localStorage
 const KEY = "cart_session_id";

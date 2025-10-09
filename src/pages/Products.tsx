@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import GlassCard from "../components/GlassCard";
 import Layout from "../components/Layout";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 type ProductRow = {
   id: string;

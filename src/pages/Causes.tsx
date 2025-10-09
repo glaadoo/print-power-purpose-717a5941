@@ -5,7 +5,7 @@ import GlassCard from "../components/GlassCard";
 import DonationBarometer from "../components/DonationBarometer";
 import { useCause } from "../context/CauseContext";
 import { useToast } from "../ui/Toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 const LS_CAUSE = "ppp:cause";
 
