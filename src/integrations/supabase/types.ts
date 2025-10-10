@@ -44,6 +44,56 @@ export type Database = {
         }
         Relationships: []
       }
+      kenzie_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: number
+          role: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: number
+          role: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: number
+          role?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kenzie_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "kenzie_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kenzie_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount_cents: number
