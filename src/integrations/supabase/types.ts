@@ -96,54 +96,54 @@ export type Database = {
       }
       orders: {
         Row: {
-          amount_cents: number
+          amount_total_cents: number
           cause_id: string | null
+          cause_name: string | null
           created_at: string
+          currency: string
+          customer_email: string | null
+          donation_cents: number
           id: string
-          product_id: string | null
-          qty: number
+          order_number: string
+          product_name: string | null
+          quantity: number
+          receipt_url: string | null
+          session_id: string
           status: string
-          stripe_cs_id: string | null
-          stripe_pi_id: string | null
         }
         Insert: {
-          amount_cents: number
+          amount_total_cents?: number
           cause_id?: string | null
+          cause_name?: string | null
           created_at?: string
+          currency?: string
+          customer_email?: string | null
+          donation_cents?: number
           id?: string
-          product_id?: string | null
-          qty?: number
-          status: string
-          stripe_cs_id?: string | null
-          stripe_pi_id?: string | null
+          order_number: string
+          product_name?: string | null
+          quantity?: number
+          receipt_url?: string | null
+          session_id: string
+          status?: string
         }
         Update: {
-          amount_cents?: number
+          amount_total_cents?: number
           cause_id?: string | null
+          cause_name?: string | null
           created_at?: string
+          currency?: string
+          customer_email?: string | null
+          donation_cents?: number
           id?: string
-          product_id?: string | null
-          qty?: number
+          order_number?: string
+          product_name?: string | null
+          quantity?: number
+          receipt_url?: string | null
+          session_id?: string
           status?: string
-          stripe_cs_id?: string | null
-          stripe_pi_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "orders_cause_id_fkey"
-            columns: ["cause_id"]
-            isOneToOne: false
-            referencedRelation: "causes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       products: {
         Row: {

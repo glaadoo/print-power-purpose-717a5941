@@ -33,45 +33,53 @@ serve(async (req) => {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       
-      const orderId = session.metadata?.order_id;
-      const paymentIntentId = session.payment_intent as string;
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
 
-      if (orderId) {
-        const supabase = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        );
+      // Extract order data from session metadata and session object
+      const orderNumber = session.metadata?.order_number || `ORD-${Date.now()}`;
+      const causeName = session.metadata?.cause_name || null;
+      const causeId = session.metadata?.cause_id || null;
+      const productName = session.metadata?.product_name || null;
+      const donationCents = parseInt(session.metadata?.donation_cents || '0');
+      const quantity = parseInt(session.metadata?.quantity || '1');
 
-        // Update order status to paid
-        const { error } = await supabase
-          .from('orders')
-          .update({ 
-            status: 'paid',
-            stripe_pi_id: paymentIntentId 
-          })
-          .eq('id', orderId);
+      // Create order record
+      const { error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          session_id: session.id,
+          status: 'completed',
+          customer_email: session.customer_details?.email || null,
+          currency: session.currency || 'usd',
+          amount_total_cents: session.amount_total || 0,
+          donation_cents: donationCents,
+          quantity: quantity,
+          product_name: productName,
+          cause_id: causeId,
+          cause_name: causeName,
+          receipt_url: (session as any).receipt_url || null,
+        });
 
-        if (error) {
-          console.error('Error updating order:', error);
-        } else {
-          console.log(`Order ${orderId} marked as paid`);
+      if (orderError) {
+        console.error('Error creating order:', orderError);
+      } else {
+        console.log(`Order ${orderNumber} created successfully`);
+        
+        // Update cause's raised_cents if cause_id exists
+        if (causeId && donationCents > 0) {
+          const { error: causeError } = await supabase.rpc('increment_cause_raised', {
+            cause_uuid: causeId,
+            amount: donationCents
+          });
           
-          // Optionally: Update cause's raised_cents
-          const { data: order } = await supabase
-            .from('orders')
-            .select('amount_cents, cause_id')
-            .eq('id', orderId)
-            .single();
-
-          if (order) {
-            const { error: causeError } = await supabase.rpc('increment_cause_raised', {
-              cause_uuid: order.cause_id,
-              amount: order.amount_cents
-            });
-            
-            if (causeError) {
-              console.error('Error incrementing cause:', causeError);
-            }
+          if (causeError) {
+            console.error('Error incrementing cause:', causeError);
+          } else {
+            console.log(`Incremented cause ${causeId} by ${donationCents} cents`);
           }
         }
       }

@@ -194,8 +194,13 @@ serve(async (req) => {
       }
 
       // Metadata
-      form.set("metadata[cause_id]", causeId);
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      form.set("metadata[order_number]", orderNumber);
+      form.set("metadata[product_name]", String(product.name || "Product"));
       form.set("metadata[quantity]", String(qty));
+      form.set("metadata[donation_cents]", String(donationCents));
+      form.set("metadata[cause_id]", causeId);
+      form.set("metadata[cause_name]", String(cause.name || ""));
 
       // Create Stripe session
       const stripeResp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
@@ -261,8 +266,13 @@ serve(async (req) => {
     }
 
     // Metadata
-    form.set("metadata[causeId]", d.causeId);
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const donationCents = donationUsd > 0 ? Math.round(donationUsd * 100) : 0;
+    form.set("metadata[order_number]", orderNumber);
+    form.set("metadata[product_name]", d.productName);
     form.set("metadata[quantity]", String(qty));
+    form.set("metadata[donation_cents]", String(donationCents));
+    form.set("metadata[cause_id]", d.causeId);
 
     // Create session via Stripe REST API
     const stripeResp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
