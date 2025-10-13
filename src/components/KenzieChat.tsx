@@ -1,7 +1,7 @@
 // src/components/KenzieChat.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { supabase as singleton } from "@/lib/supabaseClient";
+import { supabase as singleton } from "@/integrations/supabase/client";
 
 declare global {
   interface Window {
@@ -18,11 +18,8 @@ const STARTER: Msg = {
 
 // Helper to build a scoped supabase client with the session header
 function makeScopedClient(sessionId: string): SupabaseClient {
-  // Reuse the URL/key from your singleton (keeps env handling in one place)
-  // @ts-expect-error: access private fields safely; fallback to envs if you prefer
-  const url: string = (singleton as any).rest?.url ?? import.meta.env.VITE_SUPABASE_URL;
-  // @ts-expect-error
-  const key: string = (singleton as any).rest?.headers?.get("apikey") ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   return createClient(url, key, {
     global: {

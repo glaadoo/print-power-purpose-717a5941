@@ -21,8 +21,8 @@ const listVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, x: -18 },
-  show: { opacity: 1, x: 0, transition: { duration: 0.28, ease: "easeOut" } },
-  exit: { opacity: 0, x: -18, transition: { duration: 0.18, ease: "easeIn" } },
+  show: { opacity: 1, x: 0, transition: { duration: 0.28 } },
+  exit: { opacity: 0, x: -18, transition: { duration: 0.18 } },
 };
 
 export default function MenuOverlay({ open, onClose }: Props) {
