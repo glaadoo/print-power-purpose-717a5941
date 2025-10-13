@@ -95,7 +95,9 @@ const SelectSchool    = lazyPage("SelectSchool",    () => import("./pages/Select
 const SelectNonprofit = lazyPage("SelectNonprofit", () => import("./pages/SelectNonprofit"));
 const PersonalMission = lazyPage("PersonalMission", () => import("./pages/PersonalMission"));
 const Cart            = lazyPage("Cart",            () => import("./pages/Cart"));
-const Checkout        = lazyPage("Checkout",        () => import("./pages/Checkout")); // NEW
+const Checkout        = lazyPage("Checkout",        () => import("./pages/Checkout"));
+const Auth            = lazyPage("Auth",            () => import("./pages/Auth"));
+const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -293,6 +295,26 @@ export default function App() {
             element={
               <RouteBoundary name="Cancel">
                 <Cancel />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Auth */}
+          <Route
+            path="/auth"
+            element={
+              <RouteBoundary name="Auth">
+                <Auth />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin */}
+          <Route
+            path="/admin"
+            element={
+              <RouteBoundary name="Admin">
+                <Admin />
               </RouteBoundary>
             }
           />
