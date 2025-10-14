@@ -1,7 +1,7 @@
 // src/App.tsx
 import React, { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
-import KenzieChat from "@/components/KenzieChat";
+
 
 /* ---------- Debug helpers ---------- */
 
