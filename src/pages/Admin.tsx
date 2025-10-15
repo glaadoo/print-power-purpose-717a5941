@@ -192,6 +192,21 @@ export default function Admin() {
           </Button>
         </div>
 
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <Button 
+              onClick={() => navigate("/admin/sync")}
+              size="lg"
+              className="w-full md:w-auto"
+            >
+              Sync Products from Vendors
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Sync products from SinaLite, Scalable Press, and PsRestful APIs
+            </p>
+          </CardContent>
+        </Card>
+
         <Tabs defaultValue="products" className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="products">Products</TabsTrigger>

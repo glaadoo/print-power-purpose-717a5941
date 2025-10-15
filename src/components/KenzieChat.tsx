@@ -18,13 +18,19 @@ const STARTER: Msg = {
 
 // Helper to build a scoped supabase client with the session header
 function makeScopedClient(sessionId: string): SupabaseClient {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const url = import.meta.env.VITE_SUPABASE_URL || "";
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+
+  if (!url || !key) {
+    console.error("Supabase config missing");
+    throw new Error("Supabase configuration is missing");
+  }
 
   return createClient(url, key, {
     global: {
       headers: { "x-ppp-session-id": sessionId },
     },
+    auth: { persistSession: false },
   });
 }
 
