@@ -114,66 +114,11 @@ export default function Home() {
               </p>
               <div className="mt-8 flex justify-center">
                 <a
-                  href="#solutions"
+                  href="/auth"
                   className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 border border-white/10"
                 >
-                  Discover Our Services
+                  Sign Up/Register
                 </a>
-              </div>
-            </div>
-
-            {/* Your original GlassCard onboarding (floats under the quote) */}
-            <div className="mt-8 flex justify-center px-4">
-              <div className="w-full max-w-[1200px]">
-                <GlassCard>
-                  {/* paws banner */}
-                  <div className="relative h-10 sm:h-12 mb-4 overflow-hidden">
-                    <div className="absolute inset-0 flex items-center gap-3">
-                      {paws.map((n) => (
-                        <span
-                          key={n}
-                          className={`paws-row ${n % 2 ? "paws-muted" : ""}`}
-                          style={{ animationDelay: `${(n % 6) * 0.12}s` }}
-                        >
-                          🐾
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="text-center text-black">
-                    {step >= 1 && (
-                      <h2 className="typewriter-nocaret heading-fancy text-2xl sm:text-4xl">
-                        Welcome to Print with Purpose
-                      </h2>
-                    )}
-                    <div className="h-2" />
-                    {step >= 2 && (
-                      <div
-                        className="typewriter-nocaret mx-auto text-xl sm:text-3xl"
-                        style={{ fontFamily: "'Pacifico', cursive" }}
-                      >
-                        I am your mascot Kenzie
-                      </div>
-                    )}
-                    {step >= 3 && (
-                      <div className="mt-6">
-                        <p className="text-gray-800 mb-2">What are we printing for today?</p>
-                        <select
-                          defaultValue=""
-                          onChange={(e) => onSelect(e.target.value)}
-                          className="w-full sm:w-96 rounded-md border border-white/40 bg-white/20 backdrop-blur px-3 py-2 focus:ring-2"
-                          aria-label="Select purpose"
-                        >
-                          <option value="" disabled className="text-black">Select an option</option>
-                          <option value="school" className="text-black">School</option>
-                          <option value="nonprofit" className="text-black">Nonprofit</option>
-                          <option value="personal" className="text-black">Personal mission</option>
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </GlassCard>
               </div>
             </div>
           </div>
