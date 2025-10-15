@@ -14,15 +14,9 @@ export default function Auth() {
   const [session, setSession] = useState<Session | null>(null);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
-
-  // Password visibility toggles
   const [showPassword, setShowPassword] = useState(false);
-
-  // Sign in form
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
-
-  // Sign up form
   const [signUpData, setSignUpData] = useState({
     email: "",
     password: "",
@@ -40,14 +34,14 @@ export default function Auth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        navigate("/admin");
+        navigate("/welcome");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        navigate("/admin");
+        navigate("/welcome");
       }
     });
 
@@ -79,7 +73,7 @@ export default function Auth() {
       email: signUpData.email,
       password: signUpData.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
+        emailRedirectTo: `${window.location.origin}/welcome`,
         data: {
           first_name: signUpData.firstName,
           last_name: signUpData.lastName,
@@ -119,7 +113,7 @@ export default function Auth() {
         </a>
         
         <span className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
-          ADMIN LOGIN
+          Sign In
         </span>
         
         <div className="w-9" />

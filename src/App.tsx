@@ -98,6 +98,7 @@ const PersonalMission = lazyPage("PersonalMission", () => import("./pages/Person
 const Cart            = lazyPage("Cart",            () => import("./pages/Cart"));
 const Checkout        = lazyPage("Checkout",        () => import("./pages/Checkout"));
 const Auth            = lazyPage("Auth",            () => import("./pages/Auth"));
+const AdminLogin      = lazyPage("AdminLogin",      () => import("./pages/AdminLogin"));
 const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
 const AdminSync       = lazyPage("AdminSync",       () => import("./pages/AdminSync"));
 const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
@@ -308,6 +309,16 @@ export default function App() {
             element={
               <RouteBoundary name="Auth">
                 <Auth />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Login */}
+          <Route
+            path="/admin-login"
+            element={
+              <RouteBoundary name="AdminLogin">
+                <AdminLogin />
               </RouteBoundary>
             }
           />
