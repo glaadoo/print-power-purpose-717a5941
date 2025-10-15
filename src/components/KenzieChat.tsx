@@ -58,9 +58,20 @@ export default function KenzieChat() {
       // 1) read from local storage or create
       let sid = localStorage.getItem("ppp:kenzie:session_id");
       if (!sid) {
-        const { data, error } = await singleton.from("kenzie_sessions").insert({}).select("id").single();
-        if (error || !data) return;
-        sid = data.id as string;
+        try {
+          const { data, error } = await singleton
+            .from("kenzie_sessions")
+            .insert({})
+            .select("id")
+            .maybeSingle();
+          if (error || !data?.id) {
+            sid = crypto.randomUUID();
+          } else {
+            sid = data.id as string;
+          }
+        } catch {
+          sid = crypto.randomUUID();
+        }
         localStorage.setItem("ppp:kenzie:session_id", sid);
       }
       setSessionId(sid);
@@ -124,7 +135,8 @@ export default function KenzieChat() {
         headers: { 
           "Content-Type": "application/json", 
           "x-ppp-session-id": sessionId,
-          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
         },
         body: JSON.stringify({ messages: history }),
       });
