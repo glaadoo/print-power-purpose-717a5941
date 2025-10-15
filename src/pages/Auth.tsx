@@ -210,10 +210,10 @@ export default function Auth() {
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
         <a
           href="/"
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          className="size-9 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 grid place-items-center transition-colors"
           aria-label="Back to home"
         >
-          <ArrowLeft className="h-6 w-6" />
+          <ArrowLeft className="h-5 w-5" />
         </a>
         
         <a
@@ -224,7 +224,7 @@ export default function Auth() {
           PRINT&nbsp;POWER&nbsp;PURPOSE
         </a>
         
-        <div className="w-10" />
+        <div className="w-9" />
       </header>
 
       {/* Scrollable content */}
