@@ -33,15 +33,16 @@ export default function Welcome() {
   useEffect(() => {
     document.title = "Welcome - Print Power Purpose";
 
-    // Check authentication
+    // Allow guest mode: don't redirect to /auth when no session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (!session) {
-        navigate("/auth");
+        setUserProfile(null);
+        setLoading(false);
         return;
       }
 
-      // Load user profile
+      // Load user profile for signed-in users
       if (session.user) {
         setTimeout(() => {
           supabase
@@ -56,20 +57,22 @@ export default function Welcome() {
               setLoading(false);
             });
         }, 0);
+      } else {
+        setLoading(false);
       }
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
-        navigate("/auth");
+        // Stay on page in guest mode
+        setUserProfile(null);
+        setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, []);
 
   function onSelect(value: string) {
     if (!value) return;
