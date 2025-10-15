@@ -147,10 +147,10 @@ export default function Home() {
                 </p>
                 <div className="mt-8">
                   <a
-                    href="/products"
+                    href="/welcome"
                     className="inline-flex items-center justify-center rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
                   >
-                    Explore Our Solutions
+                    Continue as Guest
                   </a>
                 </div>
               </div>
