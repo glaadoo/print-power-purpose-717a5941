@@ -4,12 +4,74 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import VideoBackground from "@/components/VideoBackground";
+import { Eye, EyeOff } from "lucide-react";
+
+// Password validation and strength calculation
+interface PasswordStrength {
+  score: number; // 0-4
+  label: string;
+  color: string;
+  width: string;
+}
+
+function calculatePasswordStrength(password: string): PasswordStrength {
+  let score = 0;
+  
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^a-zA-Z0-9]/.test(password)) score++;
+  
+  const strengths: PasswordStrength[] = [
+    { score: 0, label: "Very Weak", color: "bg-red-500", width: "w-[20%]" },
+    { score: 1, label: "Weak", color: "bg-orange-500", width: "w-[40%]" },
+    { score: 2, label: "Fair", color: "bg-yellow-500", width: "w-[60%]" },
+    { score: 3, label: "Good", color: "bg-lime-500", width: "w-[80%]" },
+    { score: 4, label: "Strong", color: "bg-green-500", width: "w-full" },
+  ];
+  
+  return strengths[Math.min(score, 4)];
+}
+
+function validatePassword(password: string): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters");
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Must contain at least one uppercase letter");
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push("Must contain at least one lowercase letter");
+  }
+  
+  if (!/[0-9]/.test(password)) {
+    errors.push("Must contain at least one number");
+  }
+  
+  if (!/[^a-zA-Z0-9]/.test(password)) {
+    errors.push("Must contain at least one special character (!@#$%^&*)");
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
 
 export default function Auth() {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [loading, setLoading] = useState(false);
+
+  // Password visibility toggles
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
 
   // Sign in form
   const [signInEmail, setSignInEmail] = useState("");
@@ -28,6 +90,11 @@ export default function Auth() {
     zipCode: "",
     country: "United States",
   });
+
+  // Password strength state
+  const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>(
+    calculatePasswordStrength("")
+  );
 
   useEffect(() => {
     document.title = "Sign Up / Sign In - Print Power Purpose";
@@ -49,6 +116,11 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Update password strength when password changes
+  useEffect(() => {
+    setPasswordStrength(calculatePasswordStrength(signUpData.password));
+  }, [signUpData.password]);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -68,8 +140,26 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password
+    const validation = validatePassword(signUpData.password);
+    if (!validation.valid) {
+      toast.error(
+        <div>
+          <strong>Password requirements not met:</strong>
+          <ul className="mt-1 ml-4 list-disc text-sm">
+            {validation.errors.map((error, i) => (
+              <li key={i}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      );
+      return;
+    }
+    
     setLoading(true);
 
+    // Supabase automatically hashes passwords
     const { error } = await supabase.auth.signUp({
       email: signUpData.email,
       password: signUpData.password,
@@ -193,16 +283,52 @@ export default function Auth() {
                     colSpan
                   />
 
-                  <FormField
-                    label="Password *"
-                    type="password"
-                    value={signUpData.password}
-                    onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
-                    placeholder="Min. 6 characters"
-                    required
-                    minLength={6}
-                    colSpan
-                  />
+                  <div className="md:col-span-2">
+                    <label className="text-sm opacity-90 block mb-1">Password *</label>
+                    <div className="relative">
+                      <input
+                        type={showSignUpPassword ? "text" : "password"}
+                        value={signUpData.password}
+                        onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                        placeholder="Min. 8 characters with uppercase, number & special char"
+                        required
+                        minLength={8}
+                        className="w-full rounded-xl bg-white/90 text-black px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-white/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800"
+                        aria-label={showSignUpPassword ? "Hide password" : "Show password"}
+                      >
+                        {showSignUpPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                    
+                    {/* Password strength indicator */}
+                    {signUpData.password && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="opacity-80">Password Strength:</span>
+                          <span className={`font-semibold ${
+                            passwordStrength.score <= 1 ? "text-red-400" :
+                            passwordStrength.score === 2 ? "text-yellow-400" :
+                            passwordStrength.score === 3 ? "text-lime-400" : "text-green-400"
+                          }`}>
+                            {passwordStrength.label}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${passwordStrength.color} ${passwordStrength.width}`}
+                          />
+                        </div>
+                        <p className="text-xs opacity-70 mt-2">
+                          Required: 8+ characters, uppercase, lowercase, number, special character
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Personal Information */}
                   <div className="md:col-span-2 mt-4">
@@ -326,14 +452,27 @@ export default function Auth() {
                     required
                   />
 
-                  <FormField
-                    label="Password"
-                    type="password"
-                    value={signInPassword}
-                    onChange={(e) => setSignInPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
+                  <div>
+                    <label className="text-sm opacity-90 block mb-1">Password</label>
+                    <div className="relative">
+                      <input
+                        type={showSignInPassword ? "text" : "password"}
+                        value={signInPassword}
+                        onChange={(e) => setSignInPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        className="w-full rounded-xl bg-white/90 text-black px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-white/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignInPassword(!showSignInPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800"
+                        aria-label={showSignInPassword ? "Hide password" : "Show password"}
+                      >
+                        {showSignInPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-8 flex justify-center">
