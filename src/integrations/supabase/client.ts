@@ -1,17 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-// ✅ Vite exposes only variables that start with VITE_
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+// Temporary workaround: Use direct values since env vars aren't loading
+// TODO: This should use import.meta.env.VITE_SUPABASE_URL etc when env loading is fixed
+const url = import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co";
 const anon =
-  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ||
-  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
-
-if (!url || !anon) {
-  // Throw early with a clear message (appears in your RouteBoundary UI)
-  throw new Error(
-    "Supabase client init failed: VITE_SUPABASE_URL and either VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY are required."
-  );
-}
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw";
 
 export const supabase = createClient(url, anon, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
