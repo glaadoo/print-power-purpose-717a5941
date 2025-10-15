@@ -171,9 +171,9 @@ export default function MenuOverlay({ open, onClose, showSignOut = false }: Prop
                   }}
                   className="
                     rounded-full px-5 py-3
-                    bg-white text-black font-semibold
-                    hover:bg-white/90
-                    border border-white/10
+                    bg-white/10 text-white font-semibold
+                    hover:bg-white/20
+                    border border-white/30
                   "
                 >
                   Chat with Kenzie
