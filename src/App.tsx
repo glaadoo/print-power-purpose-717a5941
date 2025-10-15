@@ -322,6 +322,22 @@ export default function App() {
               </RouteBoundary>
             }
           />
+          <Route
+            path="/admin/login"
+            element={
+              <RouteBoundary name="AdminLoginAlias1">
+                <AdminLogin />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/login/admin"
+            element={
+              <RouteBoundary name="AdminLoginAlias2">
+                <AdminLogin />
+              </RouteBoundary>
+            }
+          />
 
           {/* Admin */}
           <Route
