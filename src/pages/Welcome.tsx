@@ -4,12 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
+import MenuOverlay from "@/components/MenuOverlay";
+import useToggle from "@/hooks/useToggle";
+import { Menu } from "lucide-react";
 
 export default function Welcome() {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { open: menuOpen, toggle: toggleMenu } = useToggle(false);
 
   // Staged reveal logic for Kenzie card
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
@@ -87,8 +91,19 @@ export default function Welcome() {
 
   return (
     <div className="fixed inset-0 text-white">
+      {/* Menu Overlay */}
+      <MenuOverlay open={menuOpen} onClose={toggleMenu} showSignOut={true} />
+
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <button
+          onClick={toggleMenu}
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+
         <a
           href="/"
           className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
@@ -96,23 +111,6 @@ export default function Welcome() {
         >
           PRINT&nbsp;POWER&nbsp;PURPOSE
         </a>
-
-        <div className="flex items-center gap-4">
-          {userProfile && (
-            <span className="text-sm opacity-90">
-              Welcome, {userProfile.first_name}!
-            </span>
-          )}
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate("/auth");
-            }}
-            className="text-sm px-4 py-2 rounded-full border border-white/30 bg-white/10 hover:bg-white/20"
-          >
-            Sign Out
-          </button>
-        </div>
       </header>
 
       {/* Scrollable content */}

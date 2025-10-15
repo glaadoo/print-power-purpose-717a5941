@@ -1,10 +1,12 @@
 // src/components/MenuOverlay.tsx
 import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "./VideoBackground";
 
 type Item = { label: string; href: string };
-type Props = { open: boolean; onClose: () => void; items?: Item[] };
+type Props = { open: boolean; onClose: () => void; items?: Item[]; showSignOut?: boolean };
 
 /** Animation settings for staggered entry/exit */
 const listVariants = {
@@ -25,7 +27,9 @@ const itemVariants = {
   exit: { opacity: 0, x: -18, transition: { duration: 0.18 } },
 };
 
-export default function MenuOverlay({ open, onClose }: Props) {
+export default function MenuOverlay({ open, onClose, showSignOut = false }: Props) {
+  const navigate = useNavigate();
+  
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -175,6 +179,30 @@ export default function MenuOverlay({ open, onClose }: Props) {
                   Chat with Kenzie
                 </button>
               </motion.div>
+
+              {showSignOut && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
+                  className="mt-4 w-full flex justify-end"
+                >
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      navigate("/auth");
+                      onClose();
+                    }}
+                    className="
+                      rounded-full px-5 py-3
+                      bg-white/10 text-white font-semibold
+                      hover:bg-white/20
+                      border border-white/30
+                    "
+                  >
+                    Sign Out
+                  </button>
+                </motion.div>
+              )}
             </nav>
 
             {/* Footer */}
