@@ -99,6 +99,7 @@ const Cart            = lazyPage("Cart",            () => import("./pages/Cart")
 const Checkout        = lazyPage("Checkout",        () => import("./pages/Checkout"));
 const Auth            = lazyPage("Auth",            () => import("./pages/Auth"));
 const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
+const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -316,6 +317,16 @@ export default function App() {
             element={
               <RouteBoundary name="Admin">
                 <Admin />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Welcome */}
+          <Route
+            path="/welcome"
+            element={
+              <RouteBoundary name="Welcome">
+                <Welcome />
               </RouteBoundary>
             }
           />

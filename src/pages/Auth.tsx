@@ -102,14 +102,14 @@ export default function Auth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        navigate("/");
+        navigate("/welcome");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        navigate("/");
+        navigate("/welcome");
       }
     });
 
@@ -164,7 +164,7 @@ export default function Auth() {
       email: signUpData.email,
       password: signUpData.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/welcome`,
         data: {
           first_name: signUpData.firstName,
           last_name: signUpData.lastName,
