@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "../components/Layout";
 import GlassCard from "../components/GlassCard";
 import DonationBarometer from "../components/DonationBarometer";
 import { useCause } from "../context/CauseContext";
 import { useToast } from "../ui/Toast";
 import { supabase } from "@/lib/supabase";
+import VideoBackground from "@/components/VideoBackground";
 
 const LS_CAUSE = "ppp:cause";
 
@@ -152,11 +152,38 @@ export default function Causes() {
       </>
     );
 
+  useEffect(() => {
+    document.title = "Choose a Cause - Print Power Purpose";
+  }, []);
+
   return (
-    <Layout>
-      <div className="min-h-screen px-6 pb-10 pt-24">
-        <div className="w-full max-w-6xl mx-auto">{body}</div>
+    <div className="fixed inset-0 text-white">
+      {/* Top bar */}
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <a
+          href="/"
+          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+          aria-label="Print Power Purpose Home"
+        >
+          PRINT&nbsp;POWER&nbsp;PURPOSE
+        </a>
+      </header>
+
+      {/* Scrollable content */}
+      <div className="h-full overflow-y-auto scroll-smooth pt-16">
+        <section className="relative min-h-screen py-12 px-4">
+          <VideoBackground
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            overlay={<div className="absolute inset-0 bg-black/50" />}
+          />
+
+          <div className="relative w-full max-w-6xl mx-auto">
+            {body}
+          </div>
+        </section>
       </div>
-    </Layout>
+    </div>
   );
 }
