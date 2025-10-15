@@ -19,22 +19,49 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const apiKey = Deno.env.get("SINALITE_API_KEY");
-    const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinalite.com/v1";
+    const clientId = Deno.env.get("SINALITE_CLIENT_ID");
+    const clientSecret = Deno.env.get("SINALITE_CLIENT_SECRET");
+    const authUrl = Deno.env.get("SINALITE_AUTH_URL") || "https://api.sinaliteuppy.com/auth/token";
+    const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinaliteuppy.com";
 
-    if (!apiKey) {
-      console.error("[SYNC-SINALITE] Missing SINALITE_API_KEY");
+    if (!clientId || !clientSecret) {
+      console.error("[SYNC-SINALITE] Missing SINALITE_CLIENT_ID or SINALITE_CLIENT_SECRET");
       return new Response(
         JSON.stringify({ error: "SinaLite API credentials not configured" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Fetch products from SinaLite API
-    console.log("[SYNC-SINALITE] Fetching from SinaLite API");
-    const response = await fetch(`${apiUrl}/products`, {
+    // Step 1: Authenticate to get access token
+    console.log("[SYNC-SINALITE] Authenticating with SinaLite");
+    const authResponse = await fetch(authUrl, {
+      method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: "client_credentials"
+      }),
+    });
+
+    if (!authResponse.ok) {
+      throw new Error(`SinaLite Auth error: ${authResponse.status}`);
+    }
+
+    const authData = await authResponse.json();
+    const accessToken = authData.access_token;
+
+    if (!accessToken) {
+      throw new Error("No access token received from SinaLite");
+    }
+
+    // Step 2: Fetch products using access token
+    console.log("[SYNC-SINALITE] Fetching products from SinaLite API");
+    const response = await fetch(`${apiUrl}/product`, {
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
     });
