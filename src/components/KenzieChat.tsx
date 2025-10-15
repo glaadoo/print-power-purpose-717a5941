@@ -119,9 +119,13 @@ export default function KenzieChat() {
       // fetch recent context from DB too
       const history = await loadHistory(sb, 25);
 
-      const res = await fetch("/api/kenzie-chat", {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kenzie-chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-ppp-session-id": sessionId },
+        headers: { 
+          "Content-Type": "application/json", 
+          "x-ppp-session-id": sessionId,
+          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+        },
         body: JSON.stringify({ messages: history }),
       });
       if (!res.ok || !res.body) throw new Error("Network error");
@@ -166,7 +170,7 @@ export default function KenzieChat() {
   return open ? (
     <div className="fixed inset-0 z-[999]">
       <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-      <div className="absolute right-4 bottom-4 w-[min(680px,95vw)] h-[min(75vh,780px)] rounded-2xl bg-white/90 backdrop-blur text-black shadow-2xl border border-black/10 flex flex-col overflow-hidden">
+      <div className="absolute right-4 bottom-4 w-[min(500px,90vw)] h-[min(600px,70vh)] rounded-2xl bg-white/90 backdrop-blur text-black shadow-2xl border border-black/10 flex flex-col overflow-hidden">
         <div className="px-4 py-3 border-b border-black/10 flex items-center justify-between bg-white/70">
           <div className="font-semibold">Chat with Kenzie</div>
           <button
@@ -198,7 +202,13 @@ export default function KenzieChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
-          <button type="submit" disabled={sending || !sb} className="rounded-xl px-4 py-2 bg-black text-white disabled:opacity-60">
+          <button 
+            type="submit" 
+            disabled={sending || !sb || !input.trim()} 
+            className={`rounded-xl px-4 py-2 text-white disabled:opacity-60 transition-colors ${
+              input.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black'
+            }`}
+          >
             Send
           </button>
         </form>
