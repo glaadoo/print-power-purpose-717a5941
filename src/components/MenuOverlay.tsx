@@ -180,7 +180,7 @@ export default function MenuOverlay({ open, onClose, showSignOut = false }: Prop
                 </button>
               </motion.div>
 
-              {showSignOut && (
+              {showSignOut ? (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
@@ -200,6 +200,27 @@ export default function MenuOverlay({ open, onClose, showSignOut = false }: Prop
                     "
                   >
                     Sign Out
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
+                  className="mt-4 w-full flex justify-end"
+                >
+                  <button
+                    onClick={() => {
+                      navigate("/");
+                      onClose();
+                    }}
+                    className="
+                      rounded-full px-5 py-3
+                      bg-white/10 text-white font-semibold
+                      hover:bg-white/20
+                      border border-white/30
+                    "
+                  >
+                    Home
                   </button>
                 </motion.div>
               )}
