@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import VideoBackground from "@/components/VideoBackground";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 // Password validation and strength calculation
 interface PasswordStrength {
@@ -207,7 +207,15 @@ export default function Auth() {
   return (
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <a
+          href="/"
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          aria-label="Back to home"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </a>
+        
         <a
           href="/"
           className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
@@ -215,6 +223,8 @@ export default function Auth() {
         >
           PRINT&nbsp;POWER&nbsp;PURPOSE
         </a>
+        
+        <div className="w-10" />
       </header>
 
       {/* Scrollable content */}
