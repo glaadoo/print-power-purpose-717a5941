@@ -129,12 +129,8 @@ export default function Welcome() {
             {/* Welcome message */}
             <div className="text-center mb-8">
               <h1 className="font-serif text-[clamp(2.5rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow mb-4">
-                Welcome to Print Power Purpose
-                {userProfile && `, ${userProfile.first_name}`}!
+                Welcome{userProfile && ` ${userProfile.first_name}`}
               </h1>
-              <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
-                We've saved your information so checkout will be seamless. Let's get started with your first order.
-              </p>
             </div>
 
             {/* Kenzie onboarding card */}
@@ -143,16 +139,20 @@ export default function Welcome() {
                 <GlassCard>
                   {/* paws banner */}
                   <div
-                    className="
-                      w-full h-12 sm:h-14
-                      bg-gradient-to-r from-orange-400 via-amber-300 to-orange-400
-                      flex items-center justify-center gap-1 sm:gap-2
-                      overflow-hidden
-                    "
+                    className="relative w-full h-24 sm:h-32 overflow-hidden"
                     aria-hidden="true"
                   >
                     {paws.map((i) => (
-                      <span key={i} className="text-xl sm:text-2xl opacity-80">
+                      <span 
+                        key={i} 
+                        className="absolute text-3xl sm:text-4xl animate-float"
+                        style={{
+                          left: `${Math.random() * 100}%`,
+                          top: `${Math.random() * 100}%`,
+                          animationDelay: `${Math.random() * 3}s`,
+                          animationDuration: `${3 + Math.random() * 2}s`
+                        }}
+                      >
                         🐾
                       </span>
                     ))}
@@ -202,73 +202,15 @@ export default function Welcome() {
                             Personal mission
                           </option>
                         </select>
-                        <p className="text-sm text-gray-600 mt-3">
-                          Don't worry, you can always change this later or browse our products directly.
-                        </p>
                       </div>
                     )}
                   </div>
                 </GlassCard>
               </div>
             </div>
-
-            {/* Quick links */}
-            <div className="mt-12 text-center">
-              <p className="text-sm opacity-80 mb-4">Or explore on your own:</p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <a
-                  href="/products"
-                  className="px-6 py-3 rounded-full bg-white/10 border border-white/30 hover:bg-white/20 backdrop-blur font-semibold transition-all"
-                >
-                  Browse Products
-                </a>
-                <a
-                  href="/causes"
-                  className="px-6 py-3 rounded-full bg-white/10 border border-white/30 hover:bg-white/20 backdrop-blur font-semibold transition-all"
-                >
-                  View Causes
-                </a>
-                <a
-                  href="/"
-                  className="px-6 py-3 rounded-full bg-white/10 border border-white/30 hover:bg-white/20 backdrop-blur font-semibold transition-all"
-                >
-                  Go to Home
-                </a>
-              </div>
-            </div>
-
-            {/* User info card (optional, to show saved data) */}
-            {userProfile && (
-              <div className="mt-12 rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 max-w-2xl mx-auto">
-                <h3 className="text-xl font-semibold mb-4 text-center">
-                  Your Saved Information
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <InfoItem label="Name" value={`${userProfile.first_name} ${userProfile.last_name}`} />
-                  {userProfile.phone && <InfoItem label="Phone" value={userProfile.phone} />}
-                  <InfoItem
-                    label="Shipping Address"
-                    value={`${userProfile.street_address}, ${userProfile.city}, ${userProfile.state} ${userProfile.zip_code}`}
-                    colSpan
-                  />
-                </div>
-                <p className="text-xs opacity-70 text-center mt-4">
-                  This information will be used for faster checkout. You can update it anytime in your profile.
-                </p>
-              </div>
-            )}
           </div>
         </section>
       </div>
-    </div>
-  );
-}
-
-function InfoItem({ label, value, colSpan }: { label: string; value: string; colSpan?: boolean }) {
-  return (
-    <div className={colSpan ? "sm:col-span-2" : ""}>
-      <div className="opacity-70 mb-1">{label}:</div>
-      <div className="font-semibold">{value}</div>
     </div>
   );
 }
