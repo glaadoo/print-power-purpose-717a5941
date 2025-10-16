@@ -117,8 +117,7 @@ serve(async (req) => {
     // Build Stripe form payload (REST is compatible with Deno/Edge)
     const form = new URLSearchParams();
     form.set("mode", "payment");
-    form.set("automatic_payment_methods[enabled]", "true");
-    form.set("automatic_payment_methods[allow_redirects]", "always");
+    form.set("payment_method_types[0]", "card");
 
     // ---------- DB FLOW (optional) ----------
     if (wantsDbFlow) {
