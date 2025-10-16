@@ -53,7 +53,7 @@ export default function Causes() {
         // Select only columns we expect to exist
         const { data, error } = await supabase
           .from("causes")
-          .select("id,name,goal_cents,raised_cents,blurb,summary,created_at")
+          .select("id,name,goal_cents,raised_cents,summary,created_at")
           .order("created_at", { ascending: false });
 
         if (error) throw error;
