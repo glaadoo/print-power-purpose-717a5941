@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Trash2, KeyRound } from "lucide-react";
+import { Trash2, KeyRound, RefreshCw } from "lucide-react";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -223,16 +223,19 @@ export default function Admin() {
             </GlassCard>
 
             <GlassCard>
+            <div className="flex flex-col gap-3">
               <Button 
                 onClick={() => navigate("/admin/sync")}
                 size="lg"
                 className="w-full md:w-auto"
               >
+                <RefreshCw className="mr-2 h-5 w-5" />
                 Sync Products from Vendors
               </Button>
-              <p className="text-sm text-white/70 mt-2">
+              <p className="text-sm text-white/70">
                 Sync products from SinaLite, Scalable Press, and PsRestful APIs
               </p>
+            </div>
             </GlassCard>
 
             <GlassCard>

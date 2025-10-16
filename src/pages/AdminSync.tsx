@@ -30,6 +30,15 @@ export default function AdminSync() {
   });
 
   useEffect(() => {
+    // Check if already authenticated via admin key in session storage
+    const storedAuth = sessionStorage.getItem("admin_authenticated");
+    if (storedAuth === "true") {
+      setIsAdmin(true);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise check Supabase auth
     checkAuth();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
