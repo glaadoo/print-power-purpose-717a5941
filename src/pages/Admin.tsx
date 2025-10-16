@@ -340,15 +340,15 @@ export default function Admin() {
                         <Menu className="h-5 w-5" />
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="bg-background/95 backdrop-blur w-80">
+                    <SheetContent side="left" className="bg-white/95 backdrop-blur w-80 border-white/20">
                       <SheetHeader>
-                        <SheetTitle>Admin Menu</SheetTitle>
-                        <SheetDescription>Quick access to admin tools</SheetDescription>
+                        <SheetTitle className="text-foreground">Admin Menu</SheetTitle>
+                        <SheetDescription className="text-muted-foreground">Quick access to admin tools</SheetDescription>
                       </SheetHeader>
                       <div className="mt-6 space-y-4">
                         <Sheet>
                           <SheetTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start" size="lg">
+                            <Button variant="outline" className="w-full justify-start bg-white border-gray-200 text-foreground hover:bg-gray-50" size="lg">
                               <AlertCircle className="mr-2 h-5 w-5" />
                               Error Logs
                               {errorLogs.filter(log => !log.resolved).length > 0 && (
@@ -358,10 +358,10 @@ export default function Admin() {
                               )}
                             </Button>
                           </SheetTrigger>
-                          <SheetContent side="right" className="bg-background/95 backdrop-blur w-full sm:max-w-3xl overflow-y-auto">
+                          <SheetContent side="right" className="bg-white/95 backdrop-blur w-full sm:max-w-3xl overflow-y-auto border-white/20">
                             <SheetHeader>
-                              <SheetTitle>Error Logs</SheetTitle>
-                              <SheetDescription>Track and manage application errors</SheetDescription>
+                              <SheetTitle className="text-foreground">Error Logs</SheetTitle>
+                              <SheetDescription className="text-muted-foreground">Track and manage application errors</SheetDescription>
                             </SheetHeader>
                             <div className="mt-6 space-y-4">
                               {errorLogs.length === 0 ? (
@@ -383,7 +383,7 @@ export default function Admin() {
                                               {new Date(log.timestamp).toLocaleString()}
                                             </span>
                                           </div>
-                                          <p className="font-semibold text-sm">{log.error_message}</p>
+                                          <p className="font-semibold text-sm text-foreground">{log.error_message}</p>
                                           {log.file_name && (
                                             <p className="text-xs text-muted-foreground">
                                               File: {log.file_name}
@@ -399,7 +399,7 @@ export default function Admin() {
                                               <summary className="text-xs cursor-pointer text-muted-foreground hover:text-foreground">
                                                 View Stack Trace
                                               </summary>
-                                              <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
+                                              <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto text-foreground">
                                                 {log.error_stack}
                                               </pre>
                                             </details>
