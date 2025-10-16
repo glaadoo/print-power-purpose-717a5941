@@ -262,55 +262,75 @@ export default function Admin() {
 
   if (!isAuthenticated) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
-        <VideoBackground 
-          srcMp4="/lovable-uploads/c0c0fa0c-0cf4-4b33-ba2c-1bf3e6c81c14.mp4"
-          overlay={<div className="absolute inset-0 bg-black/40" />}
-        />
-        <div className="relative min-h-screen flex items-center justify-center p-6">
-          <GlassCard className="w-full max-w-md">
-            <div className="space-y-4">
-              <div className="space-y-2 text-center">
-                <div className="flex items-center justify-center gap-2 text-white">
-                  <KeyRound className="h-6 w-6" />
-                  <h1 className="text-2xl font-bold">Admin Access</h1>
+      <div className="fixed inset-0 text-white">
+        <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+          <a href="/" className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase" aria-label="Print Power Purpose Home">
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </a>
+        </header>
+
+        <div className="h-full overflow-y-auto scroll-smooth pt-16">
+          <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
+            <VideoBackground 
+              srcMp4="/media/hero.mp4"
+              srcWebm="/media/hero.webm"
+              poster="/media/hero-poster.jpg"
+              overlay={<div className="absolute inset-0 bg-black/40" />}
+            />
+            <div className="relative w-full max-w-md mx-auto">
+              <GlassCard className="p-6 md:p-8">
+                <div className="space-y-4">
+                  <div className="space-y-2 text-center">
+                    <div className="flex items-center justify-center gap-2 text-white">
+                      <KeyRound className="h-6 w-6" />
+                      <h1 className="text-2xl font-bold">Admin Access</h1>
+                    </div>
+                    <p className="text-white/80">Enter admin key to continue</p>
+                  </div>
+                  <form onSubmit={handleKeySubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="admin-key" className="text-white">Admin Key</Label>
+                      <Input
+                        id="admin-key"
+                        type="password"
+                        value={adminKey}
+                        onChange={(e) => setAdminKey(e.target.value)}
+                        placeholder="Enter admin key"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full">
+                      Access Admin Panel
+                    </Button>
+                  </form>
                 </div>
-                <p className="text-white/80">Enter admin key to continue</p>
-              </div>
-              <form onSubmit={handleKeySubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="admin-key" className="text-white">Admin Key</Label>
-                  <Input
-                    id="admin-key"
-                    type="password"
-                    value={adminKey}
-                    onChange={(e) => setAdminKey(e.target.value)}
-                    placeholder="Enter admin key"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full">
-                  Access Admin Panel
-                </Button>
-              </form>
+              </GlassCard>
             </div>
-          </GlassCard>
+          </section>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen overflow-auto">
-      <VideoBackground 
-        srcMp4="/lovable-uploads/c0c0fa0c-0cf4-4b33-ba2c-1bf3e6c81c14.mp4"
-        overlay={<div className="absolute inset-0 bg-black/40" />}
-      />
-      
-      <ScrollArea className="h-screen">
-        <div className="relative p-6 pb-20">
-          <div className="max-w-7xl mx-auto space-y-6">
+    <div className="fixed inset-0 text-white">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <a href="/" className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase" aria-label="Print Power Purpose Home">
+          PRINT&nbsp;POWER&nbsp;PURPOSE
+        </a>
+      </header>
+
+      <div className="h-full overflow-y-auto scroll-smooth pt-16">
+        <section className="relative min-h-screen py-12 px-4">
+          <VideoBackground 
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            overlay={<div className="absolute inset-0 bg-black/40" />}
+          />
+          
+          <div className="relative max-w-7xl mx-auto space-y-6">
             <GlassCard>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
@@ -773,8 +793,8 @@ export default function Admin() {
               </Tabs>
             </GlassCard>
           </div>
-        </div>
-      </ScrollArea>
+        </section>
+      </div>
     </div>
   );
 }

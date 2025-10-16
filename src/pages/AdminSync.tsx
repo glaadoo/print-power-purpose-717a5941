@@ -4,33 +4,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { LogOut, RefreshCw, CheckCircle, XCircle, Clock } from "lucide-react";
-import { Session } from "@supabase/supabase-js";
-
-type SyncStatus = "idle" | "syncing" | "success" | "error";
-
-interface SyncResult {
-  vendor: string;
-  status: SyncStatus;
-  synced?: number;
-  total?: number;
-  error?: string;
-}
+import { ArrowLeft, RefreshCw, Check, X } from "lucide-react";
+import VideoBackground from "@/components/VideoBackground";
+import GlassCard from "@/components/GlassCard";
 
 export default function AdminSync() {
   const navigate = useNavigate();
-  const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  const [syncResults, setSyncResults] = useState<Record<string, SyncResult>>({
-    sinalite: { vendor: "SinaLite", status: "idle" },
-    scalablepress: { vendor: "Scalable Press", status: "idle" },
-    psrestful: { vendor: "PsRestful", status: "idle" },
+  const [syncing, setSyncing] = useState({
+    sinalite: false,
+    scalablepress: false,
+    psrestful: false
+  });
+
+  const [results, setResults] = useState<Record<string, { success: boolean; message: string } | null>>({
+    sinalite: null,
+    scalablepress: null,
+    psrestful: null
   });
 
   useEffect(() => {
-    // Check if already authenticated via admin key in session storage
     const storedAuth = sessionStorage.getItem("admin_authenticated");
     if (storedAuth === "true") {
       setIsAdmin(true);
@@ -38,293 +33,258 @@ export default function AdminSync() {
       return;
     }
 
-    // Otherwise check Supabase auth
-    checkAuth();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        checkAdminRole(session.user.id);
-      } else {
-        navigate("/auth");
-      }
-    });
+    navigate("/admin");
+  }, [navigate]);
 
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setSession(session);
-    
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
-
-    await checkAdminRole(session.user.id);
-    setLoading(false);
-  };
-
-  const checkAdminRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-
-    if (error || !data) {
-      toast.error("Access denied. Admin role required.");
-      navigate("/");
-      return;
-    }
-
-    setIsAdmin(true);
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
-
-  const syncVendor = async (vendorKey: string, functionName: string) => {
-    setSyncResults(prev => ({
-      ...prev,
-      [vendorKey]: { ...prev[vendorKey], status: "syncing" }
-    }));
-
+  const syncSinaLite = async () => {
+    setSyncing(prev => ({ ...prev, sinalite: true }));
     try {
-      const { data, error } = await supabase.functions.invoke(functionName);
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setSyncResults(prev => ({
-        ...prev,
-        [vendorKey]: {
-          ...prev[vendorKey],
-          status: "success",
-          synced: data.synced,
-          total: data.total
-        }
-      }));
-
-      const vendorName = syncResults[vendorKey].vendor;
-      toast.success(`${vendorName}: Synced ${data.synced}/${data.total} products`);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Sync failed";
+      const { data, error } = await supabase.functions.invoke('sync-sinalite');
+      if (error) throw error;
       
-      setSyncResults(prev => ({
+      setResults(prev => ({
         ...prev,
-        [vendorKey]: {
-          ...prev[vendorKey],
-          status: "error",
-          error: errorMessage
-        }
+        sinalite: { success: true, message: data.message || 'Sync completed successfully' }
       }));
-
-      const vendorName = syncResults[vendorKey].vendor;
-      toast.error(`${vendorName}: ${errorMessage}`);
+      toast.success('SinaLite products synced successfully');
+    } catch (error: any) {
+      setResults(prev => ({
+        ...prev,
+        sinalite: { success: false, message: error.message || 'Sync failed' }
+      }));
+      toast.error('Failed to sync SinaLite products');
+    } finally {
+      setSyncing(prev => ({ ...prev, sinalite: false }));
     }
   };
 
-  const syncAll = async () => {
-    await Promise.all([
-      syncVendor("sinalite", "sync-sinalite"),
-      syncVendor("scalablepress", "sync-scalablepress"),
-      syncVendor("psrestful", "sync-psrestful"),
-    ]);
+  const syncScalablePress = async () => {
+    setSyncing(prev => ({ ...prev, scalablepress: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-scalablepress');
+      if (error) throw error;
+      
+      setResults(prev => ({
+        ...prev,
+        scalablepress: { success: true, message: data.message || 'Sync completed successfully' }
+      }));
+      toast.success('Scalable Press products synced successfully');
+    } catch (error: any) {
+      setResults(prev => ({
+        ...prev,
+        scalablepress: { success: false, message: error.message || 'Sync failed' }
+      }));
+      toast.error('Failed to sync Scalable Press products');
+    } finally {
+      setSyncing(prev => ({ ...prev, scalablepress: false }));
+    }
   };
 
-  const getStatusIcon = (status: SyncStatus) => {
-    switch (status) {
-      case "syncing":
-        return <Clock className="h-5 w-5 text-blue-500 animate-pulse" />;
-      case "success":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case "error":
-        return <XCircle className="h-5 w-5 text-red-500" />;
-      default:
-        return <RefreshCw className="h-5 w-5 text-gray-400" />;
+  const syncPsRestful = async () => {
+    setSyncing(prev => ({ ...prev, psrestful: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-psrestful');
+      if (error) throw error;
+      
+      setResults(prev => ({
+        ...prev,
+        psrestful: { success: true, message: data.message || 'Sync completed successfully' }
+      }));
+      toast.success('PsRestful products synced successfully');
+    } catch (error: any) {
+      setResults(prev => ({
+        ...prev,
+        psrestful: { success: false, message: error.message || 'Sync failed' }
+      }));
+      toast.error('Failed to sync PsRestful products');
+    } finally {
+      setSyncing(prev => ({ ...prev, psrestful: false }));
     }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="fixed inset-0 text-white">
+        <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+          <a href="/" className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase" aria-label="Print Power Purpose Home">
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </a>
+        </header>
+        <div className="h-full flex items-center justify-center">
+          <div className="text-lg">Loading...</div>
+        </div>
+      </div>
+    );
   }
 
   if (!isAdmin) {
-    return null;
+    return (
+      <div className="fixed inset-0 text-white">
+        <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+          <a href="/" className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase" aria-label="Print Power Purpose Home">
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </a>
+        </header>
+        <div className="h-full flex items-center justify-center">
+          <div className="text-lg">Access Denied</div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold">Product Sync Dashboard</h1>
-            <p className="text-muted-foreground mt-2">Sync products from vendor APIs</p>
+    <div className="fixed inset-0 text-white">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <a href="/" className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase" aria-label="Print Power Purpose Home">
+          PRINT&nbsp;POWER&nbsp;PURPOSE
+        </a>
+      </header>
+
+      <div className="h-full overflow-y-auto scroll-smooth pt-16">
+        <section className="relative min-h-screen py-12 px-4">
+          <VideoBackground 
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            overlay={<div className="absolute inset-0 bg-black/40" />}
+          />
+          
+          <div className="relative max-w-4xl mx-auto space-y-6">
+            <GlassCard>
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold text-white">Product Sync</h1>
+                <Button 
+                  onClick={() => navigate("/admin")}
+                  variant="outline"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Admin
+                </Button>
+              </div>
+            </GlassCard>
+
+            <GlassCard>
+              <Card className="bg-white/5 border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white">SinaLite Products</CardTitle>
+                  <CardDescription className="text-white/70">Sync products from SinaLite API</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    onClick={syncSinaLite}
+                    disabled={syncing.sinalite}
+                    className="w-full"
+                  >
+                    {syncing.sinalite ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync SinaLite
+                      </>
+                    )}
+                  </Button>
+                  {results.sinalite && (
+                    <div className={`p-4 rounded-lg ${results.sinalite.success ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                      <div className="flex items-center gap-2 text-white">
+                        {results.sinalite.success ? (
+                          <Check className="h-5 w-5 text-green-400" />
+                        ) : (
+                          <X className="h-5 w-5 text-red-400" />
+                        )}
+                        <span className="font-medium">{results.sinalite.message}</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </GlassCard>
+
+            <GlassCard>
+              <Card className="bg-white/5 border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white">Scalable Press Products</CardTitle>
+                  <CardDescription className="text-white/70">Sync products from Scalable Press API</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    onClick={syncScalablePress}
+                    disabled={syncing.scalablepress}
+                    className="w-full"
+                  >
+                    {syncing.scalablepress ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync Scalable Press
+                      </>
+                    )}
+                  </Button>
+                  {results.scalablepress && (
+                    <div className={`p-4 rounded-lg ${results.scalablepress.success ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                      <div className="flex items-center gap-2 text-white">
+                        {results.scalablepress.success ? (
+                          <Check className="h-5 w-5 text-green-400" />
+                        ) : (
+                          <X className="h-5 w-5 text-red-400" />
+                        )}
+                        <span className="font-medium">{results.scalablepress.message}</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </GlassCard>
+
+            <GlassCard>
+              <Card className="bg-white/5 border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white">PsRestful Products</CardTitle>
+                  <CardDescription className="text-white/70">Sync products from PsRestful API</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    onClick={syncPsRestful}
+                    disabled={syncing.psrestful}
+                    className="w-full"
+                  >
+                    {syncing.psrestful ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync PsRestful
+                      </>
+                    )}
+                  </Button>
+                  {results.psrestful && (
+                    <div className={`p-4 rounded-lg ${results.psrestful.success ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                      <div className="flex items-center gap-2 text-white">
+                        {results.psrestful.success ? (
+                          <Check className="h-5 w-5 text-green-400" />
+                        ) : (
+                          <X className="h-5 w-5 text-red-400" />
+                        )}
+                        <span className="font-medium">{results.psrestful.message}</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </GlassCard>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => navigate("/admin")} variant="outline">
-              Back to Admin
-            </Button>
-            <Button onClick={handleSignOut} variant="outline">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Sync All Vendors</CardTitle>
-            <CardDescription>
-              Sync products from all vendor APIs at once
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={syncAll}
-              disabled={Object.values(syncResults).some(r => r.status === "syncing")}
-              size="lg"
-            >
-              <RefreshCw className="mr-2 h-5 w-5" />
-              Sync All Products
-            </Button>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>SinaLite</CardTitle>
-                {getStatusIcon(syncResults.sinalite.status)}
-              </div>
-              <CardDescription>Print products catalog</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {syncResults.sinalite.status === "success" && (
-                <div className="text-sm">
-                  <div className="font-medium text-green-600">
-                    ✓ Synced {syncResults.sinalite.synced} of {syncResults.sinalite.total} products
-                  </div>
-                </div>
-              )}
-              {syncResults.sinalite.status === "error" && (
-                <div className="text-sm text-red-600">
-                  {syncResults.sinalite.error}
-                </div>
-              )}
-              <Button 
-                onClick={() => syncVendor("sinalite", "sync-sinalite")}
-                disabled={syncResults.sinalite.status === "syncing"}
-                className="w-full"
-              >
-                {syncResults.sinalite.status === "syncing" ? "Syncing..." : "Sync SinaLite"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Scalable Press</CardTitle>
-                {getStatusIcon(syncResults.scalablepress.status)}
-              </div>
-              <CardDescription>Apparel catalog</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {syncResults.scalablepress.status === "success" && (
-                <div className="text-sm">
-                  <div className="font-medium text-green-600">
-                    ✓ Synced {syncResults.scalablepress.synced} of {syncResults.scalablepress.total} products
-                  </div>
-                </div>
-              )}
-              {syncResults.scalablepress.status === "error" && (
-                <div className="text-sm text-red-600">
-                  {syncResults.scalablepress.error}
-                </div>
-              )}
-              <Button 
-                onClick={() => syncVendor("scalablepress", "sync-scalablepress")}
-                disabled={syncResults.scalablepress.status === "syncing"}
-                className="w-full"
-              >
-                {syncResults.scalablepress.status === "syncing" ? "Syncing..." : "Sync Scalable Press"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>PsRestful</CardTitle>
-                {getStatusIcon(syncResults.psrestful.status)}
-              </div>
-              <CardDescription>Promo products catalog</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {syncResults.psrestful.status === "success" && (
-                <div className="text-sm">
-                  <div className="font-medium text-green-600">
-                    ✓ Synced {syncResults.psrestful.synced} of {syncResults.psrestful.total} products
-                  </div>
-                </div>
-              )}
-              {syncResults.psrestful.status === "error" && (
-                <div className="text-sm text-red-600">
-                  {syncResults.psrestful.error}
-                </div>
-              )}
-              <Button 
-                onClick={() => syncVendor("psrestful", "sync-psrestful")}
-                disabled={syncResults.psrestful.status === "syncing"}
-                className="w-full"
-              >
-                {syncResults.psrestful.status === "syncing" ? "Syncing..." : "Sync PsRestful"}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Setup Instructions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div>
-              <h3 className="font-semibold mb-1">1. Configure API Keys</h3>
-              <p className="text-muted-foreground">
-                Add these secrets via the Backend dashboard:
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground ml-4">
-                <li><code>SINALITE_API_KEY</code> - Your SinaLite API key</li>
-                <li><code>SCALABLEPRESS_API_KEY</code> - Your Scalable Press API key</li>
-                <li><code>PSRESTFUL_API_KEY</code> - Your PsRestful API key</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-1">2. Run Product Sync</h3>
-              <p className="text-muted-foreground">
-                Click "Sync All Products" or sync individual vendors using the buttons above.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-1">3. Products Auto-Update</h3>
-              <p className="text-muted-foreground">
-                Products are automatically available on the Products page after syncing.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        </section>
       </div>
     </div>
   );
