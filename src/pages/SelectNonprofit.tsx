@@ -1,6 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import VideoBackground from "@/components/VideoBackground";
+import { supabase } from "@/lib/supabase";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const NONPROFITS = [
   "Red Cross Local Chapter",
@@ -9,17 +17,69 @@ const NONPROFITS = [
   "Green Earth Society",
 ];
 
+type Cause = {
+  id: string;
+  name: string;
+  summary?: string | null;
+};
+
 export default function SelectNonprofit() {
   const nav = useNavigate();
+  const [selectedNonprofit, setSelectedNonprofit] = useState<string>("");
+  const [causes, setCauses] = useState<Cause[]>([]);
+  const [selectedCause, setSelectedCause] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
   }, []);
 
-  function choose(name: string) {
+  useEffect(() => {
+    if (!selectedNonprofit) {
+      setCauses([]);
+      setSelectedCause("");
+      return;
+    }
+
+    let alive = true;
+    setLoading(true);
+
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("causes")
+          .select("id,name,summary")
+          .order("name", { ascending: true });
+
+        if (error) throw error;
+        if (alive) setCauses(data || []);
+      } catch (e) {
+        console.error("Failed to load causes:", e);
+        if (alive) setCauses([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [selectedNonprofit]);
+
+  function handleSubmit() {
+    if (!selectedNonprofit || !selectedCause) return;
+    
+    const cause = causes.find(c => c.id === selectedCause);
+    if (!cause) return;
+
     localStorage.setItem(
       "selectedCause",
-      JSON.stringify({ type: "nonprofit", name })
+      JSON.stringify({ 
+        type: "nonprofit", 
+        nonprofit: selectedNonprofit,
+        causeId: cause.id,
+        causeName: cause.name 
+      })
     );
     nav("/products");
   }
@@ -53,16 +113,67 @@ export default function SelectNonprofit() {
                 Choose Your Nonprofit
               </h2>
 
-              <div className="flex flex-col gap-4">
-                {NONPROFITS.map((n) => (
+              <div className="flex flex-col gap-6">
+                {/* Nonprofit Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">Select Nonprofit</label>
+                  <Select value={selectedNonprofit} onValueChange={setSelectedNonprofit}>
+                    <SelectTrigger className="w-full bg-white/90 text-black border-white/30">
+                      <SelectValue placeholder="Choose a nonprofit..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      {NONPROFITS.map((n) => (
+                        <SelectItem key={n} value={n} className="text-black">
+                          {n}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Causes Dropdown - Only shown when nonprofit is selected */}
+                {selectedNonprofit && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">Select Cause</label>
+                    {loading ? (
+                      <div className="w-full px-6 py-3 rounded-xl bg-white/50 text-black text-center">
+                        Loading causes...
+                      </div>
+                    ) : causes.length > 0 ? (
+                      <Select value={selectedCause} onValueChange={setSelectedCause}>
+                        <SelectTrigger className="w-full bg-white/90 text-black border-white/30">
+                          <SelectValue placeholder="Choose a cause..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {causes.map((c) => (
+                            <SelectItem key={c.id} value={c.id} className="text-black">
+                              {c.name}
+                              {c.summary && (
+                                <span className="block text-xs text-gray-600 mt-1">
+                                  {c.summary}
+                                </span>
+                              )}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="w-full px-6 py-3 rounded-xl bg-white/50 text-black text-center">
+                        No causes available
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                {selectedNonprofit && selectedCause && (
                   <button
-                    key={n}
-                    onClick={() => choose(n)}
-                    className="w-full px-6 py-4 rounded-xl bg-white/90 text-black font-semibold text-lg hover:bg-white transition-colors"
+                    onClick={handleSubmit}
+                    className="w-full px-6 py-4 rounded-xl bg-white/90 text-black font-semibold text-lg hover:bg-white transition-colors mt-4"
                   >
-                    {n}
+                    Continue to Products
                   </button>
-                ))}
+                )}
               </div>
             </div>
           </div>
