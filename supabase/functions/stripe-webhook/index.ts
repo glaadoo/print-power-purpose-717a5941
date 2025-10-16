@@ -47,7 +47,7 @@ serve(async (req) => {
       const quantity = parseInt(session.metadata?.quantity || '1');
 
       // Create order record
-      const { error: orderError } = await supabase
+      const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
           order_number: orderNumber,
@@ -62,12 +62,32 @@ serve(async (req) => {
           cause_id: causeId,
           cause_name: causeName,
           receipt_url: (session as any).receipt_url || null,
-        });
+        })
+        .select()
+        .single();
 
       if (orderError) {
         console.error('Error creating order:', orderError);
       } else {
         console.log(`Order ${orderNumber} created successfully`);
+        
+        // Create donation record if donation amount > 0
+        if (causeId && donationCents > 0 && orderData) {
+          const { error: donationError } = await supabase
+            .from('donations')
+            .insert({
+              order_id: orderData.id,
+              cause_id: causeId,
+              amount_cents: donationCents,
+              customer_email: session.customer_details?.email || null,
+            });
+          
+          if (donationError) {
+            console.error('Error creating donation record:', donationError);
+          } else {
+            console.log(`Donation record created for ${donationCents} cents`);
+          }
+        }
         
         // Update cause's raised_cents if cause_id exists
         if (causeId && donationCents > 0) {

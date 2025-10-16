@@ -44,6 +44,48 @@ export type Database = {
         }
         Relationships: []
       }
+      donations: {
+        Row: {
+          amount_cents: number
+          cause_id: string | null
+          created_at: string
+          customer_email: string | null
+          id: string
+          order_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          cause_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          order_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          cause_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_cause_id_fkey"
+            columns: ["cause_id"]
+            isOneToOne: false
+            referencedRelation: "causes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kenzie_messages: {
         Row: {
           content: string

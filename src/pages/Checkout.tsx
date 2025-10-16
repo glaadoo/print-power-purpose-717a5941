@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import GlassCard from "../components/GlassCard";
+import FloatingCheckoutBar from "../components/FloatingCheckoutBar";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
 import { supabase } from "@/lib/supabase";
@@ -252,7 +253,7 @@ export default function Checkout() {
 
   return (
     <Layout title="Checkout">
-      <GlassCard className="w-full max-w-3xl mx-auto">
+      <GlassCard className="w-full max-w-3xl mx-auto mb-32">
         <h1 className="text-2xl font-bold text-center mb-6 text-white drop-shadow-lg">
           Review your order
         </h1>
@@ -288,7 +289,7 @@ export default function Checkout() {
             <div>
               <div className="font-bold text-white drop-shadow">Kenzie says:</div>
               <div className="text-white/90">
-                “Want to add an optional donation for {causeCtx?.cause?.name || "this cause"}?”
+                "Want to add an optional donation for {causeCtx?.cause?.name || "this cause"}?"
               </div>
             </div>
           </div>
@@ -354,6 +355,14 @@ export default function Checkout() {
           ← Back
         </button>
       </GlassCard>
+
+      {/* Floating Checkout Summary Bar */}
+      <FloatingCheckoutBar
+        productName={product.name}
+        quantity={qty}
+        subtotalCents={subtotal}
+        donationCents={donation}
+      />
     </Layout>
   );
 }
