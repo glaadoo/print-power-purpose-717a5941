@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       causes: {
         Row: {
           created_at: string
@@ -261,6 +294,47 @@ export type Database = {
           zip_code?: string
         }
         Relationships: []
+      }
+      story_requests: {
+        Row: {
+          cause_id: string
+          contact_email: string
+          created_at: string
+          id: string
+          notes: string | null
+          reached_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cause_id: string
+          contact_email: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reached_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cause_id?: string
+          contact_email?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reached_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_requests_cause_id_fkey"
+            columns: ["cause_id"]
+            isOneToOne: false
+            referencedRelation: "causes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
