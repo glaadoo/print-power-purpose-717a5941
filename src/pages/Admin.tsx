@@ -9,13 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { LogOut, Trash2, Edit } from "lucide-react";
-import { Session } from "@supabase/supabase-js";
+import { Trash2, KeyRound } from "lucide-react";
 
 export default function Admin() {
   const navigate = useNavigate();
-  const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminKey, setAdminKey] = useState("");
   const [loading, setLoading] = useState(true);
   
   const [products, setProducts] = useState<any[]>([]);
@@ -36,53 +35,39 @@ export default function Admin() {
   const [causeImage, setCauseImage] = useState("");
 
   useEffect(() => {
-    checkAuth();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        checkAdminRole(session.user.id);
-      } else {
-        navigate("/auth");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (isAdmin) {
+    // Check if already authenticated in session storage
+    const storedAuth = sessionStorage.getItem("admin_authenticated");
+    if (storedAuth === "true") {
+      setIsAuthenticated(true);
       loadData();
     }
-  }, [isAdmin]);
+    setLoading(false);
+  }, []);
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setSession(session);
+  const handleKeySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (!session) {
-      navigate("/auth");
+    // Verify admin key against backend
+    const { data, error } = await supabase.functions.invoke("verify-admin-key", {
+      body: { key: adminKey }
+    });
+
+    if (error || !data?.valid) {
+      toast.error("Invalid admin key");
       return;
     }
 
-    await checkAdminRole(session.user.id);
-    setLoading(false);
+    sessionStorage.setItem("admin_authenticated", "true");
+    setIsAuthenticated(true);
+    setAdminKey("");
+    loadData();
+    toast.success("Access granted");
   };
 
-  const checkAdminRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .single();
-
-    if (error || !data) {
-      toast.error("Access denied. Admin role required.");
-      navigate("/");
-      return;
-    }
-
-    setIsAdmin(true);
+  const handleLogout = () => {
+    sessionStorage.removeItem("admin_authenticated");
+    setIsAuthenticated(false);
+    toast.success("Logged out");
   };
 
   const loadData = async () => {
@@ -95,10 +80,6 @@ export default function Admin() {
     if (causesRes.data) setCauses(causesRes.data);
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,8 +158,38 @@ export default function Admin() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  if (!isAdmin) {
-    return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              Admin Access
+            </CardTitle>
+            <CardDescription>Enter admin key to continue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleKeySubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-key">Admin Key</Label>
+                <Input
+                  id="admin-key"
+                  type="password"
+                  value={adminKey}
+                  onChange={(e) => setAdminKey(e.target.value)}
+                  placeholder="Enter admin key"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Access Admin Panel
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -186,9 +197,9 @@ export default function Admin() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-          <Button onClick={handleSignOut} variant="outline">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
+          <Button onClick={handleLogout} variant="outline">
+            <KeyRound className="mr-2 h-4 w-4" />
+            Logout
           </Button>
         </div>
 

@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.kenzie-chat]
 verify_jwt = true
+
+[functions.verify-admin-key]
+verify_jwt = false
