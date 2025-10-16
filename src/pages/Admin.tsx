@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Trash2, KeyRound } from "lucide-react";
+import VideoBackground from "@/components/VideoBackground";
+import GlassCard from "@/components/GlassCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -160,267 +163,294 @@ export default function Admin() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5" />
-              Admin Access
-            </CardTitle>
-            <CardDescription>Enter admin key to continue</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleKeySubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="admin-key">Admin Key</Label>
-                <Input
-                  id="admin-key"
-                  type="password"
-                  value={adminKey}
-                  onChange={(e) => setAdminKey(e.target.value)}
-                  placeholder="Enter admin key"
-                  required
-                />
+      <div className="relative min-h-screen overflow-hidden">
+        <VideoBackground 
+          srcMp4="/lovable-uploads/c0c0fa0c-0cf4-4b33-ba2c-1bf3e6c81c14.mp4"
+          overlay={<div className="absolute inset-0 bg-black/40" />}
+        />
+        <div className="relative min-h-screen flex items-center justify-center p-6">
+          <GlassCard className="w-full max-w-md">
+            <div className="space-y-4">
+              <div className="space-y-2 text-center">
+                <div className="flex items-center justify-center gap-2 text-white">
+                  <KeyRound className="h-6 w-6" />
+                  <h1 className="text-2xl font-bold">Admin Access</h1>
+                </div>
+                <p className="text-white/80">Enter admin key to continue</p>
               </div>
-              <Button type="submit" className="w-full">
-                Access Admin Panel
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              <form onSubmit={handleKeySubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-key" className="text-white">Admin Key</Label>
+                  <Input
+                    id="admin-key"
+                    type="password"
+                    value={adminKey}
+                    onChange={(e) => setAdminKey(e.target.value)}
+                    placeholder="Enter admin key"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  Access Admin Panel
+                </Button>
+              </form>
+            </div>
+          </GlassCard>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-          <Button onClick={handleLogout} variant="outline">
-            <KeyRound className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+    <div className="relative min-h-screen overflow-auto">
+      <VideoBackground 
+        srcMp4="/lovable-uploads/c0c0fa0c-0cf4-4b33-ba2c-1bf3e6c81c14.mp4"
+        overlay={<div className="absolute inset-0 bg-black/40" />}
+      />
+      
+      <ScrollArea className="h-screen">
+        <div className="relative p-6 pb-20">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <GlassCard>
+              <div className="flex justify-between items-center">
+                <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
+                <Button onClick={handleLogout} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </div>
+            </GlassCard>
+
+            <GlassCard>
+              <Button 
+                onClick={() => navigate("/admin/sync")}
+                size="lg"
+                className="w-full md:w-auto"
+              >
+                Sync Products from Vendors
+              </Button>
+              <p className="text-sm text-white/70 mt-2">
+                Sync products from SinaLite, Scalable Press, and PsRestful APIs
+              </p>
+            </GlassCard>
+
+            <GlassCard>
+              <Tabs defaultValue="products" className="space-y-6">
+                <TabsList className="grid w-full max-w-md grid-cols-2 bg-white/10">
+                  <TabsTrigger value="products" className="data-[state=active]:bg-white/20 text-white">Products</TabsTrigger>
+                  <TabsTrigger value="causes" className="data-[state=active]:bg-white/20 text-white">Causes</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="products" className="space-y-6">
+                  <Card className="bg-white/5 border-white/10">
+                    <CardHeader>
+                      <CardTitle className="text-white">Add New Product</CardTitle>
+                      <CardDescription className="text-white/70">Fill in the details to add a new product</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleAddProduct} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="product-name" className="text-white">Product Name *</Label>
+                            <Input
+                              id="product-name"
+                              value={productName}
+                              onChange={(e) => setProductName(e.target.value)}
+                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="product-cost" className="text-white">Price (USD) *</Label>
+                            <Input
+                              id="product-cost"
+                              type="number"
+                              step="0.01"
+                              value={productCost}
+                              onChange={(e) => setProductCost(e.target.value)}
+                              placeholder="29.99"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="product-category" className="text-white">Category</Label>
+                            <Input
+                              id="product-category"
+                              value={productCategory}
+                              onChange={(e) => setProductCategory(e.target.value)}
+                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="product-vendor-id" className="text-white">Vendor ID *</Label>
+                            <Input
+                              id="product-vendor-id"
+                              value={productVendorId}
+                              onChange={(e) => setProductVendorId(e.target.value)}
+                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="product-image" className="text-white">Image URL</Label>
+                          <Input
+                            id="product-image"
+                            type="url"
+                            value={productImage}
+                            onChange={(e) => setProductImage(e.target.value)}
+                            placeholder="https://example.com/image.jpg"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                          />
+                        </div>
+                        <Button type="submit">Add Product</Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white/5 border-white/10">
+                    <CardHeader>
+                      <CardTitle className="text-white">All Products</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-white/10">
+                            <TableHead className="text-white/90">Name</TableHead>
+                            <TableHead className="text-white/90">Price</TableHead>
+                            <TableHead className="text-white/90">Category</TableHead>
+                            <TableHead className="text-white/90">Vendor ID</TableHead>
+                            <TableHead className="text-white/90">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {products.map((product) => (
+                            <TableRow key={product.id} className="border-white/10">
+                              <TableCell className="text-white">{product.name}</TableCell>
+                              <TableCell className="text-white">${(product.base_cost_cents / 100).toFixed(2)}</TableCell>
+                              <TableCell className="text-white/70">{product.category || "—"}</TableCell>
+                              <TableCell className="text-white/70">{product.vendor_id}</TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteProduct(product.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="causes" className="space-y-6">
+                  <Card className="bg-white/5 border-white/10">
+                    <CardHeader>
+                      <CardTitle className="text-white">Add New Cause</CardTitle>
+                      <CardDescription className="text-white/70">Fill in the details to add a new cause</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleAddCause} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="cause-name" className="text-white">Cause Name *</Label>
+                            <Input
+                              id="cause-name"
+                              value={causeName}
+                              onChange={(e) => setCauseName(e.target.value)}
+                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="cause-goal" className="text-white">Goal Amount (USD) *</Label>
+                            <Input
+                              id="cause-goal"
+                              type="number"
+                              step="0.01"
+                              value={causeGoal}
+                              onChange={(e) => setCauseGoal(e.target.value)}
+                              placeholder="10000"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cause-summary" className="text-white">Summary</Label>
+                          <Textarea
+                            id="cause-summary"
+                            value={causeSummary}
+                            onChange={(e) => setCauseSummary(e.target.value)}
+                            rows={3}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cause-image" className="text-white">Image URL</Label>
+                          <Input
+                            id="cause-image"
+                            type="url"
+                            value={causeImage}
+                            onChange={(e) => setCauseImage(e.target.value)}
+                            placeholder="https://example.com/image.jpg"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                          />
+                        </div>
+                        <Button type="submit">Add Cause</Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white/5 border-white/10">
+                    <CardHeader>
+                      <CardTitle className="text-white">All Causes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-white/10">
+                            <TableHead className="text-white/90">Name</TableHead>
+                            <TableHead className="text-white/90">Goal</TableHead>
+                            <TableHead className="text-white/90">Raised</TableHead>
+                            <TableHead className="text-white/90">Summary</TableHead>
+                            <TableHead className="text-white/90">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {causes.map((cause) => (
+                            <TableRow key={cause.id} className="border-white/10">
+                              <TableCell className="text-white">{cause.name}</TableCell>
+                              <TableCell className="text-white">${(cause.goal_cents / 100).toFixed(2)}</TableCell>
+                              <TableCell className="text-white">${(cause.raised_cents / 100).toFixed(2)}</TableCell>
+                              <TableCell className="text-white/70 max-w-xs truncate">{cause.summary || "—"}</TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteCause(cause.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </GlassCard>
+          </div>
         </div>
-
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <Button 
-              onClick={() => navigate("/admin/sync")}
-              size="lg"
-              className="w-full md:w-auto"
-            >
-              Sync Products from Vendors
-            </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Sync products from SinaLite, Scalable Press, and PsRestful APIs
-            </p>
-          </CardContent>
-        </Card>
-
-        <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="causes">Causes</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="products" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add New Product</CardTitle>
-                <CardDescription>Fill in the details to add a new product</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddProduct} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="product-name">Product Name *</Label>
-                      <Input
-                        id="product-name"
-                        value={productName}
-                        onChange={(e) => setProductName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="product-cost">Price (USD) *</Label>
-                      <Input
-                        id="product-cost"
-                        type="number"
-                        step="0.01"
-                        value={productCost}
-                        onChange={(e) => setProductCost(e.target.value)}
-                        placeholder="29.99"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="product-category">Category</Label>
-                      <Input
-                        id="product-category"
-                        value={productCategory}
-                        onChange={(e) => setProductCategory(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="product-vendor-id">Vendor ID *</Label>
-                      <Input
-                        id="product-vendor-id"
-                        value={productVendorId}
-                        onChange={(e) => setProductVendorId(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="product-image">Image URL</Label>
-                    <Input
-                      id="product-image"
-                      type="url"
-                      value={productImage}
-                      onChange={(e) => setProductImage(e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-                  <Button type="submit">Add Product</Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>All Products</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Vendor ID</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {products.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>{product.name}</TableCell>
-                        <TableCell>${(product.base_cost_cents / 100).toFixed(2)}</TableCell>
-                        <TableCell>{product.category || "—"}</TableCell>
-                        <TableCell>{product.vendor_id}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteProduct(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="causes" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add New Cause</CardTitle>
-                <CardDescription>Fill in the details to add a new cause</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddCause} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cause-name">Cause Name *</Label>
-                      <Input
-                        id="cause-name"
-                        value={causeName}
-                        onChange={(e) => setCauseName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cause-goal">Goal Amount (USD) *</Label>
-                      <Input
-                        id="cause-goal"
-                        type="number"
-                        step="0.01"
-                        value={causeGoal}
-                        onChange={(e) => setCauseGoal(e.target.value)}
-                        placeholder="10000"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cause-summary">Summary</Label>
-                    <Textarea
-                      id="cause-summary"
-                      value={causeSummary}
-                      onChange={(e) => setCauseSummary(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cause-image">Image URL</Label>
-                    <Input
-                      id="cause-image"
-                      type="url"
-                      value={causeImage}
-                      onChange={(e) => setCauseImage(e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-                  <Button type="submit">Add Cause</Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>All Causes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Goal</TableHead>
-                      <TableHead>Raised</TableHead>
-                      <TableHead>Summary</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {causes.map((cause) => (
-                      <TableRow key={cause.id}>
-                        <TableCell>{cause.name}</TableCell>
-                        <TableCell>${(cause.goal_cents / 100).toFixed(2)}</TableCell>
-                        <TableCell>${(cause.raised_cents / 100).toFixed(2)}</TableCell>
-                        <TableCell className="max-w-xs truncate">{cause.summary || "—"}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteCause(cause.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+      </ScrollArea>
     </div>
   );
 }
