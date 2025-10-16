@@ -119,6 +119,42 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          error_message: string
+          error_stack: string | null
+          file_name: string | null
+          id: string
+          page_url: string | null
+          resolved: boolean
+          session_id: string | null
+          timestamp: string
+          user_agent: string | null
+        }
+        Insert: {
+          error_message: string
+          error_stack?: string | null
+          file_name?: string | null
+          id?: string
+          page_url?: string | null
+          resolved?: boolean
+          session_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Update: {
+          error_message?: string
+          error_stack?: string | null
+          file_name?: string | null
+          id?: string
+          page_url?: string | null
+          resolved?: boolean
+          session_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       kenzie_messages: {
         Row: {
           content: string
@@ -166,6 +202,24 @@ export type Database = {
           created_at?: string
           id?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      nonprofits: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -292,6 +346,24 @@ export type Database = {
           street_address?: string
           updated_at?: string
           zip_code?: string
+        }
+        Relationships: []
+      }
+      schools: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
