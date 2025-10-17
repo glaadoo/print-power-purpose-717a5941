@@ -47,7 +47,7 @@ export default function Products() {
 
       {/* Scrollable content */}
       <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
+        <section className="relative min-h-screen py-8">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -55,33 +55,32 @@ export default function Products() {
             overlay={<div className="absolute inset-0 bg-black/50" />}
           />
 
-          <div className="relative w-full max-w-4xl mx-auto">
-            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-              <h2 className="text-3xl font-serif font-semibold text-center mb-8">
-                Products
-              </h2>
+          <div className="relative w-full px-4">
+            <h2 className="text-3xl font-serif font-semibold text-center mb-8">
+              Products
+            </h2>
 
-              {loading && <p className="text-center">Loading products…</p>}
-              {err && (
-                <div className="border border-red-400/50 bg-red-900/30 text-white p-4 rounded-xl">
-                  {err}
-                </div>
-              )}
+            {loading && <p className="text-center">Loading products…</p>}
+            {err && (
+              <div className="border border-red-400/50 bg-red-900/30 text-white p-4 rounded-xl max-w-2xl mx-auto">
+                {err}
+              </div>
+            )}
 
-              {!loading && !err && (
-                <div className="grid gap-4">
-                  {rows.map((p) => (
-                    <Link
-                      key={p.id}
-                      to={`/products/${p.id}`}
-                      className="block px-6 py-4 rounded-xl bg-white/90 text-black text-center font-semibold text-lg hover:bg-white transition-colors"
-                    >
-                      {p.name} — ${(p.base_cost_cents / 100).toFixed(2)}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            {!loading && !err && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {rows.map((p) => (
+                  <Link
+                    key={p.id}
+                    to={`/products/${p.id}`}
+                    className="aspect-square flex flex-col items-center justify-center rounded-xl bg-white/90 text-black text-center font-semibold hover:bg-white transition-colors p-4"
+                  >
+                    <span className="text-lg mb-2">{p.name}</span>
+                    <span className="text-sm">${(p.base_cost_cents / 100).toFixed(2)}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </div>
