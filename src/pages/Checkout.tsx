@@ -299,7 +299,7 @@ export default function Checkout() {
   const total = subtotal + donation;
 
   return (
-    <div className="fixed inset-0 text-white">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
         {/* Left: Home */}
