@@ -38,7 +38,7 @@ export default function Cart() {
 
       {/* Scrollable content */}
       <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
+        <section className="relative min-h-screen py-8">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -46,112 +46,110 @@ export default function Cart() {
             overlay={<div className="absolute inset-0 bg-black/50" />}
           />
 
-          <div className="relative w-full max-w-3xl mx-auto">
-            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-              <h2 className="text-3xl font-serif font-semibold text-center mb-8">Your Cart</h2>
+          <div className="relative w-full px-4">
+            <h2 className="text-3xl font-serif font-semibold text-center mb-8">Your Cart</h2>
 
-              {!hasItems ? (
-                <div className="text-center py-8">
-                  <p className="opacity-90 mb-6">Your cart is empty.</p>
-                  <button 
-                    className="rounded-full px-8 py-3 bg-white text-black font-semibold hover:bg-white/90"
-                    onClick={() => nav("/products")}
-                  >
-                    Browse Products
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <ul className="divide-y divide-white/20 mb-6">
-                    {detailed.map((it) => (
-                      <li key={it.id} className="py-4 flex items-center gap-4">
-                        {it.imageUrl ? (
-                          <img
-                            src={it.imageUrl}
-                            alt={it.name}
-                            className="w-16 h-16 object-cover rounded-lg"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-lg bg-white/20 grid place-items-center text-xs">
-                            NO IMG
-                          </div>
-                        )}
-
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-lg truncate">{it.name}</div>
-                          <div className="text-sm opacity-80">
-                            ${(it.priceCents / 100).toFixed(2)} each
-                          </div>
+            {!hasItems ? (
+              <div className="max-w-2xl mx-auto rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-8 text-center">
+                <p className="opacity-90 mb-6">Your cart is empty.</p>
+                <button 
+                  className="rounded-full px-8 py-3 bg-white text-black font-semibold hover:bg-white/90"
+                  onClick={() => nav("/products")}
+                >
+                  Browse Products
+                </button>
+              </div>
+            ) : (
+              <div className="max-w-5xl mx-auto rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
+                <ul className="divide-y divide-white/20 mb-6">
+                  {detailed.map((it) => (
+                    <li key={it.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      {it.imageUrl ? (
+                        <img
+                          src={it.imageUrl}
+                          alt={it.name}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg bg-white/20 grid place-items-center text-xs">
+                          NO IMG
                         </div>
+                      )}
 
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center"
-                            onClick={() => setQty(it.id, Math.max(1, it.quantity - 1))}
-                            aria-label="Decrease quantity"
-                          >
-                            −
-                          </button>
-
-                          <input
-                            type="number"
-                            min={1}
-                            value={it.quantity}
-                            onChange={(e) => setQty(it.id, Number(e.target.value || 1))}
-                            className="w-16 h-8 rounded-lg bg-white/90 text-black text-center outline-none"
-                          />
-
-                          <button
-                            className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center"
-                            onClick={() => setQty(it.id, it.quantity + 1)}
-                            aria-label="Increase quantity"
-                          >
-                            +
-                          </button>
-
-                          <button 
-                            className="ml-2 px-4 h-8 rounded-lg bg-red-500/80 hover:bg-red-500 text-white text-sm font-semibold"
-                            onClick={() => remove(it.id)}
-                          >
-                            Remove
-                          </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-lg">{it.name}</div>
+                        <div className="text-sm opacity-80">
+                          ${(it.priceCents / 100).toFixed(2)} each
                         </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/20">
-                    <button 
-                      className="px-6 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold"
-                      onClick={clear}
-                    >
-                      Clear Cart
-                    </button>
-                    <div className="text-right">
-                      <div className="opacity-80 text-sm">Subtotal</div>
-                      <div className="text-2xl font-bold">
-                        ${(totalCents / 100).toFixed(2)}
                       </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center"
+                          onClick={() => setQty(it.id, Math.max(1, it.quantity - 1))}
+                          aria-label="Decrease quantity"
+                        >
+                          −
+                        </button>
+
+                        <input
+                          type="number"
+                          min={1}
+                          value={it.quantity}
+                          onChange={(e) => setQty(it.id, Number(e.target.value || 1))}
+                          className="w-16 h-8 rounded-lg bg-white/90 text-black text-center outline-none"
+                        />
+
+                        <button
+                          className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center"
+                          onClick={() => setQty(it.id, it.quantity + 1)}
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+
+                        <button 
+                          className="ml-2 px-4 h-8 rounded-lg bg-red-500/80 hover:bg-red-500 text-white text-sm font-semibold"
+                          onClick={() => remove(it.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b border-white/20 gap-4">
+                  <button 
+                    className="px-6 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold"
+                    onClick={clear}
+                  >
+                    Clear Cart
+                  </button>
+                  <div className="text-right">
+                    <div className="opacity-80 text-sm">Subtotal</div>
+                    <div className="text-2xl font-bold">
+                      ${(totalCents / 100).toFixed(2)}
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex gap-4">
-                    <button
-                      className="flex-1 rounded-full px-6 py-3 bg-white/20 hover:bg-white/30 font-semibold"
-                      onClick={() => nav("/products")}
-                    >
-                      Continue Shopping
-                    </button>
-                    <button
-                      className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
-                      onClick={() => nav("/checkout", { state: inferCheckoutState(items) })}
-                    >
-                      Checkout →
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    className="flex-1 rounded-full px-6 py-3 bg-white/20 hover:bg-white/30 font-semibold"
+                    onClick={() => nav("/products")}
+                  >
+                    Continue Shopping
+                  </button>
+                  <button
+                    className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
+                    onClick={() => nav("/checkout", { state: inferCheckoutState(items) })}
+                  >
+                    Checkout →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </div>
