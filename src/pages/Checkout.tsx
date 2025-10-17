@@ -137,6 +137,17 @@ export default function Checkout() {
       })();
     } else {
       setSelectedCauseId(String(causeId));
+      // Fetch the cause name for the selected causeId
+      (async () => {
+        const { data, error } = await supabase
+          .from("causes")
+          .select("name")
+          .eq("id", causeId)
+          .single();
+        if (!error && data?.name) {
+          setSelectedCauseName(data.name);
+        }
+      })();
     }
     if (!qty || qty < 1) {
       setError("Quantity must be at least 1.");
