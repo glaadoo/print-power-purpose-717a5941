@@ -330,13 +330,13 @@ export default function Checkout() {
         <button
           onClick={continueToCheckout}
           disabled={loading}
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+          className="flex items-center gap-2 rounded-2xl px-4 py-2 bg-white text-black font-bold hover:bg-white/90 border border-white/30"
           aria-label="Donate"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="hidden sm:inline">{loading ? "Processing..." : "Donate"}</span>
+          <span className="hidden sm:inline">{loading ? "Processing..." : "DONATE"}</span>
         </button>
       </header>
 
@@ -411,32 +411,16 @@ export default function Checkout() {
                   />
                 </div>
               </div>
-
-              {/* Totals */}
-              <div className="mb-6 space-y-2">
-                <div className="flex justify-between">
-                  <span className="opacity-90">Subtotal</span>
-                  <span className="font-semibold">
-                    ${(subtotal / 100).toFixed(2)}
-                  </span>
-                </div>
-                {donation > 0 && (
-                  <div className="flex justify-between">
-                    <span className="opacity-90">Donation</span>
-                    <span className="font-semibold">
-                      ${(donation / 100).toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                <div className="border-t border-white/40 my-2" />
-                <div className="flex justify-between text-xl">
-                  <span className="font-bold">Total</span>
-                  <span className="font-bold">
-                    ${(total / 100).toFixed(2)}
-                  </span>
-                </div>
-              </div>
             </div>
+
+            {/* Fixed Continue Button - Bottom Right */}
+            <button
+              onClick={continueToCheckout}
+              disabled={loading}
+              className="fixed bottom-8 right-8 z-50 rounded-full px-8 py-4 bg-white text-black text-lg font-bold hover:bg-white/90 transition-colors shadow-2xl"
+            >
+              {loading ? "Processing..." : "CONTINUE"}
+            </button>
           </div>
 
           {/* Floating Checkout Summary Bar */}
