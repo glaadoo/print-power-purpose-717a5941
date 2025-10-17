@@ -72,14 +72,32 @@ export default function ProductDetail() {
   return (
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <a
-          href="/"
-          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-          aria-label="Print Power Purpose Home"
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <div className="flex-1"></div>
+        
+        {/* Center: Brand */}
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <a
+            href="/"
+            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+            aria-label="Print Power Purpose Home"
+          >
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </a>
+        </div>
+
+        {/* Right: Cart */}
+        <button
+          onClick={() => nav("/cart")}
+          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+          aria-label="View cart"
         >
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M9 2L7.17 4H3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4.17L15 2H9z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M5 7v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className="hidden sm:inline">Cart</span>
+        </button>
       </header>
 
       {/* Scrollable content */}
