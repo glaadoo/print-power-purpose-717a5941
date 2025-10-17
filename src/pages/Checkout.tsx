@@ -1,12 +1,11 @@
 // src/pages/Checkout.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Layout from "../components/Layout";
-import GlassCard from "../components/GlassCard";
 import FloatingCheckoutBar from "../components/FloatingCheckoutBar";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
 import { supabase } from "@/lib/supabase";
+import VideoBackground from "@/components/VideoBackground";
 
 type ProductRow = {
   id: string;
@@ -219,27 +218,75 @@ export default function Checkout() {
   // ---- UI ----
   if (error) {
     return (
-      <Layout title="Checkout">
-        <GlassCard className="w-full max-w-3xl mx-auto text-center">
-          <p className="text-red-600">{error}</p>
-          <div className="text-center mt-4 flex gap-3 justify-center">
-            <button className="btn-rect" onClick={() => navigate("/products")}>
-              Back to products
-            </button>
-            <button className="btn-rect" onClick={() => navigate("/causes")}>
-              Pick a cause
-            </button>
-          </div>
-        </GlassCard>
-      </Layout>
+      <div className="fixed inset-0 text-white">
+        <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+          <a
+            href="/"
+            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+            aria-label="Print Power Purpose Home"
+          >
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </a>
+        </header>
+
+        <div className="h-full overflow-y-auto scroll-smooth pt-16">
+          <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
+            <VideoBackground
+              srcMp4="/media/hero.mp4"
+              srcWebm="/media/hero.webm"
+              poster="/media/hero-poster.jpg"
+              overlay={<div className="absolute inset-0 bg-black/50" />}
+            />
+
+            <div className="relative w-full max-w-2xl mx-auto">
+              <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 text-center">
+                <p className="text-red-400 mb-4">{error}</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button 
+                    className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
+                    onClick={() => navigate("/causes")}
+                  >
+                    Pick a Cause
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
     );
   }
 
   if (!product || !(selectedCauseId || merged.causeId)) {
     return (
-      <Layout title="Checkout">
-        <GlassCard className="w-full max-w-3xl mx-auto text-center">Loading…</GlassCard>
-      </Layout>
+      <div className="fixed inset-0 text-white">
+        <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+          <a
+            href="/"
+            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+            aria-label="Print Power Purpose Home"
+          >
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </a>
+        </header>
+
+        <div className="h-full overflow-y-auto scroll-smooth pt-16">
+          <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
+            <VideoBackground
+              srcMp4="/media/hero.mp4"
+              srcWebm="/media/hero.webm"
+              poster="/media/hero-poster.jpg"
+              overlay={<div className="absolute inset-0 bg-black/50" />}
+            />
+
+            <div className="relative w-full max-w-2xl mx-auto">
+              <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 text-center">
+                Loading…
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
     );
   }
 
@@ -252,118 +299,136 @@ export default function Checkout() {
   const total = subtotal + donation;
 
   return (
-    <Layout title="Checkout">
-      <GlassCard className="w-full max-w-3xl mx-auto mb-32">
-        <h1 className="text-2xl font-bold text-center mb-6 text-white drop-shadow-lg">
-          Review your order
-        </h1>
+    <div className="fixed inset-0 text-white">
+      {/* Top bar */}
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <a
+          href="/"
+          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+          aria-label="Print Power Purpose Home"
+        >
+          PRINT&nbsp;POWER&nbsp;PURPOSE
+        </a>
+      </header>
 
-        {/* Order summary */}
-        <div className="space-y-4 mb-6">
-          <div className="flex justify-between">
-            <span className="text-white/90">Product</span>
-            <span className="font-semibold text-white drop-shadow">{product.name}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white/90">Quantity</span>
-            <span className="font-semibold text-white drop-shadow">{qty}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white/90">Unit price</span>
-            <span className="font-semibold text-white drop-shadow">
-              ${(unitPrice / 100).toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white/90">Supporting</span>
-            <span className="font-semibold text-white drop-shadow">
-              {selectedCauseName || causeCtx?.cause?.name || merged.causeId}
-            </span>
-          </div>
-        </div>
+      {/* Scrollable content */}
+      <div className="h-full overflow-y-auto scroll-smooth pt-16">
+        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
+          <VideoBackground
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            overlay={<div className="absolute inset-0 bg-black/50" />}
+          />
 
-        {/* Optional donation */}
-        <div className="mb-6">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="text-2xl">🐾</div>
-            <div>
-              <div className="font-bold text-white drop-shadow">Kenzie says:</div>
-              <div className="text-white/90">
-                "Want to add an optional donation for {causeCtx?.cause?.name || "this cause"}?"
+          <div className="relative w-full max-w-2xl mx-auto mb-32">
+            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
+              <h1 className="text-3xl font-serif font-semibold text-center mb-8">
+                Review Your Order
+              </h1>
+
+              {/* Order summary */}
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between">
+                  <span className="opacity-90">Product</span>
+                  <span className="font-semibold">{product.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="opacity-90">Quantity</span>
+                  <span className="font-semibold">{qty}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="opacity-90">Unit price</span>
+                  <span className="font-semibold">
+                    ${(unitPrice / 100).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="opacity-90">Supporting</span>
+                  <span className="font-semibold">
+                    {selectedCauseName || causeCtx?.cause?.name || merged.causeId}
+                  </span>
+                </div>
               </div>
+
+              {/* Optional donation */}
+              <div className="mb-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="text-2xl">🐾</div>
+                  <div>
+                    <div className="font-bold">Kenzie says:</div>
+                    <div className="opacity-90">
+                      "Want to add an optional donation for {causeCtx?.cause?.name || "this cause"}?"
+                    </div>
+                  </div>
+                </div>
+
+                <label htmlFor="donation" className="block opacity-90 mb-2">
+                  Donation (USD)
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="opacity-80">$</span>
+                  <input
+                    id="donation"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={(donation / 100).toString()}
+                    onChange={(e) =>
+                      setDonation(Math.max(0, Math.round(parseFloat(e.target.value || "0") * 100)))
+                    }
+                    className="flex-1 rounded-xl bg-white/90 text-black px-4 py-2 outline-none"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              {/* Totals */}
+              <div className="mb-6 space-y-2">
+                <div className="flex justify-between">
+                  <span className="opacity-90">Subtotal</span>
+                  <span className="font-semibold">
+                    ${(subtotal / 100).toFixed(2)}
+                  </span>
+                </div>
+                {donation > 0 && (
+                  <div className="flex justify-between">
+                    <span className="opacity-90">Donation</span>
+                    <span className="font-semibold">
+                      ${(donation / 100).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="border-t border-white/40 my-2" />
+                <div className="flex justify-between text-xl">
+                  <span className="font-bold">Total</span>
+                  <span className="font-bold">
+                    ${(total / 100).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <button
+                onClick={continueToCheckout}
+                disabled={loading}
+                className="w-full rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors"
+              >
+                {loading ? "Processing…" : "Continue to Checkout →"}
+              </button>
             </div>
           </div>
 
-          <label htmlFor="donation" className="block text-white/90 mb-1">
-            Donation (USD)
-          </label>
-          <div className="flex items-center gap-2">
-            <span className="text-white/80">$</span>
-            <input
-              id="donation"
-              type="number"
-              min="0"
-              step="0.01"
-              value={(donation / 100).toString()}
-              onChange={(e) =>
-                setDonation(Math.max(0, Math.round(parseFloat(e.target.value || "0") * 100)))
-              }
-              className="input-rect bg-white/30 text-black placeholder-black/60"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-
-        {/* Totals */}
-        <div className="mb-6 space-y-2">
-          <div className="flex justify-between">
-            <span className="text-white/90">Subtotal</span>
-            <span className="font-semibold text-white drop-shadow">
-              ${(subtotal / 100).toFixed(2)}
-            </span>
-          </div>
-          {donation > 0 && (
-            <div className="flex justify-between">
-              <span className="text-white/90">Donation</span>
-              <span className="font-semibold text-white drop-shadow">
-                ${(donation / 100).toFixed(2)}
-              </span>
-            </div>
-          )}
-          <div className="border-t border-white/40 my-2" />
-          <div className="flex justify-between">
-            <span className="font-bold text-white drop-shadow">Total</span>
-            <span className="font-extrabold text-white drop-shadow">
-              ${(total / 100).toFixed(2)}
-            </span>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <button
-          onClick={continueToCheckout}
-          disabled={loading}
-          className="btn-rect w-full h-12 font-bold bg-green-600/90 hover:bg-green-600 text-white"
-        >
-          {loading ? "Processing…" : "Continue to checkout →"}
-        </button>
-
-        <button
-          onClick={() => navigate(-1)}
-          className="btn-rect w-full h-10 mt-3 font-bold text-white/90 hover:bg-white/10"
-        >
-          ← Back
-        </button>
-      </GlassCard>
-
-      {/* Floating Checkout Summary Bar */}
-      <FloatingCheckoutBar
-        productName={product.name}
-        quantity={qty}
-        subtotalCents={subtotal}
-        donationCents={donation}
-      />
-    </Layout>
+          {/* Floating Checkout Summary Bar */}
+          <FloatingCheckoutBar
+            productName={product.name}
+            quantity={qty}
+            subtotalCents={subtotal}
+            donationCents={donation}
+          />
+        </section>
+      </div>
+    </div>
   );
 }
 
