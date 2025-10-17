@@ -2,6 +2,7 @@ import { useMemo, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
+import { X } from "lucide-react";
 
 export default function Cart() {
   const { items, totalCents, setQty, remove, clear } = useCart();
@@ -85,7 +86,7 @@ export default function Cart() {
 
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
-                          className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center"
+                          className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl font-semibold"
                           onClick={() => setQty(it.id, Math.max(1, it.quantity - 1))}
                           aria-label="Decrease quantity"
                         >
@@ -97,11 +98,11 @@ export default function Cart() {
                           min={1}
                           value={it.quantity}
                           onChange={(e) => setQty(it.id, Number(e.target.value || 1))}
-                          className="w-16 h-8 rounded-lg bg-white/90 text-black text-center outline-none"
+                          className="w-14 h-10 rounded-lg bg-white/90 text-black text-center outline-none font-semibold"
                         />
 
                         <button
-                          className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center"
+                          className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl font-semibold"
                           onClick={() => setQty(it.id, it.quantity + 1)}
                           aria-label="Increase quantity"
                         >
@@ -109,10 +110,11 @@ export default function Cart() {
                         </button>
 
                         <button 
-                          className="ml-2 px-4 h-8 rounded-lg bg-red-500/80 hover:bg-red-500 text-white text-sm font-semibold"
+                          className="ml-2 w-10 h-10 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center"
                           onClick={() => remove(it.id)}
+                          aria-label="Remove item"
                         >
-                          Remove
+                          <X size={20} />
                         </button>
                       </div>
                     </li>
