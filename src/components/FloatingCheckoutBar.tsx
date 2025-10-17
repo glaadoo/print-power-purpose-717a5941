@@ -59,7 +59,7 @@ export default function FloatingCheckoutBar({
             
             <button
               onClick={() => navigate(-1)}
-              className="px-6 py-3 rounded-full bg-white text-primary font-bold hover:bg-white/90 transition-all shadow-lg hover:shadow-glow"
+              className="px-8 py-3 rounded-full bg-white text-black font-bold text-lg hover:bg-white/90 transition-all shadow-lg hover:shadow-glow"
             >
               Continue
             </button>
