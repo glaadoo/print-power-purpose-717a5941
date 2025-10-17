@@ -346,6 +346,38 @@ export default function Admin() {
                         <SheetDescription className="text-muted-foreground">Quick access to admin tools</SheetDescription>
                       </SheetHeader>
                       <div className="mt-6 space-y-4">
+                        <Button 
+                          onClick={() => navigate("/admin/orders")}
+                          variant="outline" 
+                          className="w-full justify-start bg-white border-gray-200 text-foreground hover:bg-gray-50" 
+                          size="lg"
+                        >
+                          📦 Orders
+                        </Button>
+                        <Button 
+                          onClick={() => navigate("/admin/donations")}
+                          variant="outline" 
+                          className="w-full justify-start bg-white border-gray-200 text-foreground hover:bg-gray-50" 
+                          size="lg"
+                        >
+                          💝 Donations
+                        </Button>
+                        <Button 
+                          onClick={() => navigate("/admin/analytics")}
+                          variant="outline" 
+                          className="w-full justify-start bg-white border-gray-200 text-foreground hover:bg-gray-50" 
+                          size="lg"
+                        >
+                          📊 Analytics
+                        </Button>
+                        <Button 
+                          onClick={() => navigate("/admin/story-requests")}
+                          variant="outline" 
+                          className="w-full justify-start bg-white border-gray-200 text-foreground hover:bg-gray-50" 
+                          size="lg"
+                        >
+                          📖 Story Requests
+                        </Button>
                         <Sheet>
                           <SheetTrigger asChild>
                             <Button variant="outline" className="w-full justify-start bg-white border-gray-200 text-foreground hover:bg-gray-50" size="lg">

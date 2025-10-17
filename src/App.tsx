@@ -101,6 +101,10 @@ const Auth            = lazyPage("Auth",            () => import("./pages/Auth")
 const AdminLogin      = lazyPage("AdminLogin",      () => import("./pages/AdminLogin"));
 const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
 const AdminSync       = lazyPage("AdminSync",       () => import("./pages/AdminSync"));
+const AdminOrders     = lazyPage("AdminOrders",     () => import("./pages/AdminOrders"));
+const AdminDonations  = lazyPage("AdminDonations",  () => import("./pages/AdminDonations"));
+const AdminAnalytics  = lazyPage("AdminAnalytics",  () => import("./pages/AdminAnalytics"));
+const AdminStoryRequests = lazyPage("AdminStoryRequests", () => import("./pages/AdminStoryRequests"));
 const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
 
 /* ---------- Fallback UI ---------- */
@@ -355,6 +359,46 @@ export default function App() {
             element={
               <RouteBoundary name="AdminSync">
                 <AdminSync />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Orders */}
+          <Route
+            path="/admin/orders"
+            element={
+              <RouteBoundary name="AdminOrders">
+                <AdminOrders />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Donations */}
+          <Route
+            path="/admin/donations"
+            element={
+              <RouteBoundary name="AdminDonations">
+                <AdminDonations />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Analytics */}
+          <Route
+            path="/admin/analytics"
+            element={
+              <RouteBoundary name="AdminAnalytics">
+                <AdminAnalytics />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Story Requests */}
+          <Route
+            path="/admin/story-requests"
+            element={
+              <RouteBoundary name="AdminStoryRequests">
+                <AdminStoryRequests />
               </RouteBoundary>
             }
           />
