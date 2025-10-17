@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import GlassCard from "../components/GlassCard";
-import Layout from "../components/Layout";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
+import VideoBackground from "@/components/VideoBackground";
 
 type ProductRow = {
   id: string;
@@ -45,36 +44,19 @@ export default function ProductDetail() {
     })();
   }, [id]);
 
-  if (loading) {
-    return (
-      <Layout title="Product">
-        <GlassCard>
-          <p className="text-center">Loading product…</p>
-        </GlassCard>
-      </Layout>
-    );
-  }
-
-  if (err || !product) {
-    return (
-      <Layout title="Product">
-        <GlassCard>
-          <p className="text-center text-red-600">
-            {err || "Product not found"}
-          </p>
-        </GlassCard>
-      </Layout>
-    );
-  }
+  useEffect(() => {
+    document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
+  }, [product]);
 
   const unitCents =
-    Number(product.priceCents || 0) > 0
+    product && Number(product.priceCents || 0) > 0
       ? Number(product.priceCents)
-      : priceFromBase(product.base_cost_cents);
+      : priceFromBase(product?.base_cost_cents);
 
   const unitPrice = unitCents / 100;
 
   function handleAddToCart() {
+    if (!product) return;
     add(
       {
         id: product.id,
@@ -88,50 +70,89 @@ export default function ProductDetail() {
   }
 
   return (
-    <Layout title={product.name}>
-      <GlassCard className="w-full max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-center mb-4">{product.name}</h1>
-        <p className="text-center mb-2">Price: ${unitPrice.toFixed(2)}</p>
-        {product.description && (
-          <p className="text-center text-white/90 mb-4">{product.description}</p>
-        )}
+    <div className="fixed inset-0 text-white">
+      {/* Top bar */}
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <a
+          href="/"
+          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+          aria-label="Print Power Purpose Home"
+        >
+          PRINT&nbsp;POWER&nbsp;PURPOSE
+        </a>
+      </header>
 
-        <div className="flex flex-col gap-3 items-center">
-          <label className="font-bold">Quantity</label>
-          <input
-            type="number"
-            min="1"
-            value={qty}
-            onChange={(e) => setQty(Math.max(1, Number(e.target.value || 1)))}
-            className="input-rect bg-white/30 text-black w-24 text-center"
+      {/* Scrollable content */}
+      <div className="h-full overflow-y-auto scroll-smooth pt-16">
+        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
+          <VideoBackground
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            overlay={<div className="absolute inset-0 bg-black/50" />}
           />
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-            <button
-              onClick={handleAddToCart}
-              className="btn-rect flex-1 font-bold bg-green-600/90 hover:bg-green-600 text-white"
-            >
-              Add to cart
-            </button>
+          <div className="relative w-full max-w-2xl mx-auto">
+            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
+              {loading && <p className="text-center">Loading product…</p>}
+              
+              {err && (
+                <p className="text-center text-red-400">{err || "Product not found"}</p>
+              )}
 
-            <button
-              onClick={() =>
-                nav("/checkout", { state: { productId: product.id, qty } })
-              }
-              className="btn-rect flex-1 font-bold bg-blue-600/90 hover:bg-blue-600 text-white"
-            >
-              Checkout
-            </button>
+              {!loading && !err && product && (
+                <>
+                  <h1 className="text-3xl font-serif font-semibold text-center mb-4">
+                    {product.name}
+                  </h1>
+                  <p className="text-center text-xl mb-2">${unitPrice.toFixed(2)}</p>
+                  {product.description && (
+                    <p className="text-center opacity-90 mb-6">{product.description}</p>
+                  )}
+
+                  <div className="flex flex-col gap-4 items-center">
+                    <div className="w-full max-w-xs">
+                      <label className="block text-sm font-medium mb-2 text-center">Quantity</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={qty}
+                        onChange={(e) => setQty(Math.max(1, Number(e.target.value || 1)))}
+                        className="w-full rounded-xl bg-white/90 text-black px-4 py-2 text-center outline-none"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                      <button
+                        onClick={handleAddToCart}
+                        className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors"
+                      >
+                        Add to Cart
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          nav("/checkout", { state: { productId: product.id, qty } })
+                        }
+                        className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors"
+                      >
+                        Checkout
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => nav("/products")}
+                      className="mt-2 text-sm opacity-80 hover:opacity-100 underline"
+                    >
+                      ← Back to products
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-
-          <button
-            onClick={() => nav("/products")}
-            className="btn-rect mt-2 opacity-90"
-          >
-            ← Back to products
-          </button>
-        </div>
-      </GlassCard>
-    </Layout>
+        </section>
+      </div>
+    </div>
   );
 }
