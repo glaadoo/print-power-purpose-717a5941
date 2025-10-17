@@ -475,9 +475,52 @@ export default function Admin() {
               </div>
             </GlassCard>
 
+            {/* Quick Access Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div onClick={() => navigate("/admin/orders")} className="cursor-pointer hover:scale-105 transition-transform">
+                <GlassCard className="p-6">
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl">📦</div>
+                    <h3 className="text-xl font-bold text-white">Orders</h3>
+                    <p className="text-white/70 text-sm">View and manage all orders</p>
+                  </div>
+                </GlassCard>
+              </div>
+
+              <div onClick={() => navigate("/admin/donations")} className="cursor-pointer hover:scale-105 transition-transform">
+                <GlassCard className="p-6">
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl">💝</div>
+                    <h3 className="text-xl font-bold text-white">Donations</h3>
+                    <p className="text-white/70 text-sm">Track donations and totals</p>
+                  </div>
+                </GlassCard>
+              </div>
+
+              <div onClick={() => navigate("/admin/analytics")} className="cursor-pointer hover:scale-105 transition-transform">
+                <GlassCard className="p-6">
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl">📊</div>
+                    <h3 className="text-xl font-bold text-white">Analytics</h3>
+                    <p className="text-white/70 text-sm">Charts, metrics, and insights</p>
+                  </div>
+                </GlassCard>
+              </div>
+
+              <div onClick={() => navigate("/admin/story-requests")} className="cursor-pointer hover:scale-105 transition-transform">
+                <GlassCard className="p-6">
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl">📖</div>
+                    <h3 className="text-xl font-bold text-white">Story Requests</h3>
+                    <p className="text-white/70 text-sm">$777 milestone tracking</p>
+                  </div>
+                </GlassCard>
+              </div>
+            </div>
+
             <GlassCard>
             <div className="flex flex-col gap-3">
-              <Button 
+              <Button
                 onClick={() => navigate("/admin/sync")}
                 size="lg"
                 className="w-full md:w-auto"
