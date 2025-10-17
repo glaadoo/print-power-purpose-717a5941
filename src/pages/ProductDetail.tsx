@@ -20,7 +20,7 @@ const priceFromBase = (base?: number | null) =>
 export default function ProductDetail() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { add } = useCart();
+  const { add, items } = useCart();
 
   const [product, setProduct] = useState<ProductRow | null>(null);
   const [qty, setQty] = useState(1);
@@ -89,7 +89,7 @@ export default function ProductDetail() {
         {/* Right: Cart */}
         <button
           onClick={() => nav("/cart")}
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30 relative"
           aria-label="View cart"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -97,6 +97,11 @@ export default function ProductDetail() {
             <path d="M5 7v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span className="hidden sm:inline">Cart</span>
+          {items.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {items.length}
+            </span>
+          )}
         </button>
       </header>
 
