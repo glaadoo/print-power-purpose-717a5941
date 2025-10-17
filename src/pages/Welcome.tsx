@@ -93,7 +93,7 @@ export default function Welcome() {
   }
 
   return (
-    <div className="fixed inset-0 text-white">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
       {/* Menu Overlay */}
       <MenuOverlay open={menuOpen} onClose={toggleMenu} showSignOut={!!session} />
 
@@ -116,17 +116,36 @@ export default function Welcome() {
         </a>
       </header>
 
-      {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            overlay={<div className="absolute inset-0 bg-black/40" />}
-          />
+      {/* Fullscreen content with animated paws background */}
+      <div className="h-full w-full pt-16 relative">
+        <VideoBackground
+          srcMp4="/media/hero.mp4"
+          srcWebm="/media/hero.webm"
+          poster="/media/hero-poster.jpg"
+          overlay={<div className="absolute inset-0 bg-black/40" />}
+        />
 
-          <div className="relative w-full max-w-5xl mx-auto">
+        {/* Animated paws all over the background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          {paws.map((i) => (
+            <span 
+              key={i} 
+              className="absolute text-4xl md:text-5xl lg:text-6xl animate-float opacity-30"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${4 + Math.random() * 4}s`
+              }}
+            >
+              🐾
+            </span>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="relative h-full flex items-center justify-center px-4 py-12">
+          <div className="w-full max-w-5xl mx-auto">
             {/* Welcome message */}
             <div className="text-center mb-8">
               <h1 className="font-serif text-[clamp(2.5rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow mb-4">
@@ -143,7 +162,7 @@ export default function Welcome() {
                     className="relative w-full h-24 sm:h-32 overflow-hidden"
                     aria-hidden="true"
                   >
-                    {paws.map((i) => (
+                    {paws.slice(0, 10).map((i) => (
                       <span 
                         key={i} 
                         className="absolute text-3xl sm:text-4xl animate-float"
@@ -210,7 +229,7 @@ export default function Welcome() {
               </div>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
