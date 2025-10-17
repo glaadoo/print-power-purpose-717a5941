@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface FloatingCheckoutBarProps {
   productName: string;
   quantity: number;
   subtotalCents: number;
   donationCents: number;
+  onContinue: () => void;
+  loading?: boolean;
 }
 
 export default function FloatingCheckoutBar({
@@ -13,8 +14,9 @@ export default function FloatingCheckoutBar({
   quantity,
   subtotalCents,
   donationCents,
+  onContinue,
+  loading = false,
 }: FloatingCheckoutBarProps) {
-  const navigate = useNavigate();
   const totalCents = subtotalCents + donationCents;
 
   return (
@@ -58,10 +60,11 @@ export default function FloatingCheckoutBar({
             </div>
             
             <button
-              onClick={() => navigate(-1)}
-              className="px-8 py-3 rounded-full bg-white text-black font-bold text-lg hover:bg-white/90 transition-all shadow-lg hover:shadow-glow"
+              onClick={onContinue}
+              disabled={loading}
+              className="px-8 py-3 rounded-full bg-white text-black font-bold text-lg hover:bg-white/90 transition-all shadow-lg hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Continue
+              {loading ? "Processing..." : "Continue"}
             </button>
           </div>
         </div>

@@ -432,6 +432,8 @@ export default function Checkout() {
             quantity={qty}
             subtotalCents={subtotal}
             donationCents={donation}
+            onContinue={continueToCheckout}
+            loading={loading}
           />
         </section>
       </div>
