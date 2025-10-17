@@ -412,30 +412,6 @@ export default function Checkout() {
                 </div>
               </div>
 
-              {/* Totals */}
-              <div className="mb-6 space-y-2">
-                <div className="flex justify-between">
-                  <span className="opacity-90">Subtotal</span>
-                  <span className="font-semibold">
-                    ${(subtotal / 100).toFixed(2)}
-                  </span>
-                </div>
-                {donation > 0 && (
-                  <div className="flex justify-between">
-                    <span className="opacity-90">Donation</span>
-                    <span className="font-semibold">
-                      ${(donation / 100).toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                <div className="border-t border-white/40 my-2" />
-                <div className="flex justify-between text-xl">
-                  <span className="font-bold">Total</span>
-                  <span className="font-bold">
-                    ${(total / 100).toFixed(2)}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
 
