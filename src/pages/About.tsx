@@ -1,11 +1,14 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
 import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
+import { Button } from "@/components/ui/button";
 
 export default function About() {
   const menu = useToggle();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "About | Print Power Purpose";
@@ -15,10 +18,10 @@ export default function About() {
     <div className="relative min-h-screen">
       <VideoBackground srcMp4="/IMG_4805.jpeg" />
       
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <a href="/" className="text-2xl font-bold text-white hover:opacity-80 transition-opacity">
+      {/* Top Floating Bar */}
+      <header className="fixed top-6 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-7xl">
+        <div className="bg-black/30 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 flex items-center justify-between">
+          <a href="/" className="text-xl font-bold text-white hover:opacity-80 transition-opacity">
             Print Power Purpose
           </a>
           <button
@@ -33,8 +36,20 @@ export default function About() {
         </div>
       </header>
 
+      {/* Bottom Floating Bar */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-7xl">
+        <div className="bg-black/30 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 flex items-center justify-center">
+          <Button
+            onClick={() => navigate("/products")}
+            className="bg-white/20 hover:bg-white/30 text-white font-semibold px-8 py-2 rounded-full transition-all"
+          >
+            Shop With Purpose
+          </Button>
+        </div>
+      </div>
+
       {/* Article Content */}
-      <main className="relative z-10 pt-32 pb-20 px-6">
+      <main className="relative z-10 pt-32 pb-32 px-6">
         <div className="max-w-4xl mx-auto">
           {/* Title Section */}
           <GlassCard className="mb-8 text-center">
@@ -44,18 +59,12 @@ export default function About() {
             <div className="w-24 h-1 bg-white/60 mx-auto"></div>
           </GlassCard>
 
-          {/* Opening Stat */}
-          <GlassCard className="mb-8 bg-white/5 border-white/30">
-            <p className="text-3xl md:text-4xl font-bold text-white text-center mb-2">
-              20%
-            </p>
-            <p className="text-xl text-white/80 text-center">
-              Only 20% of donors give again after their first gift.
-            </p>
-          </GlassCard>
-
           {/* Article Body */}
           <GlassCard className="space-y-6 text-white/90 leading-relaxed">
+            <p className="text-xl font-semibold text-white">
+              Only 20% of donors give again after their first gift.
+            </p>
+
             <p>
               That statistic reveals something most nonprofits still don't want to admit: the relationship model is fundamentally broken.
             </p>
@@ -385,18 +394,6 @@ export default function About() {
             </p>
           </GlassCard>
 
-          {/* Footer CTA */}
-          <GlassCard className="mt-8 text-center bg-white/5 border-white/30">
-            <p className="text-xl text-white mb-4">
-              Ready to be part of transparent, authentic impact?
-            </p>
-            <a
-              href="/products"
-              className="inline-block px-8 py-3 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all"
-            >
-              Shop With Purpose
-            </a>
-          </GlassCard>
         </div>
       </main>
 
