@@ -1,7 +1,9 @@
 // src/App.tsx
 import React, { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import KenzieChat from "@/components/KenzieChat";
+import FloatingCartBar from "@/components/FloatingCartBar";
 
 /* ---------- Debug helpers ---------- */
 
@@ -186,11 +188,21 @@ export default function App() {
     };
   }, []);
 
+  const location = useLocation();
+
   return (
     <>
       <DebugBar />
 
-      <Suspense fallback={<Loading label="page" />}>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <Suspense fallback={<Loading label="page" />}>
         <Routes>
           {/* Home */}
           <Route
@@ -426,8 +438,11 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+        </motion.div>
+      </AnimatePresence>
 
-      {/* Mount once, globally */}
+      {/* Global floating components */}
+      <FloatingCartBar />
       <KenzieChat />
     </>
   );
