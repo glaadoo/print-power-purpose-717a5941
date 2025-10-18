@@ -15,42 +15,54 @@ export default function About() {
   }, []);
 
   return (
-    <div className="relative min-h-screen">
+    <div className="fixed inset-0 text-white overflow-y-auto">
       <VideoBackground srcMp4="/IMG_4805.jpeg" />
       
-      {/* Top Floating Bar */}
-      <header className="fixed top-6 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-7xl">
-        <div className="bg-black/30 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 flex items-center justify-between">
-          <a href="/" className="text-xl font-bold text-white hover:opacity-80 transition-opacity">
-            Print Power Purpose
-          </a>
-          <button
-            onClick={menu.toggle}
-            className="text-white hover:opacity-80 transition-opacity"
-            aria-label="Toggle menu"
+      {/* Top bar (Menu | PPP | empty) */}
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+        {/* Left: Menu */}
+        <button
+          onClick={menu.toggle}
+          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+          aria-haspopup="dialog"
+          aria-label="Open menu"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M3 6h18M3 12h18M3 18h18" stroke="white" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <span className="hidden sm:inline">Menu</span>
+        </button>
+
+        {/* Center: Brand */}
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <a
+            href="/"
+            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+            aria-label="Print Power Purpose Home"
           >
-            <div className="w-6 h-0.5 bg-white mb-1.5"></div>
-            <div className="w-6 h-0.5 bg-white mb-1.5"></div>
-            <div className="w-6 h-0.5 bg-white"></div>
-          </button>
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </a>
         </div>
+
+        {/* Right: Empty space for balance */}
+        <div className="w-[100px]"></div>
       </header>
 
-      {/* Bottom Floating Bar */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-7xl">
-        <div className="bg-black/30 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 flex items-center justify-center">
+      {/* Bottom bar */}
+      <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-3 backdrop-blur bg-black/20 border-t border-white/10">
+        <div className="flex items-center justify-center">
           <Button
             onClick={() => navigate("/products")}
-            className="bg-white/20 hover:bg-white/30 text-white font-semibold px-8 py-2 rounded-full transition-all"
+            className="bg-white/20 hover:bg-white/30 text-white font-semibold px-8 py-2 rounded-full transition-all border border-white/30"
           >
             Shop With Purpose
           </Button>
         </div>
       </div>
 
-      {/* Article Content */}
-      <main className="relative z-10 pt-32 pb-32 px-6">
-        <div className="max-w-4xl mx-auto">
+      {/* Article Content - Fullscreen */}
+      <main className="relative z-10 pt-20 pb-20 px-6 min-h-screen flex items-center">
+        <div className="w-full">
           {/* Title Section */}
           <GlassCard className="mb-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -60,7 +72,7 @@ export default function About() {
           </GlassCard>
 
           {/* Article Body */}
-          <GlassCard className="space-y-6 text-white/90 leading-relaxed">
+          <GlassCard className="space-y-6 text-white/90 leading-relaxed text-lg">
             <p className="text-xl font-semibold text-white">
               Only 20% of donors give again after their first gift.
             </p>
@@ -393,7 +405,6 @@ export default function About() {
               But messy and authentic beats polished and distant. Every time.
             </p>
           </GlassCard>
-
         </div>
       </main>
 
