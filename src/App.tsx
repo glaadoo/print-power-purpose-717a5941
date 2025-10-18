@@ -86,6 +86,7 @@ function lazyPage<T extends { default: React.ComponentType<any> }>(
 
 const Home            = lazyPage("Home",            () => import("./pages/Home"));
 const Kenzie          = lazyPage("Kenzie",          () => import("./pages/Kenzie"));
+const About           = lazyPage("About",           () => import("./pages/About"));
 const Causes          = lazyPage("Causes",          () => import("./pages/Causes"));
 const Products        = lazyPage("Products",        () => import("./pages/Products"));
 const ProductDetail   = lazyPage("ProductDetail",   () => import("./pages/ProductDetail"));
@@ -263,6 +264,14 @@ export default function App() {
             element={
               <RouteBoundary name="Kenzie">
                 <Kenzie />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <RouteBoundary name="About">
+                <About />
               </RouteBoundary>
             }
           />
