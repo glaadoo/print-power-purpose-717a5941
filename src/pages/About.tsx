@@ -62,9 +62,9 @@ export default function About() {
 
       {/* Article Content - Fullscreen */}
       <main className="relative z-10 pt-20 pb-20 px-6 min-h-screen flex items-center">
-        <div className="w-full">
-          {/* Title Section */}
-          <GlassCard className="mb-8 text-center">
+        {/* Title Section */}
+        <div className="w-full space-y-8">
+          <GlassCard className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Why Donors Trust Messy Progress Over Polished Success
             </h1>

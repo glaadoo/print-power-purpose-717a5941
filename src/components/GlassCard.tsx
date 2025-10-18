@@ -13,7 +13,7 @@ export default function GlassCard({
     <section
       className={`
         ${padding}
-        max-w-3xl mx-auto
+        w-full
         rounded-2xl shadow-xl
         ${className}
       `}
