@@ -1,52 +1,54 @@
-# Cron Job Setup for Check-Drop Automation
+# CRON Job Setup for Cause Milestone Evaluation
 
 ## Overview
-The `checkdrop-evaluate` edge function monitors all causes and automatically triggers story requests when a cause reaches the $777 milestone.
+This project includes a CRON job that runs daily to check if any causes have reached the $777 donation milestone. When reached, it creates a story request and sends an email notification to the admin.
 
-## Setting Up the Cron Job
+## Security
+The `checkdrop-evaluate` edge function is protected with a secret header (`x-cron-secret`) that must match the `CRON_SECRET` environment variable. This prevents unauthorized triggering of the function and email spam.
 
-### 1. Enable Required Extensions
-First, enable the necessary PostgreSQL extensions in your Lovable Cloud backend:
+## Manual Setup Required
+
+Due to database permission requirements for `pg_cron` and `pg_net` extensions, you'll need to run the following SQL manually in your backend SQL editor:
+
+<lov-actions>
+<lov-open-backend>Open Backend SQL Editor</lov-open-backend>
+</lov-actions>
 
 ```sql
--- Enable pg_cron for scheduled jobs
+-- Enable extensions (if not already enabled)
 CREATE EXTENSION IF NOT EXISTS pg_cron;
-
--- Enable pg_net for HTTP requests
 CREATE EXTENSION IF NOT EXISTS pg_net;
-```
 
-### 2. Create the Cron Job
-Run this SQL to schedule the check-drop evaluation to run daily at 9 AM UTC:
-
-```sql
+-- Schedule the daily job at 9 AM UTC
 SELECT cron.schedule(
   'daily-checkdrop-evaluation',
-  '0 9 * * *', -- Every day at 9:00 AM UTC
+  '0 9 * * *', -- Every day at 9 AM UTC
   $$
   SELECT
     net.http_post(
       url := 'https://wgohndthjgeqamfuldov.supabase.co/functions/v1/checkdrop-evaluate',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw'
+        'x-cron-secret', current_setting('app.settings.cron_secret', true)
       ),
-      body := jsonb_build_object(
-        'timestamp', now()
-      )
-    ) AS request_id;
+      body := jsonb_build_object('timestamp', now()::text)
+    ) as request_id;
   $$
 );
 ```
 
-### 3. Verify the Cron Job
+**Important**: You'll need to configure the `app.settings.cron_secret` setting in your database to match the `CRON_SECRET` environment variable that you've already set.
+
+## Verify the Cron Job
+
 Check that the cron job was created successfully:
 
 ```sql
 SELECT * FROM cron.job WHERE jobname = 'daily-checkdrop-evaluation';
 ```
 
-### 4. View Cron Job History
+## View Cron Job History
+
 Monitor execution history:
 
 ```sql
@@ -58,24 +60,14 @@ LIMIT 10;
 
 ## Manual Testing
 
-To manually trigger the check-drop evaluation without waiting for the cron schedule:
+To manually trigger the check-drop evaluation (requires the CRON_SECRET):
 
 ```bash
 curl -X POST https://wgohndthjgeqamfuldov.supabase.co/functions/v1/checkdrop-evaluate \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw" \
+  -H "x-cron-secret: YOUR_CRON_SECRET_VALUE" \
   -d '{"timestamp": "2025-01-01T09:00:00Z"}'
 ```
-
-## Cron Schedule Options
-
-If you want to change the frequency, here are common cron patterns:
-
-- **Every hour**: `0 * * * *`
-- **Every 6 hours**: `0 */6 * * *`
-- **Daily at 9 AM**: `0 9 * * *` (current)
-- **Weekly on Monday at 9 AM**: `0 9 * * 1`
-- **Every 15 minutes**: `*/15 * * * *`
 
 ## Modifying the Cron Job
 
@@ -86,43 +78,42 @@ To update the schedule:
 SELECT cron.unschedule('daily-checkdrop-evaluation');
 
 -- Then create a new one with updated schedule
--- (use the CREATE statement from step 2 with new cron pattern)
+-- (use the CREATE statement from above with new cron pattern)
 ```
 
-## Deleting the Cron Job
+## Cron Schedule Options
 
-To remove the cron job completely:
-
-```sql
-SELECT cron.unschedule('daily-checkdrop-evaluation');
-```
+- **Every hour**: `0 * * * *`
+- **Every 6 hours**: `0 */6 * * *`
+- **Daily at 9 AM**: `0 9 * * *` (current)
+- **Weekly on Monday at 9 AM**: `0 9 * * 1`
 
 ## What Happens During Check-Drop?
 
-1. The cron job triggers the `checkdrop-evaluate` edge function
-2. The function fetches all causes from the database
-3. For each cause that has raised >= $777:
+1. CRON job triggers the `checkdrop-evaluate` edge function with secret header
+2. Function validates the `x-cron-secret` header (security check)
+3. Fetches all causes from the database
+4. For each cause that has raised >= $777:
    - Checks if a story request already exists
    - If not, creates a new story request record
    - Sends an email notification to admin@printpowerpurpose.com
-4. Returns a summary of how many causes were evaluated and how many triggered
+5. Returns a summary of evaluated and triggered causes
 
 ## Monitoring
 
-- Check edge function logs in Lovable Cloud backend
+- Check edge function logs in backend
 - Review story_requests table for new entries
 - Monitor admin email for milestone notifications
 - Check cron.job_run_details for execution history
 
 ## Troubleshooting
 
-**Cron job not running:**
-- Verify extensions are enabled (`\dx` in SQL editor)
-- Check cron.job table for the job entry
-- Review cron.job_run_details for error messages
+**Cron job returns 401 Unauthorized:**
+- Verify `CRON_SECRET` environment variable is set correctly
+- Ensure the secret matches in both the edge function environment and the cron job configuration
 
 **Function not creating story requests:**
-- Manually test the edge function using curl
+- Manually test the edge function using curl with correct secret
 - Check edge function logs for errors
 - Verify RESEND_API_KEY secret is set
 - Ensure causes table has valid data
