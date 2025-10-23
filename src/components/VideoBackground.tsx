@@ -40,7 +40,7 @@ export default function VideoBackground({
         style={{ y }}
         className="w-full h-full object-cover"
         poster={poster}
-        preload="auto"
+        preload="metadata"
         autoPlay
         muted
         loop
