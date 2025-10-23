@@ -445,14 +445,8 @@ export type Database = {
         Args: { amount: number; cause_uuid: string }
         Returns: undefined
       }
-      ppp_session_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      require_ppp_session_id: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      ppp_session_id: { Args: never; Returns: string }
+      require_ppp_session_id: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
