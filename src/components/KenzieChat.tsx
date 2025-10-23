@@ -152,20 +152,43 @@ export default function KenzieChat() {
       const decoder = new TextDecoder();
       let done = false;
       let acc = "";
+      let buffer = "";
 
       // stream tokens and patch last assistant message
       while (!done) {
         const { value, done: d } = await reader.read();
         done = d;
         if (value) {
-          const chunk = decoder.decode(value, { stream: true });
-          acc += chunk;
-          setMessages((prev) => {
-            const cp = [...prev];
-            const last = cp[cp.length - 1];
-            if (last?.role === "assistant") last.content = acc;
-            return cp;
-          });
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Process complete lines from buffer
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || ""; // Keep incomplete line in buffer
+          
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith(":")) continue;
+            if (trimmed === "data: [DONE]") continue;
+            
+            if (trimmed.startsWith("data: ")) {
+              try {
+                const jsonStr = trimmed.slice(6);
+                const parsed = JSON.parse(jsonStr);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  acc += content;
+                  setMessages((prev) => {
+                    const cp = [...prev];
+                    const last = cp[cp.length - 1];
+                    if (last?.role === "assistant") last.content = acc;
+                    return cp;
+                  });
+                }
+              } catch (e) {
+                console.error("Failed to parse SSE chunk:", e);
+              }
+            }
+          }
         }
       }
 
