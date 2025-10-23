@@ -109,12 +109,7 @@ export default function KenzieChat() {
         const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
         setMessages(m);
       } else {
-        // seed starter to DB if empty
-        await scoped.from("kenzie_messages").insert({
-          session_id: sid,
-          role: "assistant",
-          content: STARTER.content,
-        });
+        // no DB seeding for the starter message to avoid repeating intro in model context
       }
     })();
   }, []);
@@ -156,7 +151,7 @@ export default function KenzieChat() {
           "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
         },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history.filter(m => m.content !== STARTER.content) }),
       });
       if (!res.ok || !res.body) throw new Error("Network error");
 
