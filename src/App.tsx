@@ -406,9 +406,13 @@ export default function App() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Global floating components */}
-      <FloatingCartBar />
-      <KenzieChat />
+      {/* Global floating components - wrapped in error boundaries */}
+      <RouteBoundary name="FloatingCartBar">
+        <FloatingCartBar />
+      </RouteBoundary>
+      <RouteBoundary name="KenzieChat">
+        <KenzieChat />
+      </RouteBoundary>
     </>
   );
 }

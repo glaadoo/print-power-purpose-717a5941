@@ -70,43 +70,58 @@ export default function KenzieChat() {
   // ensure session id, create scoped client, and load history
   useEffect(() => {
     (async () => {
-      // 1) read from local storage or create
-      let sid = localStorage.getItem("ppp:kenzie:session_id");
-      if (!sid) {
-        try {
-          const { data, error } = await singleton
-            .from("kenzie_sessions")
-            .insert({})
-            .select("id")
-            .maybeSingle();
-          if (error || !data?.id) {
-            sid = crypto.randomUUID();
-          } else {
-            sid = data.id as string;
-          }
-        } catch {
+      try {
+        // 1) read from local storage or create
+        let sid = localStorage.getItem("ppp:kenzie:session_id");
+        if (!sid) {
+          // Generate UUID first, then try to create session with it
           sid = crypto.randomUUID();
+          localStorage.setItem("ppp:kenzie:session_id", sid);
+          
+          // Try to create session in DB with the generated ID
+          try {
+            const scopedForInsert = makeScopedClient(sid);
+            await scopedForInsert
+              .from("kenzie_sessions")
+              .insert({ id: sid })
+              .select("id")
+              .maybeSingle();
+          } catch (dbErr) {
+            console.warn("Could not create session in DB, using local ID only:", dbErr);
+            // Continue anyway - we have a local session ID
+          }
         }
-        localStorage.setItem("ppp:kenzie:session_id", sid);
-      }
-      setSessionId(sid);
+        setSessionId(sid);
 
-      // 2) build a scoped client with the header for all subsequent queries
-      const scoped = makeScopedClient(sid);
-      setSb(scoped);
+        // 2) build a scoped client with the header for all subsequent queries
+        const scoped = makeScopedClient(sid);
+        setSb(scoped);
 
-      // 3) load last 40 messages (if any)
-      const { data: msgs, error } = await scoped
-        .from("kenzie_messages")
-        .select("role, content, created_at")
-        .order("created_at", { ascending: true })
-        .limit(40);
+        // 3) load last 40 messages (if any)
+        try {
+          const { data: msgs, error } = await scoped
+            .from("kenzie_messages")
+            .select("role, content, created_at")
+            .order("created_at", { ascending: true })
+            .limit(40);
 
-      if (!error && msgs && msgs.length) {
-        const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
-        setMessages(m);
-      } else {
-        // no DB seeding for the starter message to avoid repeating intro in model context
+          if (!error && msgs && msgs.length) {
+            const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
+            setMessages(m);
+          } else {
+            // no DB seeding for the starter message to avoid repeating intro in model context
+          }
+        } catch (loadErr) {
+          console.warn("Could not load message history:", loadErr);
+          // Continue anyway - we'll just start with the starter message
+        }
+      } catch (err) {
+        console.error("KenzieChat initialization error:", err);
+        // Generate a fallback session ID so chat still works
+        const fallbackSid = crypto.randomUUID();
+        localStorage.setItem("ppp:kenzie:session_id", fallbackSid);
+        setSessionId(fallbackSid);
+        setSb(makeScopedClient(fallbackSid));
       }
     })();
   }, []);
