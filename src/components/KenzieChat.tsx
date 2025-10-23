@@ -30,13 +30,10 @@ Just let me know what you need!`,
 
 // Helper to build a scoped supabase client with the session header
 function makeScopedClient(sessionId: string): SupabaseClient {
-  const url = import.meta.env.VITE_SUPABASE_URL || "";
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
-
-  if (!url || !key) {
-    console.error("Supabase config missing");
-    throw new Error("Supabase configuration is missing");
-  }
+  const url = import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co";
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw";
 
   return createClient(url, key, {
     global: {
