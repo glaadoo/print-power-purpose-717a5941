@@ -367,6 +367,36 @@ export type Database = {
         }
         Relationships: []
       }
+      service_role_audit: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          operation: string
+          record_id: string | null
+          table_name: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          operation: string
+          record_id?: string | null
+          table_name: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          operation?: string
+          record_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       story_requests: {
         Row: {
           cause_id: string
@@ -434,6 +464,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_error_log_rate_limit: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

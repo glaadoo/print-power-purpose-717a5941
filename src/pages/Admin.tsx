@@ -18,9 +18,9 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Admin() {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [adminKey, setAdminKey] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   
   const [products, setProducts] = useState<any[]>([]);
   const [causes, setCauses] = useState<any[]>([]);
@@ -49,39 +49,62 @@ export default function Admin() {
   const [nonprofitName, setNonprofitName] = useState("");
 
   useEffect(() => {
-    // Check if already authenticated in session storage
-    const storedAuth = sessionStorage.getItem("admin_authenticated");
-    if (storedAuth === "true") {
-      setIsAuthenticated(true);
-      loadData();
-    }
-    setLoading(false);
-  }, []);
+    // Check authentication with proper Supabase Auth
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        navigate('/admin-login');
+        return;
+      }
 
-  const handleKeySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Verify admin key against backend
-    const { data, error } = await supabase.functions.invoke("verify-admin-key", {
-      body: { key: adminKey }
+      setUserId(session.user.id);
+
+      // Verify admin role from database
+      const { data: roles, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking admin role:', error);
+        toast.error("Error verifying admin access");
+        navigate('/admin-login');
+        return;
+      }
+
+      if (!roles) {
+        toast.error("You don't have admin access");
+        navigate('/admin-login');
+        return;
+      }
+
+      setIsAdmin(true);
+      loadData();
+      setLoading(false);
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setIsAdmin(false);
+        navigate('/admin-login');
+      }
     });
 
-    if (error || !data?.valid) {
-      toast.error("Invalid admin key");
-      return;
-    }
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
-    sessionStorage.setItem("admin_authenticated", "true");
-    setIsAuthenticated(true);
-    setAdminKey("");
-    loadData();
-    toast.success("Access granted");
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin_authenticated");
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     toast.success("Logged out");
+    navigate('/admin-login');
   };
 
   const loadData = async () => {
@@ -257,60 +280,15 @@ export default function Admin() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
     return (
-      <div className="fixed inset-0 text-white">
-        <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-          <a href="/" className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase" aria-label="Print Power Purpose Home">
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
-        </header>
-
-        <div className="h-full overflow-y-auto scroll-smooth pt-16">
-          <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-            <VideoBackground 
-              srcMp4="/media/hero.mp4"
-              srcWebm="/media/hero.webm"
-              poster="/media/hero-poster.jpg"
-              overlay={<div className="absolute inset-0 bg-black/40" />}
-            />
-            <div className="relative w-full max-w-md mx-auto">
-              <GlassCard className="p-6 md:p-8">
-                <div className="space-y-4">
-                  <div className="space-y-2 text-center">
-                    <div className="flex items-center justify-center gap-2 text-white">
-                      <KeyRound className="h-6 w-6" />
-                      <h1 className="text-2xl font-bold">Admin Access</h1>
-                    </div>
-                    <p className="text-white/80">Enter admin key to continue</p>
-                  </div>
-                  <form onSubmit={handleKeySubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-key" className="text-white">Admin Key</Label>
-                      <Input
-                        id="admin-key"
-                        type="password"
-                        value={adminKey}
-                        onChange={(e) => setAdminKey(e.target.value)}
-                        placeholder="Enter admin key"
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Access Admin Panel
-                    </Button>
-                  </form>
-                </div>
-              </GlassCard>
-            </div>
-          </section>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  if (!isAdmin) {
+    return null; // Will redirect to login
   }
 
   return (
