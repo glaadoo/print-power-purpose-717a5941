@@ -1,6 +1,28 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
+// Rate limiting: Track requests per IP
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const MAX_REQUESTS = 10; // 10 requests per minute per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+
+  if (record.count >= MAX_REQUESTS) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
 type DirectBody = {
   productName: string;
   productImage?: string;
@@ -66,6 +88,19 @@ function toAbsoluteUrl(base: string, pathOrUrl: string): string {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+
+  // Rate limiting check
+  const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  if (!checkRateLimit(clientIp)) {
+    console.warn(`[RATE-LIMIT] IP ${clientIp} exceeded rate limit`);
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please try again later." }),
+      {
+        status: 429,
+        headers: { ...cors, "Content-Type": "application/json" },
+      }
+    );
+  }
 
   try {
     if (!STRIPE_SECRET_KEY) {
