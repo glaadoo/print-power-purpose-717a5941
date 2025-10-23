@@ -4,7 +4,7 @@ import { Resend } from 'https://esm.sh/resend@4.0.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
@@ -15,23 +15,18 @@ serve(async (req) => {
   }
 
   try {
-    // Security: Validate CRON secret header
+    // Security Fix #3: Validate CRON secret header to prevent unauthorized access
     const cronSecret = req.headers.get('x-cron-secret');
     const expectedSecret = Deno.env.get('CRON_SECRET');
     
-    if (!expectedSecret) {
-      console.error('CRON_SECRET not configured');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    if (cronSecret !== expectedSecret) {
-      console.warn('Unauthorized checkdrop-evaluate attempt');
+    if (!cronSecret || cronSecret !== expectedSecret) {
+      console.error('Unauthorized checkdrop-evaluate attempt - invalid or missing CRON_SECRET');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
     }
 
