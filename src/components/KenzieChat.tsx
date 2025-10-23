@@ -13,7 +13,19 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const STARTER: Msg = {
   role: "assistant",
-  content: "Hi, I’m Kenzie 🐾 How can I help with printing or donations today?",
+  content: `Woof woof! I'm Kenzie 🐾, your helpful AI assistant from Print Power Purpose! How can I fetch you some information today? I can help with:
+
+• **Custom printing questions** (materials, designs, processes - you name it!)
+
+• **Donations and causes** (how we give back, our partners, and how you can help)
+
+• **Your order status** (just bark out your order number!)
+
+• **Navigating our platform** (finding products, checking out, account help)
+
+• **Anything else that's on your mind!**
+
+Just let me know what you need!`,
 };
 
 // Helper to build a scoped supabase client with the session header
@@ -228,7 +240,7 @@ export default function KenzieChat() {
         <div ref={containerRef} className="flex-1 overflow-auto p-4 space-y-3">
           {messages.map((m, i) => (
             <div key={i} className={`max-w-[90%] ${m.role === "user" ? "ml-auto" : ""}`}>
-              <div className={`rounded-2xl px-3 py-2 ${m.role === "user" ? "bg-black text-white" : "bg-black/5"}`}>
+              <div className={`rounded-2xl px-3 py-2 whitespace-pre-wrap ${m.role === "user" ? "bg-black text-white" : "bg-black/5 text-justify"}`}>
                 {m.content}
               </div>
             </div>
