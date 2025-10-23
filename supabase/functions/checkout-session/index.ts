@@ -163,9 +163,9 @@ serve(async (req) => {
       }
 
       const productId = String(body.productId);
-      const qty = Math.max(1, Math.floor(Number(body.qty)));
+      const qty = Math.max(1, Math.min(100, Math.floor(Number(body.qty))));
       const causeId = String(body.causeId);
-      const donationCents = Math.max(0, Math.floor(Number(body.donationCents || 0)));
+      const donationCents = Math.max(0, Math.min(100000, Math.floor(Number(body.donationCents || 0))));
       const currency = String(body.currency || "usd").toLowerCase();
 
       // Build absolute redirect URLs

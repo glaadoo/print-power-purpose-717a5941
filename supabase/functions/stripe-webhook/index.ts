@@ -71,7 +71,7 @@ serve(async (req) => {
       if (orderError) {
         console.error('Error creating order:', orderError);
       } else {
-        console.log(`Order ${orderNumber} created successfully`);
+        console.log(`Order created successfully`);
         
         // Create donation record if donation amount > 0
         if (causeId && donationCents > 0 && orderData) {
@@ -87,7 +87,7 @@ serve(async (req) => {
           if (donationError) {
             console.error('Error creating donation record:', donationError);
           } else {
-            console.log(`Donation record created for ${donationCents} cents`);
+            console.log(`Donation record created successfully`);
           }
         }
         
@@ -101,7 +101,7 @@ serve(async (req) => {
           if (causeError) {
             console.error('Error incrementing cause:', causeError);
           } else {
-            console.log(`Incremented cause ${causeId} by ${donationCents} cents`);
+            console.log(`Cause donation total updated successfully`);
           }
         }
         
@@ -170,7 +170,7 @@ serve(async (req) => {
             if (emailError) {
               console.error('Error sending receipt email:', emailError);
             } else {
-              console.log(`Receipt email sent to ${session.customer_details.email}`);
+              console.log(`Receipt email sent successfully`);
             }
           } catch (emailErr) {
             console.error('Failed to send receipt email:', emailErr);

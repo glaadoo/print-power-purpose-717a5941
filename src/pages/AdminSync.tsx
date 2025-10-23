@@ -26,14 +26,52 @@ export default function AdminSync() {
   });
 
   useEffect(() => {
-    const storedAuth = sessionStorage.getItem("admin_authenticated");
-    if (storedAuth === "true") {
+    // Check authentication with proper Supabase Auth
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        navigate('/admin-login');
+        return;
+      }
+
+      // Verify admin role from database
+      const { data: roles, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking admin role:', error);
+        toast.error("Error verifying admin access");
+        navigate('/admin-login');
+        return;
+      }
+
+      if (!roles) {
+        toast.error("You don't have admin access");
+        navigate('/admin-login');
+        return;
+      }
+
       setIsAdmin(true);
       setLoading(false);
-      return;
-    }
+    };
 
-    navigate("/admin");
+    checkAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        navigate('/admin-login');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const syncSinaLite = async () => {
