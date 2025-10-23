@@ -91,7 +91,12 @@ export default function Home() {
       <ScrollDots sections={["hero", "solutions", "learn"]} />
 
       {/* Snap container with 3 slides */}
-      <div className="h-full snap-y snap-proximity overflow-y-scroll scroll-smooth">
+      <div 
+        className="h-full snap-y snap-proximity overflow-y-scroll scroll-smooth focus:outline-none"
+        tabIndex={0}
+        role="main"
+        aria-label="Main content"
+      >
         {/* ===== SLIDE 1: HERO + your Kenzie onboarding card ===== */}
         <section id="hero" className="relative h-full min-h-screen snap-start flex items-center justify-center">
           <VideoBackground
