@@ -5,34 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import KenzieChat from "@/components/KenzieChat";
 import FloatingCartBar from "@/components/FloatingCartBar";
 
-/* ---------- Debug helpers ---------- */
-
-function DebugBar() {
-  const loc = useLocation();
-  useEffect(() => {
-    console.log("[Router] location changed:", loc.pathname + loc.search + loc.hash);
-  }, [loc]);
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: 8,
-        left: 8,
-        zIndex: 9999,
-        background: "rgba(0,0,0,.75)",
-        color: "#fff",
-        padding: "6px 10px",
-        borderRadius: 8,
-        fontFamily:
-          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-        fontSize: 12,
-      }}
-    >
-      path: <strong>{loc.pathname}</strong>{" "}
-      <span style={{ opacity: 0.8 }}>{loc.search}{loc.hash}</span>
-    </div>
-  );
-}
 
 /** Per-route error boundary so crashes inside a page don't blank the whole app */
 class RouteBoundary extends React.Component<
@@ -74,13 +46,11 @@ function lazyPage<T extends { default: React.ComponentType<any> }>(
   loader: () => Promise<T>
 ) {
   return lazy(async () => {
-    console.log(`[Lazy] start loading ${label}`);
     try {
       const mod = await loader();
-      console.log(`[Lazy] loaded ${label}`);
       return mod;
     } catch (e) {
-      console.error(`[Lazy] FAILED to load ${label}`, e);
+      console.error(`Failed to load ${label}`, e);
       throw e;
     }
   });
@@ -113,7 +83,6 @@ const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcom
 /* ---------- Fallback UI ---------- */
 
 function Loading({ label }: { label: string }) {
-  console.log(`[Suspense] show fallback for ${label}`);
   return (
     <div
       style={{
@@ -141,7 +110,6 @@ function Loading({ label }: { label: string }) {
 
 function NotFound() {
   const loc = useLocation();
-  console.warn("[Router] 404 NotFound for path:", loc.pathname);
   return (
     <div
       style={{
@@ -174,14 +142,13 @@ function NotFound() {
 export default function App() {
   useEffect(() => {
     const onError = (ev: ErrorEvent) => {
-      console.error("[window.onerror]", ev.message, ev.error);
+      console.error("Application error:", ev.message, ev.error);
     };
     const onRejection = (ev: PromiseRejectionEvent) => {
-      console.error("[window.onunhandledrejection]", ev.reason);
+      console.error("Unhandled promise rejection:", ev.reason);
     };
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
-    console.log("[App] mounted");
     return () => {
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
@@ -192,8 +159,6 @@ export default function App() {
 
   return (
     <>
-      <DebugBar />
-
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
