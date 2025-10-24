@@ -117,7 +117,7 @@ export default function Welcome() {
       </header>
 
       {/* Fullscreen content with animated paws background */}
-      <div className="h-full w-full pt-20 relative">
+      <div className="h-full w-full pt-16 relative">
         <VideoBackground
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
@@ -144,7 +144,7 @@ export default function Welcome() {
         </div>
 
         {/* Content */}
-        <div className="relative h-full flex items-center justify-center px-4 py-6">
+        <div className="relative h-full flex items-center justify-center px-4 py-2">
           <div className="w-full max-w-5xl mx-auto">
 
             {/* Kenzie onboarding card */}
