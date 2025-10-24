@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import VideoBackground from "@/components/VideoBackground";
-import GlassCard from "@/components/GlassCard";
 import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { Menu } from "lucide-react";
@@ -150,7 +149,7 @@ export default function Welcome() {
             {/* Kenzie onboarding card */}
             <div className="flex justify-center px-4">
               <div className="w-full max-w-[1200px]">
-                <GlassCard padding="p-3 sm:p-4">
+                <div className="p-3 sm:p-4">
                   {/* paws banner */}
                   <div
                     className="relative w-full h-8 sm:h-10 overflow-hidden"
@@ -221,7 +220,7 @@ export default function Welcome() {
                       </div>
                     )}
                   </div>
-                </GlassCard>
+                </div>
               </div>
             </div>
           </div>
