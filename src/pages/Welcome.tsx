@@ -147,7 +147,7 @@ export default function Welcome() {
         <div className="relative h-full flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-5xl mx-auto">
             {/* Welcome message */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-12 mt-8">
               <h1 className="font-serif text-[clamp(2.5rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow mb-4">
                 Welcome{userProfile && ` ${userProfile.first_name}`}
               </h1>
