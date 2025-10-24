@@ -121,7 +121,7 @@ export default function SelectNonprofit() {
                     <SelectTrigger className="w-full bg-white/90 text-black border-white/30">
                       <SelectValue placeholder="Choose a nonprofit..." />
                     </SelectTrigger>
-                    <SelectContent side="bottom" className="bg-white z-50">
+                    <SelectContent side="bottom" sideOffset={8} avoidCollisions={false} className="bg-white z-[60]">
                       {NONPROFITS.map((n) => (
                         <SelectItem key={n} value={n} className="text-black">
                           {n}
@@ -144,7 +144,7 @@ export default function SelectNonprofit() {
                         <SelectTrigger className="w-full bg-white/90 text-black border-white/30">
                           <SelectValue placeholder="Choose a cause..." />
                         </SelectTrigger>
-                        <SelectContent side="bottom" className="bg-white z-50">
+                         <SelectContent side="bottom" sideOffset={8} avoidCollisions={false} className="bg-white z-[60]">
                           {causes.map((c) => (
                             <SelectItem key={c.id} value={c.id} className="text-black">
                               {c.name}
