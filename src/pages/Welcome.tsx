@@ -117,7 +117,7 @@ export default function Welcome() {
       </header>
 
       {/* Fullscreen content with animated paws background */}
-      <div className="h-full w-full pt-12 relative">
+      <div className="h-full w-full pt-8 relative">
         <VideoBackground
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
@@ -150,10 +150,10 @@ export default function Welcome() {
             {/* Kenzie onboarding card */}
             <div className="flex justify-center px-4">
               <div className="w-full max-w-[1200px]">
-                <GlassCard padding="p-4 sm:p-5">
+                <GlassCard padding="p-3 sm:p-4">
                   {/* paws banner */}
                   <div
-                    className="relative w-full h-12 sm:h-16 overflow-hidden"
+                    className="relative w-full h-10 sm:h-12 overflow-hidden"
                     aria-hidden="true"
                   >
                     {paws.slice(0, 10).map((i) => (
