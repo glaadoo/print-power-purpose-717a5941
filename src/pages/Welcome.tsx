@@ -117,7 +117,7 @@ export default function Welcome() {
       </header>
 
       {/* Fullscreen content with animated paws background */}
-      <div className="h-full w-full pt-8 relative">
+      <div className="h-full w-full pt-0 relative">
         <VideoBackground
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
@@ -144,7 +144,7 @@ export default function Welcome() {
         </div>
 
         {/* Content */}
-        <div className="relative h-full flex items-center justify-center px-4 py-0">
+        <div className="relative min-h-[calc(100svh-64px)] flex items-center justify-center px-4 py-0 -mt-3 sm:-mt-4">
           <div className="w-full max-w-5xl mx-auto">
 
             {/* Kenzie onboarding card */}
@@ -153,7 +153,7 @@ export default function Welcome() {
                 <GlassCard padding="p-3 sm:p-4">
                   {/* paws banner */}
                   <div
-                    className="relative w-full h-10 sm:h-12 overflow-hidden"
+                    className="relative w-full h-8 sm:h-10 overflow-hidden"
                     aria-hidden="true"
                   >
                     {paws.slice(0, 10).map((i) => (
@@ -174,7 +174,7 @@ export default function Welcome() {
 
                   <div className="text-center space-y-2">
                     {step >= 1 && (
-                      <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto">
+                      <div className="w-20 h-20 sm:w-28 sm:h-28 mx-auto">
                         <img
                           src="/IMG_4805.jpeg"
                           alt="Kenzie the mascot"
@@ -195,7 +195,7 @@ export default function Welcome() {
                       </div>
                     )}
                     {step >= 3 && (
-                      <div className="mt-2">
+                      <div className="mt-1">
                         <p className="text-gray-800 mb-2 text-lg font-semibold">
                           What are we printing for today?
                         </p>
