@@ -117,7 +117,7 @@ export default function Welcome() {
       </header>
 
       {/* Fullscreen content with animated paws background */}
-      <div className="h-full w-full pt-16 relative">
+      <div className="h-full w-full pt-24 relative">
         <VideoBackground
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
