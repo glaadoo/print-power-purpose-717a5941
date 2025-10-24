@@ -92,7 +92,7 @@ export default function Welcome() {
   }
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-y-auto text-white">
+    <div className="min-h-screen text-white">
       {/* Menu Overlay */}
       <MenuOverlay open={menuOpen} onClose={toggleMenu} showSignOut={!!session} />
 
@@ -116,7 +116,7 @@ export default function Welcome() {
       </header>
 
       {/* Fullscreen content with animated paws background */}
-      <div className="h-full w-full pt-0 relative">
+      <div className="min-h-screen w-full pt-0 relative">
         <VideoBackground
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"

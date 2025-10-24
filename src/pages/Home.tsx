@@ -36,7 +36,7 @@ export default function Home() {
   }
 
   return (
-    <div className="fixed inset-0 text-white">
+    <div className="min-h-screen text-white">
       {/* Top bar (Menu | PPP | Find Causes) */}
       <header
         className="
@@ -92,7 +92,7 @@ export default function Home() {
 
       {/* Scroll container with 3 slides */}
       <div 
-        className="h-full overflow-y-scroll scroll-smooth focus:outline-none"
+        className="scroll-smooth focus:outline-none"
         tabIndex={0}
         role="main"
         aria-label="Main content"
