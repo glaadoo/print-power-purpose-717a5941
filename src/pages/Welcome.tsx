@@ -93,7 +93,7 @@ export default function Welcome() {
   }
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
+    <div className="fixed inset-0 w-screen h-screen overflow-y-auto text-white">
       {/* Menu Overlay */}
       <MenuOverlay open={menuOpen} onClose={toggleMenu} showSignOut={!!session} />
 
