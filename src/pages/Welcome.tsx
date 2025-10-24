@@ -117,7 +117,7 @@ export default function Welcome() {
       </header>
 
       {/* Fullscreen content with animated paws background */}
-      <div className="h-full w-full pt-24 relative">
+      <div className="h-full w-full pt-20 relative">
         <VideoBackground
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
@@ -144,7 +144,7 @@ export default function Welcome() {
         </div>
 
         {/* Content */}
-        <div className="relative h-full flex items-center justify-center px-4 py-12">
+        <div className="relative h-full flex items-center justify-center px-4 py-6">
           <div className="w-full max-w-5xl mx-auto">
 
             {/* Kenzie onboarding card */}
@@ -153,7 +153,7 @@ export default function Welcome() {
                 <GlassCard>
                   {/* paws banner */}
                   <div
-                    className="relative w-full h-24 sm:h-32 overflow-hidden"
+                    className="relative w-full h-16 sm:h-20 overflow-hidden"
                     aria-hidden="true"
                   >
                     {paws.slice(0, 10).map((i) => (
@@ -172,7 +172,7 @@ export default function Welcome() {
                     ))}
                   </div>
 
-                  <div className="p-6 sm:p-10 text-center space-y-4">
+                  <div className="p-4 sm:p-6 text-center space-y-3">
                     {step >= 1 && (
                       <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto">
                         <img
@@ -183,20 +183,19 @@ export default function Welcome() {
                       </div>
                     )}
 
-                    <h1 className="font-serif text-[clamp(2.2rem,5vw,3.8rem)] leading-tight font-semibold drop-shadow mb-2">
+                    <h1 className="font-serif text-[clamp(2rem,4.5vw,3.2rem)] leading-tight font-semibold drop-shadow">
                       Welcome{userProfile && ` ${userProfile.first_name}`}
                     </h1>
-                    <div className="h-2" />
                     {step >= 2 && (
                       <div
-                        className="typewriter-nocaret mx-auto text-xl sm:text-3xl"
+                        className="typewriter-nocaret mx-auto text-lg sm:text-2xl"
                         style={{ fontFamily: "'Pacifico', cursive" }}
                       >
                         Hi! I'm your mascot Kenzie 🐾
                       </div>
                     )}
                     {step >= 3 && (
-                      <div className="mt-6">
+                      <div className="mt-4">
                         <p className="text-gray-800 mb-2 text-lg font-semibold">
                           What are we printing for today?
                         </p>
