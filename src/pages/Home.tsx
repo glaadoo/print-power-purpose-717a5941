@@ -90,15 +90,15 @@ export default function Home() {
       {/* Left-side section dots */}
       <ScrollDots sections={["hero", "solutions", "learn"]} />
 
-      {/* Snap container with 3 slides */}
+      {/* Scroll container with 3 slides */}
       <div 
-        className="h-full snap-y snap-proximity overflow-y-scroll scroll-smooth focus:outline-none"
+        className="h-full overflow-y-scroll scroll-smooth focus:outline-none"
         tabIndex={0}
         role="main"
         aria-label="Main content"
       >
         {/* ===== SLIDE 1: HERO + your Kenzie onboarding card ===== */}
-        <section id="hero" className="relative h-full min-h-screen snap-start flex items-center justify-center">
+        <section id="hero" className="relative h-full min-h-screen flex items-center justify-center">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -130,7 +130,7 @@ export default function Home() {
         </section>
 
         {/* ===== SLIDE 2: SOLUTIONS (quote + band) ===== */}
-        <section id="solutions" className="relative h-full min-h-screen snap-start flex items-center justify-center">
+        <section id="solutions" className="relative h-full min-h-screen flex items-center justify-center">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -191,7 +191,7 @@ export default function Home() {
         </section>
 
         {/* ===== SLIDE 3: LEARN (form + journey + links) ===== */}
-        <section id="learn" className="relative h-full min-h-screen snap-start flex items-center justify-center">
+        <section id="learn" className="relative h-full min-h-screen flex items-center justify-center">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
