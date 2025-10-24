@@ -117,7 +117,7 @@ export default function Welcome() {
       </header>
 
       {/* Fullscreen content with animated paws background */}
-      <div className="h-full w-full pt-16 relative">
+      <div className="h-full w-full pt-12 relative">
         <VideoBackground
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
@@ -144,16 +144,16 @@ export default function Welcome() {
         </div>
 
         {/* Content */}
-        <div className="relative h-full flex items-center justify-center px-4 py-2">
+        <div className="relative h-full flex items-center justify-center px-4 py-0">
           <div className="w-full max-w-5xl mx-auto">
 
             {/* Kenzie onboarding card */}
             <div className="flex justify-center px-4">
               <div className="w-full max-w-[1200px]">
-                <GlassCard>
+                <GlassCard padding="p-4 sm:p-5">
                   {/* paws banner */}
                   <div
-                    className="relative w-full h-16 sm:h-20 overflow-hidden"
+                    className="relative w-full h-12 sm:h-16 overflow-hidden"
                     aria-hidden="true"
                   >
                     {paws.slice(0, 10).map((i) => (
@@ -172,7 +172,7 @@ export default function Welcome() {
                     ))}
                   </div>
 
-                  <div className="p-4 sm:p-6 text-center space-y-3">
+                  <div className="text-center space-y-2">
                     {step >= 1 && (
                       <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto">
                         <img
@@ -195,7 +195,7 @@ export default function Welcome() {
                       </div>
                     )}
                     {step >= 3 && (
-                      <div className="mt-4">
+                      <div className="mt-2">
                         <p className="text-gray-800 mb-2 text-lg font-semibold">
                           What are we printing for today?
                         </p>
