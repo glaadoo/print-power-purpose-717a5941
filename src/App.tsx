@@ -66,6 +66,7 @@ const Success         = lazyPage("Success",         () => import("./pages/Succes
 const Cancel          = lazyPage("Cancel",          () => import("./pages/Cancel"));
 const Dashboard       = lazyPage("Dashboard",       () => import("./pages/Dashboard"));
 const SelectSchool    = lazyPage("SelectSchool",    () => import("./pages/SelectSchool"));
+const SelectSchoolCause = lazyPage("SelectSchoolCause", () => import("./pages/SelectSchoolCause"));
 const SelectNonprofit = lazyPage("SelectNonprofit", () => import("./pages/SelectNonprofit"));
 const PersonalMission = lazyPage("PersonalMission", () => import("./pages/PersonalMission"));
 const Cart            = lazyPage("Cart",            () => import("./pages/Cart"));
@@ -215,6 +216,14 @@ export default function App() {
             element={
               <RouteBoundary name="SelectSchool">
                 <SelectSchool />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/select/school/:school/causes"
+            element={
+              <RouteBoundary name="SelectSchoolCause">
+                <SelectSchoolCause />
               </RouteBoundary>
             }
           />
