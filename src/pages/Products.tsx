@@ -77,42 +77,42 @@ export default function Products() {
       const qty = quantities[product.id] || 0;
 
       return (
-        <GlassCard key={product.id} padding="p-8">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <h3 className="text-2xl font-bold text-white">
+        <GlassCard key={product.id} padding="p-6">
+          <div className="flex flex-col items-center text-center space-y-3">
+            <h3 className="text-xl font-bold text-white">
               {product.name}
             </h3>
             
             {product.category && (
-              <p className="text-base text-white/80">{product.category}</p>
+              <p className="text-sm text-white/80">{product.category}</p>
             )}
             
-            <p className="text-4xl font-bold text-white">
+            <p className="text-3xl font-bold text-white">
               ${unitPrice.toFixed(2)}
             </p>
 
-            <div className="flex items-center justify-center gap-4 py-4">
+            <div className="flex items-center justify-center gap-3 py-2">
               <Button
                 size="icon"
                 variant="outline"
-                className="rounded-full w-12 h-12 border-white/50 bg-white/10 text-white hover:bg-white/20"
+                className="rounded-full w-10 h-10 border-white/50 bg-white/10 text-white hover:bg-white/20"
                 onClick={() => updateQuantity(product.id, -1)}
                 disabled={qty === 0}
               >
-                <Minus className="w-5 h-5" />
+                <Minus className="w-4 h-4" />
               </Button>
               
-              <span className="text-3xl font-semibold text-white min-w-[4rem] text-center">
+              <span className="text-2xl font-semibold text-white min-w-[3rem] text-center">
                 {qty}
               </span>
               
               <Button
                 size="icon"
                 variant="outline"
-                className="rounded-full w-12 h-12 border-white/50 bg-white/10 text-white hover:bg-white/20"
+                className="rounded-full w-10 h-10 border-white/50 bg-white/10 text-white hover:bg-white/20"
                 onClick={() => updateQuantity(product.id, 1)}
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
               </Button>
             </div>
 
@@ -120,9 +120,9 @@ export default function Products() {
               onClick={() => handleAddToCart(product)}
               disabled={qty === 0}
               variant="outline"
-              className="w-full rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed py-6 text-base"
+              className="w-full rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed py-4 text-sm"
             >
-              <ShoppingCart className="w-5 h-5 mr-2" />
+              <ShoppingCart className="w-4 h-4 mr-2" />
               Add to Cart
             </Button>
           </div>
