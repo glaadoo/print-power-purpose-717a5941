@@ -48,7 +48,7 @@ export default function Cart() {
             overlay={<div className="absolute inset-0 bg-black/50" />}
           />
 
-          <div className="relative w-full h-full">
+          <div className="relative w-full min-h-[calc(100vh-4rem)]" >
             {!hasItems ? (
               <div className="absolute inset-0 flex items-center justify-center px-4">
                 <div className="max-w-2xl w-full rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-8 text-center">
@@ -62,8 +62,8 @@ export default function Cart() {
                 </div>
               </div>
             ) : (
-              <div className="absolute inset-0 p-6 md:p-8 flex flex-col">
-                <ul className="divide-y divide-white/20 flex-1 overflow-y-auto mb-4">
+              <div className="absolute inset-0 z-10 p-6 md:p-8 flex flex-col">
+                <ul className="divide-y divide-white/20 mb-4">
                   {detailed.map((it) => (
                     <li key={it.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                       {it.imageUrl ? (
