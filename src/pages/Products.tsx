@@ -79,6 +79,19 @@ export default function Products() {
       return (
         <GlassCard key={product.id} padding="p-6">
           <div className="flex flex-col h-full">
+            {/* Reserved space for product image */}
+            <div className="w-full aspect-square mb-4 rounded-lg bg-white/5 flex items-center justify-center">
+              {product.image_url ? (
+                <img 
+                  src={product.image_url} 
+                  alt={product.name}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              ) : (
+                <span className="text-white/30 text-sm">No image</span>
+              )}
+            </div>
+            
             <h3 className="text-xl font-semibold text-white mb-2 text-center">
               {product.name}
             </h3>
@@ -139,15 +152,9 @@ export default function Products() {
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
         <div className="flex-1"></div>
         
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <a
-            href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
-        </div>
+        <h1 className="text-xl md:text-2xl font-semibold tracking-wider uppercase">
+          SELECT PRODUCTS
+        </h1>
 
         <Button
           variant="outline"
@@ -175,11 +182,7 @@ export default function Products() {
             overlay={<div className="absolute inset-0 bg-black/50" />}
           />
 
-          <div className="relative w-full max-w-7xl mx-auto px-4">
-            <h2 className="text-4xl font-serif font-semibold text-center mb-12">
-              Select Your Products
-            </h2>
-
+          <div className="relative w-full max-w-7xl mx-auto px-6 pt-6">
             {loading && <p className="text-center text-xl">Loading products…</p>}
             {err && (
               <div className="border border-red-400/50 bg-red-900/30 text-white p-4 rounded-xl max-w-2xl mx-auto">
