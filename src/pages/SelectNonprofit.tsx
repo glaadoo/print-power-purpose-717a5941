@@ -17,7 +17,7 @@ export default function SelectNonprofit() {
   }, []);
 
   function handleNonprofitSelect(nonprofit: string) {
-    nav(`/select/nonprofit/${encodeURIComponent(nonprofit)}/causes`);
+    nav('/causes');
   }
 
   return (

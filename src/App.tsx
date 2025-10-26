@@ -64,9 +64,7 @@ const ProductDetail   = lazyPage("ProductDetail",   () => import("./pages/Produc
 const Success         = lazyPage("Success",         () => import("./pages/Success"));
 const Cancel          = lazyPage("Cancel",          () => import("./pages/Cancel"));
 const SelectSchool    = lazyPage("SelectSchool",    () => import("./pages/SelectSchool"));
-const SelectSchoolCause = lazyPage("SelectSchoolCause", () => import("./pages/SelectSchoolCause"));
 const SelectNonprofit = lazyPage("SelectNonprofit", () => import("./pages/SelectNonprofit"));
-const SelectNonprofitCause = lazyPage("SelectNonprofitCause", () => import("./pages/SelectNonprofitCause"));
 const PersonalMission = lazyPage("PersonalMission", () => import("./pages/PersonalMission"));
 const Cart            = lazyPage("Cart",            () => import("./pages/Cart"));
 const Checkout        = lazyPage("Checkout",        () => import("./pages/Checkout"));
@@ -233,26 +231,10 @@ export default function App() {
             }
           />
           <Route
-            path="/select/school/:school/causes"
-            element={
-              <RouteBoundary name="SelectSchoolCause">
-                <SelectSchoolCause />
-              </RouteBoundary>
-            }
-          />
-          <Route
             path="/select/nonprofit"
             element={
               <RouteBoundary name="SelectNonprofit">
                 <SelectNonprofit />
-              </RouteBoundary>
-            }
-          />
-          <Route
-            path="/select/nonprofit/:nonprofit/causes"
-            element={
-              <RouteBoundary name="SelectNonprofitCause">
-                <SelectNonprofitCause />
               </RouteBoundary>
             }
           />

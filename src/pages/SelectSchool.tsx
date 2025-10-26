@@ -19,7 +19,7 @@ export default function SelectSchool() {
 
   function handleSchoolSelect(school: string) {
     setSelectedSchool(school);
-    nav(`/select/school/${encodeURIComponent(school)}/causes`);
+    nav('/causes');
   }
 
   return (

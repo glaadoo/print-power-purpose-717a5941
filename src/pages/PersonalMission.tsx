@@ -14,8 +14,7 @@ export default function PersonalMission() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    setCause({ id: "personal-mission", name: title.trim(), summary: about.trim() || "Personal mission" });
-    window.location.href = "/products";
+    window.location.href = "/causes";
   }
 
   return (
