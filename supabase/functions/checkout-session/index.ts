@@ -45,6 +45,21 @@ type DbBody = {
   cancelPath?: string;       // '/checkout?payment=cancelled' or absolute URL
 };
 
+type CartBody = {
+  items: Array<{
+    productId: string;
+    quantity: number;
+    name: string;
+    priceCents: number;
+    imageUrl?: string;
+  }>;
+  causeId: string;
+  donationCents?: number;
+  currency?: string;
+  successPath?: string;
+  cancelPath?: string;
+};
+
 const STRIPE_SECRET_KEY = (Deno.env.get("STRIPE_SECRET_KEY") ?? "")
   .trim()
   .replace(/^['"]|['"]$/g, "");
@@ -111,16 +126,17 @@ serve(async (req) => {
       });
     }
 
-    const body = (await req.json()) as Partial<DirectBody & DbBody>;
+    const body = (await req.json()) as Partial<DirectBody & DbBody & CartBody>;
 
     // Decide flow
+    const wantsCartFlow = !!body.items && Array.isArray(body.items) && body.items.length > 0 && !!body.causeId;
     const wantsDbFlow = !!body.productId && !!body.qty && !!body.causeId;
     const wantsDirectFlow = !!body.productName && !!body.unitAmountCents && !!body.causeId;
 
-    if (!wantsDbFlow && !wantsDirectFlow) {
+    if (!wantsCartFlow && !wantsDbFlow && !wantsDirectFlow) {
       return new Response(JSON.stringify({
         error:
-          "Invalid request. Provide either { productId, qty, causeId } (DB flow) or { productName, unitAmountCents, causeId } (Direct flow).",
+          "Invalid request. Provide either { items, causeId } (Cart flow), { productId, qty, causeId } (DB flow), or { productName, unitAmountCents, causeId } (Direct flow).",
       }), { status: 400, headers: { "Content-Type": "application/json", ...cors } });
     }
 
@@ -155,6 +171,94 @@ serve(async (req) => {
     const form = new URLSearchParams();
     form.set("mode", "payment");
     form.set("payment_method_types[0]", "card");
+
+    // ---------- CART FLOW (multiple items from cart) ----------
+    if (wantsCartFlow) {
+      const c = body as CartBody;
+      const donationCents = Math.max(0, Math.min(100000, Math.floor(Number(c.donationCents || 0))));
+      const currency = String(c.currency || "usd").toLowerCase();
+      const causeId = String(c.causeId);
+
+      // Build absolute redirect URLs
+      const { successAbs, cancelAbs } = buildSuccessCancel(
+        c.successPath,
+        c.cancelPath ?? "/checkout?payment=cancelled"
+      );
+      form.set("success_url", successAbs);
+      form.set("cancel_url", cancelAbs);
+
+      // Fetch cause name
+      let causeName = "Selected Cause";
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const supaHeaders = {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_SERVICE_ROLE_KEY,
+          "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        };
+        const causeResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/causes?select=id,name&id=eq.${encodeURIComponent(causeId)}&limit=1`,
+          { headers: supaHeaders }
+        );
+        const causeArr = await causeResp.json();
+        const cause = Array.isArray(causeArr) ? causeArr[0] : null;
+        if (cause?.name) causeName = cause.name;
+      }
+
+      // Add line items for each cart item
+      c.items.forEach((item, idx) => {
+        const qty = Math.max(1, Math.floor(Number(item.quantity || 1)));
+        const unitPrice = Math.max(50, Math.floor(Number(item.priceCents || 0)));
+        
+        form.set(`line_items[${idx}][quantity]`, String(qty));
+        form.set(`line_items[${idx}][price_data][currency]`, currency);
+        form.set(`line_items[${idx}][price_data][unit_amount]`, String(unitPrice));
+        form.set(`line_items[${idx}][price_data][product_data][name]`, item.name);
+        form.set(`line_items[${idx}][price_data][product_data][description]`, `Supporting: ${causeName}`);
+        if (item.imageUrl) {
+          form.set(`line_items[${idx}][price_data][product_data][images][0]`, item.imageUrl);
+        }
+      });
+
+      // Add donation as a separate line item if present
+      if (donationCents > 0) {
+        const donationIdx = c.items.length;
+        form.set(`line_items[${donationIdx}][quantity]`, "1");
+        form.set(`line_items[${donationIdx}][price_data][currency]`, currency);
+        form.set(`line_items[${donationIdx}][price_data][unit_amount]`, String(donationCents));
+        form.set(`line_items[${donationIdx}][price_data][product_data][name]`, "Additional Donation");
+        form.set(`line_items[${donationIdx}][price_data][product_data][description]`, `Extra support for ${causeName}`);
+      }
+
+      // Metadata
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      form.set("metadata[order_number]", orderNumber);
+      form.set("metadata[item_count]", String(c.items.length));
+      form.set("metadata[donation_cents]", String(donationCents));
+      form.set("metadata[cause_id]", causeId);
+      form.set("metadata[cause_name]", causeName);
+
+      // Create Stripe session
+      const stripeResp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${STRIPE_SECRET_KEY}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: form,
+      });
+
+      const out = await stripeResp.json();
+      if (!stripeResp.ok) {
+        console.error("[STRIPE_ERROR]", out);
+        return new Response(JSON.stringify({ error: out?.error?.message || "Stripe session failed" }), {
+          status: 502, headers: { "Content-Type": "application/json", ...cors },
+        });
+      }
+
+      return new Response(JSON.stringify({ url: out.url }), {
+        status: 201, headers: { "Content-Type": "application/json", ...cors },
+      });
+    }
 
     // ---------- DB FLOW (optional) ----------
     if (wantsDbFlow) {

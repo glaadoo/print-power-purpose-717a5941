@@ -171,23 +171,25 @@ export default function Checkout() {
 
   // Create Stripe Checkout by calling your Edge Function directly (with required headers)
   async function continueToCheckout() {
-    if (!product) return;
     const causeIdForCheckout = selectedCauseId || merged.causeId;
     if (!causeIdForCheckout) return;
+    
+    // If we have cart items, use those; otherwise fall back to single product
+    if (cartItems.length === 0 && !product) return;
+    
     setLoading(true);
 
-    // Final integer unit price in cents (Stripe requires >= 50)
-    const unitAmountCents =
-      Number(product.priceCents || 0) > 0
-        ? Math.max(50, Math.round(Number(product.priceCents)))
-        : Math.max(50, priceFromBase(product.base_cost_cents));
-
-     const payload = {
-       productId: product.id,
-       qty: Number(merged.qty || 1),
-       causeId: causeIdForCheckout,
-       donationCents: donation,
-     };
+    const payload = {
+      items: cartItems.map(item => ({
+        productId: item.id,
+        quantity: item.quantity,
+        name: item.name,
+        priceCents: item.priceCents,
+        imageUrl: item.imageUrl || undefined,
+      })),
+      causeId: causeIdForCheckout,
+      donationCents: donation,
+    };
 
     const fnUrl = `${import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co"}/functions/v1/checkout-session`;
     const supaAnon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
@@ -269,7 +271,7 @@ export default function Checkout() {
     );
   }
 
-  if (!product || !(selectedCauseId || merged.causeId)) {
+  if ((cartItems.length === 0 && !product) || !(selectedCauseId || merged.causeId)) {
     return (
       <div className="fixed inset-0 text-white">
         <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">

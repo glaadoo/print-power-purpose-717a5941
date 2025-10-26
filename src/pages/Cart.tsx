@@ -155,7 +155,7 @@ export default function Cart() {
 
           <button
             className="px-6 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-sm whitespace-nowrap"
-            onClick={() => nav("/checkout", { state: inferCheckoutState(items) })}
+            onClick={() => nav("/checkout", { state: { fromCart: true } })}
           >
             Checkout
           </button>
@@ -165,13 +165,3 @@ export default function Cart() {
   );
 }
 
-// If you add one product type at a time, infer a default checkout state
-function inferCheckoutState(items: ReturnType<typeof useCart>["items"]) {
-  if (!items.length) return {};
-  const first = items[0];
-  return {
-    productId: first.id,
-    qty: first.quantity,
-    // causeId is selected elsewhere (e.g., on the causes page or from localStorage)
-  };
-}
