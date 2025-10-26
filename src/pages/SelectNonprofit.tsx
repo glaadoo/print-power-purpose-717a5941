@@ -85,11 +85,11 @@ export default function SelectNonprofit() {
   }
 
   return (
-    <div className="fixed inset-0 text-white">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
         <div className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
-          CHOOSE&nbsp;A&nbsp;NONPROFIT
+          SELECT&nbsp;A&nbsp;NONPROFIT
         </div>
       </header>
 
@@ -104,29 +104,29 @@ export default function SelectNonprofit() {
 
         <div className="relative w-full pt-4 pb-8 px-4">
           <div className="w-full max-w-6xl">
-            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 max-w-3xl">
-              {/* Nonprofit and Cause Selection */}
+            {/* Nonprofit Selection Grid */}
+            <div className="mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {NONPROFITS.map((nonprofit) => (
+                  <button
+                    key={nonprofit}
+                    onClick={() => setSelectedNonprofit(nonprofit)}
+                    className={`aspect-square rounded-xl border-2 p-4 flex items-center justify-center text-center transition-all ${
+                      selectedNonprofit === nonprofit
+                        ? 'border-white/70 bg-white/25'
+                        : 'border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/15 hover:scale-105'
+                    }`}
+                  >
+                    <span className="font-medium text-sm md:text-base">{nonprofit}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              <div className="flex flex-col gap-6">
-                {/* Nonprofit Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">Select Nonprofit</label>
-                  <Select value={selectedNonprofit} onValueChange={setSelectedNonprofit}>
-                    <SelectTrigger className="w-full bg-white/90 text-black border-white/30">
-                      <SelectValue placeholder="Choose a nonprofit..." />
-                    </SelectTrigger>
-                    <SelectContent side="bottom" sideOffset={8} className="bg-white z-[60] max-h-[300px]">
-                      {NONPROFITS.map((n) => (
-                        <SelectItem key={n} value={n} className="text-black">
-                          {n}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Causes Dropdown - Only shown when nonprofit is selected */}
-                {selectedNonprofit && (
+            {/* Causes Section - Only shown when nonprofit is selected */}
+            {selectedNonprofit && (
+              <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 max-w-3xl mx-auto">
+                <div className="flex flex-col gap-6">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium">Select Cause</label>
                     {loading ? (
@@ -138,7 +138,7 @@ export default function SelectNonprofit() {
                         <SelectTrigger className="w-full bg-white/90 text-black border-white/30">
                           <SelectValue placeholder="Choose a cause..." />
                         </SelectTrigger>
-                         <SelectContent side="bottom" sideOffset={8} className="bg-white z-[60] max-h-[300px]">
+                        <SelectContent side="bottom" sideOffset={8} className="bg-white z-[60] max-h-[300px]">
                           {causes.map((c) => (
                             <SelectItem key={c.id} value={c.id} className="text-black">
                               {c.name}
@@ -157,19 +157,19 @@ export default function SelectNonprofit() {
                       </div>
                     )}
                   </div>
-                )}
 
-                {/* Submit Button */}
-                {selectedNonprofit && selectedCause && (
-                  <button
-                    onClick={handleSubmit}
-                    className="w-full px-6 py-4 rounded-xl bg-white/90 text-black font-semibold text-lg hover:bg-white transition-colors mt-4"
-                  >
-                    Continue to Products
-                  </button>
-                )}
+                  {/* Submit Button */}
+                  {selectedCause && (
+                    <button
+                      onClick={handleSubmit}
+                      className="w-full px-6 py-4 rounded-xl bg-white/90 text-black font-semibold text-lg hover:bg-white transition-colors mt-4"
+                    >
+                      Continue to Products
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
