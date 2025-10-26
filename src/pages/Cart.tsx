@@ -124,7 +124,7 @@ export default function Cart() {
 
                 <div className="flex justify-center mt-auto pb-4">
                   <button 
-                    className="px-8 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold"
+                    className="px-12 py-4 rounded-full bg-white/90 text-black text-base font-semibold hover:bg-white shadow-lg"
                     onClick={clear}
                   >
                     Clear Cart
@@ -138,15 +138,15 @@ export default function Cart() {
 
       {/* Bottom floating bar - only show when there are items */}
       {hasItems && (
-        <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/40 border-t border-white/20">
+        <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-between gap-4 text-white backdrop-blur-md bg-black/40 border-t border-white/20">
           <button
-            className="px-6 py-2 rounded-lg bg-white/20 hover:bg-white/30 font-semibold text-sm md:text-base"
+            className="px-8 py-4 rounded-full bg-white/90 text-black font-semibold hover:bg-white shadow-lg text-sm md:text-base whitespace-nowrap"
             onClick={() => nav("/products")}
           >
             Continue Shopping
           </button>
           
-          <div className="text-center">
+          <div className="text-center flex-shrink-0">
             <div className="opacity-80 text-xs md:text-sm">Subtotal</div>
             <div className="text-xl md:text-2xl font-bold">
               ${(totalCents / 100).toFixed(2)}
@@ -154,7 +154,7 @@ export default function Cart() {
           </div>
 
           <button
-            className="px-6 py-2 rounded-lg bg-white text-black font-semibold hover:bg-white/90 text-sm md:text-base"
+            className="px-8 py-4 rounded-full bg-white/90 text-black font-semibold hover:bg-white shadow-lg text-sm md:text-base whitespace-nowrap"
             onClick={() => nav("/checkout", { state: inferCheckoutState(items) })}
           >
             Checkout
