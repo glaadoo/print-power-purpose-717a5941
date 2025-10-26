@@ -124,7 +124,7 @@ export default function Cart() {
 
                 <div className="flex justify-center mt-auto pb-4">
                   <button 
-                    className="px-12 py-4 rounded-full bg-white/90 text-black text-base font-semibold hover:bg-white shadow-lg"
+                    className="px-12 py-4 rounded-full bg-white/20 text-white text-base font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm"
                     onClick={clear}
                   >
                     Clear Cart
@@ -140,7 +140,7 @@ export default function Cart() {
       {hasItems && (
         <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-between gap-4 text-white backdrop-blur-md bg-black/40 border-t border-white/20">
           <button
-            className="px-8 py-4 rounded-full bg-white/90 text-black font-semibold hover:bg-white shadow-lg text-sm md:text-base whitespace-nowrap"
+            className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-sm md:text-base whitespace-nowrap"
             onClick={() => nav("/products")}
           >
             Continue Shopping
@@ -154,7 +154,7 @@ export default function Cart() {
           </div>
 
           <button
-            className="px-8 py-4 rounded-full bg-white/90 text-black font-semibold hover:bg-white shadow-lg text-sm md:text-base whitespace-nowrap"
+            className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-sm md:text-base whitespace-nowrap"
             onClick={() => nav("/checkout", { state: inferCheckoutState(items) })}
           >
             Checkout
