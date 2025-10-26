@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import GlassCard from "../components/GlassCard";
 import DonationBarometer from "../components/DonationBarometer";
 import { useCause } from "../context/CauseContext";
-import { useToast } from "../ui/Toast";
 import { supabase } from "@/lib/supabase";
 import VideoBackground from "@/components/VideoBackground";
 
@@ -40,11 +38,11 @@ function pickBlurb(c: Cause): string | undefined {
 export default function Causes() {
   const nav = useNavigate();
   const { setCause } = useCause();
-  const { push } = useToast();
 
   const [causes, setCauses] = useState<Cause[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [selectedCause, setSelectedCause] = useState<Cause | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -69,87 +67,76 @@ export default function Causes() {
     };
   }, []);
 
-  const cards = useMemo(
-    () =>
-      causes.map((c) => {
-        const pct = percent(c.raised_cents, c.goal_cents);
-        const description = pickBlurb(c) || "";
+  const handleCauseClick = (c: Cause) => {
+    const description = pickBlurb(c) || "";
+    setSelectedCause(c);
+    // Persist for refresh/other pages
+    try {
+      localStorage.setItem(
+        LS_CAUSE,
+        JSON.stringify({
+          causeId: c.id,
+          causeName: c.name,
+          goalCents: c.goal_cents ?? undefined,
+          raisedCents: c.raised_cents ?? undefined,
+        }),
+      );
+    } catch {}
+    // Context
+    setCause({ id: c.id, name: c.name, summary: description || "" });
+  };
 
-        const choose = () => {
-          // Persist for refresh/other pages
-          try {
-            localStorage.setItem(
-              LS_CAUSE,
-              JSON.stringify({
-                causeId: c.id,
-                causeName: c.name,
-                goalCents: c.goal_cents ?? undefined,
-                raisedCents: c.raised_cents ?? undefined,
-              }),
-            );
-          } catch {}
-          // Context + toast
-          setCause({ id: c.id, name: c.name, summary: description || "" });
-          push({ title: "Selected", body: c.name });
-          // Navigate to products
-          nav("/products");
-        };
-
-        return (
-          <GlassCard
-            key={c.id}
-            className="h-full flex flex-col items-center justify-center text-center px-6 py-8 backdrop-blur"
-          >
-            <h3 className="text-xl font-bold mb-2">{c.name}</h3>
-
-            {description && (
-              <p className="text-sm opacity-80 mb-5 max-w-xs">{description}</p>
-            )}
-
-            {/* Barometer */}
-            <div className="w-3/4 max-w-xs mb-2">
-              <DonationBarometer
-                raised_cents={c.raised_cents || 0}
-                goal_cents={c.goal_cents || 1}
-              />
-            </div>
-            <div className="text-xs opacity-70 mb-5">{pct}% funded</div>
-
-            <button onClick={choose} className="btn-rect mt-1">
-              Support this cause
-            </button>
-          </GlassCard>
-        );
-      }),
-    [causes, nav, push, setCause],
-  );
+  const handleContinue = () => {
+    if (selectedCause) {
+      nav("/products");
+    }
+  };
 
   const body =
     loading ? (
-      <GlassCard>
+      <div className="text-center text-white/80 py-8">
         <p>Loading causes…</p>
-      </GlassCard>
+      </div>
     ) : err ? (
-      <GlassCard>
-        <p className="text-red-600">{err}</p>
-      </GlassCard>
+      <div className="text-center text-red-400 py-8">
+        <p>{err}</p>
+      </div>
     ) : (
-      <>
-        <h1 className="text-3xl font-bold text-center mb-6 mt-6">Choose a Cause</h1>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {causes.map((c) => {
+          const description = pickBlurb(c) || "";
+          const isSelected = selectedCause?.id === c.id;
 
-        <div
-          className="
-            grid gap-6
-            grid-cols-1
-            sm:grid-cols-2
-            lg:grid-cols-3
-            xl:grid-cols-4
-            [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]
-          "
-        >
-          {cards}
-        </div>
-      </>
+          return (
+            <button
+              key={c.id}
+              onClick={() => handleCauseClick(c)}
+              className={`
+                aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
+                ${
+                  isSelected
+                    ? "border-white/70 bg-white/25 scale-105"
+                    : "border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/15 hover:scale-105"
+                }
+              `}
+            >
+              <h3 className="text-base md:text-lg font-bold mb-2">{c.name}</h3>
+              
+              {description && (
+                <p className="text-xs md:text-sm opacity-80 mb-3 line-clamp-3">{description}</p>
+              )}
+
+              {/* Barometer */}
+              <div className="w-full max-w-[120px]">
+                <DonationBarometer
+                  raised_cents={c.raised_cents || 0}
+                  goal_cents={c.goal_cents || 1}
+                />
+              </div>
+            </button>
+          );
+        })}
+      </div>
     );
 
   useEffect(() => {
@@ -157,33 +144,43 @@ export default function Causes() {
   }, []);
 
   return (
-    <div className="fixed inset-0 text-white">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <a
-          href="/"
-          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-          aria-label="Print Power Purpose Home"
-        >
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
+        <div className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
+          SELECT&nbsp;CAUSE
+        </div>
       </header>
 
-      {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen py-12 px-4">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            overlay={<div className="absolute inset-0 bg-black/50" />}
-          />
+      {/* Fullscreen content */}
+      <div className="h-full w-full pt-16 overflow-y-auto">
+        <VideoBackground
+          srcMp4="/media/hero.mp4"
+          srcWebm="/media/hero.webm"
+          poster="/media/hero-poster.jpg"
+          overlay={<div className="absolute inset-0 bg-black/50" />}
+        />
 
-          <div className="relative w-full max-w-6xl mx-auto">
+        <div className="relative w-full pt-4 pb-20 px-4">
+          <div className="w-full max-w-6xl mx-auto">
             {body}
           </div>
-        </section>
+        </div>
       </div>
+
+      {/* Floating Continue Bar */}
+      {selectedCause && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur border-t border-white/20 px-4 py-4">
+          <div className="max-w-6xl mx-auto flex items-center justify-center">
+            <button
+              onClick={handleContinue}
+              className="px-8 py-3 bg-white/20 hover:bg-white/30 border border-white/40 rounded-lg font-semibold transition-all hover:scale-105"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
