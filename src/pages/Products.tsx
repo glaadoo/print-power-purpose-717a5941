@@ -1,20 +1,31 @@
 // src/pages/Products.tsx
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useCart } from "@/context/CartContext";
 import VideoBackground from "@/components/VideoBackground";
+import GlassCard from "@/components/GlassCard";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart, Plus, Minus } from "lucide-react";
 
 type ProductRow = {
   id: string;
   name: string;
   base_cost_cents: number;
   image_url?: string | null;
+  category?: string | null;
 };
 
+const priceFromBase = (base?: number | null) =>
+  Math.max(100, Math.round((Number(base) || 0) * 1.6));
+
 export default function Products() {
+  const navigate = useNavigate();
+  const { add, items, totalCents } = useCart();
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
 
   useEffect(() => {
     document.title = "Products - Print Power Purpose";
@@ -32,22 +43,131 @@ export default function Products() {
     })();
   }, []);
 
+  const updateQuantity = (productId: string, delta: number) => {
+    setQuantities(prev => {
+      const current = prev[productId] || 0;
+      const newQty = Math.max(0, current + delta);
+      return { ...prev, [productId]: newQty };
+    });
+  };
+
+  const handleAddToCart = (product: ProductRow) => {
+    const qty = quantities[product.id] || 1;
+    const unitCents = priceFromBase(product.base_cost_cents);
+    
+    add(
+      {
+        id: product.id,
+        name: product.name,
+        priceCents: unitCents,
+        imageUrl: product.image_url,
+        currency: "USD",
+      },
+      qty
+    );
+
+    // Reset quantity after adding
+    setQuantities(prev => ({ ...prev, [product.id]: 0 }));
+  };
+
+  const productCards = useMemo(() => {
+    return rows.map((product) => {
+      const unitCents = priceFromBase(product.base_cost_cents);
+      const unitPrice = unitCents / 100;
+      const qty = quantities[product.id] || 0;
+
+      return (
+        <GlassCard key={product.id} padding="p-6">
+          <div className="flex flex-col h-full">
+            <h3 className="text-xl font-semibold text-white mb-2 text-center">
+              {product.name}
+            </h3>
+            
+            {product.category && (
+              <p className="text-sm text-white/70 mb-2 text-center">{product.category}</p>
+            )}
+            
+            <p className="text-2xl font-bold text-white mb-4 text-center">
+              ${unitPrice.toFixed(2)}
+            </p>
+
+            <div className="mt-auto space-y-3">
+              <div className="flex items-center justify-center gap-3">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
+                  onClick={() => updateQuantity(product.id, -1)}
+                  disabled={qty === 0}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                
+                <span className="text-2xl font-semibold text-white min-w-[3rem] text-center">
+                  {qty}
+                </span>
+                
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
+                  onClick={() => updateQuantity(product.id, 1)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <Button
+                onClick={() => handleAddToCart(product)}
+                disabled={qty === 0}
+                variant="outline"
+                className="w-full rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Add to Cart
+              </Button>
+            </div>
+          </div>
+        </GlassCard>
+      );
+    });
+  }, [rows, quantities]);
+
   return (
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <a
-          href="/"
-          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-          aria-label="Print Power Purpose Home"
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <div className="flex-1"></div>
+        
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <a
+            href="/"
+            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+            aria-label="Print Power Purpose Home"
+          >
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </a>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/cart")}
+          className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative"
         >
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
+          <ShoppingCart className="w-4 h-4" />
+          <span className="hidden sm:inline ml-2">Cart</span>
+          {items.length > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {items.length}
+            </span>
+          )}
+        </Button>
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen py-8">
+      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-24">
+        <section className="relative min-h-screen py-12">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -55,12 +175,12 @@ export default function Products() {
             overlay={<div className="absolute inset-0 bg-black/50" />}
           />
 
-          <div className="relative w-full px-4">
-            <h2 className="text-3xl font-serif font-semibold text-center mb-8">
-              Products
+          <div className="relative w-full max-w-7xl mx-auto px-4">
+            <h2 className="text-4xl font-serif font-semibold text-center mb-12">
+              Select Your Products
             </h2>
 
-            {loading && <p className="text-center">Loading products…</p>}
+            {loading && <p className="text-center text-xl">Loading products…</p>}
             {err && (
               <div className="border border-red-400/50 bg-red-900/30 text-white p-4 rounded-xl max-w-2xl mx-auto">
                 {err}
@@ -68,22 +188,34 @@ export default function Products() {
             )}
 
             {!loading && !err && (
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {rows.map((p) => (
-                  <Link
-                    key={p.id}
-                    to={`/products/${p.id}`}
-                    className="aspect-square flex flex-col items-center justify-center rounded-xl bg-white/90 text-black text-center font-semibold hover:bg-white transition-colors p-4"
-                  >
-                    <span className="text-lg mb-2">{p.name}</span>
-                    <span className="text-sm">${(p.base_cost_cents / 100).toFixed(2)}</span>
-                  </Link>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {productCards}
               </div>
             )}
           </div>
         </section>
       </div>
+
+      {/* Floating checkout bar */}
+      {items.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-black/40 border-t border-white/20">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="text-white">
+              <div className="text-sm opacity-80">{items.length} item(s) in cart</div>
+              <div className="text-xl font-semibold">${(totalCents / 100).toFixed(2)}</div>
+            </div>
+            <Button
+              onClick={() => navigate("/cart")}
+              variant="outline"
+              size="lg"
+              className="rounded-full border-white/50 bg-transparent text-white hover:bg-white/10"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              View Cart
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
