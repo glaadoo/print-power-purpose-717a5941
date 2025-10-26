@@ -162,7 +162,7 @@ export default function Home() {
             </div>
 
             {/* band: placeholder (L) + stats (R) */}
-            <div className="w-full px-6 pb-10">
+            <div className="w-full px-6 pb-10 mt-12">
               <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
                 <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8">
                   <div className="opacity-90">
