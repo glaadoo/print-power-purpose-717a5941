@@ -1,7 +1,6 @@
 // src/pages/Checkout.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import FloatingCheckoutBar from "../components/FloatingCheckoutBar";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
 import { supabase } from "@/lib/supabase";
@@ -425,16 +424,6 @@ export default function Checkout() {
 
             </div>
           </div>
-
-          {/* Floating Checkout Summary Bar */}
-          <FloatingCheckoutBar
-            productName={product.name}
-            quantity={qty}
-            subtotalCents={subtotal}
-            donationCents={donation}
-            onContinue={continueToCheckout}
-            loading={loading}
-          />
         </section>
       </div>
     </div>

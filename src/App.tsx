@@ -3,7 +3,6 @@ import React, { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import KenzieChat from "@/components/KenzieChat";
-import FloatingCartBar from "@/components/FloatingCartBar";
 
 
 /** Per-route error boundary so crashes inside a page don't blank the whole app */
@@ -449,9 +448,6 @@ export default function App() {
       </AnimatePresence>
 
       {/* Global floating components - wrapped in error boundaries */}
-      <RouteBoundary name="FloatingCartBar">
-        <FloatingCartBar />
-      </RouteBoundary>
       <RouteBoundary name="KenzieChat">
         <KenzieChat />
       </RouteBoundary>
