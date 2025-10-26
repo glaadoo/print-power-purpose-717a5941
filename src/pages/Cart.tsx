@@ -39,8 +39,8 @@ export default function Cart() {
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-20">
-        <section className="relative min-h-screen">
+      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-0">
+        <section className="relative h-[calc(100vh-4rem)]">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
