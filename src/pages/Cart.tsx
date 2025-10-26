@@ -28,18 +28,14 @@ export default function Cart() {
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <a
-          href="/"
-          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-          aria-label="Print Power Purpose Home"
-        >
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
+        <h1 className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
+          CART
+        </h1>
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen py-8">
+      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-20">
+        <section className="relative min-h-screen">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -47,22 +43,22 @@ export default function Cart() {
             overlay={<div className="absolute inset-0 bg-black/50" />}
           />
 
-          <div className="relative w-full px-4">
-            <h2 className="text-3xl font-serif font-semibold text-center mb-8">Your Cart</h2>
-
+          <div className="relative w-full h-full">
             {!hasItems ? (
-              <div className="max-w-2xl mx-auto rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-8 text-center">
-                <p className="opacity-90 mb-6">Your cart is empty.</p>
-                <button 
-                  className="rounded-full px-8 py-3 bg-white text-black font-semibold hover:bg-white/90"
-                  onClick={() => nav("/products")}
-                >
-                  Browse Products
-                </button>
+              <div className="absolute inset-0 flex items-center justify-center px-4">
+                <div className="max-w-2xl w-full rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-8 text-center">
+                  <p className="opacity-90 mb-6">Your cart is empty.</p>
+                  <button 
+                    className="rounded-full px-8 py-3 bg-white text-black font-semibold hover:bg-white/90"
+                    onClick={() => nav("/products")}
+                  >
+                    Browse Products
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="max-w-5xl mx-auto rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-                <ul className="divide-y divide-white/20 mb-6">
+              <div className="absolute inset-0 border-2 border-white/50 bg-transparent backdrop-blur-sm shadow-xl p-6 md:p-8 flex flex-col">
+                <ul className="divide-y divide-white/20 flex-1 overflow-y-auto">
                   {detailed.map((it) => (
                     <li key={it.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                       {it.imageUrl ? (
@@ -121,33 +117,12 @@ export default function Cart() {
                   ))}
                 </ul>
 
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b border-white/20 gap-4">
+                <div className="flex justify-center pt-6 border-t border-white/20 mt-4">
                   <button 
-                    className="px-6 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold"
+                    className="px-8 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold"
                     onClick={clear}
                   >
                     Clear Cart
-                  </button>
-                  <div className="text-right">
-                    <div className="opacity-80 text-sm">Subtotal</div>
-                    <div className="text-2xl font-bold">
-                      ${(totalCents / 100).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <button
-                    className="flex-1 rounded-full px-6 py-3 bg-white/20 hover:bg-white/30 font-semibold"
-                    onClick={() => nav("/products")}
-                  >
-                    Continue Shopping
-                  </button>
-                  <button
-                    className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
-                    onClick={() => nav("/checkout", { state: inferCheckoutState(items) })}
-                  >
-                    Checkout →
                   </button>
                 </div>
               </div>
@@ -155,6 +130,32 @@ export default function Cart() {
           </div>
         </section>
       </div>
+
+      {/* Bottom floating bar - only show when there are items */}
+      {hasItems && (
+        <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/40 border-t border-white/20">
+          <button
+            className="px-6 py-2 rounded-lg bg-white/20 hover:bg-white/30 font-semibold text-sm md:text-base"
+            onClick={() => nav("/products")}
+          >
+            Continue Shopping
+          </button>
+          
+          <div className="text-center">
+            <div className="opacity-80 text-xs md:text-sm">Subtotal</div>
+            <div className="text-xl md:text-2xl font-bold">
+              ${(totalCents / 100).toFixed(2)}
+            </div>
+          </div>
+
+          <button
+            className="px-6 py-2 rounded-lg bg-white text-black font-semibold hover:bg-white/90 text-sm md:text-base"
+            onClick={() => nav("/checkout", { state: inferCheckoutState(items) })}
+          >
+            Checkout
+          </button>
+        </div>
+      )}
     </div>
   );
 }
