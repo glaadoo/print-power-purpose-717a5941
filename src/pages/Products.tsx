@@ -149,10 +149,8 @@ export default function Products() {
   return (
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <div className="flex-1"></div>
-        
-        <h1 className="text-xl md:text-2xl font-semibold tracking-wider uppercase">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <h1 className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
           SELECT PRODUCTS
         </h1>
 
@@ -160,7 +158,7 @@ export default function Products() {
           variant="outline"
           size="sm"
           onClick={() => navigate("/cart")}
-          className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative"
+          className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative absolute right-4"
         >
           <ShoppingCart className="w-4 h-4" />
           <span className="hidden sm:inline ml-2">Cart</span>
@@ -191,7 +189,7 @@ export default function Products() {
             )}
 
             {!loading && !err && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
                 {productCards}
               </div>
             )}
