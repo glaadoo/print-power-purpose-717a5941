@@ -3,6 +3,7 @@ import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Cart() {
   const { items, totalCents, setQty, remove, clear } = useCart();
@@ -10,7 +11,11 @@ export default function Cart() {
 
   useEffect(() => {
     document.title = "Cart - Print Power Purpose";
-  }, []);
+    
+    // Debug: Log cart contents on mount
+    console.log("Cart items:", items);
+    console.log("Cart localStorage:", localStorage.getItem("ppp:cart"));
+  }, [items]);
 
   const hasItems = items.length > 0;
 

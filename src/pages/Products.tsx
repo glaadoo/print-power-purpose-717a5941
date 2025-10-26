@@ -7,6 +7,7 @@ import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { toast } from "sonner";
 
 type ProductRow = {
   id: string;
@@ -65,6 +66,8 @@ export default function Products() {
       },
       qty
     );
+
+    toast.success(`Added ${qty} ${product.name} to cart`);
 
     // Reset quantity after adding
     setQuantities(prev => ({ ...prev, [product.id]: 0 }));
