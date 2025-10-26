@@ -165,6 +165,25 @@ export default function App() {
 
   return (
     <>
+      {/* Debug: Visible page path indicator */}
+      <div
+        style={{
+          position: "fixed",
+          top: 10,
+          right: 10,
+          background: "rgba(0, 0, 0, 0.8)",
+          color: "white",
+          padding: "8px 12px",
+          borderRadius: 6,
+          fontFamily: "monospace",
+          fontSize: 12,
+          zIndex: 9999,
+          pointerEvents: "none",
+        }}
+      >
+        📍 {location.pathname}
+      </div>
+
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
