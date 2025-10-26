@@ -87,22 +87,8 @@ export default function SelectNonprofitCause() {
           overlay={<div className="absolute inset-0 bg-black/50" />}
         />
 
-        <div className="relative min-h-full flex flex-col items-center justify-center py-8 px-4">
-          <div className="w-full max-w-6xl mx-auto">
-            {/* Back button */}
-            <button
-              onClick={() => nav("/select/nonprofit")}
-              className="flex items-center gap-2 mb-6 text-white/80 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              Back to nonprofits
-            </button>
-
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-center mb-2">
-              Select a Cause for {nonprofit && decodeURIComponent(nonprofit)}
-            </h2>
-            <p className="text-center text-white/80 mb-8">Choose a cause to support with your purchase</p>
-
+        <div className="relative w-full pt-4 pb-8 px-4">
+          <div className="w-full max-w-6xl">
             {/* Causes Selection Grid */}
             <div className="mb-8">
               {loading ? (
