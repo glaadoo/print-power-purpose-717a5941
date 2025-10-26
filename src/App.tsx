@@ -158,6 +158,11 @@ export default function App() {
 
   const location = useLocation();
 
+  // Debug: Log current page
+  useEffect(() => {
+    console.log("📍 Current page:", location.pathname);
+  }, [location.pathname]);
+
   return (
     <>
       <AnimatePresence mode="wait">
