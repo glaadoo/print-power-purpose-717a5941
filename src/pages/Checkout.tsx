@@ -90,16 +90,6 @@ export default function Checkout() {
     Math.max(0, Math.round(Number(merged.donationUsd || 0) * 100))
   );
 
-  // Show toast if Stripe sent back ?payment=cancelled
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get("payment") === "cancelled") {
-      toast.push?.({
-        title: "Payment cancelled",
-        body: "Your payment was not completed. Please try again.",
-      });
-    }
-  }, [location.search, toast]);
 
   // Fetch product & persist merged selection (refresh-proof). If no cause provided, auto-pick first.
   useEffect(() => {

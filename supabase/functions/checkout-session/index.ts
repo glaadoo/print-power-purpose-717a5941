@@ -182,7 +182,7 @@ serve(async (req) => {
       // Build absolute redirect URLs
       const { successAbs, cancelAbs } = buildSuccessCancel(
         c.successPath,
-        c.cancelPath ?? "/checkout?payment=cancelled"
+        c.cancelPath ?? "/cart"
       );
       form.set("success_url", successAbs);
       form.set("cancel_url", cancelAbs);
@@ -277,7 +277,7 @@ serve(async (req) => {
       // Build absolute redirect URLs
       const { successAbs, cancelAbs } = buildSuccessCancel(
         body.successPath,
-        body.cancelPath ?? "/checkout?payment=cancelled"
+        body.cancelPath ?? "/cart"
       );
       form.set("success_url", successAbs);
       form.set("cancel_url",  cancelAbs);
