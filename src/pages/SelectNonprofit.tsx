@@ -88,30 +88,24 @@ export default function SelectNonprofit() {
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <a
-          href="/"
-          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-          aria-label="Print Power Purpose Home"
-        >
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
+        <div className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
+          CHOOSE&nbsp;A&nbsp;NONPROFIT
+        </div>
       </header>
 
-      {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            overlay={<div className="absolute inset-0 bg-black/50" />}
-          />
+      {/* Fullscreen content */}
+      <div className="h-full w-full pt-16 overflow-y-auto">
+        <VideoBackground
+          srcMp4="/media/hero.mp4"
+          srcWebm="/media/hero.webm"
+          poster="/media/hero-poster.jpg"
+          overlay={<div className="absolute inset-0 bg-black/50" />}
+        />
 
-          <div className="relative w-full max-w-3xl mx-auto">
-            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-              <h2 className="text-3xl font-serif font-semibold text-center mb-8">
-                Choose Your Nonprofit
-              </h2>
+        <div className="relative w-full pt-4 pb-8 px-4">
+          <div className="w-full max-w-6xl">
+            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 max-w-3xl">
+              {/* Nonprofit and Cause Selection */}
 
               <div className="flex flex-col gap-6">
                 {/* Nonprofit Dropdown */}
@@ -177,7 +171,7 @@ export default function SelectNonprofit() {
               </div>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
