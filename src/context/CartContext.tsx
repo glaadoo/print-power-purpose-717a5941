@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import { supabase } from "@/lib/supabase";
 
 export type CartItem = {
   id: string;             // product id
@@ -35,6 +36,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return { items: [] };
     }
   });
+
+  // Clear cart for guest users on mount/refresh
+  useEffect(() => {
+    const checkAuthAndClearCart = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Guest user - clear cart
+        setState({ items: [] });
+        try {
+          localStorage.removeItem(LS_KEY);
+        } catch {}
+      }
+    };
+    checkAuthAndClearCart();
+  }, []);
 
   // persist
   useEffect(() => {
