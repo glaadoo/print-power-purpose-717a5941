@@ -63,7 +63,7 @@ export default function Cart() {
               </div>
             ) : (
               <div className="absolute inset-0 border-2 border-white/50 bg-transparent backdrop-blur-sm shadow-xl p-6 md:p-8 flex flex-col">
-                <ul className="divide-y divide-white/20 flex-1 overflow-y-auto">
+                <ul className="divide-y divide-white/20 flex-1 overflow-y-auto mb-4">
                   {detailed.map((it) => (
                     <li key={it.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                       {it.imageUrl ? (
@@ -122,7 +122,7 @@ export default function Cart() {
                   ))}
                 </ul>
 
-                <div className="flex justify-center pt-6 border-t border-white/20 mt-4">
+                <div className="flex justify-center mt-auto">
                   <button 
                     className="px-8 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold"
                     onClick={clear}
