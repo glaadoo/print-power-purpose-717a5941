@@ -26,13 +26,9 @@ export default function SelectSchool() {
     <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <a
-          href="/"
-          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-          aria-label="Print Power Purpose Home"
-        >
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
+        <div className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
+          SELECT&nbsp;SCHOOL
+        </div>
       </header>
 
       {/* Fullscreen content */}
@@ -44,9 +40,9 @@ export default function SelectSchool() {
           overlay={<div className="absolute inset-0 bg-black/50" />}
         />
 
-        <div className="relative min-h-full flex flex-col items-center justify-center py-8 px-4">
-          <div className="w-full max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-center mb-8">
+        <div className="relative w-full py-8 px-4">
+          <div className="w-full max-w-6xl">
+            <h2 className="text-3xl md:text-4xl font-serif font-semibold mb-8">
               Select School
             </h2>
 
