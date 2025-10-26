@@ -40,12 +40,8 @@ export default function SelectSchool() {
           overlay={<div className="absolute inset-0 bg-black/50" />}
         />
 
-        <div className="relative w-full py-8 px-4">
+        <div className="relative w-full pt-4 pb-8 px-4">
           <div className="w-full max-w-6xl">
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold mb-8">
-              Select School
-            </h2>
-
             {/* School Selection Grid */}
             <div className="mb-8">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
