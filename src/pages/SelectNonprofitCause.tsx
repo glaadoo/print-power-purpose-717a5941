@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import DonationBarometer from "@/components/DonationBarometer";
 import { useCause } from "@/context/CauseContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { Heart } from "lucide-react";
 
 type Cause = { id: string; name: string; summary?: string; goal_cents: number; raised_cents: number };
 
@@ -127,7 +127,13 @@ export default function SelectNonprofitCause() {
         {selectedCause && (
           <div className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-black/40 border-t border-white/20">
             <div className="container mx-auto px-4 py-4 flex justify-center">
-              <Button onClick={handleSubmit} size="lg" className="px-12 rounded-full">
+              <Button 
+                onClick={handleSubmit} 
+                variant="outline"
+                size="lg" 
+                className="px-12 rounded-full border-white/50 bg-transparent text-white hover:bg-white/10"
+              >
+                <Heart className="w-5 h-5" />
                 Continue
               </Button>
             </div>
