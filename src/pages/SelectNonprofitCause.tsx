@@ -133,7 +133,6 @@ export default function SelectNonprofitCause() {
                 size="lg" 
                 className="px-12 rounded-full border-white/50 bg-transparent text-white hover:bg-white/10"
               >
-                <Heart className="w-5 h-5" />
                 Continue
               </Button>
             </div>
