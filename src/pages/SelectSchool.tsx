@@ -46,14 +46,12 @@ export default function SelectSchool() {
 
         <div className="relative min-h-full flex flex-col items-center justify-center py-8 px-4">
           <div className="w-full max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-center mb-2">
-              Select Your School
+            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-center mb-8">
+              Select School
             </h2>
-            <p className="text-center text-white/80 mb-8">Choose your school to continue</p>
 
             {/* School Selection Grid */}
             <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-center">Which school do you represent?</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {SCHOOLS.map((school) => (
                   <button
