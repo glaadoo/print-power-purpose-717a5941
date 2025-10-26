@@ -63,7 +63,6 @@ const Products        = lazyPage("Products",        () => import("./pages/Produc
 const ProductDetail   = lazyPage("ProductDetail",   () => import("./pages/ProductDetail"));
 const Success         = lazyPage("Success",         () => import("./pages/Success"));
 const Cancel          = lazyPage("Cancel",          () => import("./pages/Cancel"));
-const Dashboard       = lazyPage("Dashboard",       () => import("./pages/Dashboard"));
 const SelectSchool    = lazyPage("SelectSchool",    () => import("./pages/SelectSchool"));
 const SelectSchoolCause = lazyPage("SelectSchoolCause", () => import("./pages/SelectSchoolCause"));
 const SelectNonprofit = lazyPage("SelectNonprofit", () => import("./pages/SelectNonprofit"));
@@ -200,16 +199,6 @@ export default function App() {
             element={
               <RouteBoundary name="Home">
                 <Home />
-              </RouteBoundary>
-            }
-          />
-
-          {/* Dashboard */}
-          <Route
-            path="/dashboard"
-            element={
-              <RouteBoundary name="Dashboard">
-                <Dashboard />
               </RouteBoundary>
             }
           />
