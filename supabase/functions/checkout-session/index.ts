@@ -45,7 +45,9 @@ type DbBody = {
   cancelPath?: string;       // '/checkout?payment=cancelled' or absolute URL
 };
 
-const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+const STRIPE_SECRET_KEY = (Deno.env.get("STRIPE_SECRET_KEY") ?? "")
+  .trim()
+  .replace(/^['"]|['"]$/g, "");
 const PUBLIC_SITE_URL =
   Deno.env.get("PUBLIC_SITE_URL") ??
   Deno.env.get("VITE_PUBLIC_SITE_URL") ??
