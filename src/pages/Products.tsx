@@ -77,69 +77,54 @@ export default function Products() {
       const qty = quantities[product.id] || 0;
 
       return (
-        <GlassCard key={product.id} padding="p-6">
-          <div className="flex flex-col h-full">
-            {/* Reserved space for product image */}
-            <div className="w-full aspect-square mb-4 rounded-lg bg-white/5 flex items-center justify-center">
-              {product.image_url ? (
-                <img 
-                  src={product.image_url} 
-                  alt={product.name}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              ) : (
-                <span className="text-white/30 text-sm">No image</span>
-              )}
-            </div>
-            
-            <h3 className="text-xl font-semibold text-white mb-2 text-center">
+        <GlassCard key={product.id} padding="p-8">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <h3 className="text-2xl font-bold text-white">
               {product.name}
             </h3>
             
             {product.category && (
-              <p className="text-sm text-white/70 mb-2 text-center">{product.category}</p>
+              <p className="text-base text-white/80">{product.category}</p>
             )}
             
-            <p className="text-2xl font-bold text-white mb-4 text-center">
+            <p className="text-4xl font-bold text-white">
               ${unitPrice.toFixed(2)}
             </p>
 
-            <div className="mt-auto space-y-3">
-              <div className="flex items-center justify-center gap-3">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
-                  onClick={() => updateQuantity(product.id, -1)}
-                  disabled={qty === 0}
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                
-                <span className="text-2xl font-semibold text-white min-w-[3rem] text-center">
-                  {qty}
-                </span>
-                
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
-                  onClick={() => updateQuantity(product.id, 1)}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-
+            <div className="flex items-center justify-center gap-4 py-4">
               <Button
-                onClick={() => handleAddToCart(product)}
-                disabled={qty === 0}
+                size="icon"
                 variant="outline"
-                className="w-full rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-full w-12 h-12 border-white/50 bg-white/10 text-white hover:bg-white/20"
+                onClick={() => updateQuantity(product.id, -1)}
+                disabled={qty === 0}
               >
-                <ShoppingCart className="w-4 h-4" />
-                Add to Cart
+                <Minus className="w-5 h-5" />
+              </Button>
+              
+              <span className="text-3xl font-semibold text-white min-w-[4rem] text-center">
+                {qty}
+              </span>
+              
+              <Button
+                size="icon"
+                variant="outline"
+                className="rounded-full w-12 h-12 border-white/50 bg-white/10 text-white hover:bg-white/20"
+                onClick={() => updateQuantity(product.id, 1)}
+              >
+                <Plus className="w-5 h-5" />
               </Button>
             </div>
+
+            <Button
+              onClick={() => handleAddToCart(product)}
+              disabled={qty === 0}
+              variant="outline"
+              className="w-full rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed py-6 text-base"
+            >
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              Add to Cart
+            </Button>
           </div>
         </GlassCard>
       );
