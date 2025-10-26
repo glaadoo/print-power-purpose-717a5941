@@ -90,7 +90,7 @@ export default function SelectNonprofitCause() {
         <div className="relative w-full pt-4 pb-8 px-4">
           <div className="w-full max-w-6xl">
             {/* Causes Selection Grid */}
-            <div className="mb-8">
+            <div className="mb-24">
               {loading ? (
                 <p className="text-center opacity-70">Loading causes...</p>
               ) : causes.length === 0 ? (
@@ -101,10 +101,10 @@ export default function SelectNonprofitCause() {
                     <button
                       key={cause.id}
                       onClick={() => setSelectedCause(cause.id)}
-                      className={`rounded-xl border-2 p-6 text-left transition-all ${
+                      className={`rounded-xl border-2 p-6 text-left transition-all duration-300 ${
                         selectedCause === cause.id
                           ? "border-white bg-white/20 scale-105 shadow-lg"
-                          : "border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/15"
+                          : "border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/20 hover:scale-105"
                       }`}
                     >
                       <h4 className="font-semibold mb-2 text-lg">{cause.name}</h4>
@@ -120,17 +120,19 @@ export default function SelectNonprofitCause() {
                 </div>
               )}
             </div>
-
-            {/* Continue Button */}
-            {selectedCause && (
-              <div className="flex justify-center">
-                <Button onClick={handleSubmit} size="lg" className="px-12">
-                  Continue to Products
-                </Button>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Floating Bottom Bar */}
+        {selectedCause && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-black/40 border-t border-white/20">
+            <div className="container mx-auto px-4 py-4 flex justify-center">
+              <Button onClick={handleSubmit} size="lg" className="px-12">
+                Continue to Products
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
