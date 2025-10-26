@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
+import { useCart } from "../context/CartContext";
 import { supabase } from "@/lib/supabase";
 import VideoBackground from "@/components/VideoBackground";
 
@@ -42,6 +43,7 @@ function getFromLocalStorage() {
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation() as any;
+  const { items: cartItems } = useCart();
 
   // Optional hooks (guarded)
   const toast = (() => {
@@ -300,12 +302,8 @@ export default function Checkout() {
     );
   }
 
-  const qty = Number(merged.qty || 1);
-  const unitPrice =
-    Number(product.priceCents || 0) > 0
-      ? Math.max(50, Math.round(Number(product.priceCents)))
-      : Math.max(50, priceFromBase(product.base_cost_cents));
-  const subtotal = unitPrice * qty;
+  // Calculate totals from cart items
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.priceCents * item.quantity), 0);
   const total = subtotal + donation;
 
   return (
@@ -368,21 +366,25 @@ export default function Checkout() {
 
               {/* Order summary */}
               <div className="space-y-4 mb-6">
-                <div className="flex justify-between">
-                  <span className="opacity-90">Product</span>
-                  <span className="font-semibold">{product.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="opacity-90">Quantity</span>
-                  <span className="font-semibold">{qty}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="opacity-90">Unit price</span>
-                  <span className="font-semibold">
-                    ${(unitPrice / 100).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="border-b border-white/20 pb-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="opacity-90">Product</span>
+                      <span className="font-semibold">{item.name}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="opacity-90">Quantity</span>
+                      <span className="font-semibold">{item.quantity}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-90">Total</span>
+                      <span className="font-semibold">
+                        ${((item.priceCents * item.quantity) / 100).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-between pt-2">
                   <span className="opacity-90">Supporting</span>
                   <span className="font-semibold">
                     {selectedCauseName || causeCtx?.cause?.name || merged.causeId}
@@ -392,8 +394,8 @@ export default function Checkout() {
 
               {/* Optional donation */}
               <div className="mb-6">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="text-2xl">🐾</div>
+                <div className="flex items-start gap-3 mb-3 animate-fade-in">
+                  <div className="text-2xl animate-[pulse_2s_ease-in-out_infinite]">🐾</div>
                   <div>
                     <div className="font-bold">Kenzie says:</div>
                     <div className="opacity-90">
@@ -412,7 +414,7 @@ export default function Checkout() {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={(donation / 100).toString()}
+                    value={donation === 0 ? "" : (donation / 100).toString()}
                     onChange={(e) =>
                       setDonation(Math.max(0, Math.round(parseFloat(e.target.value || "0") * 100)))
                     }
