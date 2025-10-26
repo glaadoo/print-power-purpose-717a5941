@@ -127,8 +127,8 @@ export default function SelectNonprofitCause() {
         {selectedCause && (
           <div className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-black/40 border-t border-white/20">
             <div className="container mx-auto px-4 py-4 flex justify-center">
-              <Button onClick={handleSubmit} size="lg" className="px-12">
-                Continue to Products
+              <Button onClick={handleSubmit} size="lg" className="px-12 rounded-full">
+                Continue
               </Button>
             </div>
           </div>
