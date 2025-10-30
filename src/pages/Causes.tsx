@@ -170,10 +170,10 @@ export default function Causes() {
 
       {/* Floating Continue Bar */}
       {selectedCause && (
-        <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-center gap-4 text-white backdrop-blur-md bg-black/40 border-t border-white/20">
+        <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-center gap-4 text-white backdrop-blur-md bg-black/40 border-t border-white/20 pointer-events-none">
           <button
             onClick={handleContinue}
-            className="px-6 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-sm whitespace-nowrap"
+            className="pointer-events-auto px-6 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-sm whitespace-nowrap"
           >
             Continue
           </button>
