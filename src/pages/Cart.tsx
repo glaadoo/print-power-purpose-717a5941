@@ -122,17 +122,24 @@ export default function Cart() {
                   ))}
                 </ul>
 
-                {/* Action buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mt-8 mb-6">
+                {/* Action buttons and Subtotal */}
+                <div className="flex flex-col lg:flex-row gap-6 justify-between items-center mt-8 mb-6 border-t border-white/20 pt-6">
                   <button
-                    className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto flex items-center gap-2"
+                    className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto flex items-center gap-2 justify-center"
                     onClick={() => nav("/products")}
                   >
                     <ArrowLeft size={20} />
                     Continue Shopping
                   </button>
                   
-                  <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                  <div className="text-center">
+                    <div className="opacity-80 text-sm mb-2">Subtotal</div>
+                    <div className="text-3xl font-bold">
+                      ${(totalCents / 100).toFixed(2)}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                     <button 
                       className="px-6 py-3 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
                       onClick={clear}
@@ -141,22 +148,12 @@ export default function Cart() {
                     </button>
                     
                     <button
-                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto flex items-center gap-2"
+                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto flex items-center gap-2 justify-center"
                       onClick={() => nav("/checkout", { state: { fromCart: true } })}
                     >
                       Checkout
                       <ArrowRight size={20} />
                     </button>
-                  </div>
-                </div>
-
-                {/* Total section */}
-                <div className="border-t border-white/20 pt-6 mb-6">
-                  <div className="text-center mb-6">
-                    <div className="opacity-80 text-sm mb-2">Subtotal</div>
-                    <div className="text-3xl font-bold">
-                      ${(totalCents / 100).toFixed(2)}
-                    </div>
                   </div>
                 </div>
               </div>
