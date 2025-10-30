@@ -102,41 +102,54 @@ export default function Causes() {
         <p>{err}</p>
       </div>
     ) : (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {causes.map((c) => {
-          const description = pickBlurb(c) || "";
-          const isSelected = selectedCause?.id === c.id;
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {causes.map((c) => {
+            const description = pickBlurb(c) || "";
+            const isSelected = selectedCause?.id === c.id;
 
-          return (
+            return (
+              <button
+                key={c.id}
+                onClick={() => handleCauseClick(c)}
+                className={`
+                  aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
+                  ${
+                    isSelected
+                      ? "border-white/70 bg-white/25 scale-105"
+                      : "border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/15 hover:scale-105"
+                  }
+                `}
+              >
+                <h3 className="text-base md:text-lg font-bold mb-2">{c.name}</h3>
+                
+                {description && (
+                  <p className="text-xs md:text-sm opacity-80 mb-3 line-clamp-3">{description}</p>
+                )}
+
+                {/* Barometer */}
+                <div className="w-full max-w-[120px]">
+                  <DonationBarometer
+                    raised_cents={c.raised_cents || 0}
+                    goal_cents={c.goal_cents || 1}
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {selectedCause && (
+          <div className="flex justify-center mt-8">
             <button
-              key={c.id}
-              onClick={() => handleCauseClick(c)}
-              className={`
-                aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
-                ${
-                  isSelected
-                    ? "border-white/70 bg-white/25 scale-105"
-                    : "border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/15 hover:scale-105"
-                }
-              `}
+              onClick={handleContinue}
+              className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-base"
             >
-              <h3 className="text-base md:text-lg font-bold mb-2">{c.name}</h3>
-              
-              {description && (
-                <p className="text-xs md:text-sm opacity-80 mb-3 line-clamp-3">{description}</p>
-              )}
-
-              {/* Barometer */}
-              <div className="w-full max-w-[120px]">
-                <DonationBarometer
-                  raised_cents={c.raised_cents || 0}
-                  goal_cents={c.goal_cents || 1}
-                />
-              </div>
+              Continue
             </button>
-          );
-        })}
-      </div>
+          </div>
+        )}
+      </>
     );
 
   useEffect(() => {
@@ -168,17 +181,6 @@ export default function Causes() {
         </div>
       </div>
 
-      {/* Floating Continue Bar */}
-      {selectedCause && (
-        <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-center gap-4 text-white backdrop-blur-md bg-black/40 border-t border-white/20 pointer-events-none">
-          <button
-            onClick={handleContinue}
-            className="pointer-events-auto px-6 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-sm whitespace-nowrap"
-          >
-            Continue
-          </button>
-        </div>
-      )}
     </div>
   );
 }
