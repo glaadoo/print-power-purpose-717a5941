@@ -28,6 +28,15 @@ export default function Products() {
   const [err, setErr] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
 
+  // Sync quantities with cart items
+  useEffect(() => {
+    const cartQuantities: Record<string, number> = {};
+    items.forEach(item => {
+      cartQuantities[item.id] = item.quantity;
+    });
+    setQuantities(cartQuantities);
+  }, [items]);
+
   useEffect(() => {
     document.title = "Products - Print Power Purpose";
     
@@ -68,9 +77,6 @@ export default function Products() {
     );
 
     toast.success(`Added ${qty} ${product.name} to cart`);
-
-    // Reset quantity after adding
-    setQuantities(prev => ({ ...prev, [product.id]: 0 }));
   };
 
   const productCards = useMemo(() => {
