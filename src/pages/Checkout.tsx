@@ -389,34 +389,51 @@ export default function Checkout() {
               </div>
 
               {/* Optional donation */}
-              <div className="mb-6">
-                <div className="flex items-start gap-3 mb-3 animate-fade-in">
-                  <div className="text-2xl animate-[pulse_2s_ease-in-out_infinite]">🐾</div>
-                  <div>
-                    <div className="font-bold">Kenzie says:</div>
-                    <div className="opacity-90">
-                      "Want to add an optional donation for {causeCtx?.cause?.name || "this cause"}?"
-                    </div>
-                  </div>
+              <div className="border-t border-white/20 pt-6 mb-6">
+                <div className="mb-4">
+                  <p className="text-lg font-medium mb-2">
+                    Before completing your payment, would you like to add an additional donation to support your selected cause?
+                  </p>
+                  <p className="text-sm opacity-75 italic">
+                    (Optional - You can skip this step if you prefer)
+                  </p>
                 </div>
 
-                <label htmlFor="donation" className="block opacity-90 mb-2">
-                  Donation (USD)
+                <label htmlFor="donation" className="block font-medium mb-2">
+                  Additional Donation Amount (USD)
                 </label>
-                <div className="flex items-center gap-2">
-                  <span className="opacity-80">$</span>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-xl">$</span>
                   <input
                     id="donation"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={donation === 0 ? "" : (donation / 100).toString()}
+                    value={donation === 0 ? "" : (donation / 100).toFixed(2)}
                     onChange={(e) =>
                       setDonation(Math.max(0, Math.round(parseFloat(e.target.value || "0") * 100)))
                     }
-                    className="flex-1 rounded-xl bg-white/90 text-black px-4 py-2 outline-none"
+                    className="flex-1 rounded-xl bg-white/90 text-black px-4 py-3 outline-none focus:ring-2 focus:ring-white/50"
                     placeholder="0.00"
                   />
+                </div>
+
+                {/* Total breakdown */}
+                <div className="bg-white/10 rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="opacity-90">Subtotal</span>
+                    <span className="font-medium">${(subtotal / 100).toFixed(2)}</span>
+                  </div>
+                  {donation > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="opacity-90">Donation</span>
+                      <span className="font-medium text-green-300">${(donation / 100).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-2 border-t border-white/20 text-lg font-bold">
+                    <span>Total</span>
+                    <span>${(total / 100).toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
 
