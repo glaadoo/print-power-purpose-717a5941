@@ -132,7 +132,7 @@ export default function Cart() {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
                     <button
                       className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
                       onClick={() => nav("/products")}
@@ -140,22 +140,21 @@ export default function Cart() {
                       Continue Shopping
                     </button>
                     
-                    <button
-                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
-                      onClick={() => nav("/checkout", { state: { fromCart: true } })}
-                    >
-                      Checkout
-                    </button>
-                  </div>
-
-                  {/* Clear cart button */}
-                  <div className="flex justify-center mt-6">
-                    <button 
-                      className="px-6 py-3 rounded-full bg-white/20 text-white text-sm font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm"
-                      onClick={clear}
-                    >
-                      Clear Cart
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                      <button 
+                        className="px-6 py-3 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
+                        onClick={clear}
+                      >
+                        Clear Cart
+                      </button>
+                      
+                      <button
+                        className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
+                        onClick={() => nav("/checkout", { state: { fromCart: true } })}
+                      >
+                        Checkout
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
