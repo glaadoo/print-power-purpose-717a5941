@@ -174,7 +174,7 @@ export default function Causes() {
           overlay={<div className="absolute inset-0 bg-black/50" />}
         />
 
-        <div className="relative w-full pt-4 pb-32 px-4">
+        <div className="relative w-full pt-4 pb-8 px-4">
           <div className="w-full max-w-6xl mx-auto">
             {body}
           </div>
