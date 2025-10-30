@@ -416,22 +416,17 @@ export default function Checkout() {
                 </div>
               </div>
 
+              {/* Continue button */}
+              <button
+                onClick={continueToCheckout}
+                disabled={loading}
+                className="w-full bg-white/20 text-white hover:bg-white/30 border border-white/50 backdrop-blur-sm shadow-lg rounded-2xl px-6 py-4 text-base font-semibold transition-all disabled:opacity-50 mt-6"
+              >
+                {loading ? "Processing..." : "Continue to Payment"}
+              </button>
             </div>
           </div>
         </section>
-      </div>
-
-      {/* Floating bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 py-4 px-4 backdrop-blur bg-black/20 border-t border-white/10">
-        <div className="max-w-2xl mx-auto flex justify-center">
-          <button
-            onClick={continueToCheckout}
-            disabled={loading}
-            className="bg-white/20 text-white hover:bg-white/30 border border-white/50 backdrop-blur-sm shadow-lg rounded-full px-6 py-4 text-sm font-medium transition-all disabled:opacity-50"
-          >
-            {loading ? "Processing..." : "Continue"}
-          </button>
-        </div>
       </div>
     </div>
   );
