@@ -39,7 +39,7 @@ export default function Cart() {
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-4">
+      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-4 md:pb-8 lg:pb-12">
         <section className="relative min-h-[calc(100vh-4rem)]">
           <VideoBackground
             srcMp4="/media/hero.mp4"
