@@ -2,7 +2,7 @@ import { useMemo, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
-import { X } from "lucide-react";
+import { X, ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Cart() {
@@ -125,9 +125,10 @@ export default function Cart() {
                 {/* Action buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mt-8 mb-6">
                   <button
-                    className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
+                    className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto flex items-center gap-2"
                     onClick={() => nav("/products")}
                   >
+                    <ArrowLeft size={20} />
                     Continue Shopping
                   </button>
                   
@@ -140,10 +141,11 @@ export default function Cart() {
                     </button>
                     
                     <button
-                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
+                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto flex items-center gap-2"
                       onClick={() => nav("/checkout", { state: { fromCart: true } })}
                     >
                       Checkout
+                      <ArrowRight size={20} />
                     </button>
                   </div>
                 </div>
