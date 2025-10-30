@@ -219,17 +219,15 @@ serve(async (req) => {
         }
       });
 
-      // Add donation as an adjustable line item that users can modify on Stripe page
-      const donationIdx = c.items.length;
-      const initialDonation = donationCents > 0 ? donationCents : 500; // Default $5 if none set
-      form.set(`line_items[${donationIdx}][quantity]`, donationCents > 0 ? "1" : "0");
-      form.set(`line_items[${donationIdx}][price_data][currency]`, currency);
-      form.set(`line_items[${donationIdx}][price_data][unit_amount]`, String(initialDonation));
-      form.set(`line_items[${donationIdx}][price_data][product_data][name]`, "Optional Donation");
-      form.set(`line_items[${donationIdx}][price_data][product_data][description]`, `Support ${causeName} (adjustable)`);
-      form.set(`line_items[${donationIdx}][adjustable_quantity][enabled]`, "true");
-      form.set(`line_items[${donationIdx}][adjustable_quantity][minimum]`, "0");
-      form.set(`line_items[${donationIdx}][adjustable_quantity][maximum]`, "100");
+      // Add donation as a separate line item if present
+      if (donationCents > 0) {
+        const donationIdx = c.items.length;
+        form.set(`line_items[${donationIdx}][quantity]`, "1");
+        form.set(`line_items[${donationIdx}][price_data][currency]`, currency);
+        form.set(`line_items[${donationIdx}][price_data][unit_amount]`, String(donationCents));
+        form.set(`line_items[${donationIdx}][price_data][product_data][name]`, "Additional Donation");
+        form.set(`line_items[${donationIdx}][price_data][product_data][description]`, `Extra support for ${causeName}`);
+      }
 
       // Metadata
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -327,16 +325,13 @@ serve(async (req) => {
       form.set("line_items[0][price_data][product_data][name]", String(product.name || "Product"));
       form.set("line_items[0][price_data][product_data][description]", `Supporting: ${cause.name}`);
 
-      // Add adjustable donation line item
-      const initialDonation = donationCents > 0 ? donationCents : 500; // Default $5
-      form.set("line_items[1][quantity]", donationCents > 0 ? "1" : "0");
-      form.set("line_items[1][price_data][currency]", currency);
-      form.set("line_items[1][price_data][unit_amount]", String(initialDonation));
-      form.set("line_items[1][price_data][product_data][name]", "Optional Donation");
-      form.set("line_items[1][price_data][product_data][description]", `Support ${cause.name} (adjustable)`);
-      form.set("line_items[1][adjustable_quantity][enabled]", "true");
-      form.set("line_items[1][adjustable_quantity][minimum]", "0");
-      form.set("line_items[1][adjustable_quantity][maximum]", "100");
+      if (donationCents > 0) {
+        form.set("line_items[1][quantity]", "1");
+        form.set("line_items[1][price_data][currency]", currency);
+        form.set("line_items[1][price_data][unit_amount]", String(donationCents));
+        form.set("line_items[1][price_data][product_data][name]", "Additional Donation");
+        form.set("line_items[1][price_data][product_data][description]", `Extra support for ${cause.name}`);
+      }
 
       // Metadata
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -400,17 +395,15 @@ serve(async (req) => {
       form.set("line_items[0][price_data][product_data][images][0]", d.productImage);
     }
 
-    // Add adjustable donation line item
-    const initialDonation = donationUsd > 0 ? Math.round(donationUsd * 100) : 500; // Default $5
-    form.set("line_items[1][quantity]", donationUsd > 0 ? "1" : "0");
-    form.set("line_items[1][price_data][currency]", currency);
-    form.set("line_items[1][price_data][unit_amount]", String(initialDonation));
-    form.set("line_items[1][price_data][product_data][name]", "Optional Donation");
-    form.set("line_items[1][price_data][product_data][description]", "Adjust quantity to donate more");
-    form.set("line_items[1][price_data][product_data][metadata][causeId]", d.causeId);
-    form.set("line_items[1][adjustable_quantity][enabled]", "true");
-    form.set("line_items[1][adjustable_quantity][minimum]", "0");
-    form.set("line_items[1][adjustable_quantity][maximum]", "100");
+    // Optional donation
+    if (donationUsd > 0) {
+      const donationCents = Math.round(donationUsd * 100);
+      form.set("line_items[1][quantity]", "1");
+      form.set("line_items[1][price_data][currency]", "usd");
+      form.set("line_items[1][price_data][unit_amount]", String(donationCents));
+      form.set("line_items[1][price_data][product_data][name]", "Donation to cause");
+      form.set("line_items[1][price_data][product_data][metadata][causeId]", d.causeId);
+    }
 
     // Metadata
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
