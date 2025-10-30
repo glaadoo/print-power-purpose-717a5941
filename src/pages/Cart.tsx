@@ -122,38 +122,38 @@ export default function Cart() {
                   ))}
                 </ul>
 
+                {/* Action buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mt-8 mb-6">
+                  <button
+                    className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
+                    onClick={() => nav("/products")}
+                  >
+                    Continue Shopping
+                  </button>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    <button 
+                      className="px-6 py-3 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
+                      onClick={clear}
+                    >
+                      Clear Cart
+                    </button>
+                    
+                    <button
+                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
+                      onClick={() => nav("/checkout", { state: { fromCart: true } })}
+                    >
+                      Checkout
+                    </button>
+                  </div>
+                </div>
+
                 {/* Total section */}
                 <div className="border-t border-white/20 pt-6 mb-6">
                   <div className="text-center mb-6">
                     <div className="opacity-80 text-sm mb-2">Subtotal</div>
                     <div className="text-3xl font-bold">
                       ${(totalCents / 100).toFixed(2)}
-                    </div>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-                    <button
-                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
-                      onClick={() => nav("/products")}
-                    >
-                      Continue Shopping
-                    </button>
-                    
-                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                      <button 
-                        className="px-6 py-3 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
-                        onClick={clear}
-                      >
-                        Clear Cart
-                      </button>
-                      
-                      <button
-                        className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm w-full sm:w-auto"
-                        onClick={() => nav("/checkout", { state: { fromCart: true } })}
-                      >
-                        Checkout
-                      </button>
                     </div>
                   </div>
                 </div>
