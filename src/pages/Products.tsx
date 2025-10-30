@@ -206,7 +206,10 @@ export default function Products() {
               className="rounded-full border-white/50 bg-transparent text-white hover:bg-white/10"
             >
               <ShoppingCart className="w-5 h-5" />
-              View Cart
+              <span className="flex flex-col items-start gap-0.5">
+                <span className="text-sm font-semibold">View Cart ({items.length})</span>
+                <span className="text-xs opacity-90">${(totalCents / 100).toFixed(2)}</span>
+              </span>
             </Button>
           </div>
         </div>
