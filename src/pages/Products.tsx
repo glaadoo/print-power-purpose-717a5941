@@ -22,7 +22,7 @@ const priceFromBase = (base?: number | null) =>
 
 export default function Products() {
   const navigate = useNavigate();
-  const { add, items, totalCents } = useCart();
+  const { add, items, count, totalCents } = useCart();
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -152,15 +152,20 @@ export default function Products() {
           variant="outline"
           size="sm"
           onClick={() => navigate("/cart")}
-          className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative absolute right-4"
+          className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative absolute right-4 flex items-center gap-2 pr-4"
         >
-          <ShoppingCart className="w-4 h-4" />
-          <span className="hidden sm:inline ml-2">Cart</span>
-          {items.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-              {items.length}
-            </span>
-          )}
+          <div className="relative">
+            <ShoppingCart className="w-4 h-4" />
+            {count > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {count}
+              </span>
+            )}
+          </div>
+          <div className="hidden sm:flex flex-col items-start">
+            <span className="text-xs font-semibold">{count} items</span>
+            <span className="text-[10px] opacity-90">${(totalCents / 100).toFixed(2)}</span>
+          </div>
         </Button>
       </header>
 

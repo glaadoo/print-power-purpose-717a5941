@@ -6,7 +6,7 @@ import { X, ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Cart() {
-  const { items, totalCents, setQty, remove, clear } = useCart();
+  const { items, count, totalCents, setQty, remove, clear } = useCart();
   const nav = useNavigate();
 
   useEffect(() => {
@@ -43,11 +43,22 @@ export default function Cart() {
           CART
         </h1>
         <button 
-          className="rounded-full w-10 h-10 bg-white/10 text-white hover:bg-white/20 border border-white/50 flex items-center justify-center"
+          className="rounded-full px-4 py-2 bg-white/10 text-white hover:bg-white/20 border border-white/50 flex items-center gap-2 relative"
           onClick={() => nav("/products")}
-          aria-label="Continue Shopping"
+          aria-label="Cart"
         >
-          <ShoppingCart size={20} />
+          <div className="relative">
+            <ShoppingCart size={20} />
+            {count > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {count}
+              </span>
+            )}
+          </div>
+          <div className="hidden sm:flex flex-col items-start">
+            <span className="text-xs font-semibold">{count} items</span>
+            <span className="text-[10px] opacity-90">${(totalCents / 100).toFixed(2)}</span>
+          </div>
         </button>
       </header>
 
