@@ -32,10 +32,22 @@ export default function Cart() {
   return (
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <button 
+          className="rounded-full px-4 py-2 bg-white/10 text-white hover:bg-white/20 border border-white/50"
+          onClick={() => nav("/")}
+        >
+          ← Home
+        </button>
         <h1 className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
           CART
         </h1>
+        <button 
+          className="rounded-full px-4 py-2 bg-white/10 text-white hover:bg-white/20 border border-white/50"
+          onClick={() => nav("/products")}
+        >
+          Continue Shopping
+        </button>
       </header>
 
       {/* Scrollable content */}
