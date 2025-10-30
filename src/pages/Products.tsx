@@ -197,11 +197,11 @@ export default function Products() {
       </div>
 
       {/* Floating checkout bar */}
-      {items.length > 0 && (
+      {count > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-black/40 border-t border-white/20">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="text-white">
-              <div className="text-sm opacity-80">{items.length} item(s) in cart</div>
+              <div className="text-sm opacity-80">{count} item(s) in cart</div>
               <div className="text-xl font-semibold">${(totalCents / 100).toFixed(2)}</div>
             </div>
             <Button
@@ -212,7 +212,7 @@ export default function Products() {
             >
               <ShoppingCart className="w-5 h-5" />
               <span className="flex flex-col items-start gap-0.5">
-                <span className="text-sm font-semibold">View Cart ({items.length})</span>
+                <span className="text-sm font-semibold">View Cart ({count})</span>
                 <span className="text-xs opacity-90">${(totalCents / 100).toFixed(2)}</span>
               </span>
             </Button>
