@@ -146,18 +146,21 @@ export default function Checkout() {
       return;
     }
 
-    supabase
-      .from("products")
-      .select("*")
-      .eq("id", productId)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) {
-          setError("Product not found");
-          return;
-        }
-        setProduct(data as ProductRow);
-      });
+    // Only fetch product if we have a productId and no cart items
+    if (productId && cartItems.length === 0) {
+      supabase
+        .from("products")
+        .select("*")
+        .eq("id", productId)
+        .single()
+        .then(({ data, error }) => {
+          if (error || !data) {
+            setError("Product not found");
+            return;
+          }
+          setProduct(data as ProductRow);
+        });
+    }
   }, [merged]);
 
   // Create Stripe Checkout by calling your Edge Function directly (with required headers)
