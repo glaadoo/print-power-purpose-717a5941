@@ -341,7 +341,7 @@ export default function Checkout() {
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
+      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-24">
         <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
           <VideoBackground
             srcMp4="/media/hero.mp4"
