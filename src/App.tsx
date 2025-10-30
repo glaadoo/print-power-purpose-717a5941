@@ -167,7 +167,7 @@ export default function App() {
         style={{
           position: "fixed",
           top: 10,
-          right: 10,
+          right: "25%",
           background: "rgba(0, 0, 0, 0.8)",
           color: "white",
           padding: "8px 12px",
@@ -176,6 +176,7 @@ export default function App() {
           fontSize: 12,
           zIndex: 9999,
           pointerEvents: "none",
+          transform: "translateX(50%)",
         }}
       >
         📍 {location.pathname}
