@@ -341,7 +341,7 @@ export default function Checkout() {
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-24">
+      <div className="h-full overflow-y-auto scroll-smooth pt-16">
         <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
           <VideoBackground
             srcMp4="/media/hero.mp4"
@@ -350,7 +350,7 @@ export default function Checkout() {
             overlay={<div className="absolute inset-0 bg-black/50" />}
           />
 
-          <div className="relative w-full max-w-2xl mx-auto mb-32">
+          <div className="relative w-full max-w-2xl mx-auto">
             <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
               <h1 className="text-3xl font-serif font-semibold text-center mb-8">
                 Review Your Order
