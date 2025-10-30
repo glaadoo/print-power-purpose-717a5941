@@ -2,7 +2,7 @@ import { useMemo, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
-import { X, ArrowLeft, ArrowRight } from "lucide-react";
+import { X, ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Cart() {
@@ -43,10 +43,11 @@ export default function Cart() {
           CART
         </h1>
         <button 
-          className="rounded-full px-4 py-2 bg-white/10 text-white hover:bg-white/20 border border-white/50"
+          className="rounded-full w-10 h-10 bg-white/10 text-white hover:bg-white/20 border border-white/50 flex items-center justify-center"
           onClick={() => nav("/products")}
+          aria-label="Continue Shopping"
         >
-          Continue Shopping
+          <ShoppingCart size={20} />
         </button>
       </header>
 
