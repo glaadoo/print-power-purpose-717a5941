@@ -100,7 +100,8 @@ export default function Checkout() {
       localStorage.setItem(LS_KEY, JSON.stringify({ productId, qty, causeId, donationUsd }));
     } catch {}
 
-    if (!productId) {
+    // Only require productId if we don't have cart items
+    if (!productId && cartItems.length === 0) {
       setError("Missing product. Please select a product first.");
       return;
     }
