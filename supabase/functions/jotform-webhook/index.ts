@@ -39,6 +39,8 @@ serve(async (req) => {
     }
 
     console.log('Jotform webhook payload received:', JSON.stringify(payload).substring(0, 500));
+    console.log('Full payload keys:', Object.keys(payload));
+    console.log('Payload sample:', JSON.stringify(payload, null, 2).substring(0, 2000));
 
     // Verify webhook secret if configured
     if (webhookSecret) {
