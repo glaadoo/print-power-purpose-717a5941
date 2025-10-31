@@ -55,11 +55,17 @@ export default function Donate() {
   useEffect(() => {
     const success = searchParams.get("payment");
     if (success === "success") {
-      setShowSuccessMessage(true);
-      // Remove the query param
-      nav(`/donate?cause=${causeId}`, { replace: true });
+      // Show success message
+      toast.success("Thank you for your donation! Your payment was successful.");
+      
+      // Redirect to home after 3 seconds
+      const timer = setTimeout(() => {
+        nav("/");
+      }, 3000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [searchParams, causeId, nav]);
+  }, [searchParams, nav]);
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
@@ -188,7 +194,7 @@ export default function Donate() {
             causeId: cause.id,
             donationUsd: 0,
             currency: "usd",
-            successPath: `/`,
+            successPath: `/donate?cause=${cause.id}&payment=success`,
             cancelPath: `/donate?cause=${cause.id}&payment=cancelled`,
           },
         });
