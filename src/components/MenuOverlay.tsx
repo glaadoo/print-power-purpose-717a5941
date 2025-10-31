@@ -1,7 +1,7 @@
 // src/components/MenuOverlay.tsx
 import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "./VideoBackground";
 
@@ -138,19 +138,35 @@ export default function MenuOverlay({ open, onClose, showSignOut = false }: Prop
               >
                 {menuItems.map((it) => (
                   <motion.li key={it.href} variants={itemVariants} className="w-full">
-                    <a
-                      href={it.href}
-                      onClick={onClose}
-                      className="
-                        inline-block ml-auto
-                        text-white/90 hover:text-white
-                        text-lg md:text-xl font-semibold
-                        tracking-wide
-                        transition-all hover:translate-x-1
-                      "
-                    >
-                      {it.label}
-                    </a>
+                    {it.href.startsWith('#') ? (
+                      <a
+                        href={it.href}
+                        onClick={onClose}
+                        className="
+                          inline-block ml-auto
+                          text-white/90 hover:text-white
+                          text-lg md:text-xl font-semibold
+                          tracking-wide
+                          transition-all hover:translate-x-1
+                        "
+                      >
+                        {it.label}
+                      </a>
+                    ) : (
+                      <Link
+                        to={it.href}
+                        onClick={onClose}
+                        className="
+                          inline-block ml-auto
+                          text-white/90 hover:text-white
+                          text-lg md:text-xl font-semibold
+                          tracking-wide
+                          transition-all hover:translate-x-1
+                        "
+                      >
+                        {it.label}
+                      </Link>
+                    )}
                   </motion.li>
                 ))}
               </motion.ul>
