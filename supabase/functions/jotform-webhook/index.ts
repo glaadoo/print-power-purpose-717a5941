@@ -66,39 +66,48 @@ serve(async (req) => {
 
     // Extract Jotform submission data
     // Jotform sends data in rawRequest or as direct fields
-    const submission = payload.rawRequest || payload;
-    
-    // Map Jotform fields to our database structure
-    // Jotform submission format uses q{number}_fieldName pattern
-    // We need to search through all keys to find the actual form data
-    let formData: any = {};
-    
-    // Extract all q{number} fields from the submission
-    Object.keys(submission).forEach(key => {
-      if (key.startsWith('q') && !key.includes('_')) {
-        // This is a question field, map it
-        const value = submission[key];
-        if (typeof value === 'object' && value !== null) {
-          // Could be email, name, or other complex field
-          if (value.email) formData.email = value.email;
-          if (value.first) formData.firstName = value.first;
-          if (value.last) formData.lastName = value.last;
-        } else {
-          formData[key] = value;
-        }
+    let submission: any = payload.rawRequest || payload;
+
+    // If rawRequest is a JSON string, parse it
+    if (typeof submission === 'string') {
+      try {
+        submission = JSON.parse(submission);
+      } catch {
+        submission = {};
       }
-    });
-    
-    const formType = submission.formType || 'order';
-    const customerEmail = formData.email || submission.email;
-    const customerName = formData.firstName && formData.lastName 
-      ? `${formData.firstName} ${formData.lastName}` 
-      : submission.name;
-    const amount = parseFloat(submission.amount || '0');
-    const donationAmount = parseFloat(submission.donation || '0');
-    const productName = submission.product || formData.product;
-    const causeId = submission.causeId || formData.causeId;
-    const orderNumber = submission.submissionID || `JF-${Date.now()}`;
+    }
+
+    // Helper to pull values from the "pretty" string
+    const pretty: string | undefined = typeof payload.pretty === 'string' ? payload.pretty : undefined;
+    const getFromPretty = (label: string) => {
+      if (!pretty) return undefined;
+      try {
+        const safe = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(`${safe}\s*:\s*([^,]+)`);
+        return pretty.match(re)?.[1]?.trim();
+      } catch {
+        return undefined;
+      }
+    };
+
+    // Generic finder by key substring in parsed submission
+    const findByKey = (needle: string): any => {
+      const n = needle.toLowerCase();
+      for (const [k, v] of Object.entries(submission)) {
+        if (k.toLowerCase().includes(n)) return v;
+      }
+      return undefined;
+    };
+
+    const formType = submission.formType || getFromPretty('Form Type (Hidden)') || getFromPretty('Form Type') || 'order';
+    const customerEmail = submission.email || findByKey('email') || getFromPretty('Your Email Address');
+    const productName = submission.product || findByKey('product') || getFromPretty('Product Name');
+    const amountStr = (submission.amount ?? findByKey('number')) ?? getFromPretty('Amount') ?? '0';
+    const donationStr = (submission.donation ?? findByKey('donation')) ?? getFromPretty('Donation Amount (Optional)') ?? '0';
+    const amount = parseFloat(String(amountStr)) || 0;
+    const donationAmount = parseFloat(String(donationStr)) || 0;
+    const causeId = submission.causeId || findByKey('cause');
+    const orderNumber = payload.submissionID || submission.submissionID || `JF-${Date.now()}`;
 
     console.log('Parsed submission:', {
       formType,
