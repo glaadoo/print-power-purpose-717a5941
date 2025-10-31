@@ -64,17 +64,36 @@ serve(async (req) => {
     const submission = payload.rawRequest || payload;
     
     // Map Jotform fields to our database structure
-    // Common Jotform field patterns:
-    // - q{number}_fieldName for named fields
-    // - submissionID for submission ID
-    const formType = submission.formType || submission.q_formType || 'order';
-    const customerEmail = submission.email || submission.q_email || submission.customerEmail;
-    const customerName = submission.name || submission.q_name || submission.fullName;
-    const amount = parseFloat(submission.amount || submission.q_amount || '0');
-    const donationAmount = parseFloat(submission.donation || submission.q_donation || '0');
-    const productName = submission.product || submission.q_product || submission.productName;
-    const causeId = submission.causeId || submission.q_causeId || submission.cause;
-    const orderNumber = submission.submissionID || submission.submission_id || `JF-${Date.now()}`;
+    // Jotform submission format uses q{number}_fieldName pattern
+    // We need to search through all keys to find the actual form data
+    let formData: any = {};
+    
+    // Extract all q{number} fields from the submission
+    Object.keys(submission).forEach(key => {
+      if (key.startsWith('q') && !key.includes('_')) {
+        // This is a question field, map it
+        const value = submission[key];
+        if (typeof value === 'object' && value !== null) {
+          // Could be email, name, or other complex field
+          if (value.email) formData.email = value.email;
+          if (value.first) formData.firstName = value.first;
+          if (value.last) formData.lastName = value.last;
+        } else {
+          formData[key] = value;
+        }
+      }
+    });
+    
+    const formType = submission.formType || 'order';
+    const customerEmail = formData.email || submission.email;
+    const customerName = formData.firstName && formData.lastName 
+      ? `${formData.firstName} ${formData.lastName}` 
+      : submission.name;
+    const amount = parseFloat(submission.amount || '0');
+    const donationAmount = parseFloat(submission.donation || '0');
+    const productName = submission.product || formData.product;
+    const causeId = submission.causeId || formData.causeId;
+    const orderNumber = submission.submissionID || `JF-${Date.now()}`;
 
     console.log('Parsed submission:', {
       formType,
