@@ -71,6 +71,7 @@ const Checkout        = lazyPage("Checkout",        () => import("./pages/Checko
 const Auth            = lazyPage("Auth",            () => import("./pages/Auth"));
 const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
 const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
+const JotFormPayment = lazyPage("JotFormPayment", () => import("./pages/JotFormPayment"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -326,6 +327,16 @@ export default function App() {
             element={
               <RouteBoundary name="Welcome">
                 <Welcome />
+              </RouteBoundary>
+            }
+          />
+
+          {/* JotForm Payment */}
+          <Route
+            path="/jotform-payment"
+            element={
+              <RouteBoundary name="JotFormPayment">
+                <JotFormPayment />
               </RouteBoundary>
             }
           />

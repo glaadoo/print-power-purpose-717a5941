@@ -41,6 +41,7 @@ serve(async (req) => {
       );
 
       // Extract order data from session metadata and session object
+      const existingOrderId = session.metadata?.order_id || null;
       const orderNumber = session.metadata?.order_number || `ORD-${Date.now()}`;
       const causeName = session.metadata?.cause_name || null;
       const causeId = session.metadata?.cause_id || null;
@@ -48,25 +49,51 @@ serve(async (req) => {
       const donationCents = parseInt(session.metadata?.donation_cents || '0');
       const quantity = parseInt(session.metadata?.quantity || '1');
 
-      // Create order record
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          order_number: orderNumber,
-          session_id: session.id,
-          status: 'completed',
-          customer_email: session.customer_details?.email || null,
-          currency: session.currency || 'usd',
-          amount_total_cents: session.amount_total || 0,
-          donation_cents: donationCents,
-          quantity: quantity,
-          product_name: productName,
-          cause_id: causeId,
-          cause_name: causeName,
-          receipt_url: (session as any).receipt_url || null,
-        })
-        .select()
-        .single();
+      let orderData;
+      let orderError;
+
+      // If order_id exists in metadata, update existing order (JotForm flow)
+      if (existingOrderId) {
+        console.log(`Updating existing order: ${existingOrderId}`);
+        const updateResult = await supabase
+          .from('orders')
+          .update({
+            status: 'completed',
+            customer_email: session.customer_details?.email || null,
+            amount_total_cents: session.amount_total || 0,
+            receipt_url: (session as any).receipt_url || null,
+          })
+          .eq('id', existingOrderId)
+          .select()
+          .single();
+        
+        orderData = updateResult.data;
+        orderError = updateResult.error;
+      } else {
+        // Create new order record (direct Stripe flow)
+        console.log(`Creating new order`);
+        const insertResult = await supabase
+          .from('orders')
+          .insert({
+            order_number: orderNumber,
+            session_id: session.id,
+            status: 'completed',
+            customer_email: session.customer_details?.email || null,
+            currency: session.currency || 'usd',
+            amount_total_cents: session.amount_total || 0,
+            donation_cents: donationCents,
+            quantity: quantity,
+            product_name: productName,
+            cause_id: causeId,
+            cause_name: causeName,
+            receipt_url: (session as any).receipt_url || null,
+          })
+          .select()
+          .single();
+        
+        orderData = insertResult.data;
+        orderError = insertResult.error;
+      }
 
       if (orderError) {
         console.error('Error creating order:', orderError);
