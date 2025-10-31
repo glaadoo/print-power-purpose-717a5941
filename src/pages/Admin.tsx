@@ -143,28 +143,51 @@ export default function Admin() {
   };
 
   const loadAllData = async () => {
-    const [
-      productsRes, causesRes, schoolsRes, nonprofitsRes, errorLogsRes,
-      ordersRes, donationsRes, storyRequestsRes
-    ] = await Promise.all([
-      supabase.from("products").select("*").order("created_at", { ascending: false }),
-      supabase.from("causes").select("*").order("created_at", { ascending: false }),
-      supabase.from("schools").select("*").order("created_at", { ascending: false }),
-      supabase.from("nonprofits").select("*").order("created_at", { ascending: false }),
-      supabase.from("error_logs").select("*").order("timestamp", { ascending: false }).limit(50),
-      supabase.from("orders").select("*").order("created_at", { ascending: false }),
-      supabase.from("donations").select("*").order("created_at", { ascending: false }),
-      supabase.from("story_requests").select("*").order("created_at", { ascending: false })
-    ]);
+    try {
+      const sessionToken = sessionStorage.getItem("admin_session");
+      if (!sessionToken) {
+        toast.error("Session expired. Please log in again.");
+        setIsAuthenticated(false);
+        return;
+      }
 
-    if (productsRes.data) setProducts(productsRes.data);
-    if (causesRes.data) setCauses(causesRes.data);
-    if (schoolsRes.data) setSchools(schoolsRes.data);
-    if (nonprofitsRes.data) setNonprofits(nonprofitsRes.data);
-    if (errorLogsRes.data) setErrorLogs(errorLogsRes.data);
-    if (ordersRes.data) setOrders(ordersRes.data);
-    if (donationsRes.data) setDonations(donationsRes.data);
-    if (storyRequestsRes.data) setStoryRequests(storyRequestsRes.data);
+      // Fetch admin stats from edge function using service role
+      const { data: stats, error } = await supabase.functions.invoke('admin-stats', {
+        body: { sessionToken }
+      });
+
+      if (error) {
+        console.error('Failed to load admin stats:', error);
+        toast.error("Failed to load data");
+        return;
+      }
+
+      if (stats) {
+        setOrders(stats.orders || []);
+        setDonations(stats.donations || []);
+        setCauses(stats.causes || []);
+        setProducts(stats.products || []);
+        setStoryRequests(stats.storyRequests || []);
+
+        console.log('Admin Stats Loaded:');
+        console.log('Orders:', stats.orders?.length || 0, 'Total Revenue:', stats.totalRevenue);
+        console.log('Donations:', stats.donations?.length || 0, 'Total Donations:', stats.totalDonations);
+      }
+
+      // Load other data directly
+      const [schoolsRes, nonprofitsRes, errorLogsRes] = await Promise.all([
+        supabase.from("schools").select("*").order("created_at", { ascending: false }),
+        supabase.from("nonprofits").select("*").order("created_at", { ascending: false }),
+        supabase.from("error_logs").select("*").order("timestamp", { ascending: false }).limit(50)
+      ]);
+
+      if (schoolsRes.data) setSchools(schoolsRes.data);
+      if (nonprofitsRes.data) setNonprofits(nonprofitsRes.data);
+      if (errorLogsRes.data) setErrorLogs(errorLogsRes.data);
+    } catch (err) {
+      console.error('Error loading admin data:', err);
+      toast.error("Failed to load admin data");
+    }
   };
 
   // CRUD and other handlers
