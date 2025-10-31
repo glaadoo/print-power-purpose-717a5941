@@ -464,7 +464,7 @@ export default function Donate() {
                   <Button
                     type="submit"
                     disabled={processing}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 text-lg rounded-lg transition-all"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 text-lg rounded-full transition-all transform hover:scale-105 shadow-lg"
                   >
                     {processing ? "Processing..." : "Continue"}
                   </Button>
@@ -543,7 +543,7 @@ export default function Donate() {
                   <Button
                     type="submit"
                     disabled={processing}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 text-lg rounded-lg transition-all"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 text-lg rounded-full transition-all transform hover:scale-105 shadow-lg"
                   >
                     {processing ? "Processing..." : "Continue"}
                   </Button>
