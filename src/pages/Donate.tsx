@@ -394,18 +394,24 @@ export default function Donate() {
 
                 <div className="space-y-3 border border-white/20 rounded-lg overflow-hidden">
                   <button 
-                    onClick={processDonation}
+                    onClick={() => {
+                      console.log('Apple Pay clicked');
+                      processDonation();
+                    }}
                     disabled={processing}
                     className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left border-b border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                     </svg>
-                    <span>Apple Pay</span>
+                    <span>{processing ? 'Processing...' : 'Apple Pay'}</span>
                   </button>
 
                   <button 
-                    onClick={processDonation}
+                    onClick={() => {
+                      console.log('Credit Card clicked');
+                      processDonation();
+                    }}
                     disabled={processing}
                     className="w-full p-4 bg-blue-500/20 border-2 border-blue-500 hover:bg-blue-500/30 transition-colors flex items-center gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -413,18 +419,21 @@ export default function Donate() {
                       <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth={2} />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 10h20" />
                     </svg>
-                    <span>Credit card</span>
+                    <span>{processing ? 'Processing...' : 'Credit card'}</span>
                   </button>
 
                   <button 
-                    onClick={processDonation}
+                    onClick={() => {
+                      console.log('PayPal clicked');
+                      processDonation();
+                    }}
                     disabled={processing}
                     className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left border-b border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg className="w-6 h-6" fill="#00457C" viewBox="0 0 24 24">
                       <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.116c-.317-.033-.65-.05-1.005-.05h-2.134l-1.476 9.36c-.05.316.183.597.5.597h2.146c.365 0 .673-.267.729-.629.661-4.18.976-6.196.976-6.196.119-.757.327-1.557.605-2.404.149-.454.31-.866.484-1.235.145-.306.306-.58.487-.81z"/>
                     </svg>
-                    <span>PayPal</span>
+                    <span>{processing ? 'Processing...' : 'PayPal'}</span>
                   </button>
 
                   <button 
