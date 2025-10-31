@@ -19,6 +19,12 @@ export default function Home() {
     orderCount: 0,
   });
 
+  // Featured story/video state
+  const [featuredStory, setFeaturedStory] = useState<{
+    video_url: string | null;
+    cause_id: string | null;
+  } | null>(null);
+
   // Set document title
   useEffect(() => {
     document.title = "Home - Print Power Purpose";
@@ -62,6 +68,28 @@ export default function Home() {
 
     loadStats();
 
+    // Load featured story
+    async function loadFeaturedStory() {
+      try {
+        const { data } = await supabase
+          .from("story_requests")
+          .select("video_url, cause_id")
+          .not("video_url", "is", null)
+          .eq("status", "completed")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (data) {
+          setFeaturedStory(data);
+        }
+      } catch (error) {
+        console.error("Error loading featured story:", error);
+      }
+    }
+
+    loadFeaturedStory();
+
     // Subscribe to realtime updates
     const donationsChannel = supabase
       .channel("donations-changes")
@@ -81,9 +109,19 @@ export default function Home() {
       )
       .subscribe();
 
+    const storiesChannel = supabase
+      .channel("stories-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "story_requests" },
+        () => loadFeaturedStory()
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(donationsChannel);
       supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(storiesChannel);
     };
   }, []);
 
@@ -236,13 +274,30 @@ export default function Home() {
             <div className="w-full px-6 pb-10 mt-12">
               <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
                 <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8">
-                  <div className="opacity-90">
-                    <div className="text-sm uppercase tracking-wide opacity-80">Placeholder</div>
-                    <h3 className="mt-2 text-2xl font-bold">Featured Nonprofit</h3>
-                    <p className="mt-2 opacity-90">
-                      Reserve this space for a rotating spotlight (logo, short story, donate link).
-                    </p>
-                  </div>
+                  {featuredStory?.video_url ? (
+                    <div className="w-full">
+                      <div className="text-sm uppercase tracking-wide opacity-80 mb-3">Featured Story</div>
+                      <div className="w-full aspect-video rounded-lg overflow-hidden bg-black/30">
+                        <video
+                          className="w-full h-full object-cover"
+                          src={featuredStory.video_url}
+                          controls
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="opacity-90">
+                      <div className="text-sm uppercase tracking-wide opacity-80">Featured Story</div>
+                      <h3 className="mt-2 text-2xl font-bold">Milestone Donor Stories</h3>
+                      <p className="mt-2 opacity-90">
+                        When donations reach $777 milestones, we feature the donor's story here. Help us reach the next milestone!
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex items-center justify-center">
