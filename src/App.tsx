@@ -59,6 +59,7 @@ const Home            = lazyPage("Home",            () => import("./pages/Home")
 const Kenzie          = lazyPage("Kenzie",          () => import("./pages/Kenzie"));
 const About           = lazyPage("About",           () => import("./pages/About"));
 const Causes          = lazyPage("Causes",          () => import("./pages/Causes"));
+const Donate          = lazyPage("Donate",          () => import("./pages/Donate"));
 const Products        = lazyPage("Products",        () => import("./pages/Products"));
 const ProductDetail   = lazyPage("ProductDetail",   () => import("./pages/ProductDetail"));
 const Success         = lazyPage("Success",         () => import("./pages/Success"));
@@ -270,6 +271,14 @@ export default function App() {
             element={
               <RouteBoundary name="Causes">
                 <Causes />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/donate"
+            element={
+              <RouteBoundary name="Donate">
+                <Donate />
               </RouteBoundary>
             }
           />

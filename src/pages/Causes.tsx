@@ -88,7 +88,7 @@ export default function Causes() {
 
   const handleContinue = () => {
     if (selectedCause) {
-      nav("/products");
+      nav(`/donate?cause=${selectedCause.id}`);
     }
   };
 
