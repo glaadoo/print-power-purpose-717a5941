@@ -87,6 +87,11 @@ export default function Causes() {
     } catch {}
     // Context
     setCause({ id: c.id, name: c.name, summary: description || "" });
+
+    // In donation flow, navigate immediately to the donation form
+    if (flow === "donation") {
+      nav(`/donate?cause=${c.id}`);
+    }
   };
 
   const handleContinue = () => {

@@ -429,7 +429,7 @@ export default function Home() {
           { label: "Products", href: "/products" },
           { label: "Causes", href: "/causes" },
           { label: "Contact", href: "/contact" },
-          { label: "Donate", href: "/donate" },
+          { label: "Donate", href: "/causes?flow=donation" },
         ]}
       />
     </div>
