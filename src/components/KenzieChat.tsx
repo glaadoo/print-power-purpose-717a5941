@@ -45,12 +45,24 @@ function makeScopedClient(sessionId: string): SupabaseClient {
 
 export default function KenzieChat() {
   const [open, setOpen] = useState(false);
+  const [showPawIntro, setShowPawIntro] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([STARTER]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [sb, setSb] = useState<SupabaseClient | null>(null); // scoped client with header
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Show paw intro on first open
+  useEffect(() => {
+    if (open && !localStorage.getItem("ppp:kenzie:intro_shown")) {
+      setShowPawIntro(true);
+      setTimeout(() => {
+        setShowPawIntro(false);
+        localStorage.setItem("ppp:kenzie:intro_shown", "true");
+      }, 3000); // Show paw animation for 3 seconds
+    }
+  }, [open]);
 
   // open on custom event
   useEffect(() => {
@@ -230,9 +242,30 @@ export default function KenzieChat() {
   return open ? (
     <div className="fixed inset-0 z-[999]">
       <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+      
+      {/* Paw intro animation overlay */}
+      {showPawIntro && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/95 backdrop-blur-sm z-10 animate-fade-in">
+          <div className="text-center space-y-6">
+            <div className="text-8xl animate-bounce">
+              🐾
+            </div>
+            <div className="text-2xl font-bold text-primary animate-scale-in">
+              Woof! Kenzie here!
+            </div>
+            <div className="text-lg text-muted-foreground animate-fade-in">
+              Ready to help with your printing needs...
+            </div>
+            <div className="paws-row">
+              🐾 🐾 🐾 🐾 🐾
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="absolute right-4 bottom-4 w-[min(500px,90vw)] h-[min(600px,70vh)] rounded-2xl bg-white/90 backdrop-blur text-black shadow-2xl border border-black/10 flex flex-col overflow-hidden">
         <div className="px-4 py-3 border-b border-black/10 flex items-center justify-between bg-white/70">
-          <div className="font-semibold">Chat with Kenzie</div>
+          <div className="font-semibold">Chat with Kenzie 🐾</div>
           <button
             onClick={() => setOpen(false)}
             className="size-9 rounded-full border border-black/10 bg-black/5 hover:bg-black/10 grid place-items-center"
