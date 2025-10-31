@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -77,8 +76,8 @@ export default function Admin() {
     psrestful: null
   });
 
+  // useEffect to check session on mount
   useEffect(() => {
-    // Verify existing session on mount
     const sessionToken = sessionStorage.getItem("admin_session");
     if (sessionToken) {
       verifySession(sessionToken);
@@ -122,7 +121,6 @@ export default function Admin() {
         toast.error("Invalid admin key");
         setAdminKey("");
       } else {
-        // Store session token (not the key)
         sessionStorage.setItem("admin_session", data.sessionToken);
         setIsAuthenticated(true);
         loadAllData();
@@ -169,7 +167,7 @@ export default function Admin() {
     if (storyRequestsRes.data) setStoryRequests(storyRequestsRes.data);
   };
 
-  // CRUD Operations
+  // CRUD and other handlers
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -297,7 +295,6 @@ export default function Admin() {
     else { toast.success("Status updated"); loadAllData(); }
   };
 
-  // Sync functions
   const syncSinaLite = async () => {
     setSyncing(prev => ({ ...prev, sinalite: true }));
     try {
@@ -346,7 +343,6 @@ export default function Admin() {
     }
   };
 
-  // Export functions
   const exportOrdersToCSV = () => {
     const filteredOrders = orders.filter(order => {
       const matchesSearch = 
@@ -427,7 +423,6 @@ export default function Admin() {
 
   const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'];
 
-  // Filter functions
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.customer_email?.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
@@ -471,7 +466,7 @@ export default function Admin() {
             <div className="space-y-6">
               <div className="text-center">
                 <KeyRound className="w-12 h-12 mx-auto text-white mb-4" />
-                <h1 className="text-3xl font-bold text-white mb-2">Admin Access</h1>
+                <h1 className="text-3xl font-serif font-bold text-white mb-2">Admin Access</h1>
                 <p className="text-white/70">Enter your admin key to access the panel</p>
               </div>
               
@@ -492,7 +487,7 @@ export default function Admin() {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-white text-black hover:bg-white/90"
+                  className="w-full bg-white text-black hover:bg-white/90 font-semibold py-6 rounded-2xl"
                   disabled={loading}
                 >
                   {loading ? "Verifying..." : "Access Admin Panel"}
@@ -505,76 +500,109 @@ export default function Admin() {
     );
   }
 
-  // Main admin panel content
+  // Main admin panel content  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col">
       <VideoBackground 
         srcMp4="/media/hero.mp4"
         srcWebm="/media/hero.webm"
         poster="/media/hero-poster.jpg"
+        overlay={<div className="absolute inset-0 bg-black/70" />}
       />
       
-      <div className="relative z-10 p-6 max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold text-primary">Admin Panel</h1>
-          <Button variant="destructive" onClick={handleLogout} className="flex items-center gap-2">
-            <LogOut size={18} /> Logout
+      {/* Header */}
+      <header className="relative z-50 px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/30 border-b border-white/10 shrink-0">
+        <div>
+          <h1 className="text-2xl font-serif font-bold tracking-wide">Admin Panel</h1>
+          <p className="text-sm text-white/70 tracking-[0.2em] uppercase">Print Power Purpose</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate("/")}
+            className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Site
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleLogout}
+            className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
           </Button>
         </div>
+      </header>
 
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="causes">Causes</TabsTrigger>
-            <TabsTrigger value="schools">Schools</TabsTrigger>
-            <TabsTrigger value="nonprofits">Nonprofits</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="donations">Donations</TabsTrigger>
-            <TabsTrigger value="errors">Error Logs</TabsTrigger>
-            <TabsTrigger value="stories">Story Requests</TabsTrigger>
-            <TabsTrigger value="sync">Sync</TabsTrigger>
-          </TabsList>
+      {/* Main Content */}
+      <div className="relative flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+          {/* Analytics Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <GlassCard className="bg-white/5 border-white/20">
+              <div className="flex items-center gap-3 mb-2">
+                <DollarSign className="h-5 w-5 text-white/80" />
+                <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Revenue</h3>
+              </div>
+              <div className="text-3xl font-serif font-bold text-white">
+                ${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
+            </GlassCard>
 
-          <TabsContent value="dashboard">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Total Revenue</CardTitle>
-                  <CardDescription>From all orders</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">${(totalRevenue / 100).toFixed(2)}</div>
-                </CardContent>
-              </Card>
+            <GlassCard className="bg-white/5 border-white/20">
+              <div className="flex items-center gap-3 mb-2">
+                <Heart className="h-5 w-5 text-white/80" />
+                <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Donations</h3>
+              </div>
+              <div className="text-3xl font-serif font-bold text-white">
+                ${(totalDonations / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
+            </GlassCard>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Total Donations</CardTitle>
-                  <CardDescription>Donations received</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">${(totalDonations / 100).toFixed(2)}</div>
-                </CardContent>
-              </Card>
+            <GlassCard className="bg-white/5 border-white/20">
+              <div className="flex items-center gap-3 mb-2">
+                <ShoppingCart className="h-5 w-5 text-white/80" />
+                <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Orders</h3>
+              </div>
+              <div className="text-3xl font-serif font-bold text-white">
+                {orders.length}
+              </div>
+            </GlassCard>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Active Causes</CardTitle>
-                  <CardDescription>Causes with raised funds</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{activeCauses}</div>
-                </CardContent>
-              </Card>
-            </div>
+            <GlassCard className="bg-white/5 border-white/20">
+              <div className="flex items-center gap-3 mb-2">
+                <TrendingUp className="h-5 w-5 text-white/80" />
+                <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Active Causes</h3>
+              </div>
+              <div className="text-3xl font-serif font-bold text-white">
+                {activeCauses}
+              </div>
+            </GlassCard>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Donations by Cause</CardTitle>
-                </CardHeader>
-                <CardContent>
+          {/* Tabs */}
+          <Tabs defaultValue="dashboard" className="space-y-6">
+            <TabsList className="bg-white/10 border-white/20">
+              <TabsTrigger value="dashboard" className="data-[state=active]:bg-white/20">Dashboard</TabsTrigger>
+              <TabsTrigger value="products" className="data-[state=active]:bg-white/20">Products</TabsTrigger>
+              <TabsTrigger value="causes" className="data-[state=active]:bg-white/20">Causes</TabsTrigger>
+              <TabsTrigger value="schools" className="data-[state=active]:bg-white/20">Schools</TabsTrigger>
+              <TabsTrigger value="nonprofits" className="data-[state=active]:bg-white/20">Nonprofits</TabsTrigger>
+              <TabsTrigger value="orders" className="data-[state=active]:bg-white/20">Orders</TabsTrigger>
+              <TabsTrigger value="donations" className="data-[state=active]:bg-white/20">Donations</TabsTrigger>
+              <TabsTrigger value="errors" className="data-[state=active]:bg-white/20">Error Logs</TabsTrigger>
+              <TabsTrigger value="stories" className="data-[state=active]:bg-white/20">Story Requests</TabsTrigger>
+              <TabsTrigger value="sync" className="data-[state=active]:bg-white/20">Sync</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dashboard">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <GlassCard className="bg-white/5 border-white/20">
+                  <h3 className="text-xl font-serif font-bold text-white mb-4">Donations by Cause</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -593,14 +621,10 @@ export default function Admin() {
                       <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
                     </PieChart>
                   </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                </GlassCard>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Orders by Week</CardTitle>
-                </CardHeader>
-                <CardContent>
+                <GlassCard className="bg-white/5 border-white/20">
+                  <h3 className="text-xl font-serif font-bold text-white mb-4">Orders by Week</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={ordersByWeek}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -611,448 +635,454 @@ export default function Admin() {
                       <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
                     </BarChart>
                   </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                </GlassCard>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="products">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-4">Add New Product</h2>
-              <form onSubmit={handleAddProduct} className="space-y-4 max-w-md">
-                <div>
-                  <Label htmlFor="productName">Name</Label>
-                  <Input id="productName" value={productName} onChange={e => setProductName(e.target.value)} required />
-                </div>
-                <div>
-                  <Label htmlFor="productCost">Cost (USD)</Label>
-                  <Input id="productCost" type="number" min="0" step="0.01" value={productCost} onChange={e => setProductCost(e.target.value)} required />
-                </div>
-                <div>
-                  <Label htmlFor="productCategory">Category</Label>
-                  <Input id="productCategory" value={productCategory} onChange={e => setProductCategory(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="productImage">Image URL</Label>
-                  <Input id="productImage" value={productImage} onChange={e => setProductImage(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="productVendorId">Vendor ID</Label>
-                  <Input id="productVendorId" value={productVendorId} onChange={e => setProductVendorId(e.target.value)} />
-                </div>
-                <Button type="submit">Add Product</Button>
-              </form>
-            </div>
+            <TabsContent value="products">
+              <GlassCard className="bg-white/5 border-white/20">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Add New Product</h2>
+                <form onSubmit={handleAddProduct} className="space-y-4 max-w-md">
+                  <div>
+                    <Label htmlFor="productName" className="text-white">Name</Label>
+                    <Input id="productName" value={productName} onChange={e => setProductName(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <div>
+                    <Label htmlFor="productCost" className="text-white">Cost (USD)</Label>
+                    <Input id="productCost" type="number" min="0" step="0.01" value={productCost} onChange={e => setProductCost(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <div>
+                    <Label htmlFor="productCategory" className="text-white">Category</Label>
+                    <Input id="productCategory" value={productCategory} onChange={e => setProductCategory(e.target.value)} className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <div>
+                    <Label htmlFor="productImage" className="text-white">Image URL</Label>
+                    <Input id="productImage" value={productImage} onChange={e => setProductImage(e.target.value)} className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <div>
+                    <Label htmlFor="productVendorId" className="text-white">Vendor ID</Label>
+                    <Input id="productVendorId" value={productVendorId} onChange={e => setProductVendorId(e.target.value)} className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <Button type="submit" className="bg-white text-black hover:bg-white/90">Add Product</Button>
+                </form>
+              </GlassCard>
 
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Products List</h2>
-              <ScrollArea className="max-h-[400px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Cost</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Vendor</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {products.map(product => (
-                      <TableRow key={product.id}>
-                        <TableCell>{product.name}</TableCell>
-                        <TableCell>${(product.base_cost_cents / 100).toFixed(2)}</TableCell>
-                        <TableCell>{product.category || "-"}</TableCell>
-                        <TableCell>{product.vendor}</TableCell>
-                        <TableCell>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id)} className="flex items-center gap-1">
-                            <Trash2 size={16} /> Delete
-                          </Button>
-                        </TableCell>
+              <GlassCard className="bg-white/5 border-white/20 mt-6">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Products List</h2>
+                <ScrollArea className="max-h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white/80">Name</TableHead>
+                        <TableHead className="text-white/80">Cost</TableHead>
+                        <TableHead className="text-white/80">Category</TableHead>
+                        <TableHead className="text-white/80">Vendor</TableHead>
+                        <TableHead className="text-white/80">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-          </TabsContent>
+                    </TableHeader>
+                    <TableBody>
+                      {products.map(product => (
+                        <TableRow key={product.id}>
+                          <TableCell className="text-white">{product.name}</TableCell>
+                          <TableCell className="text-white">${(product.base_cost_cents / 100).toFixed(2)}</TableCell>
+                          <TableCell className="text-white">{product.category || "-"}</TableCell>
+                          <TableCell className="text-white">{product.vendor}</TableCell>
+                          <TableCell>
+                            <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id)} className="flex items-center gap-1">
+                              <Trash2 size={16} /> Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </GlassCard>
+            </TabsContent>
 
-          <TabsContent value="causes">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-4">Add New Cause</h2>
-              <form onSubmit={handleAddCause} className="space-y-4 max-w-md">
-                <div>
-                  <Label htmlFor="causeName">Name</Label>
-                  <Input id="causeName" value={causeName} onChange={e => setCauseName(e.target.value)} required />
-                </div>
-                <div>
-                  <Label htmlFor="causeGoal">Goal (USD)</Label>
-                  <Input id="causeGoal" type="number" min="0" step="0.01" value={causeGoal} onChange={e => setCauseGoal(e.target.value)} required />
-                </div>
-                <div>
-                  <Label htmlFor="causeSummary">Summary</Label>
-                  <Textarea id="causeSummary" value={causeSummary} onChange={e => setCauseSummary(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="causeImage">Image URL</Label>
-                  <Input id="causeImage" value={causeImage} onChange={e => setCauseImage(e.target.value)} />
-                </div>
-                <Button type="submit">Add Cause</Button>
-              </form>
-            </div>
+            <TabsContent value="causes">
+              <GlassCard className="bg-white/5 border-white/20">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Add New Cause</h2>
+                <form onSubmit={handleAddCause} className="space-y-4 max-w-md">
+                  <div>
+                    <Label htmlFor="causeName" className="text-white">Name</Label>
+                    <Input id="causeName" value={causeName} onChange={e => setCauseName(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <div>
+                    <Label htmlFor="causeGoal" className="text-white">Goal (USD)</Label>
+                    <Input id="causeGoal" type="number" min="0" step="0.01" value={causeGoal} onChange={e => setCauseGoal(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <div>
+                    <Label htmlFor="causeSummary" className="text-white">Summary</Label>
+                    <Textarea id="causeSummary" value={causeSummary} onChange={e => setCauseSummary(e.target.value)} className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <div>
+                    <Label htmlFor="causeImage" className="text-white">Image URL</Label>
+                    <Input id="causeImage" value={causeImage} onChange={e => setCauseImage(e.target.value)} className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <Button type="submit" className="bg-white text-black hover:bg-white/90">Add Cause</Button>
+                </form>
+              </GlassCard>
 
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Causes List</h2>
-              <ScrollArea className="max-h-[400px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Goal</TableHead>
-                      <TableHead>Raised</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              <GlassCard className="bg-white/5 border-white/20 mt-6">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Causes List</h2>
+                <ScrollArea className="max-h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white/80">Name</TableHead>
+                        <TableHead className="text-white/80">Goal</TableHead>
+                        <TableHead className="text-white/80">Raised</TableHead>
+                        <TableHead className="text-white/80">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {causes.map(cause => (
+                        <TableRow key={cause.id}>
+                          <TableCell className="text-white">{cause.name}</TableCell>
+                          <TableCell className="text-white">${(cause.goal_cents / 100).toFixed(2)}</TableCell>
+                          <TableCell className="text-white">${(cause.raised_cents / 100).toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Button variant="destructive" size="sm" onClick={() => handleDeleteCause(cause.id)} className="flex items-center gap-1">
+                              <Trash2 size={16} /> Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="schools">
+              <GlassCard className="bg-white/5 border-white/20">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Add New School</h2>
+                <form onSubmit={handleAddSchool} className="space-y-4 max-w-md">
+                  <div>
+                    <Label htmlFor="schoolName" className="text-white">Name</Label>
+                    <Input id="schoolName" value={schoolName} onChange={e => setSchoolName(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <Button type="submit" className="bg-white text-black hover:bg-white/90">Add School</Button>
+                </form>
+              </GlassCard>
+
+              <GlassCard className="bg-white/5 border-white/20 mt-6">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Schools List</h2>
+                <ScrollArea className="max-h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white/80">Name</TableHead>
+                        <TableHead className="text-white/80">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {schools.map(school => (
+                        <TableRow key={school.id}>
+                          <TableCell className="text-white">{school.name}</TableCell>
+                          <TableCell>
+                            <Button variant="destructive" size="sm" onClick={() => handleDeleteSchool(school.id)} className="flex items-center gap-1">
+                              <Trash2 size={16} /> Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="nonprofits">
+              <GlassCard className="bg-white/5 border-white/20">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Add New Nonprofit</h2>
+                <form onSubmit={handleAddNonprofit} className="space-y-4 max-w-md">
+                  <div>
+                    <Label htmlFor="nonprofitName" className="text-white">Name</Label>
+                    <Input id="nonprofitName" value={nonprofitName} onChange={e => setNonprofitName(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
+                  </div>
+                  <Button type="submit" className="bg-white text-black hover:bg-white/90">Add Nonprofit</Button>
+                </form>
+              </GlassCard>
+
+              <GlassCard className="bg-white/5 border-white/20 mt-6">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Nonprofits List</h2>
+                <ScrollArea className="max-h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white/80">Name</TableHead>
+                        <TableHead className="text-white/80">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {nonprofits.map(np => (
+                        <TableRow key={np.id}>
+                          <TableCell className="text-white">{np.name}</TableCell>
+                          <TableCell>
+                            <Button variant="destructive" size="sm" onClick={() => handleDeleteNonprofit(np.id)} className="flex items-center gap-1">
+                              <Trash2 size={16} /> Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="orders">
+              <GlassCard className="bg-white/5 border-white/20">
+                <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="relative max-w-sm">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
+                    <Input
+                      placeholder="Search orders..."
+                      value={orderSearchTerm}
+                      onChange={e => setOrderSearchTerm(e.target.value)}
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                    />
+                  </div>
+                  <select
+                    value={orderStatusFilter}
+                    onChange={e => setOrderStatusFilter(e.target.value)}
+                    className="border rounded px-3 py-2 bg-white/10 border-white/20 text-white"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  <Button onClick={exportOrdersToCSV} className="flex items-center gap-2 bg-white text-black hover:bg-white/90">
+                    <Download size={16} /> Export CSV
+                  </Button>
+                </div>
+
+                <ScrollArea className="max-h-[500px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white/80">Order #</TableHead>
+                        <TableHead className="text-white/80">Customer Email</TableHead>
+                        <TableHead className="text-white/80">Product</TableHead>
+                        <TableHead className="text-white/80">Amount</TableHead>
+                        <TableHead className="text-white/80">Donation</TableHead>
+                        <TableHead className="text-white/80">Cause</TableHead>
+                        <TableHead className="text-white/80">Status</TableHead>
+                        <TableHead className="text-white/80">Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders.map(order => (
+                        <TableRow key={order.id}>
+                          <TableCell className="text-white">{order.order_number}</TableCell>
+                          <TableCell className="text-white">{order.customer_email}</TableCell>
+                          <TableCell className="text-white">{order.product_name}</TableCell>
+                          <TableCell className="text-white">${(order.amount_total_cents / 100).toFixed(2)}</TableCell>
+                          <TableCell className="text-white">${(order.donation_cents / 100).toFixed(2)}</TableCell>
+                          <TableCell className="text-white">{order.cause_name || "N/A"}</TableCell>
+                          <TableCell>
+                            <Badge variant={order.status === "completed" ? "default" : order.status === "pending" ? "secondary" : "destructive"}>
+                              {order.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-white">{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="donations">
+              <GlassCard className="bg-white/5 border-white/20">
+                <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="relative max-w-sm">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
+                    <Input
+                      placeholder="Search donations..."
+                      value={donationSearchTerm}
+                      onChange={e => setDonationSearchTerm(e.target.value)}
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                    />
+                  </div>
+                  <select
+                    value={donationCauseFilter}
+                    onChange={e => setDonationCauseFilter(e.target.value)}
+                    className="border rounded px-3 py-2 bg-white/10 border-white/20 text-white"
+                  >
+                    <option value="all">All Causes</option>
                     {causes.map(cause => (
-                      <TableRow key={cause.id}>
-                        <TableCell>{cause.name}</TableCell>
-                        <TableCell>${(cause.goal_cents / 100).toFixed(2)}</TableCell>
-                        <TableCell>${(cause.raised_cents / 100).toFixed(2)}</TableCell>
-                        <TableCell>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteCause(cause.id)} className="flex items-center gap-1">
-                            <Trash2 size={16} /> Delete
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                      <option key={cause.id} value={cause.id}>{cause.name}</option>
                     ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="schools">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-4">Add New School</h2>
-              <form onSubmit={handleAddSchool} className="space-y-4 max-w-md">
-                <div>
-                  <Label htmlFor="schoolName">Name</Label>
-                  <Input id="schoolName" value={schoolName} onChange={e => setSchoolName(e.target.value)} required />
+                  </select>
+                  <Button onClick={exportDonationsToCSV} className="flex items-center gap-2 bg-white text-black hover:bg-white/90">
+                    <Download size={16} /> Export CSV
+                  </Button>
                 </div>
-                <Button type="submit">Add School</Button>
-              </form>
-            </div>
 
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Schools List</h2>
-              <ScrollArea className="max-h-[400px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {schools.map(school => (
-                      <TableRow key={school.id}>
-                        <TableCell>{school.name}</TableCell>
-                        <TableCell>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteSchool(school.id)} className="flex items-center gap-1">
-                            <Trash2 size={16} /> Delete
-                          </Button>
-                        </TableCell>
+                <ScrollArea className="max-h-[500px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white/80">Customer Email</TableHead>
+                        <TableHead className="text-white/80">Amount</TableHead>
+                        <TableHead className="text-white/80">Cause</TableHead>
+                        <TableHead className="text-white/80">Date</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-          </TabsContent>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDonations.map(donation => (
+                        <TableRow key={donation.id}>
+                          <TableCell className="text-white">{donation.customer_email}</TableCell>
+                          <TableCell className="text-white">${(donation.amount_cents / 100).toFixed(2)}</TableCell>
+                          <TableCell className="text-white">{causes.find(c => c.id === donation.cause_id)?.name || "N/A"}</TableCell>
+                          <TableCell className="text-white">{new Date(donation.created_at).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </GlassCard>
+            </TabsContent>
 
-          <TabsContent value="nonprofits">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-4">Add New Nonprofit</h2>
-              <form onSubmit={handleAddNonprofit} className="space-y-4 max-w-md">
-                <div>
-                  <Label htmlFor="nonprofitName">Name</Label>
-                  <Input id="nonprofitName" value={nonprofitName} onChange={e => setNonprofitName(e.target.value)} required />
+            <TabsContent value="errors">
+              <GlassCard className="bg-white/5 border-white/20">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Error Logs</h2>
+                <ScrollArea className="max-h-[500px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white/80">Timestamp</TableHead>
+                        <TableHead className="text-white/80">Message</TableHead>
+                        <TableHead className="text-white/80">Resolved</TableHead>
+                        <TableHead className="text-white/80">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {errorLogs.map(error => (
+                        <TableRow key={error.id}>
+                          <TableCell className="text-white">{new Date(error.timestamp).toLocaleString()}</TableCell>
+                          <TableCell className="text-white">{error.message}</TableCell>
+                          <TableCell>
+                            {error.resolved ? (
+                              <CheckCircle className="text-green-500" />
+                            ) : (
+                              <AlertCircle className="text-red-500" />
+                            )}
+                          </TableCell>
+                          <TableCell className="flex gap-2">
+                            {!error.resolved && (
+                              <Button size="sm" onClick={() => handleMarkErrorResolved(error.id)} className="flex items-center gap-1 bg-white text-black hover:bg-white/90">
+                                <Check size={16} /> Mark Resolved
+                              </Button>
+                            )}
+                            <Button variant="destructive" size="sm" onClick={() => handleDeleteErrorLog(error.id)} className="flex items-center gap-1">
+                              <Trash2 size={16} /> Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="stories">
+              <GlassCard className="bg-white/5 border-white/20">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Story Requests</h2>
+                <ScrollArea className="max-h-[500px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-white/80">Customer Email</TableHead>
+                        <TableHead className="text-white/80">Story</TableHead>
+                        <TableHead className="text-white/80">Status</TableHead>
+                        <TableHead className="text-white/80">Updated At</TableHead>
+                        <TableHead className="text-white/80">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {storyRequests.map(story => (
+                        <TableRow key={story.id}>
+                          <TableCell className="text-white">{story.customer_email}</TableCell>
+                          <TableCell className="text-white">{story.story_text}</TableCell>
+                          <TableCell>
+                            <Badge variant={
+                              story.status === "approved" ? "default" :
+                              story.status === "pending" ? "secondary" :
+                              "destructive"
+                            }>
+                              {story.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-white">{new Date(story.updated_at).toLocaleString()}</TableCell>
+                          <TableCell className="flex gap-2">
+                            {story.status !== "approved" && (
+                              <Button size="sm" onClick={() => handleUpdateStoryStatus(story.id, "approved")} className="flex items-center gap-1 bg-white text-black hover:bg-white/90">
+                                <Check size={16} /> Approve
+                              </Button>
+                            )}
+                            {story.status !== "rejected" && (
+                              <Button variant="destructive" size="sm" onClick={() => handleUpdateStoryStatus(story.id, "rejected")} className="flex items-center gap-1">
+                                <X size={16} /> Reject
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="sync">
+              <GlassCard className="bg-white/5 border-white/20">
+                <div className="space-y-6 max-w-md">
+                  <h2 className="text-2xl font-serif font-semibold text-white mb-4">Sync Products</h2>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <Button onClick={syncSinaLite} disabled={syncing.sinalite} className="flex items-center gap-2 bg-white text-black hover:bg-white/90">
+                      <RefreshCw size={16} className={syncing.sinalite ? "animate-spin" : ""} /> Sync SinaLite
+                    </Button>
+                    {syncResults.sinalite && (
+                      <span className={syncResults.sinalite.success ? "text-green-400" : "text-red-400"}>
+                        {syncResults.sinalite.message}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <Button onClick={syncScalablePress} disabled={syncing.scalablepress} className="flex items-center gap-2 bg-white text-black hover:bg-white/90">
+                      <RefreshCw size={16} className={syncing.scalablepress ? "animate-spin" : ""} /> Sync Scalable Press
+                    </Button>
+                    {syncResults.scalablepress && (
+                      <span className={syncResults.scalablepress.success ? "text-green-400" : "text-red-400"}>
+                        {syncResults.scalablepress.message}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <Button onClick={syncPsRestful} disabled={syncing.psrestful} className="flex items-center gap-2 bg-white text-black hover:bg-white/90">
+                      <RefreshCw size={16} className={syncing.psrestful ? "animate-spin" : ""} /> Sync PsRestful
+                    </Button>
+                    {syncResults.psrestful && (
+                      <span className={syncResults.psrestful.success ? "text-green-400" : "text-red-400"}>
+                        {syncResults.psrestful.message}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <Button type="submit">Add Nonprofit</Button>
-              </form>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Nonprofits List</h2>
-              <ScrollArea className="max-h-[400px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {nonprofits.map(np => (
-                      <TableRow key={np.id}>
-                        <TableCell>{np.name}</TableCell>
-                        <TableCell>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteNonprofit(np.id)} className="flex items-center gap-1">
-                            <Trash2 size={16} /> Delete
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="orders">
-            <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search orders..."
-                  value={orderSearchTerm}
-                  onChange={e => setOrderSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <select
-                value={orderStatusFilter}
-                onChange={e => setOrderStatusFilter(e.target.value)}
-                className="border rounded px-3 py-2"
-              >
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              <Button onClick={exportOrdersToCSV} className="flex items-center gap-2">
-                <Download size={16} /> Export CSV
-              </Button>
-            </div>
-
-            <ScrollArea className="max-h-[500px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order #</TableHead>
-                    <TableHead>Customer Email</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Donation</TableHead>
-                    <TableHead>Cause</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.map(order => (
-                    <TableRow key={order.id}>
-                      <TableCell>{order.order_number}</TableCell>
-                      <TableCell>{order.customer_email}</TableCell>
-                      <TableCell>{order.product_name}</TableCell>
-                      <TableCell>${(order.amount_total_cents / 100).toFixed(2)}</TableCell>
-                      <TableCell>${(order.donation_cents / 100).toFixed(2)}</TableCell>
-                      <TableCell>{order.cause_name || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge variant={order.status === "completed" ? "default" : order.status === "pending" ? "secondary" : "destructive"}>
-                          {order.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="donations">
-            <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search donations..."
-                  value={donationSearchTerm}
-                  onChange={e => setDonationSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <select
-                value={donationCauseFilter}
-                onChange={e => setDonationCauseFilter(e.target.value)}
-                className="border rounded px-3 py-2"
-              >
-                <option value="all">All Causes</option>
-                {causes.map(cause => (
-                  <option key={cause.id} value={cause.id}>{cause.name}</option>
-                ))}
-              </select>
-              <Button onClick={exportDonationsToCSV} className="flex items-center gap-2">
-                <Download size={16} /> Export CSV
-              </Button>
-            </div>
-
-            <ScrollArea className="max-h-[500px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Customer Email</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Cause</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDonations.map(donation => (
-                    <TableRow key={donation.id}>
-                      <TableCell>{donation.customer_email}</TableCell>
-                      <TableCell>${(donation.amount_cents / 100).toFixed(2)}</TableCell>
-                      <TableCell>{causes.find(c => c.id === donation.cause_id)?.name || "N/A"}</TableCell>
-                      <TableCell>{new Date(donation.created_at).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="errors">
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Error Logs</h2>
-              <ScrollArea className="max-h-[500px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Timestamp</TableHead>
-                      <TableHead>Message</TableHead>
-                      <TableHead>Resolved</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {errorLogs.map(error => (
-                      <TableRow key={error.id}>
-                        <TableCell>{new Date(error.timestamp).toLocaleString()}</TableCell>
-                        <TableCell>{error.message}</TableCell>
-                        <TableCell>
-                          {error.resolved ? (
-                            <CheckCircle className="text-green-500" />
-                          ) : (
-                            <AlertCircle className="text-red-500" />
-                          )}
-                        </TableCell>
-                        <TableCell className="flex gap-2">
-                          {!error.resolved && (
-                            <Button size="sm" onClick={() => handleMarkErrorResolved(error.id)} className="flex items-center gap-1">
-                              <Check size={16} /> Mark Resolved
-                            </Button>
-                          )}
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteErrorLog(error.id)} className="flex items-center gap-1">
-                            <Trash2 size={16} /> Delete
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="stories">
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Story Requests</h2>
-              <ScrollArea className="max-h-[500px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Customer Email</TableHead>
-                      <TableHead>Story</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Updated At</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {storyRequests.map(story => (
-                      <TableRow key={story.id}>
-                        <TableCell>{story.customer_email}</TableCell>
-                        <TableCell>{story.story_text}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            story.status === "approved" ? "default" :
-                            story.status === "pending" ? "secondary" :
-                            "destructive"
-                          }>
-                            {story.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{new Date(story.updated_at).toLocaleString()}</TableCell>
-                        <TableCell className="flex gap-2">
-                          {story.status !== "approved" && (
-                            <Button size="sm" onClick={() => handleUpdateStoryStatus(story.id, "approved")} className="flex items-center gap-1">
-                              <Check size={16} /> Approve
-                            </Button>
-                          )}
-                          {story.status !== "rejected" && (
-                            <Button variant="destructive" size="sm" onClick={() => handleUpdateStoryStatus(story.id, "rejected")} className="flex items-center gap-1">
-                              <X size={16} /> Reject
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="sync">
-            <div className="space-y-6 max-w-md">
-              <h2 className="text-2xl font-semibold mb-4">Sync Products</h2>
-
-              <div className="flex items-center justify-between gap-4">
-                <Button onClick={syncSinaLite} disabled={syncing.sinalite} className="flex items-center gap-2">
-                  <RefreshCw size={16} className={syncing.sinalite ? "animate-spin" : ""} /> Sync SinaLite
-                </Button>
-                {syncResults.sinalite && (
-                  <span className={syncResults.sinalite.success ? "text-green-600" : "text-red-600"}>
-                    {syncResults.sinalite.message}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <Button onClick={syncScalablePress} disabled={syncing.scalablepress} className="flex items-center gap-2">
-                  <RefreshCw size={16} className={syncing.scalablepress ? "animate-spin" : ""} /> Sync Scalable Press
-                </Button>
-                {syncResults.scalablepress && (
-                  <span className={syncResults.scalablepress.success ? "text-green-600" : "text-red-600"}>
-                    {syncResults.scalablepress.message}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <Button onClick={syncPsRestful} disabled={syncing.psrestful} className="flex items-center gap-2">
-                  <RefreshCw size={16} className={syncing.psrestful ? "animate-spin" : ""} /> Sync PsRestful
-                </Button>
-                {syncResults.psrestful && (
-                  <span className={syncResults.psrestful.success ? "text-green-600" : "text-red-600"}>
-                    {syncResults.psrestful.message}
-                  </span>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+              </GlassCard>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
