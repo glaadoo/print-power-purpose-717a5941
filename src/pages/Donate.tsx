@@ -633,34 +633,6 @@ export default function Donate() {
                 </div>
 
                 <form onSubmit={handleDonate} className="space-y-6">
-              {/* Frequency Toggle */}
-              <div>
-                <div className="inline-flex rounded-full overflow-hidden border-2 border-white/20 mb-6">
-                  <button
-                    type="button"
-                    onClick={() => setFrequency("once")}
-                    className={`px-8 py-3 font-semibold transition-all ${
-                      frequency === "once"
-                        ? "bg-white text-black border-2 border-blue-500"
-                        : "bg-white/5 text-white hover:bg-white/10"
-                    }`}
-                  >
-                    Give once
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFrequency("monthly")}
-                    className={`px-8 py-3 font-semibold transition-all flex items-center justify-center gap-2 ${
-                      frequency === "monthly"
-                        ? "bg-white text-black border-2 border-blue-500"
-                        : "bg-white/5 text-white hover:bg-white/10"
-                    }`}
-                  >
-                    <span className={frequency === "monthly" ? "text-red-500" : ""}>♥</span> Monthly
-                  </button>
-                </div>
-              </div>
-
               {/* Preset Amounts */}
               <div>
                 <div className="grid grid-cols-3 gap-3 mb-3">
@@ -669,26 +641,55 @@ export default function Donate() {
                       key={amt}
                       type="button"
                       onClick={() => setAmount(amt.toString())}
-                      className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                      className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
                         amount === amt.toString()
-                          ? "bg-white/20 text-white border-2 border-white"
-                          : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                          ? "bg-white text-black border-white"
+                          : "bg-white/10 text-white border-white/20 hover:bg-white/15 hover:border-white/30"
                       }`}
                     >
                       ${amt}
                     </button>
                   ))}
                 </div>
+                
+                {/* Frequency Toggle - Centered */}
+                <div className="flex justify-center my-4">
+                  <div className="inline-flex rounded-full overflow-hidden bg-white/10 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setFrequency("once")}
+                      className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-all ${
+                        frequency === "once"
+                          ? "bg-white text-black shadow-lg"
+                          : "text-white/80 hover:text-white"
+                      }`}
+                    >
+                      Give once
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFrequency("monthly")}
+                      className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-1.5 ${
+                        frequency === "monthly"
+                          ? "bg-white text-black shadow-lg"
+                          : "text-white/80 hover:text-white"
+                      }`}
+                    >
+                      <span className={frequency === "monthly" ? "text-red-500" : ""}>♥</span> Monthly
+                    </button>
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-3 gap-3">
                   {[25, 15, 8].map((amt) => (
                     <button
                       key={amt}
                       type="button"
                       onClick={() => setAmount(amt.toString())}
-                      className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                      className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
                         amount === amt.toString()
-                          ? "bg-white/20 text-white border-2 border-white"
-                          : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                          ? "bg-white text-black border-white"
+                          : "bg-white/10 text-white border-white/20 hover:bg-white/15 hover:border-white/30"
                       }`}
                     >
                       ${amt}
