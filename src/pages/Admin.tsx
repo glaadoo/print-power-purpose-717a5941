@@ -446,11 +446,10 @@ export default function Admin() {
   // Checking auth
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <VideoBackground />
-        <div className="text-center z-10">
-          <KeyRound className="w-12 h-12 mx-auto text-primary animate-pulse mb-4" />
-          <p className="text-lg text-muted-foreground">Verifying session...</p>
+      <div className="fixed inset-0 flex items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Checking authentication...</p>
         </div>
       </div>
     );
@@ -509,7 +508,11 @@ export default function Admin() {
   // Main admin panel content
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <VideoBackground />
+      <VideoBackground 
+        srcMp4="/media/hero.mp4"
+        srcWebm="/media/hero.webm"
+        poster="/media/hero-poster.jpg"
+      />
       
       <div className="relative z-10 p-6 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
@@ -809,13 +812,15 @@ export default function Admin() {
 
           <TabsContent value="orders">
             <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <Input
-                placeholder="Search orders..."
-                value={orderSearchTerm}
-                onChange={e => setOrderSearchTerm(e.target.value)}
-                className="max-w-sm"
-                icon={<Search />}
-              />
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search orders..."
+                  value={orderSearchTerm}
+                  onChange={e => setOrderSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               <select
                 value={orderStatusFilter}
                 onChange={e => setOrderStatusFilter(e.target.value)}
@@ -855,7 +860,7 @@ export default function Admin() {
                       <TableCell>${(order.donation_cents / 100).toFixed(2)}</TableCell>
                       <TableCell>{order.cause_name || "N/A"}</TableCell>
                       <TableCell>
-                        <Badge variant={order.status === "completed" ? "success" : order.status === "pending" ? "warning" : "destructive"}>
+                        <Badge variant={order.status === "completed" ? "default" : order.status === "pending" ? "secondary" : "destructive"}>
                           {order.status}
                         </Badge>
                       </TableCell>
@@ -869,13 +874,15 @@ export default function Admin() {
 
           <TabsContent value="donations">
             <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <Input
-                placeholder="Search donations..."
-                value={donationSearchTerm}
-                onChange={e => setDonationSearchTerm(e.target.value)}
-                className="max-w-sm"
-                icon={<Search />}
-              />
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search donations..."
+                  value={donationSearchTerm}
+                  onChange={e => setDonationSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               <select
                 value={donationCauseFilter}
                 onChange={e => setDonationCauseFilter(e.target.value)}
@@ -979,8 +986,8 @@ export default function Admin() {
                         <TableCell>{story.story_text}</TableCell>
                         <TableCell>
                           <Badge variant={
-                            story.status === "approved" ? "success" :
-                            story.status === "pending" ? "warning" :
+                            story.status === "approved" ? "default" :
+                            story.status === "pending" ? "secondary" :
                             "destructive"
                           }>
                             {story.status}
