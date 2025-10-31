@@ -147,33 +147,57 @@ export default function Donate() {
     setProcessing(true);
 
     try {
-      // Create Stripe checkout session for monthly recurring donation
-      const { data, error } = await supabase.functions.invoke("create-monthly-donation", {
-        body: {
-          causeId: cause.id,
-          causeName: cause.name,
-          amountCents: Math.round(finalAmount * 100),
-          customerEmail: donorEmail,
-          firstName: donorFirstName,
-          lastName: donorLastName,
-          phone: donorPhone,
-          address: {
-            street: donorStreetAddress,
-            apartment: donorApartment,
-            city: donorCity,
-            state: donorState,
-            zipCode: donorZipCode,
-            country: donorCountry,
+      if (frequency === "monthly") {
+        // Create Stripe checkout session for monthly recurring donation
+        const { data, error } = await supabase.functions.invoke("create-monthly-donation", {
+          body: {
+            causeId: cause.id,
+            causeName: cause.name,
+            amountCents: Math.round(finalAmount * 100),
+            customerEmail: donorEmail,
+            firstName: donorFirstName,
+            lastName: donorLastName,
+            phone: donorPhone,
+            address: {
+              street: donorStreetAddress,
+              apartment: donorApartment,
+              city: donorCity,
+              state: donorState,
+              zipCode: donorZipCode,
+              country: donorCountry,
+            },
           },
-        },
-      });
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      if (data?.url) {
-        window.location.href = data.url;
+        if (data?.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error("No checkout URL returned");
+        }
       } else {
-        throw new Error("No checkout URL returned");
+        // Create Stripe checkout session for one-time donation
+        const { data, error } = await supabase.functions.invoke("checkout-session", {
+          body: {
+            flow: "direct",
+            name: `Donation to ${cause.name}`,
+            priceUsd: finalAmount,
+            imageUrl: "",
+            donationCents: 0, // Already included in price
+            causeId: cause.id,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          window.open(data.url, '_blank');
+          toast.success("Opening payment page...");
+          setProcessing(false);
+        } else {
+          throw new Error("No checkout URL returned");
+        }
       }
     } catch (err: any) {
       console.error("Donation error:", err);
