@@ -427,6 +427,30 @@ serve(async (req) => {
     form.set("metadata[quantity]", String(qty));
     form.set("metadata[donation_cents]", String(donationCents));
     form.set("metadata[cause_id]", d.causeId);
+    
+    // Fetch cause name from Supabase
+    let causeName = "";
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supaHeaders = {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      };
+      try {
+        const causeResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/causes?select=id,name&id=eq.${encodeURIComponent(d.causeId)}&limit=1`,
+          { headers: supaHeaders }
+        );
+        const causeArr = await causeResp.json();
+        const cause = Array.isArray(causeArr) ? causeArr[0] : null;
+        if (cause?.name) causeName = cause.name;
+      } catch (e) {
+        console.error("Failed to fetch cause name:", e);
+      }
+    }
+    if (causeName) {
+      form.set("metadata[cause_name]", causeName);
+    }
 
     // Create session via Stripe REST API
     const stripeResp = await fetch("https://api.stripe.com/v1/checkout/sessions", {

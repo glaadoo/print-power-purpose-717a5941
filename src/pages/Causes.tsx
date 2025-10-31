@@ -64,8 +64,30 @@ export default function Causes() {
         if (alive) setLoading(false);
       }
     })();
+
+    // Subscribe to real-time updates for causes
+    const channel = supabase
+      .channel('causes-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'causes'
+        },
+        (payload) => {
+          console.log('Cause updated:', payload);
+          // Update the specific cause in the list
+          setCauses(prev => 
+            prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c)
+          );
+        }
+      )
+      .subscribe();
+
     return () => {
       alive = false;
+      supabase.removeChannel(channel);
     };
   }, []);
 
