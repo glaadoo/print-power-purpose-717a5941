@@ -585,7 +585,7 @@ export default function Donate() {
                       setShowMonthlyUpsell(false);
                     }}
                     disabled={processing}
-                    className="w-full h-14 text-lg bg-red-500 hover:bg-red-600 text-white"
+                    className="w-full h-14 text-lg bg-red-500 hover:bg-red-600 text-white rounded-full transition-all transform hover:scale-105 shadow-lg font-semibold"
                   >
                     ❤️ Donate ${Math.max(10, Math.floor(parseFloat(amount) / 2))}/month
                   </Button>
@@ -596,7 +596,7 @@ export default function Donate() {
                       setShowMonthlyUpsell(false);
                     }}
                     disabled={processing}
-                    className="w-full h-14 text-lg bg-blue-500 hover:bg-blue-600 text-white"
+                    className="w-full h-14 text-lg bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-all transform hover:scale-105 shadow-lg font-semibold"
                   >
                     Donate ${Math.max(5, Math.floor(parseFloat(amount) / 3))}/month
                   </Button>
