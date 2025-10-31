@@ -46,6 +46,19 @@ export default function Donate() {
   const [donorState, setDonorState] = useState("");
   const [donorZipCode, setDonorZipCode] = useState("");
   const [donorCountry, setDonorCountry] = useState("United States");
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [coverTransactionCosts, setCoverTransactionCosts] = useState(true);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  // Check for success in URL params
+  useEffect(() => {
+    const success = searchParams.get("payment");
+    if (success === "success") {
+      setShowSuccessMessage(true);
+      // Remove the query param
+      nav(`/donate?cause=${causeId}`, { replace: true });
+    }
+  }, [searchParams, causeId, nav]);
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
@@ -124,17 +137,34 @@ export default function Donate() {
     if (!cause) return;
     
     const donationAmount = parseFloat(amount);
+    let finalAmount = donationAmount;
+    
+    // Add transaction costs if checked (approximately 2.9% + $0.30)
+    if (coverTransactionCosts) {
+      finalAmount = Math.round((donationAmount + 0.30) / 0.971 * 100) / 100;
+    }
+    
     setProcessing(true);
 
     try {
-      // Create Stripe checkout session for donation
-      const { data, error } = await supabase.functions.invoke("checkout-session", {
+      // Create Stripe checkout session for monthly recurring donation
+      const { data, error } = await supabase.functions.invoke("create-monthly-donation", {
         body: {
           causeId: cause.id,
           causeName: cause.name,
-          donationCents: Math.round(donationAmount * 100),
+          amountCents: Math.round(finalAmount * 100),
           customerEmail: donorEmail,
-          isDonationOnly: true,
+          firstName: donorFirstName,
+          lastName: donorLastName,
+          phone: donorPhone,
+          address: {
+            street: donorStreetAddress,
+            apartment: donorApartment,
+            city: donorCity,
+            state: donorState,
+            zipCode: donorZipCode,
+            country: donorCountry,
+          },
         },
       });
 
@@ -254,9 +284,116 @@ export default function Donate() {
             </div>
           </div>
 
-          {/* Right Column - Donation Form, Monthly Upsell, Donor Details, or Address Form */}
+          {/* Right Column - Donation Form, Monthly Upsell, Donor Details, Address Form, or Payment Form */}
           <div className="bg-white/10 backdrop-blur-md text-white flex flex-col p-6 md:p-8">
-            {showAddressForm ? (
+            {showPaymentForm ? (
+              <div className="space-y-6">
+                <button
+                  onClick={() => {
+                    setShowPaymentForm(false);
+                    setShowAddressForm(true);
+                  }}
+                  className="flex items-center gap-2 text-sm hover:underline text-white/90"
+                >
+                  ← Back
+                </button>
+
+                <h2 className="text-2xl font-bold text-white">
+                  You donate ${parseFloat(amount).toFixed(2)} USD/month
+                </h2>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={coverTransactionCosts}
+                      onChange={(e) => setCoverTransactionCosts(e.target.checked)}
+                      className="w-5 h-5 rounded border-white/20 bg-white/10 text-blue-500 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-white/90 flex items-center gap-2">
+                      Cover transaction costs
+                      <button className="text-white/60 hover:text-white/90">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                    </span>
+                  </label>
+                </div>
+
+                <div className="space-y-3 border border-white/20 rounded-lg overflow-hidden">
+                  <button className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left border-b border-white/10">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    <span>Apple Pay</span>
+                  </button>
+
+                  <button className="w-full p-4 bg-blue-500/20 border-2 border-blue-500 hover:bg-blue-500/30 transition-colors flex items-center gap-3 text-left">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth={2} />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 10h20" />
+                    </svg>
+                    <span>Credit card</span>
+                  </button>
+
+                  <button className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left border-b border-white/10">
+                    <svg className="w-6 h-6" fill="#00457C" viewBox="0 0 24 24">
+                      <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.116c-.317-.033-.65-.05-1.005-.05h-2.134l-1.476 9.36c-.05.316.183.597.5.597h2.146c.365 0 .673-.267.729-.629.661-4.18.976-6.196.976-6.196.119-.757.327-1.557.605-2.404.149-.454.31-.866.484-1.235.145-.306.306-.58.487-.81z"/>
+                    </svg>
+                    <span>PayPal</span>
+                  </button>
+
+                  <button className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                    </svg>
+                    <span>Bank transfer</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <Input
+                    type="text"
+                    placeholder="Card number"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      type="text"
+                      placeholder="Expiration"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="CVC"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={processDonation}
+                  disabled={processing}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 text-lg rounded-lg transition-all"
+                >
+                  {processing ? "Processing..." : "Donate"}
+                </Button>
+
+                <div className="border-t border-white/10 pt-4 space-y-2 text-sm text-white/70">
+                  <a href="#" className="block underline hover:no-underline">
+                    Is my donation secure?
+                  </a>
+                  <a href="#" className="block underline hover:no-underline">
+                    Is this donation tax-deductible?
+                  </a>
+                  <a href="#" className="block underline hover:no-underline">
+                    Can I cancel my recurring donation?
+                  </a>
+                </div>
+              </div>
+            ) : showAddressForm ? (
               <div className="space-y-6">
                 <button
                   onClick={() => {
@@ -270,7 +407,7 @@ export default function Donate() {
 
                 <h2 className="text-2xl font-bold text-white">Enter your address</h2>
 
-                <form onSubmit={(e) => { e.preventDefault(); processDonation(); }} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); setShowAddressForm(false); setShowPaymentForm(true); }} className="space-y-4">
                   <div>
                     <Input
                       type="text"
@@ -633,6 +770,40 @@ export default function Donate() {
           </div>
         </div>
       </div>
+
+      {/* Success Message Overlay */}
+      {showSuccessMessage && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowSuccessMessage(false)}
+        >
+          <div
+            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 max-w-md w-full text-center text-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
+              <p className="text-white/80 mb-1">
+                Thank you for subscribing to donate every month.
+              </p>
+              <p className="text-white/60 text-sm">
+                Your support makes a real difference.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowSuccessMessage(false)}
+              className="mt-6 px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
