@@ -69,13 +69,7 @@ const PersonalMission = lazyPage("PersonalMission", () => import("./pages/Person
 const Cart            = lazyPage("Cart",            () => import("./pages/Cart"));
 const Checkout        = lazyPage("Checkout",        () => import("./pages/Checkout"));
 const Auth            = lazyPage("Auth",            () => import("./pages/Auth"));
-const AdminLogin      = lazyPage("AdminLogin",      () => import("./pages/AdminLogin"));
 const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
-const AdminSync       = lazyPage("AdminSync",       () => import("./pages/AdminSync"));
-const AdminOrders     = lazyPage("AdminOrders",     () => import("./pages/AdminOrders"));
-const AdminDonations  = lazyPage("AdminDonations",  () => import("./pages/AdminDonations"));
-const AdminAnalytics  = lazyPage("AdminAnalytics",  () => import("./pages/AdminAnalytics"));
-const AdminStoryRequests = lazyPage("AdminStoryRequests", () => import("./pages/AdminStoryRequests"));
 const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
 
 /* ---------- Fallback UI ---------- */
@@ -306,98 +300,12 @@ export default function App() {
             }
           />
 
-          {/* Auth */}
-          <Route
-            path="/auth"
-            element={
-              <RouteBoundary name="Auth">
-                <Auth />
-              </RouteBoundary>
-            }
-          />
-
-          {/* Admin Login */}
-          <Route
-            path="/admin-login"
-            element={
-              <RouteBoundary name="AdminLogin">
-                <AdminLogin />
-              </RouteBoundary>
-            }
-          />
-          <Route
-            path="/admin/login"
-            element={
-              <RouteBoundary name="AdminLoginAlias1">
-                <AdminLogin />
-              </RouteBoundary>
-            }
-          />
-          <Route
-            path="/login/admin"
-            element={
-              <RouteBoundary name="AdminLoginAlias2">
-                <AdminLogin />
-              </RouteBoundary>
-            }
-          />
-
           {/* Admin */}
           <Route
             path="/admin"
             element={
               <RouteBoundary name="Admin">
                 <Admin />
-              </RouteBoundary>
-            }
-          />
-
-          {/* Admin Sync */}
-          <Route
-            path="/admin/sync"
-            element={
-              <RouteBoundary name="AdminSync">
-                <AdminSync />
-              </RouteBoundary>
-            }
-          />
-
-          {/* Admin Orders */}
-          <Route
-            path="/admin/orders"
-            element={
-              <RouteBoundary name="AdminOrders">
-                <AdminOrders />
-              </RouteBoundary>
-            }
-          />
-
-          {/* Admin Donations */}
-          <Route
-            path="/admin/donations"
-            element={
-              <RouteBoundary name="AdminDonations">
-                <AdminDonations />
-              </RouteBoundary>
-            }
-          />
-
-          {/* Admin Analytics */}
-          <Route
-            path="/admin/analytics"
-            element={
-              <RouteBoundary name="AdminAnalytics">
-                <AdminAnalytics />
-              </RouteBoundary>
-            }
-          />
-
-          {/* Admin Story Requests */}
-          <Route
-            path="/admin/story-requests"
-            element={
-              <RouteBoundary name="AdminStoryRequests">
-                <AdminStoryRequests />
               </RouteBoundary>
             }
           />
