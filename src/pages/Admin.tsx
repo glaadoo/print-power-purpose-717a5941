@@ -13,17 +13,22 @@ import { toast } from "sonner";
 import {
   Trash2, KeyRound, RefreshCw, Download, Search,
   AlertCircle, CheckCircle, X, ArrowLeft, Check,
-  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp
+  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { User, Session } from "@supabase/supabase-js";
 
 export default function Admin() {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [adminKey, setAdminKey] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   
   // Data states
@@ -77,47 +82,92 @@ export default function Admin() {
   });
 
   useEffect(() => {
-    const storedKey = sessionStorage.getItem("admin_key");
-    if (storedKey) {
-      verifyKey(storedKey);
-    }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        setTimeout(() => {
+          checkAdminRole(session.user.id);
+        }, 0);
+      } else {
+        setIsAdmin(false);
+        setCheckingAuth(false);
+      }
+    });
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        checkAdminRole(session.user.id);
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const verifyKey = async (key: string) => {
-    setLoading(true);
+  const checkAdminRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke("verify-admin-key", {
-        body: { key }
-      });
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
 
       if (error) throw error;
-
-      if (data.valid) {
-        setIsAuthenticated(true);
-        sessionStorage.setItem("admin_key", key);
+      
+      if (data) {
+        setIsAdmin(true);
         loadAllData();
       } else {
-        toast.error("Invalid admin key");
-        sessionStorage.removeItem("admin_key");
+        setIsAdmin(false);
+        toast.error("Access denied: Admin privileges required");
       }
     } catch (error: any) {
-      toast.error(error.message || "Authentication failed");
-      sessionStorage.removeItem("admin_key");
+      console.error("Error checking admin role:", error);
+      setIsAdmin(false);
+      toast.error("Authentication error");
     } finally {
-      setLoading(false);
+      setCheckingAuth(false);
     }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await verifyKey(adminKey);
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+      
+      toast.success("Logged in successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin_key");
-    setIsAuthenticated(false);
-    setAdminKey("");
-    toast.success("Logged out");
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setIsAdmin(false);
+      toast.success("Logged out successfully");
+      navigate("/");
+    } catch (error: any) {
+      toast.error("Logout failed");
+    }
   };
 
   const loadAllData = async () => {
@@ -418,8 +468,20 @@ export default function Admin() {
     return matchesSearch && matchesCause;
   });
 
+  // Show loading state
+  if (checkingAuth) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Login screen
-  if (!isAuthenticated) {
+  if (!user || !isAdmin) {
     return (
       <div className="fixed inset-0 text-white">
         <VideoBackground 
@@ -433,26 +495,39 @@ export default function Admin() {
           <GlassCard className="w-full max-w-md">
             <div className="space-y-6">
               <div className="text-center">
-                <h1 className="text-3xl font-bold text-white mb-2">Admin Access</h1>
-                <p className="text-white/70">Enter your admin key to continue</p>
+                <h1 className="text-3xl font-bold text-white mb-2">Admin Login</h1>
+                <p className="text-white/70">Sign in with your admin account</p>
               </div>
               
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <Label htmlFor="admin-key" className="text-white mb-2 block">Admin Key</Label>
+                  <Label htmlFor="email" className="text-white mb-2 block">Email</Label>
                   <Input
-                    id="admin-key"
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@example.com"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password" className="text-white mb-2 block">Password</Label>
+                  <Input
+                    id="password"
                     type="password"
-                    value={adminKey}
-                    onChange={(e) => setAdminKey(e.target.value)}
-                    placeholder="Enter admin key"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                     required
                   />
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Verifying..." : "Login"}
+                  {loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
               
@@ -490,13 +565,16 @@ export default function Admin() {
           
           <div className="relative max-w-7xl mx-auto space-y-6">
             <GlassCard>
-              <div className="flex justify-between items-center flex-wrap gap-4">
-                <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
-                <Button onClick={handleLogout} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                  <KeyRound className="mr-2 h-4 w-4" />
-                  Logout
-                </Button>
-              </div>
+                <div className="flex justify-between items-center flex-wrap gap-4">
+                  <div>
+                    <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
+                    <p className="text-white/70 mt-1">Logged in as {user?.email}</p>
+                  </div>
+                  <Button onClick={handleLogout} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </Button>
+                </div>
             </GlassCard>
 
             <GlassCard>
