@@ -130,6 +130,28 @@ serve(async (req) => {
       },
     });
 
+    // Idempotency check: see if this submission was already processed
+    const { data: existingOrder } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('order_number', orderNumber)
+      .maybeSingle();
+
+    if (existingOrder) {
+      console.log('Submission already processed, skipping:', orderNumber);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Submission already processed (idempotent)',
+          orderNumber,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
     // Handle based on form type
     if (formType === 'donation' || donationAmount > 0) {
       // Process donation
