@@ -24,7 +24,10 @@ serve(async (req) => {
 
     if (contentType.includes('application/json')) {
       payload = await req.json();
-    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+    } else if (
+      contentType.includes('application/x-www-form-urlencoded') ||
+      contentType.includes('multipart/form-data')
+    ) {
       const formData = await req.formData();
       payload = Object.fromEntries(formData);
     } else {
