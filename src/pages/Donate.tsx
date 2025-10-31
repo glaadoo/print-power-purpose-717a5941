@@ -356,7 +356,7 @@ export default function Donate() {
           </div>
 
           {/* Right Column - Donation Form, Monthly Upsell, Donor Details, Address Form, or Payment Form */}
-          <div className="bg-white/10 backdrop-blur-md text-white flex flex-col p-6 md:p-8">
+          <div className="bg-white/10 backdrop-blur-md text-white flex flex-col p-6 md:p-8 overflow-y-auto min-h-0">
             {showPaymentForm ? (
               <div className="space-y-6">
                 <button
