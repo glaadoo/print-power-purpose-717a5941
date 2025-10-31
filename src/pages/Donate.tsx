@@ -36,9 +36,16 @@ export default function Donate() {
   const [recentDonations, setRecentDonations] = useState<RecentDonation[]>([]);
   const [showMonthlyUpsell, setShowMonthlyUpsell] = useState(false);
   const [showDonorDetails, setShowDonorDetails] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
   const [donorFirstName, setDonorFirstName] = useState("");
   const [donorLastName, setDonorLastName] = useState("");
   const [donorPhone, setDonorPhone] = useState("");
+  const [donorStreetAddress, setDonorStreetAddress] = useState("");
+  const [donorApartment, setDonorApartment] = useState("");
+  const [donorCity, setDonorCity] = useState("");
+  const [donorState, setDonorState] = useState("");
+  const [donorZipCode, setDonorZipCode] = useState("");
+  const [donorCountry, setDonorCountry] = useState("United States");
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
@@ -247,9 +254,111 @@ export default function Donate() {
             </div>
           </div>
 
-          {/* Right Column - Donation Form, Monthly Upsell, or Donor Details */}
+          {/* Right Column - Donation Form, Monthly Upsell, Donor Details, or Address Form */}
           <div className="bg-white/10 backdrop-blur-md text-white flex flex-col p-6 md:p-8">
-            {showDonorDetails ? (
+            {showAddressForm ? (
+              <div className="space-y-6">
+                <button
+                  onClick={() => {
+                    setShowAddressForm(false);
+                    setShowDonorDetails(true);
+                  }}
+                  className="flex items-center gap-2 text-sm hover:underline text-white/90"
+                >
+                  ← Back
+                </button>
+
+                <h2 className="text-2xl font-bold text-white">Enter your address</h2>
+
+                <form onSubmit={(e) => { e.preventDefault(); processDonation(); }} className="space-y-4">
+                  <div>
+                    <Input
+                      type="text"
+                      value={donorStreetAddress}
+                      onChange={(e) => setDonorStreetAddress(e.target.value)}
+                      placeholder="Street address"
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+
+                  <div>
+                    <Input
+                      type="text"
+                      value={donorApartment}
+                      onChange={(e) => setDonorApartment(e.target.value)}
+                      placeholder="Apartment / suite / floor"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+
+                  <div>
+                    <Input
+                      type="text"
+                      value={donorCity}
+                      onChange={(e) => setDonorCity(e.target.value)}
+                      placeholder="City"
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Input
+                        type="text"
+                        value={donorState}
+                        onChange={(e) => setDonorState(e.target.value)}
+                        placeholder="State"
+                        required
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type="text"
+                        value={donorZipCode}
+                        onChange={(e) => setDonorZipCode(e.target.value)}
+                        placeholder="Zip code"
+                        required
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Input
+                      type="text"
+                      value={donorCountry}
+                      onChange={(e) => setDonorCountry(e.target.value)}
+                      placeholder="Country"
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={processing}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 text-lg rounded-lg transition-all"
+                  >
+                    {processing ? "Processing..." : "Continue"}
+                  </Button>
+
+                  <div className="border-t border-white/10 pt-4 space-y-2 text-sm text-white/70">
+                    <a href="#" className="block underline hover:no-underline">
+                      Is my donation secure?
+                    </a>
+                    <a href="#" className="block underline hover:no-underline">
+                      Is this donation tax-deductible?
+                    </a>
+                    <a href="#" className="block underline hover:no-underline">
+                      Can I cancel my recurring donation?
+                    </a>
+                  </div>
+                </form>
+              </div>
+            ) : showDonorDetails ? (
               <div className="space-y-6">
                 <button
                   onClick={() => {
@@ -263,7 +372,7 @@ export default function Donate() {
 
                 <h2 className="text-2xl font-bold text-white">Enter your details</h2>
 
-                <form onSubmit={(e) => { e.preventDefault(); processDonation(); }} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); setShowDonorDetails(false); setShowAddressForm(true); }} className="space-y-4">
                   <div>
                     <Input
                       type="text"
