@@ -42,7 +42,11 @@ serve(async (req) => {
 
     // Verify webhook secret if configured
     if (webhookSecret) {
-      const providedSecret = payload.webhook_secret || req.headers.get('x-jotform-secret');
+      // Check query string first, then payload, then headers
+      const url = new URL(req.url);
+      const querySecret = url.searchParams.get('webhook_secret');
+      const providedSecret = querySecret || payload.webhook_secret || req.headers.get('x-jotform-secret');
+      
       if (providedSecret !== webhookSecret) {
         console.error('Invalid webhook secret');
         return new Response(
