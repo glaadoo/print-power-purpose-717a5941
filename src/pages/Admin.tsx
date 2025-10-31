@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -512,30 +512,24 @@ export default function Admin() {
       
       {/* Header */}
       <header className="relative z-50 px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/30 border-b border-white/10 shrink-0">
-        <div>
-          <h1 className="text-2xl font-serif font-bold tracking-wide">Admin Panel</h1>
-          <p className="text-sm text-white/70 tracking-[0.2em] uppercase">Print Power Purpose</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate("/")}
-            className="border-white/30 bg-white/10 text-white hover:bg-white/20"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Site
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleLogout}
-            className="border-white/30 bg-white/10 text-white hover:bg-white/20"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
+        <Link
+          to="/"
+          className="text-xl font-bold text-white hover:text-white/80 transition-colors font-serif"
+        >
+          PRINT POWER PURPOSE
+        </Link>
+        
+        <h1 className="text-2xl font-serif font-bold tracking-wide">ADMIN</h1>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleLogout}
+          className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
+        </Button>
       </header>
 
       {/* Main Content */}
