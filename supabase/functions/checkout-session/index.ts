@@ -175,7 +175,11 @@ serve(async (req) => {
     // ---------- CART FLOW (multiple items from cart) ----------
     if (wantsCartFlow) {
       const c = body as CartBody;
-      const donationCents = Math.max(0, Math.min(100000, Math.floor(Number(c.donationCents || 0))));
+      // Normalize donation: if less than Stripe's minimum (50 cents), treat as 0
+      let donationCents = Math.max(0, Math.min(100000, Math.floor(Number(c.donationCents || 0))));
+      if (donationCents > 0 && donationCents < 50) {
+        donationCents = 0; // Skip donations below Stripe's minimum
+      }
       const currency = String(c.currency || "usd").toLowerCase();
       const causeId = String(c.causeId);
 
@@ -271,7 +275,11 @@ serve(async (req) => {
       const productId = String(body.productId);
       const qty = Math.max(1, Math.min(100, Math.floor(Number(body.qty))));
       const causeId = String(body.causeId);
-      const donationCents = Math.max(0, Math.min(100000, Math.floor(Number(body.donationCents || 0))));
+      // Normalize donation: if less than Stripe's minimum (50 cents), treat as 0
+      let donationCents = Math.max(0, Math.min(100000, Math.floor(Number(body.donationCents || 0))));
+      if (donationCents > 0 && donationCents < 50) {
+        donationCents = 0; // Skip donations below Stripe's minimum
+      }
       const currency = String(body.currency || "usd").toLowerCase();
 
       // Build absolute redirect URLs
@@ -372,7 +380,11 @@ serve(async (req) => {
     // Validate & normalize
     const qty = Math.max(1, Math.floor(Number(d.quantity || 1)));
     const unit = Math.max(50, Math.floor(Number(d.unitAmountCents || 0))); // Stripe min 50¢
-    const donationUsd = Math.max(0, Number(d.donationUsd || 0));
+    let donationUsd = Math.max(0, Number(d.donationUsd || 0));
+    // Normalize donation: if less than $0.50 (Stripe's minimum), treat as 0
+    if (donationUsd > 0 && donationUsd < 0.5) {
+      donationUsd = 0;
+    }
     const currency = String(d.currency || "usd").toLowerCase();
 
     if (!d.productName || !d.causeId || !Number.isFinite(unit) || unit < 50) {
