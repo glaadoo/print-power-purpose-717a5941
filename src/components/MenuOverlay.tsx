@@ -27,7 +27,7 @@ const itemVariants = {
   exit: { opacity: 0, x: -18, transition: { duration: 0.18 } },
 };
 
-export default function MenuOverlay({ open, onClose, showSignOut = false }: Props) {
+export default function MenuOverlay({ open, onClose, items, showSignOut = false }: Props) {
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -37,8 +37,8 @@ export default function MenuOverlay({ open, onClose, showSignOut = false }: Prop
     };
   }, [open]);
 
-  // ✅ Updated menu items list
-  const menuItems: Item[] = [
+  // Use provided items or fall back to default menu items
+  const menuItems: Item[] = items || [
     { label: "About", href: "/about" },
     { label: "Solutions", href: "#solutions" },
     { label: "Learn", href: "#learn" },
