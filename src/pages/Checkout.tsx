@@ -395,12 +395,12 @@ export default function Checkout() {
                     Before completing your payment, would you like to add an additional donation to support your selected cause?
                   </p>
                   <p className="text-sm opacity-75 italic">
-                    (Optional - You can skip this step if you prefer)
+                    (Optional - Leave empty to proceed without additional donation)
                   </p>
                 </div>
 
                 <label htmlFor="donation" className="block font-medium mb-2">
-                  Additional Donation Amount (USD)
+                  Additional Donation Amount (USD) - Optional
                 </label>
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xl">$</span>
@@ -410,11 +410,12 @@ export default function Checkout() {
                     min="0"
                     step="0.01"
                     value={donation === 0 ? "" : (donation / 100).toFixed(2)}
-                    onChange={(e) =>
-                      setDonation(Math.max(0, Math.round(parseFloat(e.target.value || "0") * 100)))
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.trim();
+                      setDonation(value === "" ? 0 : Math.max(0, Math.round(parseFloat(value) * 100)));
+                    }}
                     className="flex-1 rounded-xl bg-white/90 text-black px-4 py-3 outline-none focus:ring-2 focus:ring-white/50"
-                    placeholder="0.00"
+                    placeholder="0.00 (optional)"
                   />
                 </div>
 
