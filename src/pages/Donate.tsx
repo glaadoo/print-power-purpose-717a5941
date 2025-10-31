@@ -25,6 +25,7 @@ export default function Donate() {
   const [amount, setAmount] = useState("");
   const [donorEmail, setDonorEmail] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [frequency, setFrequency] = useState<"once" | "monthly">("once");
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
@@ -124,17 +125,17 @@ export default function Donate() {
   }
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden">
       {/* Header */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/30 border-b border-white/10">
         <button
           onClick={() => nav("/causes")}
-          className="text-sm md:text-base font-semibold uppercase tracking-wide hover:opacity-80"
+          className="text-sm font-medium hover:opacity-80 transition-opacity"
         >
           ← Back to Causes
         </button>
-        <div className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
-          DONATE
+        <div className="text-sm font-semibold uppercase tracking-wider">
+          Secure Donation
         </div>
       </header>
 
@@ -144,53 +145,120 @@ export default function Donate() {
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
           poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/50" />}
+          overlay={<div className="absolute inset-0 bg-black/60" />}
         />
 
-        <div className="relative w-full min-h-full flex items-center justify-center py-12 px-4">
-          <div className="w-full max-w-2xl">
-            {/* Cause info card */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl p-6 md:p-8 mb-6">
-              <h1 className="text-3xl md:text-4xl font-bold mb-3">{cause.name}</h1>
-              {cause.summary && (
-                <p className="text-white/80 mb-6">{cause.summary}</p>
-              )}
+        <div className="relative w-full min-h-full flex items-start justify-center py-8 px-4">
+          <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 lg:gap-8">
+            {/* Left Column - Cause Info */}
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 text-white h-fit">
+              <h1 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                {cause.name}
+              </h1>
               
+              {cause.summary && (
+                <p className="text-white/90 mb-6 leading-relaxed">
+                  {cause.summary}
+                </p>
+              )}
+
               {/* Barometer */}
-              <div className="max-w-md mx-auto">
+              <div className="mb-6 bg-white/5 rounded-xl p-4">
                 <DonationBarometer
                   raised_cents={cause.raised_cents || 0}
                   goal_cents={cause.goal_cents || 1}
                 />
               </div>
+
+              <div className="text-sm text-white/70 space-y-2">
+                <p>Your donation helps make a direct impact on this cause.</p>
+                <p>100% of your contribution goes directly to supporting this initiative.</p>
+              </div>
             </div>
 
-            {/* Donation form card */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl p-6 md:p-8">
-              <h2 className="text-2xl font-bold mb-6 text-center">Make a Donation</h2>
-              
+            {/* Right Column - Donation Form */}
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 text-white h-fit">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold">Secure Donation</h2>
+              </div>
+
               <form onSubmit={handleDonate} className="space-y-6">
+                {/* Frequency Toggle */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-2">
-                    Your Email
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={donorEmail}
-                    onChange={(e) => setDonorEmail(e.target.value)}
-                    placeholder="donor@example.com"
-                    required
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
-                  />
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <button
+                      type="button"
+                      onClick={() => setFrequency("once")}
+                      className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                        frequency === "once"
+                          ? "bg-white text-black"
+                          : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                      }`}
+                    >
+                      Give once
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFrequency("monthly")}
+                      className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                        frequency === "monthly"
+                          ? "bg-white text-black"
+                          : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                      }`}
+                    >
+                      <span className="text-red-500">♥</span> Monthly
+                    </button>
+                  </div>
                 </div>
 
+                {/* Preset Amounts */}
                 <div>
-                  <label htmlFor="amount" className="block text-sm font-medium mb-2">
-                    Donation Amount (USD)
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    {[140, 70, 40].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setAmount(amt.toString())}
+                        className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                          amount === amt.toString()
+                            ? "bg-white/20 text-white border-2 border-white"
+                            : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                        }`}
+                      >
+                        ${amt}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[25, 15, 8].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setAmount(amt.toString())}
+                        className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                          amount === amt.toString()
+                            ? "bg-white/20 text-white border-2 border-white"
+                            : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                        }`}
+                      >
+                        ${amt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Amount Input */}
+                <div>
+                  <label htmlFor="amount" className="block text-sm font-medium mb-2 text-white/90">
+                    Or enter custom amount
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 text-lg">
                       $
                     </span>
                     <Input
@@ -200,39 +268,45 @@ export default function Donate() {
                       min="1"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      placeholder="25.00"
+                      placeholder="15"
                       required
-                      className="bg-white/10 border-white/30 text-white placeholder:text-white/50 pl-8"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 pl-8 pr-16 h-12 text-lg"
                     />
-                  </div>
-                  
-                  {/* Quick amount buttons */}
-                  <div className="grid grid-cols-4 gap-2 mt-3">
-                    {[10, 25, 50, 100].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setAmount(amt.toString())}
-                        className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/30 text-sm font-medium transition-colors"
-                      >
-                        ${amt}
-                      </button>
-                    ))}
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 text-sm">
+                      USD
+                    </span>
                   </div>
                 </div>
 
+                {/* Email Input */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-2 text-white/90">
+                    Your Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={donorEmail}
+                    onChange={(e) => setDonorEmail(e.target.value)}
+                    placeholder="donor@example.com"
+                    required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12"
+                  />
+                </div>
+
+                {/* Submit Button */}
                 <Button
                   type="submit"
                   disabled={processing}
-                  className="w-full bg-white text-black hover:bg-white/90 font-semibold py-6 text-lg"
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 text-lg rounded-lg transition-all"
                 >
-                  {processing ? "Processing..." : "Continue to Payment"}
+                  {processing ? "Processing..." : "Donate"}
                 </Button>
-              </form>
 
-              <p className="text-xs text-center text-white/60 mt-4">
-                You'll be redirected to a secure payment page to complete your donation.
-              </p>
+                <p className="text-xs text-center text-white/50">
+                  Secure payment • Tax-deductible • Cancel anytime
+                </p>
+              </form>
             </div>
           </div>
         </div>
