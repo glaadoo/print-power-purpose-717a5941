@@ -34,6 +34,7 @@ export default function Donate() {
   const [processing, setProcessing] = useState(false);
   const [frequency, setFrequency] = useState<"once" | "monthly">("once");
   const [recentDonations, setRecentDonations] = useState<RecentDonation[]>([]);
+  const [showMonthlyUpsell, setShowMonthlyUpsell] = useState(false);
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
@@ -98,6 +99,20 @@ export default function Donate() {
       return;
     }
 
+    // Show monthly upsell for one-time donations
+    if (frequency === "once") {
+      setShowMonthlyUpsell(true);
+      return;
+    }
+
+    // Process donation directly for monthly
+    await processDonation();
+  };
+
+  const processDonation = async () => {
+    if (!cause) return;
+    
+    const donationAmount = parseFloat(amount);
     setProcessing(true);
 
     try {
@@ -228,18 +243,78 @@ export default function Donate() {
             </div>
           </div>
 
-          {/* Right Column - Donation Form */}
+          {/* Right Column - Donation Form or Monthly Upsell */}
           <div className="bg-white/10 backdrop-blur-md text-white flex flex-col p-6 md:p-8">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold">Secure Donation</h2>
-            </div>
+            {showMonthlyUpsell ? (
+              <div className="space-y-6">
+                <button
+                  onClick={() => setShowMonthlyUpsell(false)}
+                  className="flex items-center gap-2 text-sm hover:underline"
+                >
+                  ← Back
+                </button>
 
-            <form onSubmit={handleDonate} className="space-y-6">
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold">Become a monthly supporter</h2>
+                  <p className="text-white/80 leading-relaxed">
+                    Will you convert your ${amount} contribution into a monthly donation? Your ongoing support can help us focus better on our work.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => {
+                      setFrequency("monthly");
+                      processDonation();
+                    }}
+                    disabled={processing}
+                    className="w-full h-14 text-lg bg-red-500 hover:bg-red-600 text-white"
+                  >
+                    ❤️ Donate ${Math.max(10, Math.floor(parseFloat(amount) / 2))}/month
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setFrequency("monthly");
+                      processDonation();
+                    }}
+                    disabled={processing}
+                    className="w-full h-14 text-lg bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    Donate ${Math.max(5, Math.floor(parseFloat(amount) / 3))}/month
+                  </Button>
+                  <button
+                    onClick={processDonation}
+                    disabled={processing}
+                    className="w-full text-center underline py-2 hover:no-underline text-white/90"
+                  >
+                    No, keep my one-time ${amount} gift
+                  </button>
+                </div>
+
+                <div className="border-t border-white/10 pt-6 space-y-2 text-sm text-white/70">
+                  <a href="#" className="block underline hover:no-underline">
+                    Is my donation secure?
+                  </a>
+                  <a href="#" className="block underline hover:no-underline">
+                    Is this donation tax-deductible?
+                  </a>
+                  <a href="#" className="block underline hover:no-underline">
+                    Can I cancel my recurring donation?
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold">Secure Donation</h2>
+                </div>
+
+                <form onSubmit={handleDonate} className="space-y-6">
               {/* Frequency Toggle */}
               <div>
                 <div className="grid grid-cols-2 gap-3 mb-6">
@@ -355,10 +430,12 @@ export default function Donate() {
                 {processing ? "Processing..." : "Donate"}
               </Button>
 
-              <p className="text-xs text-center text-white/50">
-                Secure payment • Tax-deductible • Cancel anytime
-              </p>
-            </form>
+                  <p className="text-xs text-center text-white/50">
+                    Secure payment • Tax-deductible • Cancel anytime
+                  </p>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>
