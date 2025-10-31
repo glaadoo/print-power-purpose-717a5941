@@ -300,6 +300,16 @@ export default function App() {
             }
           />
 
+          {/* Auth */}
+          <Route
+            path="/auth"
+            element={
+              <RouteBoundary name="Auth">
+                <Auth />
+              </RouteBoundary>
+            }
+          />
+
           {/* Admin */}
           <Route
             path="/admin"
