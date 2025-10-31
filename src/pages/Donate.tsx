@@ -7,6 +7,13 @@ import VideoBackground from "@/components/VideoBackground";
 import DonationBarometer from "@/components/DonationBarometer";
 import { toast } from "sonner";
 
+type RecentDonation = {
+  id: string;
+  customer_email: string;
+  amount_cents: number;
+  created_at: string;
+};
+
 type Cause = {
   id: string;
   name: string;
@@ -26,6 +33,7 @@ export default function Donate() {
   const [donorEmail, setDonorEmail] = useState("");
   const [processing, setProcessing] = useState(false);
   const [frequency, setFrequency] = useState<"once" | "monthly">("once");
+  const [recentDonations, setRecentDonations] = useState<RecentDonation[]>([]);
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
@@ -48,6 +56,18 @@ export default function Donate() {
 
         if (error) throw error;
         if (alive && data) setCause(data);
+
+        // Fetch recent donations for this cause
+        const { data: donations, error: donationsError } = await supabase
+          .from("donations")
+          .select("id,customer_email,amount_cents,created_at")
+          .eq("cause_id", causeId)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (!donationsError && donations && alive) {
+          setRecentDonations(donations);
+        }
       } catch (e: any) {
         console.error("Failed to load cause:", e);
         toast.error("Failed to load cause");
@@ -148,36 +168,75 @@ export default function Donate() {
           overlay={<div className="absolute inset-0 bg-black/60" />}
         />
 
-        <div className="relative w-full min-h-full flex items-start justify-center py-8 px-4">
-          <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Left Column - Cause Info */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 text-white h-fit">
-              <h1 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-                {cause.name}
-              </h1>
-              
-              {cause.summary && (
-                <p className="text-white/90 mb-6 leading-relaxed">
-                  {cause.summary}
-                </p>
-              )}
+        <div className="relative w-full h-full flex items-stretch justify-center py-8 px-4">
+          <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 lg:gap-8 h-full">
+            {/* Left Column - Cause Info (Scrollable) */}
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 text-white flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto pr-2 space-y-6">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                    {cause.name}
+                  </h1>
+                  
+                  {cause.summary && (
+                    <p className="text-white/90 mb-6 leading-relaxed">
+                      {cause.summary}
+                    </p>
+                  )}
 
-              {/* Barometer */}
-              <div className="mb-6 bg-white/5 rounded-xl p-4">
-                <DonationBarometer
-                  raised_cents={cause.raised_cents || 0}
-                  goal_cents={cause.goal_cents || 1}
-                />
-              </div>
+                  {/* Barometer */}
+                  <div className="bg-white/5 rounded-xl p-4 mb-6">
+                    <DonationBarometer
+                      raised_cents={cause.raised_cents || 0}
+                      goal_cents={cause.goal_cents || 1}
+                    />
+                  </div>
 
-              <div className="text-sm text-white/70 space-y-2">
-                <p>Your donation helps make a direct impact on this cause.</p>
-                <p>100% of your contribution goes directly to supporting this initiative.</p>
+                  <div className="text-sm text-white/70 space-y-2 mb-8">
+                    <p>Your donation helps make a direct impact on this cause.</p>
+                    <p>100% of your contribution goes directly to supporting this initiative.</p>
+                  </div>
+                </div>
+
+                {/* Recent Donations */}
+                <div>
+                  <h2 className="text-xl font-bold mb-4 text-white">Recent Donations</h2>
+                  <div className="space-y-3">
+                    {recentDonations.length > 0 ? (
+                      recentDonations.map((donation) => {
+                        const donorName = donation.customer_email.split('@')[0];
+                        const displayName = donorName.charAt(0).toUpperCase() + donorName.slice(1);
+                        const amount = (donation.amount_cents / 100).toLocaleString('en-US', { 
+                          style: 'currency', 
+                          currency: 'USD',
+                          minimumFractionDigits: 0
+                        });
+                        
+                        return (
+                          <div 
+                            key={donation.id}
+                            className="bg-white/5 rounded-lg p-3 flex items-center justify-between border border-white/10"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
+                                {displayName.charAt(0)}
+                              </div>
+                              <span className="text-white/90 font-medium">{displayName}</span>
+                            </div>
+                            <span className="text-white font-semibold">{amount}</span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-white/60 text-sm">No donations yet. Be the first!</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Right Column - Donation Form */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 text-white h-fit">
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 text-white flex flex-col">
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
