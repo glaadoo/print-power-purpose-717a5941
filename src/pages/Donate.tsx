@@ -167,63 +167,62 @@ export default function Donate() {
           <div className="bg-white/10 backdrop-blur-md border-r border-white/20 text-white flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
               <div>
-                  <h1 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-                    {cause.name}
-                  </h1>
-                  
-                  {cause.summary && (
-                    <p className="text-white/90 mb-6 leading-relaxed">
-                      {cause.summary}
-                    </p>
-                  )}
+                <h1 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                  {cause.name}
+                </h1>
+                
+                {cause.summary && (
+                  <p className="text-white/90 mb-6 leading-relaxed">
+                    {cause.summary}
+                  </p>
+                )}
 
-                  {/* Barometer */}
-                  <div className="bg-white/5 rounded-xl p-4 mb-6">
-                    <DonationBarometer
-                      raised_cents={cause.raised_cents || 0}
-                      goal_cents={cause.goal_cents || 1}
-                    />
-                  </div>
-
-                  <div className="text-sm text-white/70 space-y-2 mb-8">
-                    <p>Your donation helps make a direct impact on this cause.</p>
-                    <p>100% of your contribution goes directly to supporting this initiative.</p>
-                  </div>
+                {/* Barometer */}
+                <div className="bg-white/5 rounded-xl p-4 mb-6">
+                  <DonationBarometer
+                    raised_cents={cause.raised_cents || 0}
+                    goal_cents={cause.goal_cents || 1}
+                  />
                 </div>
 
-                {/* Recent Donations */}
-                <div>
-                  <h2 className="text-xl font-bold mb-4 text-white">Recent Donations</h2>
-                  <div className="space-y-3">
-                    {recentDonations.length > 0 ? (
-                      recentDonations.map((donation) => {
-                        const donorName = donation.customer_email.split('@')[0];
-                        const displayName = donorName.charAt(0).toUpperCase() + donorName.slice(1);
-                        const amount = (donation.amount_cents / 100).toLocaleString('en-US', { 
-                          style: 'currency', 
-                          currency: 'USD',
-                          minimumFractionDigits: 0
-                        });
-                        
-                        return (
-                          <div 
-                            key={donation.id}
-                            className="bg-white/5 rounded-lg p-3 flex items-center justify-between border border-white/10"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
-                                {displayName.charAt(0)}
-                              </div>
-                              <span className="text-white/90 font-medium">{displayName}</span>
+                <div className="text-sm text-white/70 space-y-2 mb-8">
+                  <p>Your donation helps make a direct impact on this cause.</p>
+                  <p>100% of your contribution goes directly to supporting this initiative.</p>
+                </div>
               </div>
-                            <span className="text-white font-semibold">{amount}</span>
+
+              {/* Recent Donations */}
+              <div>
+                <h2 className="text-xl font-bold mb-4 text-white">Recent Donations</h2>
+                <div className="space-y-3">
+                  {recentDonations.length > 0 ? (
+                    recentDonations.map((donation) => {
+                      const donorName = donation.customer_email.split('@')[0];
+                      const displayName = donorName.charAt(0).toUpperCase() + donorName.slice(1);
+                      const amount = (donation.amount_cents / 100).toLocaleString('en-US', { 
+                        style: 'currency', 
+                        currency: 'USD',
+                        minimumFractionDigits: 0
+                      });
+                      
+                      return (
+                        <div 
+                          key={donation.id}
+                          className="bg-white/5 rounded-lg p-3 flex items-center justify-between border border-white/10"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
+                              {displayName.charAt(0)}
+                            </div>
+                            <span className="text-white/90 font-medium">{displayName}</span>
                           </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-white/60 text-sm">No donations yet. Be the first!</p>
-                    )}
-                  </div>
+                          <span className="text-white font-semibold">{amount}</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-white/60 text-sm">No donations yet. Be the first!</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -231,136 +230,135 @@ export default function Donate() {
 
           {/* Right Column - Donation Form */}
           <div className="bg-white/10 backdrop-blur-md text-white flex flex-col p-6 md:p-8">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold">Secure Donation</h2>
+            </div>
+
+            <form onSubmit={handleDonate} className="space-y-6">
+              {/* Frequency Toggle */}
+              <div>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setFrequency("once")}
+                    className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                      frequency === "once"
+                        ? "bg-white text-black"
+                        : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                    }`}
+                  >
+                    Give once
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFrequency("monthly")}
+                    className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                      frequency === "monthly"
+                        ? "bg-white text-black"
+                        : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                    }`}
+                  >
+                    <span className="text-red-500">♥</span> Monthly
+                  </button>
                 </div>
-                <h2 className="text-xl font-semibold">Secure Donation</h2>
               </div>
 
-              <form onSubmit={handleDonate} className="space-y-6">
-                {/* Frequency Toggle */}
-                <div>
-                  <div className="grid grid-cols-2 gap-3 mb-6">
+              {/* Preset Amounts */}
+              <div>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  {[140, 70, 40].map((amt) => (
                     <button
+                      key={amt}
                       type="button"
-                      onClick={() => setFrequency("once")}
-                      className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                        frequency === "once"
-                          ? "bg-white text-black"
+                      onClick={() => setAmount(amt.toString())}
+                      className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                        amount === amt.toString()
+                          ? "bg-white/20 text-white border-2 border-white"
                           : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
                       }`}
                     >
-                      Give once
+                      ${amt}
                     </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {[25, 15, 8].map((amt) => (
                     <button
+                      key={amt}
                       type="button"
-                      onClick={() => setFrequency("monthly")}
-                      className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                        frequency === "monthly"
-                          ? "bg-white text-black"
+                      onClick={() => setAmount(amt.toString())}
+                      className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                        amount === amt.toString()
+                          ? "bg-white/20 text-white border-2 border-white"
                           : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
                       }`}
                     >
-                      <span className="text-red-500">♥</span> Monthly
+                      ${amt}
                     </button>
-                  </div>
+                  ))}
                 </div>
+              </div>
 
-                {/* Preset Amounts */}
-                <div>
-                  <div className="grid grid-cols-3 gap-3 mb-3">
-                    {[140, 70, 40].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setAmount(amt.toString())}
-                        className={`px-4 py-3 rounded-lg font-semibold transition-all ${
-                          amount === amt.toString()
-                            ? "bg-white/20 text-white border-2 border-white"
-                            : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
-                        }`}
-                      >
-                        ${amt}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[25, 15, 8].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setAmount(amt.toString())}
-                        className={`px-4 py-3 rounded-lg font-semibold transition-all ${
-                          amount === amt.toString()
-                            ? "bg-white/20 text-white border-2 border-white"
-                            : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
-                        }`}
-                      >
-                        ${amt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custom Amount Input */}
-                <div>
-                  <label htmlFor="amount" className="block text-sm font-medium mb-2 text-white/90">
-                    Or enter custom amount
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 text-lg">
-                      $
-                    </span>
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      min="1"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="15"
-                      required
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 pl-8 pr-16 h-12 text-lg"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 text-sm">
-                      USD
-                    </span>
-                  </div>
-                </div>
-
-                {/* Email Input */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-2 text-white/90">
-                    Your Email
-                  </label>
+              {/* Custom Amount Input */}
+              <div>
+                <label htmlFor="amount" className="block text-sm font-medium mb-2 text-white/90">
+                  Or enter custom amount
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 text-lg">
+                    $
+                  </span>
                   <Input
-                    id="email"
-                    type="email"
-                    value={donorEmail}
-                    onChange={(e) => setDonorEmail(e.target.value)}
-                    placeholder="donor@example.com"
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="15"
                     required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 pl-8 pr-16 h-12 text-lg"
                   />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 text-sm">
+                    USD
+                  </span>
                 </div>
+              </div>
 
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  disabled={processing}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 text-lg rounded-lg transition-all"
-                >
-                  {processing ? "Processing..." : "Donate"}
-                </Button>
+              {/* Email Input */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-2 text-white/90">
+                  Your Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={donorEmail}
+                  onChange={(e) => setDonorEmail(e.target.value)}
+                  placeholder="donor@example.com"
+                  required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12"
+                />
+              </div>
 
-                <p className="text-xs text-center text-white/50">
-                  Secure payment • Tax-deductible • Cancel anytime
-                </p>
-              </form>
-            </div>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={processing}
+                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 text-lg rounded-lg transition-all"
+              >
+                {processing ? "Processing..." : "Donate"}
+              </Button>
+
+              <p className="text-xs text-center text-white/50">
+                Secure payment • Tax-deductible • Cancel anytime
+              </p>
+            </form>
           </div>
         </div>
       </div>
