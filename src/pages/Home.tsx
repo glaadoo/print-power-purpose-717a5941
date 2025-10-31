@@ -273,13 +273,13 @@ export default function Home() {
             {/* band: placeholder (L) + stats (R) */}
             <div className="w-full px-6 pb-10 mt-12">
               <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
-                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8">
+                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex flex-col h-full">
                   {featuredStory?.video_url ? (
-                    <div className="w-full">
+                    <div className="w-full h-full flex flex-col">
                       <div className="text-sm uppercase tracking-wide opacity-80 mb-3">Featured Story</div>
-                      <div className="w-full aspect-video rounded-lg overflow-hidden bg-black/30">
+                      <div className="flex-1 rounded-lg overflow-hidden bg-black/30">
                         <video
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           src={featuredStory.video_url}
                           controls
                           autoPlay
