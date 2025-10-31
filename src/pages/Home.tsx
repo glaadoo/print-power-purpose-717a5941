@@ -6,14 +6,85 @@ import VideoBackground from "@/components/VideoBackground";
 import MenuOverlay from "@/components/MenuOverlay";
 import ScrollDots from "@/components/ScrollDots";
 import useToggle from "@/hooks/useToggle";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Home() {
   const nav = useNavigate();
   const menu = useToggle(false);
 
+  // Real stats from database
+  const [stats, setStats] = useState({
+    totalRaised: 0,
+    organizationCount: 0,
+    orderCount: 0,
+  });
+
   // Set document title
   useEffect(() => {
     document.title = "Home - Print Power Purpose";
+  }, []);
+
+  // Fetch real stats from database
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        // Get total donations
+        const { data: donations } = await supabase
+          .from("donations")
+          .select("amount_cents");
+        const totalRaised = donations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0;
+
+        // Get organization counts
+        const [
+          { count: nonprofitCount },
+          { count: schoolCount },
+          { count: causeCount },
+        ] = await Promise.all([
+          supabase.from("nonprofits").select("*", { count: "exact", head: true }),
+          supabase.from("schools").select("*", { count: "exact", head: true }),
+          supabase.from("causes").select("*", { count: "exact", head: true }),
+        ]);
+
+        // Get order count
+        const { count: orderCount } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true });
+
+        setStats({
+          totalRaised,
+          organizationCount: (nonprofitCount || 0) + (schoolCount || 0) + (causeCount || 0),
+          orderCount: orderCount || 0,
+        });
+      } catch (error) {
+        console.error("Error loading stats:", error);
+      }
+    }
+
+    loadStats();
+
+    // Subscribe to realtime updates
+    const donationsChannel = supabase
+      .channel("donations-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "donations" },
+        () => loadStats()
+      )
+      .subscribe();
+
+    const ordersChannel = supabase
+      .channel("orders-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        () => loadStats()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(donationsChannel);
+      supabase.removeChannel(ordersChannel);
+    };
   }, []);
 
   // ===== original staged reveal logic for Kenzie card =====
@@ -176,15 +247,27 @@ export default function Home() {
 
                 <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex items-center justify-center">
                   <div className="grid grid-cols-2 gap-6 text-center w-full">
-                    <Stat value="$197M+" label="Raised for nonprofits*" />
-                    <Stat value="260+" label="Partner organizations" />
+                    <Stat 
+                      value={`$${(stats.totalRaised / 100).toLocaleString('en-US', { 
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0 
+                      })}`} 
+                      label="Raised for nonprofits" 
+                    />
+                    <Stat 
+                      value={`${stats.organizationCount}+`} 
+                      label="Partner organizations" 
+                    />
                     <Stat value="99.95%" label="Platform uptime" />
-                    <Stat value="50k+" label="Orders fulfilled" />
+                    <Stat 
+                      value={`${stats.orderCount.toLocaleString()}+`} 
+                      label="Orders fulfilled" 
+                    />
                   </div>
                 </div>
               </div>
               <p className="mt-3 text-center text-xs opacity-70">
-                *Example figures shown as placeholders. Replace with live stats when ready.
+                Live stats updated in real-time from our database.
               </p>
             </div>
           </div>
