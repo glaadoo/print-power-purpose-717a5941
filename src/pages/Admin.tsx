@@ -575,18 +575,76 @@ export default function Admin() {
 
           {/* Tabs */}
           <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList className="bg-white/10 border-white/20">
-              <TabsTrigger value="dashboard" className="data-[state=active]:bg-white/20">Dashboard</TabsTrigger>
-              <TabsTrigger value="products" className="data-[state=active]:bg-white/20">Products</TabsTrigger>
-              <TabsTrigger value="causes" className="data-[state=active]:bg-white/20">Causes</TabsTrigger>
-              <TabsTrigger value="schools" className="data-[state=active]:bg-white/20">Schools</TabsTrigger>
-              <TabsTrigger value="nonprofits" className="data-[state=active]:bg-white/20">Nonprofits</TabsTrigger>
-              <TabsTrigger value="orders" className="data-[state=active]:bg-white/20">Orders</TabsTrigger>
-              <TabsTrigger value="donations" className="data-[state=active]:bg-white/20">Donations</TabsTrigger>
-              <TabsTrigger value="errors" className="data-[state=active]:bg-white/20">Error Logs</TabsTrigger>
-              <TabsTrigger value="stories" className="data-[state=active]:bg-white/20">Story Requests</TabsTrigger>
-              <TabsTrigger value="sync" className="data-[state=active]:bg-white/20">Sync</TabsTrigger>
-            </TabsList>
+            <div className="flex justify-center">
+              <TabsList className="bg-[#5a5a5a] p-1 rounded-full inline-flex gap-1">
+                <TabsTrigger 
+                  value="dashboard" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Dashboard
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analytics" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Analytics
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="products" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Products
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="causes" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Causes
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="schools" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Schools
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="nonprofits" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Nonprofits
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="orders" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Orders
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="donations" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Donations
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="errors" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Error Logs
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="stories" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Story Requests
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="sync" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Sync
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="dashboard">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -624,6 +682,51 @@ export default function Admin() {
                       <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
                     </BarChart>
                   </ResponsiveContainer>
+                </GlassCard>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="analytics">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <GlassCard className="bg-white/5 border-white/20">
+                  <h3 className="text-xl font-serif font-bold text-white mb-4">Revenue Breakdown</h3>
+                  <div className="space-y-4 text-white">
+                    <div className="flex justify-between items-center py-2 border-b border-white/10">
+                      <span className="text-white/80">Product Sales</span>
+                      <span className="font-semibold">${((totalRevenue - totalDonations) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-white/10">
+                      <span className="text-white/80">Total Donations</span>
+                      <span className="font-semibold">${(totalDonations / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-white/80 font-bold">Total Revenue</span>
+                      <span className="font-bold text-lg">${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </GlassCard>
+
+                <GlassCard className="bg-white/5 border-white/20">
+                  <h3 className="text-xl font-serif font-bold text-white mb-4">Cause Progress</h3>
+                  <div className="space-y-3">
+                    {causes.slice(0, 5).map(cause => {
+                      const progress = cause.goal_cents > 0 ? (cause.raised_cents / cause.goal_cents) * 100 : 0;
+                      return (
+                        <div key={cause.id} className="text-white">
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-white/80">{cause.name}</span>
+                            <span className="font-semibold">{Math.round(progress)}%</span>
+                          </div>
+                          <div className="w-full bg-white/10 rounded-full h-2">
+                            <div 
+                              className="bg-white rounded-full h-2 transition-all"
+                              style={{ width: `${Math.min(progress, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </GlassCard>
               </div>
             </TabsContent>
