@@ -635,14 +635,14 @@ export default function Donate() {
                 <form onSubmit={handleDonate} className="space-y-6">
               {/* Frequency Toggle */}
               <div>
-                <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="inline-flex rounded-full overflow-hidden border-2 border-white/20 mb-6">
                   <button
                     type="button"
                     onClick={() => setFrequency("once")}
-                    className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                    className={`px-8 py-3 font-semibold transition-all ${
                       frequency === "once"
-                        ? "bg-white text-black"
-                        : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                        ? "bg-white text-black border-2 border-blue-500"
+                        : "bg-white/5 text-white hover:bg-white/10"
                     }`}
                   >
                     Give once
@@ -650,13 +650,13 @@ export default function Donate() {
                   <button
                     type="button"
                     onClick={() => setFrequency("monthly")}
-                    className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    className={`px-8 py-3 font-semibold transition-all flex items-center justify-center gap-2 ${
                       frequency === "monthly"
-                        ? "bg-white text-black"
-                        : "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                        ? "bg-white text-black border-2 border-blue-500"
+                        : "bg-white/5 text-white hover:bg-white/10"
                     }`}
                   >
-                    <span className="text-red-500">♥</span> Monthly
+                    <span className={frequency === "monthly" ? "text-red-500" : ""}>♥</span> Monthly
                   </button>
                 </div>
               </div>
