@@ -632,28 +632,8 @@ export default function Donate() {
                   <h2 className="text-xl font-semibold">Secure Donation</h2>
                 </div>
 
-                <form onSubmit={handleDonate} className="space-y-6">
-              {/* Preset Amounts */}
-              <div>
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  {[140, 70, 40].map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => setAmount(amt.toString())}
-                      className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
-                        amount === amt.toString()
-                          ? "bg-white text-black border-white"
-                          : "bg-white/10 text-white border-white/20 hover:bg-white/15 hover:border-white/30"
-                      }`}
-                    >
-                      ${amt}
-                    </button>
-                  ))}
-                </div>
-                
                 {/* Frequency Toggle - Centered */}
-                <div className="flex justify-center my-4">
+                <div className="flex justify-center mb-6">
                   <div className="inline-flex rounded-full overflow-hidden bg-white/10 p-1">
                     <button
                       type="button"
@@ -679,7 +659,26 @@ export default function Donate() {
                     </button>
                   </div>
                 </div>
-                
+
+                <form onSubmit={handleDonate} className="space-y-6">
+              {/* Preset Amounts */}
+              <div>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  {[140, 70, 40].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setAmount(amt.toString())}
+                      className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
+                        amount === amt.toString()
+                          ? "bg-white text-black border-white"
+                          : "bg-white/10 text-white border-white/20 hover:bg-white/15 hover:border-white/30"
+                      }`}
+                    >
+                      ${amt}
+                    </button>
+                  ))}
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[25, 15, 8].map((amt) => (
                     <button
