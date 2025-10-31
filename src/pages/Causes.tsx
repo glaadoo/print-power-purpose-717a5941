@@ -71,6 +71,7 @@ export default function Causes() {
 
   const handleCauseClick = (c: Cause) => {
     const description = pickBlurb(c) || "";
+    console.log("Cause selected:", c.name, "ID:", c.id, "Flow:", flow);
     setSelectedCause(c);
     // Persist for refresh/other pages
     try {
@@ -89,13 +90,18 @@ export default function Causes() {
   };
 
   const handleContinue = () => {
+    console.log("Continue clicked. Flow:", flow, "Selected cause:", selectedCause?.name);
     if (selectedCause) {
       // If coming from donation flow, go to donation form; otherwise go to products
       if (flow === "donation") {
+        console.log("Navigating to donation form with cause:", selectedCause.id);
         nav(`/donate?cause=${selectedCause.id}`);
       } else {
+        console.log("Navigating to products page");
         nav("/products");
       }
+    } else {
+      console.log("No cause selected!");
     }
   };
 
