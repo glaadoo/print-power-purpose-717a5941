@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import DonationBarometer from "../components/DonationBarometer";
 import { useCause } from "../context/CauseContext";
 import { supabase } from "@/lib/supabase";
@@ -38,6 +38,8 @@ function pickBlurb(c: Cause): string | undefined {
 export default function Causes() {
   const nav = useNavigate();
   const { setCause } = useCause();
+  const [searchParams] = useSearchParams();
+  const flow = searchParams.get("flow");
 
   const [causes, setCauses] = useState<Cause[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,12 @@ export default function Causes() {
 
   const handleContinue = () => {
     if (selectedCause) {
-      nav("/products");
+      // If coming from donation flow, go to donation form; otherwise go to products
+      if (flow === "donation") {
+        nav(`/donate?cause=${selectedCause.id}`);
+      } else {
+        nav("/products");
+      }
     }
   };
 
