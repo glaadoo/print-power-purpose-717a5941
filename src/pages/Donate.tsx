@@ -669,9 +669,9 @@ export default function Donate() {
                       key={amt}
                       type="button"
                       onClick={() => setAmount(amt.toString())}
-                      className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
+                      className={`px-6 py-3 rounded-full border-2 font-semibold transition-all transform hover:scale-105 ${
                         amount === amt.toString()
-                          ? "bg-white text-black border-white"
+                          ? "bg-white text-black border-white shadow-lg"
                           : "bg-white/10 text-white border-white/20 hover:bg-white/15 hover:border-white/30"
                       }`}
                     >
@@ -685,9 +685,9 @@ export default function Donate() {
                       key={amt}
                       type="button"
                       onClick={() => setAmount(amt.toString())}
-                      className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
+                      className={`px-6 py-3 rounded-full border-2 font-semibold transition-all transform hover:scale-105 ${
                         amount === amt.toString()
-                          ? "bg-white text-black border-white"
+                          ? "bg-white text-black border-white shadow-lg"
                           : "bg-white/10 text-white border-white/20 hover:bg-white/15 hover:border-white/30"
                       }`}
                     >
@@ -703,7 +703,7 @@ export default function Donate() {
                   Or enter custom amount
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 text-lg">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/70 text-lg">
                     $
                   </span>
                   <Input
@@ -715,9 +715,9 @@ export default function Donate() {
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="15"
                     required
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 pl-8 pr-16 h-12 text-lg"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 pl-10 pr-16 h-12 text-lg rounded-full transition-all focus:border-white/40 focus:bg-white/15"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 text-sm">
+                  <span className="absolute right-6 top-1/2 -translate-y-1/2 text-white/50 text-sm">
                     USD
                   </span>
                 </div>
@@ -735,7 +735,7 @@ export default function Donate() {
                   onChange={(e) => setDonorEmail(e.target.value)}
                   placeholder="donor@example.com"
                   required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12 rounded-full px-6 transition-all focus:border-white/40 focus:bg-white/15"
                 />
               </div>
 
