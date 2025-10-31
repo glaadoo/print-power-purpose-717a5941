@@ -322,14 +322,22 @@ export default function Donate() {
                 </div>
 
                 <div className="space-y-3 border border-white/20 rounded-lg overflow-hidden">
-                  <button className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left border-b border-white/10">
+                  <button 
+                    onClick={processDonation}
+                    disabled={processing}
+                    className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left border-b border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                     </svg>
                     <span>Apple Pay</span>
                   </button>
 
-                  <button className="w-full p-4 bg-blue-500/20 border-2 border-blue-500 hover:bg-blue-500/30 transition-colors flex items-center gap-3 text-left">
+                  <button 
+                    onClick={processDonation}
+                    disabled={processing}
+                    className="w-full p-4 bg-blue-500/20 border-2 border-blue-500 hover:bg-blue-500/30 transition-colors flex items-center gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth={2} />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 10h20" />
@@ -337,49 +345,28 @@ export default function Donate() {
                     <span>Credit card</span>
                   </button>
 
-                  <button className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left border-b border-white/10">
+                  <button 
+                    onClick={processDonation}
+                    disabled={processing}
+                    className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left border-b border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <svg className="w-6 h-6" fill="#00457C" viewBox="0 0 24 24">
                       <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.116c-.317-.033-.65-.05-1.005-.05h-2.134l-1.476 9.36c-.05.316.183.597.5.597h2.146c.365 0 .673-.267.729-.629.661-4.18.976-6.196.976-6.196.119-.757.327-1.557.605-2.404.149-.454.31-.866.484-1.235.145-.306.306-.58.487-.81z"/>
                     </svg>
                     <span>PayPal</span>
                   </button>
 
-                  <button className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left">
+                  <button 
+                    onClick={processDonation}
+                    disabled={processing}
+                    className="w-full p-4 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                     </svg>
                     <span>Bank transfer</span>
                   </button>
                 </div>
-
-                <div className="space-y-3">
-                  <Input
-                    type="text"
-                    placeholder="Card number"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
-                  />
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      type="text"
-                      placeholder="Expiration"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
-                    />
-                    <Input
-                      type="text"
-                      placeholder="CVC"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  onClick={processDonation}
-                  disabled={processing}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 text-lg rounded-lg transition-all"
-                >
-                  {processing ? "Processing..." : "Donate"}
-                </Button>
 
                 <div className="border-t border-white/10 pt-4 space-y-2 text-sm text-white/70">
                   <a href="#" className="block underline hover:no-underline">
