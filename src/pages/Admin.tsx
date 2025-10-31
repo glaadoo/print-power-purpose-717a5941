@@ -709,15 +709,15 @@ export default function Admin() {
                         <CardTitle className="text-white">Top Causes by Donations</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
+                        <ResponsiveContainer width="100%" height={350}>
                           <PieChart>
                             <Pie
                               data={donationsByCause}
                               cx="50%"
-                              cy="50%"
-                              labelLine={false}
+                              cy="45%"
+                              labelLine={true}
                               label={(entry) => `${entry.name}: $${entry.raised.toFixed(2)}`}
-                              outerRadius={80}
+                              outerRadius={90}
                               fill="#8884d8"
                               dataKey="raised"
                             >
