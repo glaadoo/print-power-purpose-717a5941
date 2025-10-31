@@ -155,7 +155,10 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                     ) : (
                       <Link
                         to={it.href}
-                        onClick={onClose}
+                        onClick={(e) => {
+                          console.log(`Navigating to: ${it.href}`);
+                          onClose();
+                        }}
                         className="
                           inline-block ml-auto
                           text-white/90 hover:text-white
