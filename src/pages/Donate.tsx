@@ -65,8 +65,9 @@ export default function Donate() {
   }, []);
 
   useEffect(() => {
+    // If no cause is selected, just finish loading - we'll show cause selection UI
     if (!causeId) {
-      nav("/causes");
+      setLoading(false);
       return;
     }
 
@@ -96,7 +97,7 @@ export default function Donate() {
       } catch (e: any) {
         console.error("Failed to load cause:", e);
         toast.error("Failed to load cause");
-        nav("/causes");
+        // Don't redirect on error - let user try again
       } finally {
         if (alive) setLoading(false);
       }
@@ -105,7 +106,7 @@ export default function Donate() {
     return () => {
       alive = false;
     };
-  }, [causeId, nav]);
+  }, [causeId]);
 
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +222,53 @@ export default function Donate() {
   }
 
   if (!cause) {
-    return null;
+    return (
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col">
+        {/* Header */}
+        <header className="px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/30 border-b border-white/10 shrink-0">
+          <button
+            onClick={() => nav("/")}
+            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="hidden sm:inline">Back</span>
+          </button>
+          
+          <div className="text-sm md:text-base font-semibold uppercase tracking-[0.2em]">
+            SELECT A CAUSE
+          </div>
+          
+          <div className="w-20" /> {/* Spacer for centering */}
+        </header>
+
+        {/* Main content */}
+        <div className="flex-1 overflow-hidden relative">
+          <VideoBackground
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            overlay={<div className="absolute inset-0 bg-black/60" />}
+          />
+          
+          <div className="relative w-full h-full flex items-center justify-center p-6">
+            <div className="max-w-2xl w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 text-white">
+              <h1 className="text-3xl font-bold mb-4">Make a Donation</h1>
+              <p className="text-white/80 mb-8">
+                To make a donation, please first select a cause you'd like to support.
+              </p>
+              <Button
+                onClick={() => nav("/causes")}
+                className="w-full bg-white text-black hover:bg-white/90 font-semibold py-6 text-lg rounded-2xl"
+              >
+                Browse Causes
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
