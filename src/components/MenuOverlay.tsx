@@ -45,7 +45,7 @@ export default function MenuOverlay({ open, onClose, showSignOut = false }: Prop
     { label: "Insights", href: "/insights" },
     { label: "News", href: "/news" },
     { label: "Contact", href: "/contact" },
-    { label: "Donate", href: "/donate" },
+    { label: "Donate", href: "/causes" },
   ];
 
   return (
