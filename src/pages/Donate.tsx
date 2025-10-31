@@ -743,7 +743,7 @@ export default function Donate() {
               <Button
                 type="submit"
                 disabled={processing}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 text-lg rounded-lg transition-all"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 text-lg rounded-full transition-all transform hover:scale-105 shadow-lg"
               >
                 {processing ? "Processing..." : "Donate"}
               </Button>
