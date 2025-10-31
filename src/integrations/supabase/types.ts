@@ -403,30 +403,36 @@ export type Database = {
           contact_email: string
           created_at: string
           id: string
+          milestone_amount: number | null
           notes: string | null
           reached_at: string
           status: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           cause_id: string
           contact_email: string
           created_at?: string
           id?: string
+          milestone_amount?: number | null
           notes?: string | null
           reached_at?: string
           status?: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           cause_id?: string
           contact_email?: string
           created_at?: string
           id?: string
+          milestone_amount?: number | null
           notes?: string | null
           reached_at?: string
           status?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {
