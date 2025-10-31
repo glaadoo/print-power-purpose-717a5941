@@ -35,6 +35,10 @@ export default function Donate() {
   const [frequency, setFrequency] = useState<"once" | "monthly">("once");
   const [recentDonations, setRecentDonations] = useState<RecentDonation[]>([]);
   const [showMonthlyUpsell, setShowMonthlyUpsell] = useState(false);
+  const [showDonorDetails, setShowDonorDetails] = useState(false);
+  const [donorFirstName, setDonorFirstName] = useState("");
+  const [donorLastName, setDonorLastName] = useState("");
+  const [donorPhone, setDonorPhone] = useState("");
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
@@ -243,9 +247,88 @@ export default function Donate() {
             </div>
           </div>
 
-          {/* Right Column - Donation Form or Monthly Upsell */}
+          {/* Right Column - Donation Form, Monthly Upsell, or Donor Details */}
           <div className="bg-white/10 backdrop-blur-md text-white flex flex-col p-6 md:p-8">
-            {showMonthlyUpsell ? (
+            {showDonorDetails ? (
+              <div className="space-y-6">
+                <button
+                  onClick={() => {
+                    setShowDonorDetails(false);
+                    setShowMonthlyUpsell(true);
+                  }}
+                  className="flex items-center gap-2 text-sm hover:underline text-white/90"
+                >
+                  ← Back
+                </button>
+
+                <h2 className="text-2xl font-bold text-white">Enter your details</h2>
+
+                <form onSubmit={(e) => { e.preventDefault(); processDonation(); }} className="space-y-4">
+                  <div>
+                    <Input
+                      type="text"
+                      value={donorFirstName}
+                      onChange={(e) => setDonorFirstName(e.target.value)}
+                      placeholder="First name"
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+
+                  <div>
+                    <Input
+                      type="text"
+                      value={donorLastName}
+                      onChange={(e) => setDonorLastName(e.target.value)}
+                      placeholder="Last name"
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+
+                  <div>
+                    <Input
+                      type="email"
+                      value={donorEmail}
+                      onChange={(e) => setDonorEmail(e.target.value)}
+                      placeholder="Email address"
+                      required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+
+                  <div>
+                    <Input
+                      type="tel"
+                      value={donorPhone}
+                      onChange={(e) => setDonorPhone(e.target.value)}
+                      placeholder="Phone number (optional)"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={processing}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-6 text-lg rounded-lg transition-all"
+                  >
+                    {processing ? "Processing..." : "Continue"}
+                  </Button>
+
+                  <div className="border-t border-white/10 pt-4 space-y-2 text-sm text-white/70">
+                    <a href="#" className="block underline hover:no-underline">
+                      Is my donation secure?
+                    </a>
+                    <a href="#" className="block underline hover:no-underline">
+                      Is this donation tax-deductible?
+                    </a>
+                    <a href="#" className="block underline hover:no-underline">
+                      Can I cancel my recurring donation?
+                    </a>
+                  </div>
+                </form>
+              </div>
+            ) : showMonthlyUpsell ? (
               <div className="space-y-6">
                 <button
                   onClick={() => setShowMonthlyUpsell(false)}
@@ -265,7 +348,8 @@ export default function Donate() {
                   <Button
                     onClick={() => {
                       setFrequency("monthly");
-                      processDonation();
+                      setShowDonorDetails(true);
+                      setShowMonthlyUpsell(false);
                     }}
                     disabled={processing}
                     className="w-full h-14 text-lg bg-red-500 hover:bg-red-600 text-white"
@@ -275,7 +359,8 @@ export default function Donate() {
                   <Button
                     onClick={() => {
                       setFrequency("monthly");
-                      processDonation();
+                      setShowDonorDetails(true);
+                      setShowMonthlyUpsell(false);
                     }}
                     disabled={processing}
                     className="w-full h-14 text-lg bg-blue-500 hover:bg-blue-600 text-white"
