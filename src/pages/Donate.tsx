@@ -145,22 +145,16 @@ export default function Donate() {
   }
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col">
       {/* Header */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/30 border-b border-white/10">
-        <button
-          onClick={() => nav("/causes")}
-          className="text-sm font-medium hover:opacity-80 transition-opacity"
-        >
-          ← Back to Causes
-        </button>
-        <div className="text-sm font-semibold uppercase tracking-wider">
-          Secure Donation
+      <header className="px-4 md:px-6 py-4 flex items-center justify-center text-white backdrop-blur-md bg-black/30 border-b border-white/10 shrink-0">
+        <div className="text-sm md:text-base font-semibold uppercase tracking-[0.2em]">
+          DONATIONS
         </div>
       </header>
 
       {/* Main content */}
-      <div className="h-full w-full pt-16 overflow-y-auto">
+      <div className="flex-1 overflow-hidden relative">
         <VideoBackground
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
@@ -168,12 +162,11 @@ export default function Donate() {
           overlay={<div className="absolute inset-0 bg-black/60" />}
         />
 
-        <div className="relative w-full h-full flex items-stretch justify-center py-8 px-4">
-          <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 lg:gap-8 h-full">
-            {/* Left Column - Cause Info (Scrollable) */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 text-white flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto pr-2 space-y-6">
-                <div>
+        <div className="relative w-full h-full grid lg:grid-cols-2">
+          {/* Left Column - Cause Info (Scrollable) */}
+          <div className="bg-white/10 backdrop-blur-md border-r border-white/20 text-white flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+              <div>
                   <h1 className="text-3xl md:text-4xl font-bold mb-6 text-white">
                     {cause.name}
                   </h1>
@@ -222,7 +215,7 @@ export default function Donate() {
                                 {displayName.charAt(0)}
                               </div>
                               <span className="text-white/90 font-medium">{displayName}</span>
-                            </div>
+              </div>
                             <span className="text-white font-semibold">{amount}</span>
                           </div>
                         );
@@ -234,9 +227,10 @@ export default function Donate() {
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Right Column - Donation Form */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-8 text-white flex flex-col">
+          {/* Right Column - Donation Form */}
+          <div className="bg-white/10 backdrop-blur-md text-white flex flex-col p-6 md:p-8">
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
                   <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
