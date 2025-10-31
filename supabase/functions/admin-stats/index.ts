@@ -56,11 +56,20 @@ serve(async (req) => {
     const donations = donationsRes.data || [];
     const causes = causesRes.data || [];
 
+    // Filter only completed/paid orders (exclude pending orders with $0)
+    const completedOrders = orders.filter(o => 
+      o.status === 'completed' && (o.amount_total_cents || 0) > 0
+    );
+
+    // Calculate total donations from both direct donations and checkout donations
+    const directDonations = donations.reduce((sum, d) => sum + (d.amount_cents || 0), 0);
+    const checkoutDonations = completedOrders.reduce((sum, o) => sum + (o.donation_cents || 0), 0);
+
     // Calculate statistics
     const stats = {
-      totalRevenue: orders.reduce((sum, o) => sum + (o.amount_total_cents || 0), 0),
-      totalDonations: donations.reduce((sum, d) => sum + (d.amount_cents || 0), 0),
-      totalOrders: orders.length,
+      totalRevenue: completedOrders.reduce((sum, o) => sum + (o.amount_total_cents || 0), 0),
+      totalDonations: directDonations + checkoutDonations,
+      totalOrders: completedOrders.length,
       totalDonationsCount: donations.length,
       activeCauses: causes.filter(c => (c.raised_cents || 0) > 0).length,
       orders: orders,
