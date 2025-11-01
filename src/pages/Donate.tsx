@@ -178,7 +178,7 @@ export default function Donate() {
             unitAmountCents: Math.round(finalAmount * 100),
             quantity: 1,
             causeId: cause.id,
-            donationUsd: 0,
+            donationUsd: finalAmount, // This is a pure donation, so donation = full amount
             currency: "usd",
             successPath: `/?payment=success&cause=${cause.id}`,
             cancelPath: `/donate?cause=${cause.id}&payment=cancelled`,
