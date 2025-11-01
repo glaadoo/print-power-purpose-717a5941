@@ -37,10 +37,15 @@ export default function Home() {
     const payment = searchParams.get("payment");
     if (payment === "success") {
       toast.success("Thank you for your donation! Your payment was successful.");
-      // Clean up URL
-      nav("/", { replace: true });
+      
+      // Clean up URL by removing payment params but keep on home page
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("payment");
+      newUrl.searchParams.delete("cause");
+      newUrl.searchParams.delete("session_id");
+      window.history.replaceState({}, "", newUrl.pathname);
     }
-  }, [searchParams, nav]);
+  }, [searchParams]);
 
   // Fetch real stats from database
   useEffect(() => {
