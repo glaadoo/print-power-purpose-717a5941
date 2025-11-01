@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 
 import GlassCard from "../components/GlassCard";
 import VideoBackground from "@/components/VideoBackground";
@@ -10,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function Home() {
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
   const menu = useToggle(false);
 
   // Real stats from database
@@ -29,6 +31,16 @@ export default function Home() {
   useEffect(() => {
     document.title = "Home - Print Power Purpose";
   }, []);
+
+  // Handle payment success from donation page
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    if (payment === "success") {
+      toast.success("Thank you for your donation! Your payment was successful.");
+      // Clean up URL
+      nav("/", { replace: true });
+    }
+  }, [searchParams, nav]);
 
   // Fetch real stats from database
   useEffect(() => {
