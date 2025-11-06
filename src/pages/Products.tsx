@@ -6,7 +6,7 @@ import { useCart } from "@/context/CartContext";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Plus, Minus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 type ProductRow = {
@@ -143,16 +143,29 @@ export default function Products() {
   return (
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <h1 className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10 relative">
+        {/* Left: Back button */}
+        <Button
+          onClick={() => navigate(-1)}
+          variant="outline"
+          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          size="sm"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+
+        {/* Center: Title */}
+        <h1 className="absolute left-1/2 -translate-x-1/2 tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
           SELECT PRODUCTS
         </h1>
 
+        {/* Right: Cart button */}
         <Button
           variant="outline"
           size="sm"
           onClick={() => navigate("/cart")}
-          className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative absolute right-4 flex items-center gap-2 pr-4"
+          className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative flex items-center gap-2 pr-4"
         >
           <div className="relative">
             <ShoppingCart className="w-4 h-4" />
