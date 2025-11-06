@@ -172,7 +172,7 @@ export default function Contact() {
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1"
+                      className="flex-1 bg-white text-gray-900 hover:bg-white/90 font-semibold"
                     >
                       Send Message
                     </Button>
