@@ -31,6 +31,7 @@ type ContactFormData = z.infer<typeof contactSchema>;
 export default function Contact() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -44,6 +45,7 @@ export default function Contact() {
 
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
+    setIsSuccess(false);
     try {
       // Store contact inquiry in database
       const { error } = await supabase.from("contact_inquiries").insert({
@@ -55,6 +57,7 @@ export default function Contact() {
 
       if (error) throw error;
 
+      setIsSuccess(true);
       toast.success("Thank you! We'll get back to you soon.");
       form.reset();
     } catch (error) {
@@ -82,6 +85,14 @@ export default function Contact() {
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  {isSuccess && (
+                    <div className="rounded-lg border border-green-500/50 bg-green-500/10 p-4 text-white">
+                      <p className="font-semibold">✓ Message sent successfully!</p>
+                      <p className="text-sm text-white/80 mt-1">
+                        We'll get back to you as soon as possible.
+                      </p>
+                    </div>
+                  )}
                   <FormField
                     control={form.control}
                     name="name"
@@ -163,7 +174,7 @@ export default function Contact() {
                       disabled={isSubmitting}
                       className="flex-1"
                     >
-                      {isSubmitting ? "Sending..." : "Send Message"}
+                      Send Message
                     </Button>
                     <Button
                       type="button"
