@@ -72,14 +72,6 @@ export default function Contact() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-4xl">
-        <Button
-          onClick={() => navigate(-1)}
-          variant="outline"
-          className="mb-4 bg-white/10 border-white/20 text-white hover:bg-white/20"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
         <GlassCard className="backdrop-blur-md bg-white/5">
           <div className="grid md:grid-cols-2 gap-8">
             {/* Left: Contact Form */}
