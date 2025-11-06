@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import VideoBackground from "@/components/VideoBackground";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 type ProductRow = {
   id: string;
@@ -72,8 +74,17 @@ export default function ProductDetail() {
   return (
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <div className="flex-1"></div>
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10 relative">
+        {/* Left: Back button */}
+        <Button
+          onClick={() => nav(-1)}
+          variant="outline"
+          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          size="sm"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
         
         {/* Center: Brand */}
         <div className="absolute left-1/2 -translate-x-1/2">
