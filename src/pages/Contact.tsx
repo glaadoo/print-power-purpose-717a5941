@@ -18,6 +18,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import GlassCard from "@/components/GlassCard";
 import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft } from "lucide-react";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -71,6 +72,14 @@ export default function Contact() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-4xl">
+        <Button
+          onClick={() => navigate(-1)}
+          variant="ghost"
+          className="mb-4 text-white hover:bg-white/10"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
         <GlassCard className="backdrop-blur-md bg-white/5">
           <div className="grid md:grid-cols-2 gap-8">
             {/* Left: Contact Form */}
