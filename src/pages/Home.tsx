@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
 
 import GlassCard from "../components/GlassCard";
 import VideoBackground from "@/components/VideoBackground";
@@ -9,7 +8,6 @@ import MenuOverlay from "@/components/MenuOverlay";
 import ScrollDots from "@/components/ScrollDots";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const nav = useNavigate();
@@ -234,19 +232,6 @@ export default function Home() {
             parallaxVh={14}
             overlay={<div className="absolute inset-0 bg-black/35" />}
           />
-
-          {/* Back button in top-left */}
-          <div className="absolute top-20 left-6 z-10">
-            <Button
-              onClick={() => nav(-1)}
-              variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              size="sm"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-          </div>
 
           <div className="px-6 text-center w-full">
             {/* Hero quote + CTA */}
