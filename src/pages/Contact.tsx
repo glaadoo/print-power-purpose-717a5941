@@ -74,8 +74,8 @@ export default function Contact() {
       <div className="w-full max-w-4xl">
         <Button
           onClick={() => navigate(-1)}
-          variant="ghost"
-          className="mb-4 text-white hover:bg-white/10"
+          variant="outline"
+          className="mb-4 bg-white/10 border-white/20 text-white hover:bg-white/20"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
