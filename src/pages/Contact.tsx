@@ -76,6 +76,15 @@ export default function Contact() {
           <div className="grid md:grid-cols-2 gap-8">
             {/* Left: Contact Form */}
             <div>
+              <Button
+                onClick={() => navigate(-1)}
+                variant="outline"
+                className="mb-4 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                size="sm"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                 Contact Us
               </h1>
