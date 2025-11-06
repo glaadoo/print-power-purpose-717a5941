@@ -19,8 +19,19 @@ export default function ScrollDots({ sections }: { sections: string[] }) {
     return () => observers.forEach((o) => o.disconnect());
   }, [sections]);
 
-  const scrollTo = (id: string) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollTo = (id: string) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    
+    const headerOffset = 80; // Fixed header height + padding
+    const elementPosition = element.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: "smooth"
+    });
+  };
 
   return (
     <div

@@ -141,7 +141,21 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                     {it.href.startsWith('#') ? (
                       <a
                         href={it.href}
-                        onClick={onClose}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const id = it.href.substring(1);
+                          const element = document.getElementById(id);
+                          if (element) {
+                            const headerOffset = 80;
+                            const elementPosition = element.getBoundingClientRect().top;
+                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                            window.scrollTo({
+                              top: offsetPosition,
+                              behavior: "smooth"
+                            });
+                          }
+                          onClose();
+                        }}
                         className="
                           inline-block ml-auto
                           text-white/90 hover:text-white
