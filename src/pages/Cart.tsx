@@ -95,6 +95,8 @@ export default function Cart() {
                           src={it.imageUrl}
                           alt={it.name}
                           className="w-16 h-16 object-cover rounded-lg"
+                          loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div className="w-16 h-16 rounded-lg bg-white/20 grid place-items-center text-xs">

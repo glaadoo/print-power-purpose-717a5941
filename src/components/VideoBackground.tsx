@@ -40,11 +40,12 @@ export default function VideoBackground({
         style={{ y }}
         className="w-full h-full object-cover"
         poster={poster}
-        preload="metadata"
+        preload="none"
         autoPlay
         muted
         loop
         playsInline
+        loading="lazy"
       >
         {srcWebm && <source src={srcWebm} type="video/webm" />}
         <source src={srcMp4} type="video/mp4" />

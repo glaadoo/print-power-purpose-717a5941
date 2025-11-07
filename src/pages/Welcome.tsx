@@ -178,6 +178,8 @@ export default function Welcome() {
                           src="/IMG_4805.jpeg"
                           alt="Kenzie the mascot"
                           className="w-full h-full object-cover rounded-full shadow-lg"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     )}

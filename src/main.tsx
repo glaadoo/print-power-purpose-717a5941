@@ -11,7 +11,7 @@ import { ToastProvider } from "./ui/Toast";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    {/* Background image layer (fixed, behind everything) */}
+    {/* Background image layer (fixed, behind everything) - lazy loaded */}
     <div
       aria-hidden
       style={{
@@ -23,6 +23,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         backgroundSize: "cover",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
+        willChange: "transform",
       }}
     />
 
