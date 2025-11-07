@@ -97,8 +97,29 @@ export default function Donate() {
       }
     })();
 
+    // Set up real-time subscription for this specific cause
+    const causeChannel = supabase
+      .channel(`cause-${causeId}-updates`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'causes',
+          filter: `id=eq.${causeId}`
+        },
+        (payload) => {
+          console.log('Cause updated in real-time:', payload);
+          if (payload.new && alive) {
+            setCause(payload.new as Cause);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       alive = false;
+      supabase.removeChannel(causeChannel);
     };
   }, [causeId]);
 
