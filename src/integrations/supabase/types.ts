@@ -498,6 +498,39 @@ export type Database = {
           },
         ]
       }
+      system_logs: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          level: string
+          message: string
+          metadata: Json | null
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          level: string
+          message: string
+          metadata?: Json | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          level?: string
+          message?: string
+          metadata?: Json | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -526,6 +559,7 @@ export type Database = {
     Functions: {
       check_error_log_rate_limit: { Args: never; Returns: boolean }
       cleanup_expired_admin_sessions: { Args: never; Returns: undefined }
+      cleanup_old_system_logs: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

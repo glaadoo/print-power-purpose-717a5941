@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import {
   Trash2, KeyRound, RefreshCw, Download, Search,
   AlertCircle, CheckCircle, X, ArrowLeft, Check,
-  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut
+  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import VideoBackground from "@/components/VideoBackground";
@@ -554,6 +554,19 @@ export default function Admin() {
       {/* Main Content */}
       <div className="relative flex-1 overflow-y-auto pt-16">
         <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-bold text-white">Dashboard Overview</h2>
+              <p className="text-white/70">Manage your Print Power Purpose platform</p>
+            </div>
+            <Link to="/system-logs">
+              <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                <Activity className="h-4 w-4" />
+                View System Logs
+              </Button>
+            </Link>
+          </div>
+
           {/* Analytics Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <GlassCard className="bg-white/5 border-white/20">

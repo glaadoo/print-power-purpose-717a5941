@@ -73,6 +73,7 @@ const Admin           = lazyPage("Admin",           () => import("./pages/Admin"
 const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
 const JotFormPayment = lazyPage("JotFormPayment", () => import("./pages/JotFormPayment"));
 const Contact         = lazyPage("Contact",         () => import("./pages/Contact"));
+const SystemLogs      = lazyPage("SystemLogs",      () => import("./pages/SystemLogs"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -346,6 +347,16 @@ export default function App() {
             element={
               <RouteBoundary name="JotFormPayment">
                 <JotFormPayment />
+              </RouteBoundary>
+            }
+          />
+
+          {/* System Logs */}
+          <Route
+            path="/system-logs"
+            element={
+              <RouteBoundary name="SystemLogs">
+                <SystemLogs />
               </RouteBoundary>
             }
           />
