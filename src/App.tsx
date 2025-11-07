@@ -3,6 +3,7 @@ import React, { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import KenzieChat from "@/components/KenzieChat";
+import ScrollToTop from "@/components/ScrollToTop";
 
 
 /** Per-route error boundary so crashes inside a page don't blank the whole app */
@@ -159,6 +160,8 @@ export default function App() {
 
   return (
     <>
+      <ScrollToTop />
+      
       {/* Debug: Visible page path indicator */}
       <div
         style={{
