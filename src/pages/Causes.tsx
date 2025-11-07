@@ -4,6 +4,8 @@ import DonationBarometer from "../components/DonationBarometer";
 import { useCause } from "../context/CauseContext";
 import { supabase } from "@/lib/supabase";
 import VideoBackground from "@/components/VideoBackground";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const LS_CAUSE = "ppp:cause";
 
@@ -199,10 +201,22 @@ export default function Causes() {
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <div className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10 relative">
+        <Button
+          onClick={() => nav(-1)}
+          variant="outline"
+          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          size="sm"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        <div className="absolute left-1/2 -translate-x-1/2 tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
           SELECT&nbsp;CAUSE
         </div>
+        
+        <div className="w-20" /> {/* Spacer for centering */}
       </header>
 
       {/* Fullscreen content */}
