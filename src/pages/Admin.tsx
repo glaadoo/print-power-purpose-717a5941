@@ -18,6 +18,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import VideoUpload from "@/components/VideoUpload";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -666,6 +667,12 @@ export default function Admin() {
                 >
                   Sync
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="videos" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Videos
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -1194,6 +1201,13 @@ export default function Admin() {
                     )}
                   </div>
                 </div>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="videos">
+              <GlassCard className="bg-white/5 border-white/20">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-6">Video Management</h2>
+                <VideoUpload />
               </GlassCard>
             </TabsContent>
           </Tabs>

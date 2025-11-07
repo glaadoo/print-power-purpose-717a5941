@@ -75,7 +75,8 @@ serve(async (req) => {
     
     for (const story of completedStories) {
       try {
-        console.log(`Processing story ${story.id} for cause: ${story.causes?.name}`);
+        const causeName = (story.causes as any)?.name || 'Unknown Cause';
+        console.log(`Processing story ${story.id} for cause: ${causeName}`);
 
         // Here you can add integrations:
         // 1. Post to social media (Twitter, Facebook, Instagram)
@@ -104,16 +105,17 @@ serve(async (req) => {
           results.push({
             story_id: story.id,
             success: true,
-            cause_name: story.causes?.name,
+            cause_name: causeName,
             milestone: story.milestone_amount / 100
           });
         }
       } catch (error) {
         console.error(`Error processing story ${story.id}:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         results.push({
           story_id: story.id,
           success: false,
-          error: error.message
+          error: errorMessage
         });
       }
     }
@@ -133,9 +135,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("❌ Error in weekly story post:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: errorMessage,
         success: false 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
