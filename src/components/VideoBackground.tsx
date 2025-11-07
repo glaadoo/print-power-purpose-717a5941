@@ -45,7 +45,6 @@ export default function VideoBackground({
         muted
         loop
         playsInline
-        loading="lazy"
       >
         {srcWebm && <source src={srcWebm} type="video/webm" />}
         <source src={srcMp4} type="video/mp4" />

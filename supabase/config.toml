@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.admin-stats]
 verify_jwt = false
+
+[functions.weekly-story-post]
+verify_jwt = false
