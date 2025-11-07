@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
 import { X, ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export default function Cart() {
   const { items, count, totalCents, setQty, remove, clear } = useCart();
@@ -33,12 +34,15 @@ export default function Cart() {
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <button 
-          className="rounded-full px-4 py-2 bg-white/10 text-white hover:bg-white/20 border border-white/50"
-          onClick={() => nav("/")}
+        <Button
+          onClick={() => nav(-1)}
+          variant="outline"
+          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          size="sm"
         >
-          ← Home
-        </button>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
         <h1 className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
           CART
         </h1>
