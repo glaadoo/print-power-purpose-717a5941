@@ -70,7 +70,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex justify-center p-6 pt-8">
       <div className="w-full max-w-4xl">
         <GlassCard className="backdrop-blur-md bg-white/5">
           <div className="grid md:grid-cols-2 gap-8">
