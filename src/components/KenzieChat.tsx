@@ -160,6 +160,21 @@ export default function KenzieChat() {
       content: text,
     });
 
+    // Quick path: instant greeting for short salutations
+    const lower = text.toLowerCase();
+    const isGreet = /^(hi|hello|hey|hiya|howdy|yo|sup|good (morning|afternoon|evening))\b/.test(lower);
+    if (isGreet) {
+      const quick = "Hi there! I'm Kenzie 🐾 — how can I help today? I can answer printing questions, track orders, recommend products, and guide donations.";
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: text },
+        { role: "assistant", content: quick },
+      ]);
+      await sb.from("kenzie_messages").insert({ session_id: sessionId, role: "assistant", content: quick });
+      setSending(false);
+      return;
+    }
+
     // 2) show locally (optimistic)
     setMessages((prev) => [...prev, { role: "user", content: text }, { role: "assistant", content: "" }]);
 
