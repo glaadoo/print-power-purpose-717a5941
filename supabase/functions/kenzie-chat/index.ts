@@ -36,7 +36,7 @@ serve(async (req) => {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('order_number, session_id, product_name, quantity, amount_total_cents, created_at, status, customer_email')
+        .select('order_number, session_id, product_name, quantity, amount_total_cents, donation_cents, created_at, status, customer_email')
         .ilike('customer_email', `%${emailLower}%`)
         .order('created_at', { ascending: false});
 
@@ -67,6 +67,7 @@ serve(async (req) => {
             product_name: 'Donation',
             quantity: 1,
             amount_total_cents: d.amount_cents,
+            donation_cents: 0,
             created_at: d.created_at,
             status: 'completed',
             customer_email: d.customer_email,
@@ -136,12 +137,12 @@ Rules:
 - Never start with a greeting once the conversation has begun. No "How can I help" loops.
 - Answer the latest user message directly in 1–3 short sentences.
 - If the request is vague (e.g., "donations"), give 2-3 concise facts and ask ONE targeted follow-up question.
-- For orders, immediately ask: "Please share your order number or the email used, and I’ll fetch the status."
-- If unsure, say so and provide support@printpowerpurpose.com.
+- For orders, immediately ask: "Please share your order number or the email used, and I'll fetch the status."
+- If you cannot understand or help with a request, respond with EXACTLY: "FALLBACK_GREETING"
 - Avoid listing capabilities or repeating your intro.
 
 Context guidance:
-- Donations: briefly explain how customers select a cause and that a portion of each order supports it; ask whether it’s for a school or nonprofit.
+- Donations: briefly explain how customers select a cause and that a portion of each order supports it; ask whether it's for a school or nonprofit. Each order includes an optional donation amount, defaulting to $0 if not provided.
 - Navigation: point users to the most direct next step (e.g., where to choose a cause or proceed to checkout).
 
 Tone: warm, professional, minimal dog puns ("fetch," "woof") used sparingly.`;

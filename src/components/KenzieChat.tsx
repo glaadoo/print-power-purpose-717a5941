@@ -399,6 +399,7 @@ export default function KenzieChat() {
               responseMsg += `• Order Number: ${order.order_number}\n`;
               responseMsg += `• Product: ${order.product_name || 'N/A'}\n`;
               responseMsg += `• Amount: $${(order.amount_total_cents / 100).toFixed(2)}\n`;
+              responseMsg += `• Donation: $${((order.donation_cents || 0) / 100).toFixed(2)}\n`;
               responseMsg += `• Date: ${new Date(order.created_at).toLocaleDateString()}\n`;
               responseMsg += `• Status: ${order.status}\n\n`;
             });
@@ -506,6 +507,26 @@ export default function KenzieChat() {
         role: "assistant",
         content: acc.trim() ? acc : "…",
       });
+
+      // Check if AI returned fallback greeting signal
+      if (acc.includes("FALLBACK_GREETING")) {
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: "Hi there! I'm Kenzie 🐾 — how can I help today?\nWhat should I help you with?",
+            buttons: [
+              { label: "Check products that we offer", action: "products" },
+              { label: "List of causes", action: "causes" },
+              { label: "What can you print for", action: "print_info" },
+              { label: "Check order details", action: "check_orders" },
+              { label: "Check order status", action: "order_status" }
+            ]
+          };
+          return updated;
+        });
+        setFlowState("initial");
+      }
     } catch (err) {
       setMessages((prev) => [
         ...prev.slice(0, -1),
