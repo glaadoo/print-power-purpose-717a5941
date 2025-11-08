@@ -9,7 +9,8 @@ declare global {
   }
 }
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; buttons?: { label: string; action: string }[] };
+type FlowState = "initial" | "awaiting_option" | "awaiting_email_orders" | "awaiting_email_status" | "showing_results";
 
 const STARTER: Msg = {
   role: "assistant",
@@ -50,7 +51,9 @@ export default function KenzieChat() {
   const [messages, setMessages] = useState<Msg[]>([STARTER]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [sb, setSb] = useState<SupabaseClient | null>(null); // scoped client with header
+  const [sb, setSb] = useState<SupabaseClient | null>(null);
+  const [flowState, setFlowState] = useState<FlowState>("initial");
+  const [userEmail, setUserEmail] = useState<string>("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Show paw intro on first open
@@ -143,6 +146,36 @@ export default function KenzieChat() {
     containerRef.current?.scrollTo({ top: 1e9, behavior: "smooth" });
   }, [messages, open]);
 
+  async function handleButtonClick(action: string) {
+    if (!sessionId || !sb) return;
+    
+    if (action === "check_orders") {
+      const msg = "Great! Please enter the registered email ID you used while placing the order.";
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: "Check your order details" },
+        { role: "assistant", content: msg },
+      ]);
+      await sb.from("kenzie_messages").insert([
+        { session_id: sessionId, role: "user", content: "Check your order details" },
+        { session_id: sessionId, role: "assistant", content: msg }
+      ]);
+      setFlowState("awaiting_email_orders");
+    } else if (action === "order_status") {
+      const msg = "Sure! Please enter the registered email ID you used while placing the order.";
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: "Order status" },
+        { role: "assistant", content: msg },
+      ]);
+      await sb.from("kenzie_messages").insert([
+        { session_id: sessionId, role: "user", content: "Order status" },
+        { session_id: sessionId, role: "assistant", content: msg }
+      ]);
+      setFlowState("awaiting_email_status");
+    }
+  }
+
   async function send(e?: React.FormEvent) {
     e?.preventDefault();
     if (!sessionId || !sb || sending) return;
@@ -164,13 +197,104 @@ export default function KenzieChat() {
     const lower = text.toLowerCase();
     const isGreet = /^(hi|hello|hey|hiya|howdy|yo|sup|good (morning|afternoon|evening))\b/.test(lower);
     if (isGreet) {
-      const quick = "Hi there! I'm Kenzie 🐾 — how can I help today? I can answer printing questions, track orders, recommend products, and guide donations.";
+      const quick = "Hi there! I'm Kenzie 🐾 — how can I help today?\n\nWhat should I help you with?";
       setMessages((prev) => [
         ...prev,
         { role: "user", content: text },
-        { role: "assistant", content: quick },
+        { 
+          role: "assistant", 
+          content: quick,
+          buttons: [
+            { label: "Check your order details", action: "check_orders" },
+            { label: "Order status", action: "order_status" }
+          ]
+        },
       ]);
       await sb.from("kenzie_messages").insert({ session_id: sessionId, role: "assistant", content: quick });
+      setSending(false);
+      setFlowState("awaiting_option");
+      return;
+    }
+
+    // Handle flow-based responses
+    if (flowState === "awaiting_email_orders" || flowState === "awaiting_email_status") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(text)) {
+        const errorMsg = "Please provide a valid email address.";
+        setMessages((prev) => [
+          ...prev,
+          { role: "user", content: text },
+          { role: "assistant", content: errorMsg },
+        ]);
+        await sb.from("kenzie_messages").insert({ session_id: sessionId, role: "assistant", content: errorMsg });
+        setSending(false);
+        return;
+      }
+
+      setUserEmail(text);
+      setMessages((prev) => [...prev, { role: "user", content: text }, { role: "assistant", content: "" }]);
+
+      try {
+        const { data: orders, error } = await sb
+          .from("orders")
+          .select("*")
+          .eq("customer_email", text)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (!orders || orders.length === 0) {
+          const noOrdersMsg = `I couldn't find any orders associated with ${text}. Please double-check the email address or contact support if you need assistance.`;
+          setMessages((prev) => {
+            const cp = [...prev];
+            cp[cp.length - 1] = { role: "assistant", content: noOrdersMsg };
+            return cp;
+          });
+          await sb.from("kenzie_messages").insert({ session_id: sessionId, role: "assistant", content: noOrdersMsg });
+          setFlowState("initial");
+        } else {
+          let responseMsg = "";
+          if (flowState === "awaiting_email_orders") {
+            responseMsg = `Found ${orders.length} order${orders.length > 1 ? 's' : ''} for ${text}:\n\n`;
+            orders.forEach((order, idx) => {
+              responseMsg += `**Order ${idx + 1}:**\n`;
+              responseMsg += `• Order Number: ${order.order_number}\n`;
+              responseMsg += `• Product: ${order.product_name || 'N/A'}\n`;
+              responseMsg += `• Amount: $${(order.amount_total_cents / 100).toFixed(2)}\n`;
+              responseMsg += `• Date: ${new Date(order.created_at).toLocaleDateString()}\n`;
+              responseMsg += `• Status: ${order.status}\n\n`;
+            });
+          } else {
+            responseMsg = `Order Status for ${text}:\n\n`;
+            orders.forEach((order, idx) => {
+              responseMsg += `**Order ${idx + 1}:**\n`;
+              responseMsg += `• Order Number: ${order.order_number}\n`;
+              responseMsg += `• Status: ${order.status}\n`;
+              responseMsg += `• Last Updated: ${new Date(order.created_at).toLocaleDateString()}\n\n`;
+            });
+          }
+          responseMsg += "Is there anything else I can help you with?";
+          
+          setMessages((prev) => {
+            const cp = [...prev];
+            cp[cp.length - 1] = { role: "assistant", content: responseMsg };
+            return cp;
+          });
+          await sb.from("kenzie_messages").insert({ session_id: sessionId, role: "assistant", content: responseMsg });
+          setFlowState("initial");
+        }
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        const errorMsg = "Sorry, I had trouble fetching your order information. Please try again.";
+        setMessages((prev) => {
+          const cp = [...prev];
+          cp[cp.length - 1] = { role: "assistant", content: errorMsg };
+          return cp;
+        });
+        await sb.from("kenzie_messages").insert({ session_id: sessionId, role: "assistant", content: errorMsg });
+        setFlowState("initial");
+      }
+      
       setSending(false);
       return;
     }
@@ -310,6 +434,20 @@ export default function KenzieChat() {
                   </div>
                 )}
               </div>
+              {m.buttons && m.buttons.length > 0 && (
+                <div className="mt-2 flex flex-col gap-2">
+                  {m.buttons.map((btn, btnIdx) => (
+                    <button
+                      key={btnIdx}
+                      onClick={() => handleButtonClick(btn.action)}
+                      disabled={sending}
+                      className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-left"
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
