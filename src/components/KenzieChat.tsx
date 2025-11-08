@@ -171,6 +171,50 @@ export default function KenzieChat() {
     setFlowState("initial");
   }
 
+  async function handleStartNewConversation() {
+    try {
+      // Generate new session ID
+      const newSid = crypto.randomUUID();
+      localStorage.setItem("ppp:kenzie:session_id", newSid);
+      
+      // Create new session in database
+      try {
+        const scopedForInsert = makeScopedClient(newSid);
+        await scopedForInsert
+          .from("kenzie_sessions")
+          .insert({ id: newSid })
+          .select("id")
+          .maybeSingle();
+        
+        // Update the scoped client
+        const newScoped = makeScopedClient(newSid);
+        setSb(newScoped);
+      } catch (dbErr) {
+        console.warn("Could not create new session in DB, using local ID only:", dbErr);
+        // Continue anyway - we have a local session ID
+        setSb(makeScopedClient(newSid));
+      }
+      
+      // Reset to initial state with greeting
+      setSessionId(newSid);
+      setMessages([STARTER]);
+      setConversationEnded(false);
+      setFlowState("initial");
+      setUserEmail("");
+      setInput("");
+    } catch (err) {
+      console.error("Error starting new conversation:", err);
+      // Fallback: just reset the UI
+      const fallbackSid = crypto.randomUUID();
+      localStorage.setItem("ppp:kenzie:session_id", fallbackSid);
+      setSessionId(fallbackSid);
+      setSb(makeScopedClient(fallbackSid));
+      setMessages([STARTER]);
+      setConversationEnded(false);
+      setFlowState("initial");
+    }
+  }
+
   async function handleButtonClick(action: string) {
     if (!sessionId || !sb) return;
     
@@ -478,44 +522,54 @@ export default function KenzieChat() {
         </div>
 
         <form onSubmit={send} className="p-3 border-t border-black/10 bg-white/70 flex flex-col gap-2">
-          <div className="flex gap-2">
-            <input
-              className="flex-1 rounded-xl border border-black/10 px-3 py-2 outline-none focus:ring-2 focus:ring-black/20 disabled:bg-black/5 disabled:cursor-not-allowed transition-all"
-              placeholder={conversationEnded ? "Conversation ended" : sending ? "Kenzie is responding..." : "Ask about products, donations, orders…"}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={sending || !sb || conversationEnded}
-              autoFocus
-            />
-            <button 
-              type="submit" 
-              disabled={sending || !sb || !input.trim() || conversationEnded} 
-              className={`rounded-xl px-4 py-2 text-white disabled:opacity-60 disabled:cursor-not-allowed transition-all transform active:scale-95 ${
-                sending ? 'bg-gray-500' : input.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black/60'
-              }`}
-            >
-              {sending ? (
-                <div className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span className="hidden sm:inline">Sending</span>
-                </div>
-              ) : (
-                <span>Send</span>
-              )}
-            </button>
-          </div>
-          {!conversationEnded && (
+          {conversationEnded ? (
             <button
               type="button"
-              onClick={handleEndConversation}
-              disabled={sending}
-              className="w-full rounded-xl px-4 py-2 text-sm text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              onClick={handleStartNewConversation}
+              className="w-full rounded-xl px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 transition-all transform active:scale-95 font-medium"
             >
-              End Conversation
+              Start Conversation Again
             </button>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 rounded-xl border border-black/10 px-3 py-2 outline-none focus:ring-2 focus:ring-black/20 disabled:bg-black/5 disabled:cursor-not-allowed transition-all"
+                  placeholder={sending ? "Kenzie is responding..." : "Ask about products, donations, orders…"}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  disabled={sending || !sb}
+                  autoFocus
+                />
+                <button 
+                  type="submit" 
+                  disabled={sending || !sb || !input.trim()} 
+                  className={`rounded-xl px-4 py-2 text-white disabled:opacity-60 disabled:cursor-not-allowed transition-all transform active:scale-95 ${
+                    sending ? 'bg-gray-500' : input.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black/60'
+                  }`}
+                >
+                  {sending ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="hidden sm:inline">Sending</span>
+                    </div>
+                  ) : (
+                    <span>Send</span>
+                  )}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={handleEndConversation}
+                disabled={sending}
+                className="w-full rounded-xl px-4 py-2 text-sm text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                End Conversation
+              </button>
+            </>
           )}
         </form>
       </div>
