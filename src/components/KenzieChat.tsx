@@ -14,19 +14,14 @@ type FlowState = "initial" | "awaiting_option" | "awaiting_email_orders" | "awai
 
 const STARTER: Msg = {
   role: "assistant",
-  content: `Woof woof! I'm Kenzie 🐾, your helpful AI assistant from Print Power Purpose! How can I fetch you some information today? I can help with:
-
-• **Custom printing questions** (materials, designs, processes - you name it!)
-
-• **Donations and causes** (how we give back, our partners, and how you can help)
-
-• **Your order status** (just bark out your order number!)
-
-• **Navigating our platform** (finding products, checking out, account help)
-
-• **Anything else that's on your mind!**
-
-Just let me know what you need!`,
+  content: "Hi! How can I help you today?",
+  buttons: [
+    { label: "Check products that we offer", action: "products" },
+    { label: "List of causes", action: "causes" },
+    { label: "What can you print for", action: "print_info" },
+    { label: "Check order details", action: "check_orders" },
+    { label: "Check order status", action: "order_status" }
+  ]
 };
 
 // Helper to build a scoped supabase client with the session header
@@ -218,15 +213,51 @@ export default function KenzieChat() {
   async function handleButtonClick(action: string) {
     if (!sessionId || !sb) return;
     
-    if (action === "check_orders") {
-      const msg = "Great! Please enter the registered email ID you used while placing the order.";
+    if (action === "products") {
+      const msg = "We offer custom printing on a variety of products! Visit our Products page to browse items like t-shirts, hoodies, mugs, tote bags, and more. Each purchase supports a cause of your choice! 🎨";
       setMessages((prev) => [
         ...prev,
-        { role: "user", content: "Check your order details" },
+        { role: "user", content: "Check products that we offer" },
         { role: "assistant", content: msg },
       ]);
       await sb.from("kenzie_messages").insert([
-        { session_id: sessionId, role: "user", content: "Check your order details" },
+        { session_id: sessionId, role: "user", content: "Check products that we offer" },
+        { session_id: sessionId, role: "assistant", content: msg }
+      ]);
+      setFlowState("initial");
+    } else if (action === "causes") {
+      const msg = "Print Power Purpose partners with nonprofits and schools to give back to communities! Visit our Causes page to see our current partners and learn how each purchase makes a difference. You can select your preferred cause during checkout! 💙";
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: "List of causes" },
+        { role: "assistant", content: msg },
+      ]);
+      await sb.from("kenzie_messages").insert([
+        { session_id: sessionId, role: "user", content: "List of causes" },
+        { session_id: sessionId, role: "assistant", content: msg }
+      ]);
+      setFlowState("initial");
+    } else if (action === "print_info") {
+      const msg = "We can print on almost anything! From apparel like t-shirts and hoodies, to accessories like mugs, phone cases, and tote bags. We also offer banners, stickers, and custom promotional items. Have something specific in mind? Just ask! 🖨️";
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: "What can you print for" },
+        { role: "assistant", content: msg },
+      ]);
+      await sb.from("kenzie_messages").insert([
+        { session_id: sessionId, role: "user", content: "What can you print for" },
+        { session_id: sessionId, role: "assistant", content: msg }
+      ]);
+      setFlowState("initial");
+    } else if (action === "check_orders") {
+      const msg = "Great! Please enter the registered email ID you used while placing the order.";
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: "Check order details" },
+        { role: "assistant", content: msg },
+      ]);
+      await sb.from("kenzie_messages").insert([
+        { session_id: sessionId, role: "user", content: "Check order details" },
         { session_id: sessionId, role: "assistant", content: msg }
       ]);
       setFlowState("awaiting_email_orders");
