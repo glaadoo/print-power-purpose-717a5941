@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.weekly-story-post]
 verify_jwt = false
+
+[functions.verify-checkout]
+verify_jwt = false

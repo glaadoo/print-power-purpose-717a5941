@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useCause } from "../context/CauseContext";
 import VideoBackground from "@/components/VideoBackground";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Success() {
   const [sp] = useSearchParams();
@@ -27,6 +28,18 @@ export default function Success() {
       localStorage.removeItem("ppp:checkout");
     } catch {}
   }, [clearCart]);
+
+  // Fallback finalize to ensure order is saved even if webhook didn't run
+  useEffect(() => {
+    if (!sessionId) return;
+    (async () => {
+      try {
+        await supabase.functions.invoke('verify-checkout', { body: { session_id: sessionId } });
+      } catch (e) {
+        console.error('Finalize order failed', e);
+      }
+    })();
+  }, [sessionId]);
 
   return (
     <div className="fixed inset-0 text-white">
