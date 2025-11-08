@@ -111,7 +111,7 @@ export default function Success() {
                 </button>
                 <button 
                   className="rounded-full px-6 py-3 bg-white/20 border border-white/30 text-white font-semibold hover:bg-white/30"
-                  onClick={() => window.location.assign("/products")}
+                  onClick={() => window.location.assign("/welcome")}
                 >
                   Continue Shopping
                 </button>
