@@ -242,6 +242,20 @@ export default function KenzieChat() {
         { session_id: sessionId, role: "assistant", content: msg }
       ]);
       setFlowState("awaiting_email_status");
+    } else if (action === "retry_email") {
+      const msg = "No problem! Please enter a different email address to search for orders.";
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: "Try another email" },
+        { role: "assistant", content: msg },
+      ]);
+      await sb.from("kenzie_messages").insert([
+        { session_id: sessionId, role: "user", content: "Try another email" },
+        { session_id: sessionId, role: "assistant", content: msg }
+      ]);
+      // Keep the same flow state based on what the user was originally trying to do
+      const previousFlow = flowState === "showing_results" ? "awaiting_email_orders" : flowState;
+      setFlowState(previousFlow === "initial" ? "awaiting_email_orders" : previousFlow);
     }
   }
 
@@ -316,11 +330,17 @@ export default function KenzieChat() {
           const noOrdersMsg = `I couldn't find any orders associated with ${text}. Please double-check the email address or contact support if you need assistance.`;
           setMessages((prev) => {
             const cp = [...prev];
-            cp[cp.length - 1] = { role: "assistant", content: noOrdersMsg };
+            cp[cp.length - 1] = { 
+              role: "assistant", 
+              content: noOrdersMsg,
+              buttons: [
+                { label: "Try Another Email", action: "retry_email" }
+              ]
+            };
             return cp;
           });
           await sb.from("kenzie_messages").insert({ session_id: sessionId, role: "assistant", content: noOrdersMsg });
-          setFlowState("initial");
+          setFlowState("showing_results");
         } else {
           let responseMsg = "";
           if (flowState === "awaiting_email_orders") {
