@@ -36,7 +36,7 @@ serve(async (req) => {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('order_number, product_name, quantity, amount_total_cents, created_at, status, customer_email')
+        .select('order_number, session_id, product_name, quantity, amount_total_cents, created_at, status, customer_email')
         .ilike('customer_email', `%${emailLower}%`)
         .order('created_at', { ascending: false});
 
@@ -63,13 +63,51 @@ serve(async (req) => {
         } else if (donations && donations.length > 0) {
           const donationOrders = donations.map((d) => ({
             order_number: 'DONATION',
+            session_id: null,
             product_name: 'Donation',
+            quantity: 1,
             amount_total_cents: d.amount_cents,
             created_at: d.created_at,
             status: 'completed',
             customer_email: d.customer_email,
           }));
           results = donationOrders;
+        }
+      }
+      // Enrich missing product details via Stripe if needed
+      const STRIPE_KEY = (Deno.env.get('STRIPE_SECRET_KEY') ?? '').trim();
+      if (STRIPE_KEY && results.length > 0) {
+        for (const order of results as Array<any>) {
+          const missing = !order.product_name || order.product_name === 'NA';
+          if (missing && order.session_id) {
+            try {
+              const resp = await fetch(
+                `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(order.session_id)}?expand[]=line_items.data.price.product`,
+                { headers: { Authorization: `Bearer ${STRIPE_KEY}` } }
+              );
+              if (resp.ok) {
+                const session = await resp.json();
+                const items = session?.line_items?.data?.map((li: any) => {
+                  const name = li?.price?.product?.name || li?.description || 'Item';
+                  const qty = li?.quantity ?? 1;
+                  return { name, quantity: qty };
+                }) ?? [];
+                if (items.length > 0) {
+                  (order as any).items = items;
+                  order.product_name = items
+                    .map((i: any) => (i.quantity > 1 ? `${i.name} x${i.quantity}` : i.name))
+                    .join(', ');
+                  // Aggregate quantity for display when multiple items
+                  order.quantity = items.reduce((sum: number, i: any) => sum + (i.quantity || 0), 0) || order.quantity;
+                }
+              } else {
+                const t = await resp.text();
+                console.error('fetch_orders stripe line_items failed', { status: resp.status, body: t });
+              }
+            } catch (e) {
+              console.error('fetch_orders stripe error', e);
+            }
+          }
         }
       }
 
