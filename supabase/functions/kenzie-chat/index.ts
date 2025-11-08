@@ -36,7 +36,7 @@ serve(async (req) => {
       const { data: orders, error } = await supabase
         .from('orders')
         .select('order_number, product_name, amount_total_cents, created_at, status, customer_email')
-        .ilike('customer_email', emailRaw)
+        .ilike('customer_email', `%${emailRaw}%`)
         .order('created_at', { ascending: false });
 
       if (error) {
