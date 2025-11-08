@@ -36,9 +36,9 @@ serve(async (req) => {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('order_number, product_name, amount_total_cents, created_at, status, customer_email')
+        .select('order_number, product_name, quantity, amount_total_cents, created_at, status, customer_email')
         .ilike('customer_email', `%${emailLower}%`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false});
 
       if (error) {
         console.error('fetch_orders error', { email: emailLower, error });
