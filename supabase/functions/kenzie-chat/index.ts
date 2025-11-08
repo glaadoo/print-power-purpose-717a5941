@@ -88,11 +88,14 @@ serve(async (req) => {
               );
               if (resp.ok) {
                 const session = await resp.json();
-                const items = session?.line_items?.data?.map((li: any) => {
-                  const name = li?.price?.product?.name || li?.description || 'Item';
-                  const qty = li?.quantity ?? 1;
-                  return { name, quantity: qty };
-                }) ?? [];
+                const items = session?.line_items?.data
+                  ?.map((li: any) => {
+                    const name = li?.price?.product?.name || li?.description || 'Item';
+                    const qty = li?.quantity ?? 1;
+                    return { name, quantity: qty };
+                  })
+                  // Filter out donation items - they should only show in the donation field
+                  .filter((item: any) => !item.name.toLowerCase().includes('donation')) ?? [];
                 if (items.length > 0) {
                   (order as any).items = items;
                   order.product_name = items
