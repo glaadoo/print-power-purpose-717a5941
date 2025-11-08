@@ -337,8 +337,11 @@ export default function KenzieChat() {
           role: "assistant", 
           content: quick,
           buttons: [
-            { label: "Check your order details", action: "check_orders" },
-            { label: "Order status", action: "order_status" }
+            { label: "Check products that we offer", action: "products" },
+            { label: "List of causes", action: "causes" },
+            { label: "What can you print for", action: "print_info" },
+            { label: "Check order details", action: "check_orders" },
+            { label: "Check order status", action: "order_status" }
           ]
         },
       ]);
