@@ -279,30 +279,53 @@ export default function KenzieChat() {
 
         <div ref={containerRef} className="flex-1 overflow-auto p-4 space-y-3">
           {messages.map((m, i) => (
-            <div key={i} className={`max-w-[90%] ${m.role === "user" ? "ml-auto" : ""}`}>
+            <div 
+              key={i} 
+              className={`max-w-[90%] animate-fade-in ${m.role === "user" ? "ml-auto" : ""}`}
+            >
               <div className={`rounded-2xl px-3 py-2 whitespace-pre-wrap ${m.role === "user" ? "bg-black text-white" : "bg-black/5 text-justify"}`}>
-                {m.content}
+                {m.content || (
+                  <div className="flex items-center gap-2 py-1">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 rounded-full bg-black/40 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-black/40 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-black/40 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                    </div>
+                    <span className="text-sm text-black/60">Kenzie is thinking...</span>
+                  </div>
+                )}
               </div>
             </div>
           ))}
-          {sending && <div className="text-sm text-black/60">Kenzie is typing…</div>}
         </div>
 
         <form onSubmit={send} className="p-3 border-t border-black/10 bg-white/70 flex gap-2">
           <input
-            className="flex-1 rounded-xl border border-black/10 px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"
-            placeholder="Ask about products, donations, orders…"
+            className="flex-1 rounded-xl border border-black/10 px-3 py-2 outline-none focus:ring-2 focus:ring-black/20 disabled:bg-black/5 disabled:cursor-not-allowed transition-all"
+            placeholder={sending ? "Kenzie is responding..." : "Ask about products, donations, orders…"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            disabled={sending || !sb}
+            autoFocus
           />
           <button 
             type="submit" 
             disabled={sending || !sb || !input.trim()} 
-            className={`rounded-xl px-4 py-2 text-white disabled:opacity-60 transition-colors ${
-              input.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black'
+            className={`rounded-xl px-4 py-2 text-white disabled:opacity-60 disabled:cursor-not-allowed transition-all transform active:scale-95 ${
+              sending ? 'bg-gray-500' : input.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black/60'
             }`}
           >
-            Send
+            {sending ? (
+              <div className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="hidden sm:inline">Sending</span>
+              </div>
+            ) : (
+              <span>Send</span>
+            )}
           </button>
         </form>
       </div>
