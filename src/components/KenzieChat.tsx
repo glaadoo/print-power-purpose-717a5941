@@ -12,17 +12,35 @@ declare global {
 type Msg = { role: "user" | "assistant"; content: string; buttons?: { label: string; action: string }[] };
 type FlowState = "initial" | "awaiting_option" | "awaiting_email_orders" | "awaiting_email_status" | "showing_results";
 
-const STARTER: Msg = {
-  role: "assistant",
-  content: "Hi! How can I help you today?",
-  buttons: [
-    { label: "Check products that we offer", action: "products" },
-    { label: "List of causes", action: "causes" },
-    { label: "What can you print for", action: "print_info" },
-    { label: "Check order details", action: "check_orders" },
-    { label: "Check order status", action: "order_status" }
-  ]
-};
+const STARTER_MESSAGES: Msg[] = [
+  {
+    role: "assistant",
+    content: `Woof woof! I'm Kenzie 🐾, your helpful AI assistant from Print Power Purpose! How can I fetch you some information today? I can help with:
+
+• **Custom printing questions** (materials, designs, processes - you name it!)
+
+• **Donations and causes** (how we give back, our partners, and how you can help)
+
+• **Your order status** (just bark out your order number!)
+
+• **Navigating our platform** (finding products, checking out, account help)
+
+• **Anything else that's on your mind!**
+
+Just let me know what you need!`
+  },
+  {
+    role: "assistant",
+    content: "Hi! How can I help you today?",
+    buttons: [
+      { label: "Check products that we offer", action: "products" },
+      { label: "List of causes", action: "causes" },
+      { label: "What can you print for", action: "print_info" },
+      { label: "Check order details", action: "check_orders" },
+      { label: "Check order status", action: "order_status" }
+    ]
+  }
+];
 
 // Helper to build a scoped supabase client with the session header
 function makeScopedClient(sessionId: string): SupabaseClient {
@@ -43,7 +61,7 @@ export default function KenzieChat() {
   const [open, setOpen] = useState(false);
   const [showPawIntro, setShowPawIntro] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Msg[]>([STARTER]);
+  const [messages, setMessages] = useState<Msg[]>(STARTER_MESSAGES);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [sb, setSb] = useState<SupabaseClient | null>(null);
@@ -192,7 +210,7 @@ export default function KenzieChat() {
       
       // Reset to initial state with greeting
       setSessionId(newSid);
-      setMessages([STARTER]);
+      setMessages(STARTER_MESSAGES);
       setConversationEnded(false);
       setFlowState("initial");
       setUserEmail("");
@@ -204,7 +222,7 @@ export default function KenzieChat() {
       localStorage.setItem("ppp:kenzie:session_id", fallbackSid);
       setSessionId(fallbackSid);
       setSb(makeScopedClient(fallbackSid));
-      setMessages([STARTER]);
+      setMessages(STARTER_MESSAGES);
       setConversationEnded(false);
       setFlowState("initial");
     }
@@ -434,7 +452,7 @@ export default function KenzieChat() {
           "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
         },
-        body: JSON.stringify({ messages: history.filter(m => m.content !== STARTER.content) }),
+        body: JSON.stringify({ messages: history.filter(m => !STARTER_MESSAGES.some(s => s.content === m.content)) }),
       });
       if (!res.ok || !res.body) throw new Error("Network error");
 
