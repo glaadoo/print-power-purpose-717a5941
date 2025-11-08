@@ -235,13 +235,13 @@ export default function KenzieChat() {
       setMessages((prev) => [...prev, { role: "user", content: text }, { role: "assistant", content: "" }]);
 
       try {
-        const { data: orders, error } = await sb
-          .from("orders")
-          .select("*")
-          .eq("customer_email", text)
-          .order("created_at", { ascending: false });
+        // Call edge function to fetch orders (requires service role access)
+        const { data: ordersData, error: ordersError } = await sb.functions.invoke("kenzie-chat", {
+          body: { action: "fetch_orders", email: text }
+        });
 
-        if (error) throw error;
+        if (ordersError) throw ordersError;
+        const orders = ordersData?.orders || [];
 
         if (!orders || orders.length === 0) {
           const noOrdersMsg = `I couldn't find any orders associated with ${text}. Please double-check the email address or contact support if you need assistance.`;

@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +12,36 @@ serve(async (req) => {
   }
 
   try {
+    const body = await req.json();
+    
+    // Handle order fetching action
+    if (body.action === 'fetch_orders') {
+      const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+        throw new Error('Supabase configuration missing');
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?customer_email=eq.${body.email}&order=created_at.desc`, {
+        headers: {
+          'apikey': SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+
+      const orders = await response.json();
+      return new Response(JSON.stringify({ orders }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Handle chat AI flow
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
@@ -23,7 +52,7 @@ serve(async (req) => {
       throw new Error('Session ID is required');
     }
 
-    const { messages } = await req.json();
+    const { messages } = body;
 
     const systemPrompt = `You are Kenzie 🐾, a friendly AI assistant for Print Power Purpose.
 
