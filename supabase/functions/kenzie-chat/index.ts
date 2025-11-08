@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-ppp-session-id',
@@ -23,20 +23,32 @@ serve(async (req) => {
         throw new Error('Supabase configuration missing');
       }
 
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?customer_email=eq.${body.email}&order=created_at.desc`, {
-        headers: {
-          'apikey': SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
+      const emailRaw = String(body.email ?? '').trim();
+      if (!emailRaw) {
+        return new Response(JSON.stringify({ orders: [], error: 'Email required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      const orders = await response.json();
-      return new Response(JSON.stringify({ orders }), {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('order_number, product_name, amount_total_cents, created_at, status, customer_email')
+        .ilike('customer_email', emailRaw)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('fetch_orders error', { email: emailRaw, error });
+        return new Response(JSON.stringify({ orders: [], error: 'Failed to fetch orders' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log('fetch_orders', { email: emailRaw, count: orders?.length ?? 0 });
+      return new Response(JSON.stringify({ orders: orders ?? [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
