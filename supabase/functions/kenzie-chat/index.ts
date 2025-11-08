@@ -24,7 +24,8 @@ serve(async (req) => {
       }
 
       const emailRaw = String(body.email ?? '').trim();
-      if (!emailRaw) {
+      const emailLower = emailRaw.toLowerCase();
+      if (!emailLower) {
         return new Response(JSON.stringify({ orders: [], error: 'Email required' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -36,19 +37,44 @@ serve(async (req) => {
       const { data: orders, error } = await supabase
         .from('orders')
         .select('order_number, product_name, amount_total_cents, created_at, status, customer_email')
-        .ilike('customer_email', `%${emailRaw}%`)
+        .ilike('customer_email', `%${emailLower}%`)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('fetch_orders error', { email: emailRaw, error });
+        console.error('fetch_orders error', { email: emailLower, error });
         return new Response(JSON.stringify({ orders: [], error: 'Failed to fetch orders' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      console.log('fetch_orders', { email: emailRaw, count: orders?.length ?? 0 });
-      return new Response(JSON.stringify({ orders: orders ?? [] }), {
+      let results = orders ?? [];
+
+      // Fallback: include donation records tied to this email (mapped to order-like objects)
+      if (results.length === 0) {
+        const { data: donations, error: donationsError } = await supabase
+          .from('donations')
+          .select('amount_cents, created_at, customer_email')
+          .ilike('customer_email', `%${emailLower}%`)
+          .order('created_at', { ascending: false });
+
+        if (donationsError) {
+          console.error('fetch_orders donations fallback error', { email: emailLower, error: donationsError });
+        } else if (donations && donations.length > 0) {
+          const donationOrders = donations.map((d) => ({
+            order_number: 'DONATION',
+            product_name: 'Donation',
+            amount_total_cents: d.amount_cents,
+            created_at: d.created_at,
+            status: 'completed',
+            customer_email: d.customer_email,
+          }));
+          results = donationOrders;
+        }
+      }
+
+      console.log('fetch_orders', { email: emailLower, count: results.length });
+      return new Response(JSON.stringify({ orders: results }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
