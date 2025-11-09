@@ -3,6 +3,7 @@ import React, { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import KenzieChat from "@/components/KenzieChat";
+import ChatbotWidget from "@/components/ChatbotWidget";
 import ScrollToTop from "@/components/ScrollToTop";
 
 
@@ -386,6 +387,13 @@ export default function App() {
       <RouteBoundary name="KenzieChat">
         <KenzieChat />
       </RouteBoundary>
+
+      {/* Chatbot widget - show on all pages except home */}
+      {location.pathname !== "/" && (
+        <RouteBoundary name="ChatbotWidget">
+          <ChatbotWidget />
+        </RouteBoundary>
+      )}
     </>
   );
 }
