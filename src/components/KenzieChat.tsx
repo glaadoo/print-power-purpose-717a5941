@@ -56,6 +56,8 @@ export default function KenzieChat() {
   const [showHistory, setShowHistory] = useState(false);
   const [pastSessions, setPastSessions] = useState<Array<{ id: string; created_at: string; preview: string }>>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleStartOver = () => {
@@ -122,6 +124,44 @@ export default function KenzieChat() {
     } catch (err) {
       console.error("Error loading session:", err);
     }
+  };
+
+  const startEditingTitle = (sid: string, currentTitle: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingSessionId(sid);
+    setEditingTitle(currentTitle);
+  };
+
+  const saveTitle = async (sid: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!editingTitle.trim()) {
+      setEditingSessionId(null);
+      return;
+    }
+
+    try {
+      const scopedClient = makeScopedClient(sid);
+      await scopedClient
+        .from("kenzie_sessions")
+        .update({ title: editingTitle.trim() })
+        .eq("id", sid);
+
+      // Update local state
+      setPastSessions(prev => prev.map(session => 
+        session.id === sid ? { ...session, preview: editingTitle.trim() } : session
+      ));
+      
+      setEditingSessionId(null);
+    } catch (err) {
+      console.error("Error updating title:", err);
+    }
+  };
+
+  const cancelEditingTitle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingSessionId(null);
+    setEditingTitle("");
   };
 
   const deleteSession = async (sid: string, e: React.MouseEvent) => {
@@ -885,27 +925,85 @@ export default function KenzieChat() {
                     key={session.id}
                     className="relative group"
                   >
-                    <button
-                      onClick={() => loadSession(session.id)}
-                      className="w-full text-left p-3 pr-12 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
-                    >
-                      <div className="text-sm font-medium text-black/80 truncate">{session.preview}</div>
-                      <div className="text-xs text-black/50 mt-1">
-                        {new Date(session.created_at).toLocaleDateString()} {new Date(session.created_at).toLocaleTimeString()}
+                    {editingSessionId === session.id ? (
+                      <div className="w-full p-3 pr-24 rounded-lg bg-black/5">
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveTitle(session.id, e as any);
+                            if (e.key === 'Escape') cancelEditingTitle(e as any);
+                          }}
+                          className="w-full px-2 py-1 text-sm font-medium rounded border border-black/20 focus:outline-none focus:ring-2 focus:ring-black/20"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="text-xs text-black/50 mt-1">
+                          Press Enter to save, Esc to cancel
+                        </div>
                       </div>
-                    </button>
-                    <button
-                      onClick={(e) => deleteSession(session.id, e)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Delete conversation"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        <line x1="10" y1="11" x2="10" y2="17"/>
-                        <line x1="14" y1="11" x2="14" y2="17"/>
-                      </svg>
-                    </button>
+                    ) : (
+                      <button
+                        onClick={() => loadSession(session.id)}
+                        className="w-full text-left p-3 pr-24 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
+                      >
+                        <div className="text-sm font-medium text-black/80 truncate">{session.preview}</div>
+                        <div className="text-xs text-black/50 mt-1">
+                          {new Date(session.created_at).toLocaleDateString()} {new Date(session.created_at).toLocaleTimeString()}
+                        </div>
+                      </button>
+                    )}
+                    
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {editingSessionId === session.id ? (
+                        <>
+                          <button
+                            onClick={(e) => saveTitle(session.id, e)}
+                            className="p-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-600"
+                            title="Save title"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                          <button
+                            onClick={cancelEditingTitle}
+                            className="p-2 rounded-lg bg-black/10 hover:bg-black/20 text-black/60"
+                            title="Cancel"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={(e) => startEditingTitle(session.id, session.preview, e)}
+                            className="p-2 rounded-lg bg-black/10 hover:bg-black/20 text-black/60"
+                            title="Edit title"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => deleteSession(session.id, e)}
+                            className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600"
+                            title="Delete conversation"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                              <line x1="10" y1="11" x2="10" y2="17"/>
+                              <line x1="14" y1="11" x2="14" y2="17"/>
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
