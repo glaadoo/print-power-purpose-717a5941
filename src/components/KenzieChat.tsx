@@ -120,23 +120,36 @@ export default function KenzieChat() {
         .order("created_at", { ascending: true })
         .limit(40);
 
-      if (!error && msgs && msgs.length) {
-        const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
-        
-        // Update all relevant states
-        setSessionId(sid);
-        localStorage.setItem("ppp:kenzie:session_id", sid);
-        setSb(scopedClient);
-        setMessages(m);
-        setShowHistory(false);
-        setFlowState("initial");
-        setConversationEnded(false);
-        setUserEmail("");
-        setInput("");
-        setSearchQuery("");
+      // Always switch context to the clicked session
+      setSessionId(sid);
+      localStorage.setItem("ppp:kenzie:session_id", sid);
+      setSb(scopedClient);
+      setShowHistory(false);
+      setFlowState("initial");
+      setConversationEnded(false);
+      setUserEmail("");
+      setInput("");
+      setSearchQuery("");
+
+      if (!error && msgs) {
+        if (msgs.length > 0) {
+          const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
+          setMessages(m);
+        } else {
+          // No messages yet for this session: show starter messages
+          setMessages(STARTER_MESSAGES);
+        }
+      } else {
+        // On error, still load the session with starter messages
+        setMessages(STARTER_MESSAGES);
       }
     } catch (err) {
       console.error("Error loading session:", err);
+      // Fallback: still switch to session and show starter messages
+      setSessionId(sid);
+      setSb(makeScopedClient(sid));
+      setMessages(STARTER_MESSAGES);
+      setShowHistory(false);
     }
   };
 
