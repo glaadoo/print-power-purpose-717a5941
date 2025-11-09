@@ -61,7 +61,7 @@ export default function KenzieChat() {
   const [open, setOpen] = useState(false);
   const [showPawIntro, setShowPawIntro] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Msg[]>(STARTER_MESSAGES);
+  const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [sb, setSb] = useState<SupabaseClient | null>(null);
@@ -80,6 +80,16 @@ export default function KenzieChat() {
       }, 3000); // Show paw animation for 3 seconds
     }
   }, [open]);
+
+  // Display greeting messages with 1-second delay when chat opens
+  useEffect(() => {
+    if (open && messages.length === 0 && sessionId) {
+      const timer = setTimeout(() => {
+        setMessages(STARTER_MESSAGES);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [open, messages.length, sessionId]);
 
   // open on custom event
   useEffect(() => {
@@ -137,9 +147,8 @@ export default function KenzieChat() {
           if (!error && msgs && msgs.length) {
             const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
             setMessages(m);
-          } else {
-            // no DB seeding for the starter message to avoid repeating intro in model context
           }
+          // Messages will be set by the greeting delay useEffect if empty
         } catch (loadErr) {
           console.warn("Could not load message history:", loadErr);
           // Continue anyway - we'll just start with the starter message
