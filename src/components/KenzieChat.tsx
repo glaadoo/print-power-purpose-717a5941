@@ -73,26 +73,17 @@ export default function KenzieChat() {
       const sessionsData = await Promise.all(
         allSessionIds.slice(0, 10).map(async (sid: string) => {
           const scopedClient = makeScopedClient(sid);
-          const { data: msgs } = await scopedClient
-            .from("kenzie_messages")
-            .select("content, role, created_at")
-            .order("created_at", { ascending: true })
-            .limit(2);
-          
-          const preview = msgs?.[0]?.role === "assistant" 
-            ? msgs[0].content.substring(0, 50) + "..."
-            : "Conversation";
           
           const { data: sessionData } = await scopedClient
             .from("kenzie_sessions")
-            .select("created_at")
+            .select("created_at, title")
             .eq("id", sid)
             .maybeSingle();
           
           return {
             id: sid,
             created_at: sessionData?.created_at || new Date().toISOString(),
-            preview
+            preview: sessionData?.title || "New Conversation"
           };
         })
       );
@@ -449,12 +440,31 @@ export default function KenzieChat() {
     setInput("");
     setSending(true);
 
+    // Check if this is the first user message and generate title
+    const { data: existingMessages } = await sb
+      .from("kenzie_messages")
+      .select("id")
+      .eq("session_id", sessionId)
+      .eq("role", "user")
+      .limit(1);
+
+    const isFirstUserMessage = !existingMessages || existingMessages.length === 0;
+
     // 1) write user message to DB
     await sb.from("kenzie_messages").insert({
       session_id: sessionId,
       role: "user",
       content: text,
     });
+
+    // Generate and save title from first user message
+    if (isFirstUserMessage) {
+      const title = text.length > 50 ? text.substring(0, 50) + "..." : text;
+      await sb
+        .from("kenzie_sessions")
+        .update({ title })
+        .eq("id", sessionId);
+    }
 
     // Quick path: instant greeting for short salutations
     const lower = text.toLowerCase();
