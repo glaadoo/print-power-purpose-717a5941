@@ -54,7 +54,7 @@ export default function KenzieChat() {
   const [userEmail, setUserEmail] = useState<string>("");
   const [conversationEnded, setConversationEnded] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [pastSessions, setPastSessions] = useState<Array<{ id: string; created_at: string; preview: string }>>([]);
+  const [pastSessions, setPastSessions] = useState<Array<{ id: string; created_at: string; preview: string; pinned: boolean }>>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -85,19 +85,27 @@ export default function KenzieChat() {
           
           const { data: sessionData } = await scopedClient
             .from("kenzie_sessions")
-            .select("created_at, title")
+            .select("created_at, title, pinned")
             .eq("id", sid)
             .maybeSingle();
           
           return {
             id: sid,
             created_at: sessionData?.created_at || new Date().toISOString(),
-            preview: sessionData?.title || "New Conversation"
+            preview: sessionData?.title || "New Conversation",
+            pinned: sessionData?.pinned || false
           };
         })
       );
       
-      setPastSessions(sessionsData.filter(Boolean));
+      // Sort: pinned conversations first, then by creation date
+      const sorted = sessionsData.filter(Boolean).sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      
+      setPastSessions(sorted);
     } catch (err) {
       console.error("Error loading past sessions:", err);
     }
@@ -162,6 +170,34 @@ export default function KenzieChat() {
     e.stopPropagation();
     setEditingSessionId(null);
     setEditingTitle("");
+  };
+
+  const togglePinSession = async (sid: string, currentPinned: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      const scopedClient = makeScopedClient(sid);
+      await scopedClient
+        .from("kenzie_sessions")
+        .update({ pinned: !currentPinned })
+        .eq("id", sid);
+
+      // Update local state and re-sort
+      setPastSessions(prev => {
+        const updated = prev.map(session => 
+          session.id === sid ? { ...session, pinned: !currentPinned } : session
+        );
+        
+        // Sort: pinned first, then by date
+        return updated.sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      });
+    } catch (err) {
+      console.error("Error toggling pin:", err);
+    }
   };
 
   const deleteSession = async (sid: string, e: React.MouseEvent) => {
@@ -926,7 +962,7 @@ export default function KenzieChat() {
                     className="relative group"
                   >
                     {editingSessionId === session.id ? (
-                      <div className="w-full p-3 pr-24 rounded-lg bg-black/5">
+                      <div className="w-full p-3 pr-32 rounded-lg bg-black/5">
                         <input
                           type="text"
                           value={editingTitle}
@@ -946,9 +982,16 @@ export default function KenzieChat() {
                     ) : (
                       <button
                         onClick={() => loadSession(session.id)}
-                        className="w-full text-left p-3 pr-24 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
+                        className="w-full text-left p-3 pr-32 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
                       >
-                        <div className="text-sm font-medium text-black/80 truncate">{session.preview}</div>
+                        <div className="flex items-center gap-2">
+                          {session.pinned && (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-500 flex-shrink-0">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                          )}
+                          <div className="text-sm font-medium text-black/80 truncate">{session.preview}</div>
+                        </div>
                         <div className="text-xs text-black/50 mt-1">
                           {new Date(session.created_at).toLocaleDateString()} {new Date(session.created_at).toLocaleTimeString()}
                         </div>
@@ -979,6 +1022,15 @@ export default function KenzieChat() {
                         </>
                       ) : (
                         <>
+                          <button
+                            onClick={(e) => togglePinSession(session.id, session.pinned, e)}
+                            className={`p-2 rounded-lg ${session.pinned ? 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30' : 'bg-black/10 hover:bg-black/20 text-black/60'}`}
+                            title={session.pinned ? "Unpin conversation" : "Pin conversation"}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill={session.pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                          </button>
                           <button
                             onClick={(e) => startEditingTitle(session.id, session.preview, e)}
                             className="p-2 rounded-lg bg-black/10 hover:bg-black/20 text-black/60"
