@@ -117,8 +117,9 @@ export default function KenzieChat() {
       const { data: msgs, error } = await scopedClient
         .from("kenzie_messages")
         .select("role, content, created_at")
+        .eq("session_id", sid)
         .order("created_at", { ascending: true })
-        .limit(40);
+        .limit(1000);
 
       // Always switch context to the clicked session
       setSessionId(sid);
