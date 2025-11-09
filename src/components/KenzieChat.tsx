@@ -55,6 +55,7 @@ export default function KenzieChat() {
   const [conversationEnded, setConversationEnded] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [pastSessions, setPastSessions] = useState<Array<{ id: string; created_at: string; preview: string }>>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleStartOver = () => {
@@ -63,6 +64,12 @@ export default function KenzieChat() {
     setUserEmail("");
     setConversationEnded(false);
   };
+
+  const filteredSessions = pastSessions.filter(session => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return session.preview.toLowerCase().includes(query);
+  });
 
   const loadPastSessions = async () => {
     if (!sb) return;
@@ -823,7 +830,10 @@ export default function KenzieChat() {
             <div className="px-4 py-3 border-b border-black/10 flex items-center justify-between bg-white/70">
               <div className="font-semibold">Chat History</div>
               <button
-                onClick={() => setShowHistory(false)}
+                onClick={() => {
+                  setShowHistory(false);
+                  setSearchQuery("");
+                }}
                 className="size-9 rounded-full border border-black/10 bg-black/5 hover:bg-black/10 grid place-items-center"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -831,11 +841,46 @@ export default function KenzieChat() {
                 </svg>
               </button>
             </div>
+            
+            {/* Search Input */}
+            <div className="px-4 py-3 border-b border-black/10">
+              <div className="relative">
+                <svg 
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40"
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <circle cx="11" cy="11" r="8" strokeWidth="2"/>
+                  <path d="m21 21-4.35-4.35" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search conversations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-black/10 bg-white focus:outline-none focus:ring-2 focus:ring-black/20"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 hover:text-black/60"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="flex-1 overflow-auto p-4 space-y-2">
-              {pastSessions.length === 0 ? (
-                <div className="text-center text-black/40 py-8">No past conversations</div>
+              {filteredSessions.length === 0 ? (
+                <div className="text-center text-black/40 py-8">
+                  {searchQuery ? "No conversations found" : "No past conversations"}
+                </div>
               ) : (
-                pastSessions.map((session) => (
+                filteredSessions.map((session) => (
                   <div
                     key={session.id}
                     className="relative group"
