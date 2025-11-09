@@ -511,13 +511,16 @@ export default function KenzieChat() {
         content: acc.trim() ? acc : "…",
       });
 
-      // Check if AI returned fallback greeting signal
-      if (acc.includes("FALLBACK_GREETING")) {
+      // Check if AI returned show options signal
+      if (acc.includes("SHOW_OPTIONS")) {
         setMessages(prev => {
           const updated = [...prev];
+          const currentContent = updated[updated.length - 1].content;
+          // Remove the SHOW_OPTIONS marker and keep the helpful message
+          const cleanContent = currentContent.replace("SHOW_OPTIONS", "").trim();
           updated[updated.length - 1] = {
             role: "assistant",
-            content: "Hi there! I'm Kenzie 🐾 — how can I help today?\nWhat should I help you with?",
+            content: cleanContent || "I'm not quite sure what you're asking for. Could you please rephrase that or choose one of the options I can help with?",
             buttons: [
               { label: "Check products that we offer", action: "products" },
               { label: "List of causes", action: "causes" },
@@ -528,7 +531,7 @@ export default function KenzieChat() {
           };
           return updated;
         });
-        setFlowState("initial");
+        setFlowState("awaiting_option");
       }
     } catch (err) {
       setMessages((prev) => [
