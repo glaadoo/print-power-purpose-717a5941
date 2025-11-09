@@ -131,6 +131,32 @@ export default function HelpCenter() {
             overlay={<div className="absolute inset-0 bg-black/40" />}
           />
 
+          {/* More animated paws for categories section */}
+          <div className="absolute top-[10%] left-[12%] animate-float opacity-50" style={{ animationDelay: '0.3s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-[25%] right-[18%] animate-float opacity-60" style={{ animationDelay: '0.8s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-[40%] left-[8%] animate-float opacity-55" style={{ animationDelay: '1.3s' }}>
+            <span className="text-3xl">🐾</span>
+          </div>
+          <div className="absolute top-[55%] right-[10%] animate-float opacity-65" style={{ animationDelay: '1.8s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-[70%] left-[15%] animate-float opacity-50" style={{ animationDelay: '2.3s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-[85%] right-[12%] animate-float opacity-70" style={{ animationDelay: '2.8s' }}>
+            <span className="text-3xl">🐾</span>
+          </div>
+          <div className="absolute top-[15%] left-[35%] animate-float opacity-60" style={{ animationDelay: '3.3s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-[50%] right-[35%] animate-float opacity-55" style={{ animationDelay: '3.8s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+
           <div className="px-6 w-full max-w-6xl mx-auto">
             <h2 className="text-center font-serif text-[clamp(2rem,5vw,3.5rem)] leading-tight font-semibold drop-shadow mb-12">
               What do you need help with?
@@ -191,6 +217,32 @@ export default function HelpCenter() {
             parallaxVh={8}
             overlay={<div className="absolute inset-0 bg-black/40" />}
           />
+
+          {/* More animated paws for FAQ section */}
+          <div className="absolute top-[8%] right-[20%] animate-float opacity-65" style={{ animationDelay: '0.5s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-[20%] left-[10%] animate-float opacity-50" style={{ animationDelay: '1s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-[35%] right-[8%] animate-float opacity-70" style={{ animationDelay: '1.5s' }}>
+            <span className="text-3xl">🐾</span>
+          </div>
+          <div className="absolute top-[50%] left-[22%] animate-float opacity-55" style={{ animationDelay: '2s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-[65%] right-[25%] animate-float opacity-60" style={{ animationDelay: '2.5s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-[80%] left-[18%] animate-float opacity-65" style={{ animationDelay: '3s' }}>
+            <span className="text-3xl">🐾</span>
+          </div>
+          <div className="absolute top-[28%] left-[45%] animate-float opacity-50" style={{ animationDelay: '3.5s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-[72%] right-[40%] animate-float opacity-70" style={{ animationDelay: '4s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
 
           <div className="px-6 w-full max-w-4xl mx-auto">
             <h2 className="text-center font-serif text-[clamp(2rem,5vw,3.5rem)] leading-tight font-semibold drop-shadow mb-8">
@@ -272,6 +324,32 @@ export default function HelpCenter() {
             parallaxVh={6}
             overlay={<div className="absolute inset-0 bg-black/40" />}
           />
+
+          {/* More animated paws for contact section */}
+          <div className="absolute top-[12%] left-[8%] animate-float opacity-60" style={{ animationDelay: '0.2s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-[22%] right-[15%] animate-float opacity-55" style={{ animationDelay: '0.7s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-[38%] left-[20%] animate-float opacity-70" style={{ animationDelay: '1.2s' }}>
+            <span className="text-3xl">🐾</span>
+          </div>
+          <div className="absolute top-[52%] right-[12%] animate-float opacity-50" style={{ animationDelay: '1.7s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-[68%] left-[25%] animate-float opacity-65" style={{ animationDelay: '2.2s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-[82%] right-[18%] animate-float opacity-60" style={{ animationDelay: '2.7s' }}>
+            <span className="text-3xl">🐾</span>
+          </div>
+          <div className="absolute top-[18%] left-[42%] animate-float opacity-55" style={{ animationDelay: '3.2s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-[58%] right-[38%] animate-float opacity-70" style={{ animationDelay: '3.7s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
 
           <div className="px-6 w-full max-w-4xl mx-auto text-center">
             <GlassCard padding="p-12">
