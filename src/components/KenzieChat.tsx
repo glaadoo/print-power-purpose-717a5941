@@ -122,12 +122,18 @@ export default function KenzieChat() {
 
       if (!error && msgs && msgs.length) {
         const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
-        setMessages(m);
+        
+        // Update all relevant states
         setSessionId(sid);
         localStorage.setItem("ppp:kenzie:session_id", sid);
         setSb(scopedClient);
+        setMessages(m);
         setShowHistory(false);
         setFlowState("initial");
+        setConversationEnded(false);
+        setUserEmail("");
+        setInput("");
+        setSearchQuery("");
       }
     } catch (err) {
       console.error("Error loading session:", err);
@@ -251,15 +257,30 @@ export default function KenzieChat() {
     }
   }, [open]);
 
-  // Display greeting messages with 1-second delay when chat opens
+  // Display greeting messages with 1-second delay when chat opens (only for new sessions)
   useEffect(() => {
     if (open && messages.length === 0 && sessionId) {
+      // Check if this is a new session by seeing if there are any messages in the database
+      const checkAndSetGreeting = async () => {
+        if (!sb) return;
+        const { data } = await sb
+          .from("kenzie_messages")
+          .select("id")
+          .eq("session_id", sessionId)
+          .limit(1);
+        
+        // Only show greeting if no messages exist in database
+        if (!data || data.length === 0) {
+          setMessages(STARTER_MESSAGES);
+        }
+      };
+      
       const timer = setTimeout(() => {
-        setMessages(STARTER_MESSAGES);
+        checkAndSetGreeting();
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [open, messages.length, sessionId]);
+  }, [open, messages.length, sessionId, sb]);
 
   // open on custom event
   useEffect(() => {
