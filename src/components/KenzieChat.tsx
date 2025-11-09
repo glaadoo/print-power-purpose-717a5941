@@ -15,17 +15,13 @@ type FlowState = "initial" | "awaiting_option" | "awaiting_email_orders" | "awai
 const STARTER_MESSAGES: Msg[] = [
   {
     role: "assistant",
-    content: `Woof woof! I'm Kenzie 🐾, your helpful AI assistant from Print Power Purpose! How can I fetch you some information today?`
-  },
-  {
-    role: "assistant",
-    content: "Hi! How can I help you today?",
+    content: `Woof! I'm Kenzie 🐾 How can I help you today?`,
     buttons: [
-      { label: "Check products that we offer", action: "products" },
-      { label: "List of causes", action: "causes" },
-      { label: "What can you print for", action: "print_info" },
-      { label: "Check order details", action: "check_orders" },
-      { label: "Check order status", action: "order_status" }
+      { label: "Products", action: "products" },
+      { label: "Causes", action: "causes" },
+      { label: "Print Info", action: "print_info" },
+      { label: "Order Details", action: "check_orders" },
+      { label: "Order Status", action: "order_status" }
     ]
   }
 ];
@@ -330,15 +326,15 @@ export default function KenzieChat() {
       setMessages((prev) => [
         ...prev,
         { role: "user", content: text },
-        { 
+          { 
           role: "assistant", 
           content: quick,
           buttons: [
-            { label: "Check products that we offer", action: "products" },
-            { label: "List of causes", action: "causes" },
-            { label: "What can you print for", action: "print_info" },
-            { label: "Check order details", action: "check_orders" },
-            { label: "Check order status", action: "order_status" }
+            { label: "Products", action: "products" },
+            { label: "Causes", action: "causes" },
+            { label: "Print Info", action: "print_info" },
+            { label: "Order Details", action: "check_orders" },
+            { label: "Order Status", action: "order_status" }
           ]
         },
       ]);
@@ -533,11 +529,11 @@ export default function KenzieChat() {
             role: "assistant",
             content: "I'm not quite sure what you're asking for. Could you please rephrase that or choose one of the options I can help with?",
             buttons: [
-              { label: "Check products that we offer", action: "products" },
-              { label: "List of causes", action: "causes" },
-              { label: "What can you print for", action: "print_info" },
-              { label: "Check order details", action: "check_orders" },
-              { label: "Check order status", action: "order_status" }
+              { label: "Products", action: "products" },
+              { label: "Causes", action: "causes" },
+              { label: "Print Info", action: "print_info" },
+              { label: "Order Details", action: "check_orders" },
+              { label: "Order Status", action: "order_status" }
             ]
           };
           return updated;
@@ -564,11 +560,11 @@ export default function KenzieChat() {
             role: "assistant",
             content: cleanContent || "I'm not quite sure what you're asking for. Could you please rephrase that or choose one of the options I can help with?",
             buttons: [
-              { label: "Check products that we offer", action: "products" },
-              { label: "List of causes", action: "causes" },
-              { label: "What can you print for", action: "print_info" },
-              { label: "Check order details", action: "check_orders" },
-              { label: "Check order status", action: "order_status" }
+              { label: "Products", action: "products" },
+              { label: "Causes", action: "causes" },
+              { label: "Print Info", action: "print_info" },
+              { label: "Order Details", action: "check_orders" },
+              { label: "Order Status", action: "order_status" }
             ]
           };
           return updated;
@@ -583,11 +579,11 @@ export default function KenzieChat() {
         if (last?.role === "assistant") {
           last.content = "Sorry, I had trouble replying. Could you rephrase your question or choose from these options?";
           last.buttons = [
-            { label: "Check products that we offer", action: "products" },
-            { label: "List of causes", action: "causes" },
-            { label: "What can you print for", action: "print_info" },
-            { label: "Check order details", action: "check_orders" },
-            { label: "Check order status", action: "order_status" }
+            { label: "Products", action: "products" },
+            { label: "Causes", action: "causes" },
+            { label: "Print Info", action: "print_info" },
+            { label: "Order Details", action: "check_orders" },
+            { label: "Order Status", action: "order_status" }
           ];
         }
         return cp;
@@ -655,13 +651,13 @@ export default function KenzieChat() {
                 )}
               </div>
               {m.buttons && m.buttons.length > 0 && (
-                <div className="mt-2 flex flex-col gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-2">
                   {m.buttons.map((btn, btnIdx) => (
                     <button
                       key={btnIdx}
                       onClick={() => handleButtonClick(btn.action)}
                       disabled={sending}
-                      className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-left"
+                      className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-center text-sm font-medium"
                     >
                       {btn.label}
                     </button>
