@@ -21,7 +21,8 @@ const STARTER_MESSAGES: Msg[] = [
       { label: "Causes", action: "causes" },
       { label: "Print Info", action: "print_info" },
       { label: "Order Details", action: "check_orders" },
-      { label: "Order Status", action: "order_status" }
+      { label: "Order Status", action: "order_status" },
+      { label: "Our Mission", action: "mission" }
     ]
   }
 ];
@@ -284,6 +285,18 @@ export default function KenzieChat() {
         { session_id: sessionId, role: "assistant", content: msg }
       ]);
       setFlowState("awaiting_email_status");
+    } else if (action === "mission") {
+      const msg = "At Print Power Purpose, we believe every purchase should make a difference! Our mission is to combine quality custom printing with meaningful giving. Every item you order directly supports nonprofits and schools in need. Learn more about our impact and mission on our Personal Mission page! 🎯💙";
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: "Tell me about your mission" },
+        { role: "assistant", content: msg },
+      ]);
+      await sb.from("kenzie_messages").insert([
+        { session_id: sessionId, role: "user", content: "Tell me about your mission" },
+        { session_id: sessionId, role: "assistant", content: msg }
+      ]);
+      setFlowState("initial");
     } else if (action === "retry_email") {
       const msg = "No problem! Please enter a different email address to search for orders.";
       setMessages((prev) => [
