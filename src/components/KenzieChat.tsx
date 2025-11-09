@@ -347,7 +347,8 @@ export default function KenzieChat() {
             { label: "Causes", action: "causes" },
             { label: "Print Info", action: "print_info" },
             { label: "Order Details", action: "check_orders" },
-            { label: "Order Status", action: "order_status" }
+            { label: "Order Status", action: "order_status" },
+            { label: "Our Mission", action: "mission" }
           ]
         },
       ]);
@@ -433,10 +434,21 @@ export default function KenzieChat() {
         }
       } catch (err) {
         console.error("Error fetching orders:", err);
-        const errorMsg = "Sorry, I had trouble fetching your order information. Please try again.";
+        const errorMsg = "Sorry, I had trouble fetching your order information. Could you try again or choose from these options?";
         setMessages((prev) => {
           const cp = [...prev];
-          cp[cp.length - 1] = { role: "assistant", content: errorMsg };
+          cp[cp.length - 1] = { 
+            role: "assistant", 
+            content: errorMsg,
+            buttons: [
+              { label: "Products", action: "products" },
+              { label: "Causes", action: "causes" },
+              { label: "Print Info", action: "print_info" },
+              { label: "Order Details", action: "check_orders" },
+              { label: "Order Status", action: "order_status" },
+              { label: "Our Mission", action: "mission" }
+            ]
+          };
           return cp;
         });
         await sb.from("kenzie_messages").insert({ session_id: sessionId, role: "assistant", content: errorMsg });
@@ -463,7 +475,8 @@ export default function KenzieChat() {
             { label: "List of causes", action: "causes" },
             { label: "What can you print for", action: "print_info" },
             { label: "Check order details", action: "check_orders" },
-            { label: "Check order status", action: "order_status" }
+            { label: "Check order status", action: "order_status" },
+            { label: "Our Mission", action: "mission" }
           ];
         }
         return cp;
@@ -546,7 +559,8 @@ export default function KenzieChat() {
               { label: "Causes", action: "causes" },
               { label: "Print Info", action: "print_info" },
               { label: "Order Details", action: "check_orders" },
-              { label: "Order Status", action: "order_status" }
+              { label: "Order Status", action: "order_status" },
+              { label: "Our Mission", action: "mission" }
             ]
           };
           return updated;
@@ -577,7 +591,8 @@ export default function KenzieChat() {
               { label: "Causes", action: "causes" },
               { label: "Print Info", action: "print_info" },
               { label: "Order Details", action: "check_orders" },
-              { label: "Order Status", action: "order_status" }
+              { label: "Order Status", action: "order_status" },
+              { label: "Our Mission", action: "mission" }
             ]
           };
           return updated;
@@ -596,7 +611,8 @@ export default function KenzieChat() {
             { label: "Causes", action: "causes" },
             { label: "Print Info", action: "print_info" },
             { label: "Order Details", action: "check_orders" },
-            { label: "Order Status", action: "order_status" }
+            { label: "Order Status", action: "order_status" },
+            { label: "Our Mission", action: "mission" }
           ];
         }
         return cp;
