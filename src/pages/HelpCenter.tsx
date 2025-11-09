@@ -25,53 +25,24 @@ export default function HelpCenter() {
 
   return (
     <div className="min-h-screen text-white">
-      {/* Top bar (Menu | PPP | Find Causes) */}
+      {/* Top bar - Brand only */}
       <header
         className="
           fixed top-0 inset-x-0 z-50
           px-4 md:px-6 py-3
-          flex items-center justify-between
+          flex items-center justify-center
           text-white
           backdrop-blur bg-black/20
           border-b border-white/10
         "
       >
-        {/* Left: Hamburger */}
-        <button
-          onClick={menu.on}
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-haspopup="dialog"
-          aria-controls="menu"
-          aria-label="Open menu"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M3 6h18M3 12h18M3 18h18" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="hidden sm:inline">Menu</span>
-        </button>
-
         {/* Center: Brand */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <a
-            href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
-        </div>
-
-        {/* Right: Find Causes */}
         <a
-          href="/causes"
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-label="Find causes"
+          href="/"
+          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+          aria-label="Print Power Purpose Home"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2" />
-            <path d="M20 20l-3.2-3.2" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="hidden sm:inline">Find Causes</span>
+          PRINT&nbsp;POWER&nbsp;PURPOSE
         </a>
       </header>
 
@@ -95,8 +66,29 @@ export default function HelpCenter() {
             overlay={<div className="absolute inset-0 bg-black/40" />}
           />
 
-          {/* Animated paw icon */}
-          <div className="absolute top-24 left-1/4 animate-float opacity-70">
+          {/* Animated paw icons - multiple floating paws */}
+          <div className="absolute top-20 left-[10%] animate-float opacity-60" style={{ animationDelay: '0s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-32 right-[15%] animate-float opacity-50" style={{ animationDelay: '0.5s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-48 left-[25%] animate-float opacity-70" style={{ animationDelay: '1s' }}>
+            <span className="text-3xl">🐾</span>
+          </div>
+          <div className="absolute top-64 right-[30%] animate-float opacity-55" style={{ animationDelay: '1.5s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-80 left-[40%] animate-float opacity-65" style={{ animationDelay: '2s' }}>
+            <span className="text-4xl">🐾</span>
+          </div>
+          <div className="absolute top-36 right-[8%] animate-float opacity-60" style={{ animationDelay: '2.5s' }}>
+            <span className="text-3xl">🐾</span>
+          </div>
+          <div className="absolute top-56 left-[18%] animate-float opacity-50" style={{ animationDelay: '3s' }}>
+            <span className="text-5xl">🐾</span>
+          </div>
+          <div className="absolute top-72 right-[22%] animate-float opacity-70" style={{ animationDelay: '3.5s' }}>
             <span className="text-4xl">🐾</span>
           </div>
 
