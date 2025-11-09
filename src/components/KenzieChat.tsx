@@ -53,6 +53,8 @@ export default function KenzieChat() {
   const [flowState, setFlowState] = useState<FlowState>("initial");
   const [userEmail, setUserEmail] = useState<string>("");
   const [conversationEnded, setConversationEnded] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [pastSessions, setPastSessions] = useState<Array<{ id: string; created_at: string; preview: string }>>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleStartOver = () => {
@@ -60,6 +62,68 @@ export default function KenzieChat() {
     setFlowState("initial");
     setUserEmail("");
     setConversationEnded(false);
+  };
+
+  const loadPastSessions = async () => {
+    if (!sb) return;
+    try {
+      // Get all sessions from local storage history
+      const allSessionIds = JSON.parse(localStorage.getItem("ppp:kenzie:session_history") || "[]");
+      
+      const sessionsData = await Promise.all(
+        allSessionIds.slice(0, 10).map(async (sid: string) => {
+          const scopedClient = makeScopedClient(sid);
+          const { data: msgs } = await scopedClient
+            .from("kenzie_messages")
+            .select("content, role, created_at")
+            .order("created_at", { ascending: true })
+            .limit(2);
+          
+          const preview = msgs?.[0]?.role === "assistant" 
+            ? msgs[0].content.substring(0, 50) + "..."
+            : "Conversation";
+          
+          const { data: sessionData } = await scopedClient
+            .from("kenzie_sessions")
+            .select("created_at")
+            .eq("id", sid)
+            .maybeSingle();
+          
+          return {
+            id: sid,
+            created_at: sessionData?.created_at || new Date().toISOString(),
+            preview
+          };
+        })
+      );
+      
+      setPastSessions(sessionsData.filter(Boolean));
+    } catch (err) {
+      console.error("Error loading past sessions:", err);
+    }
+  };
+
+  const loadSession = async (sid: string) => {
+    try {
+      const scopedClient = makeScopedClient(sid);
+      const { data: msgs, error } = await scopedClient
+        .from("kenzie_messages")
+        .select("role, content, created_at")
+        .order("created_at", { ascending: true })
+        .limit(40);
+
+      if (!error && msgs && msgs.length) {
+        const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
+        setMessages(m);
+        setSessionId(sid);
+        localStorage.setItem("ppp:kenzie:session_id", sid);
+        setSb(scopedClient);
+        setShowHistory(false);
+        setFlowState("initial");
+      }
+    } catch (err) {
+      console.error("Error loading session:", err);
+    }
   };
 
   // Show paw intro on first open
@@ -108,6 +172,13 @@ export default function KenzieChat() {
           // Generate UUID first, then try to create session with it
           sid = crypto.randomUUID();
           localStorage.setItem("ppp:kenzie:session_id", sid);
+          
+          // Add to session history
+          const history = JSON.parse(localStorage.getItem("ppp:kenzie:session_history") || "[]");
+          if (!history.includes(sid)) {
+            history.unshift(sid);
+            localStorage.setItem("ppp:kenzie:session_history", JSON.stringify(history.slice(0, 20)));
+          }
           
           // Try to create session in DB with the generated ID
           try {
@@ -190,6 +261,13 @@ export default function KenzieChat() {
       // Generate new session ID
       const newSid = crypto.randomUUID();
       localStorage.setItem("ppp:kenzie:session_id", newSid);
+      
+      // Add to session history
+      const history = JSON.parse(localStorage.getItem("ppp:kenzie:session_history") || "[]");
+      if (!history.includes(newSid)) {
+        history.unshift(newSid);
+        localStorage.setItem("ppp:kenzie:session_history", JSON.stringify(history.slice(0, 20)));
+      }
       
       // Create new session in database
       try {
@@ -659,6 +737,19 @@ export default function KenzieChat() {
           <div className="font-semibold">Chat with Kenzie 🐾</div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => {
+                setShowHistory(!showHistory);
+                if (!showHistory) loadPastSessions();
+              }}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/5 hover:bg-black/10 transition-colors"
+              title="View chat history"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </button>
+            <button
               onClick={handleStartOver}
               className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/5 hover:bg-black/10 transition-colors"
             >
@@ -675,6 +766,41 @@ export default function KenzieChat() {
             </button>
           </div>
         </div>
+
+        {/* History Panel */}
+        {showHistory && (
+          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col">
+            <div className="px-4 py-3 border-b border-black/10 flex items-center justify-between bg-white/70">
+              <div className="font-semibold">Chat History</div>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="size-9 rounded-full border border-black/10 bg-black/5 hover:bg-black/10 grid place-items-center"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4 space-y-2">
+              {pastSessions.length === 0 ? (
+                <div className="text-center text-black/40 py-8">No past conversations</div>
+              ) : (
+                pastSessions.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => loadSession(session.id)}
+                    className="w-full text-left p-3 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
+                  >
+                    <div className="text-sm font-medium text-black/80 truncate">{session.preview}</div>
+                    <div className="text-xs text-black/50 mt-1">
+                      {new Date(session.created_at).toLocaleDateString()} {new Date(session.created_at).toLocaleTimeString()}
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         <div ref={containerRef} className="flex-1 overflow-auto p-4 space-y-3">
           {messages.map((m, i) => (
