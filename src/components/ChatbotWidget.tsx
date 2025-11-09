@@ -35,7 +35,7 @@ export default function ChatbotWidget() {
         }}
         className="absolute -top-2 -left-2 text-primary"
       >
-        <PawPrint className="w-5 h-5" />
+        <PawPrint className="w-6 h-6" />
       </motion.div>
 
       <motion.div
@@ -51,7 +51,7 @@ export default function ChatbotWidget() {
         }}
         className="absolute -bottom-1 -left-3 text-primary/80"
       >
-        <PawPrint className="w-5 h-5" />
+        <PawPrint className="w-6 h-6" />
       </motion.div>
 
       {/* Main button */}
