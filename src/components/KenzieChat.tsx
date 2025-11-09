@@ -126,6 +126,46 @@ export default function KenzieChat() {
     }
   };
 
+  const deleteSession = async (sid: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!confirm("Are you sure you want to delete this conversation?")) {
+      return;
+    }
+
+    try {
+      const scopedClient = makeScopedClient(sid);
+      
+      // Delete messages for this session
+      await scopedClient
+        .from("kenzie_messages")
+        .delete()
+        .eq("session_id", sid);
+      
+      // Delete the session
+      await scopedClient
+        .from("kenzie_sessions")
+        .delete()
+        .eq("id", sid);
+      
+      // Remove from local storage history
+      const history = JSON.parse(localStorage.getItem("ppp:kenzie:session_history") || "[]");
+      const updatedHistory = history.filter((id: string) => id !== sid);
+      localStorage.setItem("ppp:kenzie:session_history", JSON.stringify(updatedHistory));
+      
+      // If we deleted the current session, start a new one
+      if (sessionId === sid) {
+        await handleStartNewConversation();
+      }
+      
+      // Refresh the history list
+      await loadPastSessions();
+    } catch (err) {
+      console.error("Error deleting session:", err);
+      alert("Failed to delete conversation. Please try again.");
+    }
+  };
+
   // Show paw intro on first open
   useEffect(() => {
     if (open && !localStorage.getItem("ppp:kenzie:intro_shown")) {
@@ -786,16 +826,32 @@ export default function KenzieChat() {
                 <div className="text-center text-black/40 py-8">No past conversations</div>
               ) : (
                 pastSessions.map((session) => (
-                  <button
+                  <div
                     key={session.id}
-                    onClick={() => loadSession(session.id)}
-                    className="w-full text-left p-3 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
+                    className="relative group"
                   >
-                    <div className="text-sm font-medium text-black/80 truncate">{session.preview}</div>
-                    <div className="text-xs text-black/50 mt-1">
-                      {new Date(session.created_at).toLocaleDateString()} {new Date(session.created_at).toLocaleTimeString()}
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => loadSession(session.id)}
+                      className="w-full text-left p-3 pr-12 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
+                    >
+                      <div className="text-sm font-medium text-black/80 truncate">{session.preview}</div>
+                      <div className="text-xs text-black/50 mt-1">
+                        {new Date(session.created_at).toLocaleDateString()} {new Date(session.created_at).toLocaleTimeString()}
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => deleteSession(session.id, e)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Delete conversation"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                      </svg>
+                    </button>
+                  </div>
                 ))
               )}
             </div>
