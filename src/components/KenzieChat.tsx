@@ -15,19 +15,7 @@ type FlowState = "initial" | "awaiting_option" | "awaiting_email_orders" | "awai
 const STARTER_MESSAGES: Msg[] = [
   {
     role: "assistant",
-    content: `Woof woof! I'm Kenzie 🐾, your helpful AI assistant from Print Power Purpose! How can I fetch you some information today? I can help with:
-
-• **Custom printing questions** (materials, designs, processes - you name it!)
-
-• **Donations and causes** (how we give back, our partners, and how you can help)
-
-• **Your order status** (just bark out your order number!)
-
-• **Navigating our platform** (finding products, checking out, account help)
-
-• **Anything else that's on your mind!**
-
-Just let me know what you need!`
+    content: `Woof woof! I'm Kenzie 🐾, your helpful AI assistant from Print Power Purpose! How can I fetch you some information today?`
   },
   {
     role: "assistant",
