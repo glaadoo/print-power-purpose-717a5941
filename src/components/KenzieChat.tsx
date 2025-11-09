@@ -444,6 +444,27 @@ export default function KenzieChat() {
     // 2) show locally (optimistic)
     setMessages((prev) => [...prev, { role: "user", content: text }, { role: "assistant", content: "" }]);
 
+    // Set a timeout to prevent infinite "thinking" state
+    const timeoutId = setTimeout(() => {
+      setSending(false);
+      setMessages((prev) => {
+        const cp = [...prev];
+        const last = cp[cp.length - 1];
+        if (last?.role === "assistant" && !last.content) {
+          last.content = "I'm having trouble responding right now. Could you please try rephrasing your question or select from one of these options?";
+          last.buttons = [
+            { label: "Check products that we offer", action: "products" },
+            { label: "List of causes", action: "causes" },
+            { label: "What can you print for", action: "print_info" },
+            { label: "Check order details", action: "check_orders" },
+            { label: "Check order status", action: "order_status" }
+          ];
+        }
+        return cp;
+      });
+      setFlowState("awaiting_option");
+    }, 30000); // 30 second timeout
+
     try {
       // fetch recent context from DB too
       const history = await loadHistory(sb, 25);
@@ -504,11 +525,35 @@ export default function KenzieChat() {
         }
       }
 
+      // Clear the timeout since we got a response
+      clearTimeout(timeoutId);
+
+      // If no response was received, show fallback with options
+      if (!acc.trim()) {
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: "I'm not quite sure what you're asking for. Could you please rephrase that or choose one of the options I can help with?",
+            buttons: [
+              { label: "Check products that we offer", action: "products" },
+              { label: "List of causes", action: "causes" },
+              { label: "What can you print for", action: "print_info" },
+              { label: "Check order details", action: "check_orders" },
+              { label: "Check order status", action: "order_status" }
+            ]
+          };
+          return updated;
+        });
+        setFlowState("awaiting_option");
+        return;
+      }
+
       // 3) persist the assistant final content
       await sb.from("kenzie_messages").insert({
         session_id: sessionId,
         role: "assistant",
-        content: acc.trim() ? acc : "…",
+        content: acc.trim(),
       });
 
       // Check if AI returned show options signal
@@ -534,10 +579,23 @@ export default function KenzieChat() {
         setFlowState("awaiting_option");
       }
     } catch (err) {
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        { role: "assistant", content: "Sorry, I had trouble replying. Please try again." },
-      ]);
+      console.error("Chat error:", err);
+      setMessages((prev) => {
+        const cp = [...prev];
+        const last = cp[cp.length - 1];
+        if (last?.role === "assistant") {
+          last.content = "Sorry, I had trouble replying. Could you rephrase your question or choose from these options?";
+          last.buttons = [
+            { label: "Check products that we offer", action: "products" },
+            { label: "List of causes", action: "causes" },
+            { label: "What can you print for", action: "print_info" },
+            { label: "Check order details", action: "check_orders" },
+            { label: "Check order status", action: "order_status" }
+          ];
+        }
+        return cp;
+      });
+      setFlowState("awaiting_option");
     } finally {
       setSending(false);
     }
