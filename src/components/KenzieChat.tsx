@@ -55,6 +55,13 @@ export default function KenzieChat() {
   const [conversationEnded, setConversationEnded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const handleStartOver = () => {
+    setMessages(STARTER_MESSAGES);
+    setFlowState("initial");
+    setUserEmail("");
+    setConversationEnded(false);
+  };
+
   // Show paw intro on first open
   useEffect(() => {
     if (open && !localStorage.getItem("ppp:kenzie:intro_shown")) {
@@ -650,15 +657,23 @@ export default function KenzieChat() {
       <div className="absolute right-4 bottom-4 w-[min(500px,90vw)] h-[min(600px,70vh)] rounded-2xl bg-white/90 backdrop-blur text-black shadow-2xl border border-black/10 flex flex-col overflow-hidden">
         <div className="px-4 py-3 border-b border-black/10 flex items-center justify-between bg-white/70">
           <div className="font-semibold">Chat with Kenzie 🐾</div>
-          <button
-            onClick={() => setOpen(false)}
-            className="size-9 rounded-full border border-black/10 bg-black/5 hover:bg-black/10 grid place-items-center"
-            aria-label="Close chat"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleStartOver}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/5 hover:bg-black/10 transition-colors"
+            >
+              Start Over
+            </button>
+            <button
+              onClick={() => setOpen(false)}
+              className="size-9 rounded-full border border-black/10 bg-black/5 hover:bg-black/10 grid place-items-center"
+              aria-label="Close chat"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div ref={containerRef} className="flex-1 overflow-auto p-4 space-y-3">
