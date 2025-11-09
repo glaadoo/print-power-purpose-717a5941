@@ -58,6 +58,7 @@ export default function KenzieChat() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [suppressGreeting, setSuppressGreeting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleStartOver = () => {
@@ -121,7 +122,7 @@ export default function KenzieChat() {
         .order("created_at", { ascending: true })
         .limit(1000);
 
-      // Always switch context to the clicked session
+      // Switch context immediately
       setSessionId(sid);
       localStorage.setItem("ppp:kenzie:session_id", sid);
       setSb(scopedClient);
@@ -131,25 +132,25 @@ export default function KenzieChat() {
       setUserEmail("");
       setInput("");
       setSearchQuery("");
+      setSuppressGreeting(true);
 
       if (!error && msgs) {
         if (msgs.length > 0) {
           const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
           setMessages(m);
         } else {
-          // No messages yet for this session: show starter messages
-          setMessages(STARTER_MESSAGES);
+          // Do not inject greeting for existing sessions with no messages
+          setMessages([]);
         }
       } else {
-        // On error, still load the session with starter messages
-        setMessages(STARTER_MESSAGES);
+        // On error, don't show greeting. Keep messages as-is or empty.
+        setMessages([]);
       }
     } catch (err) {
       console.error("Error loading session:", err);
-      // Fallback: still switch to session and show starter messages
       setSessionId(sid);
       setSb(makeScopedClient(sid));
-      setMessages(STARTER_MESSAGES);
+      setMessages([]);
       setShowHistory(false);
     }
   };
