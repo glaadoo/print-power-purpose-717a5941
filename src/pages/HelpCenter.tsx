@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
@@ -21,6 +21,18 @@ export default function HelpCenter() {
   // Set document title
   useEffect(() => {
     document.title = "Help Center - Print Power Purpose";
+  }, []);
+
+  // Generate 100 random paws with different positions, sizes, and delays
+  const backgroundPaws = useMemo(() => {
+    return Array.from({ length: 100 }, (_, i) => ({
+      id: i,
+      top: `${Math.random() * 90 + 5}%`,
+      left: `${Math.random() * 90 + 5}%`,
+      size: Math.random() * 3 + 2, // 2rem to 5rem
+      opacity: Math.random() * 0.4 + 0.3, // 0.3 to 0.7
+      delay: Math.random() * 5, // 0s to 5s
+    }));
   }, []);
 
   return (
@@ -66,31 +78,22 @@ export default function HelpCenter() {
             overlay={<div className="absolute inset-0 bg-black/40" />}
           />
 
-          {/* Animated paw icons - multiple floating paws */}
-          <div className="absolute top-20 left-[10%] animate-float opacity-60" style={{ animationDelay: '0s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-32 right-[15%] animate-float opacity-50" style={{ animationDelay: '0.5s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-48 left-[25%] animate-float opacity-70" style={{ animationDelay: '1s' }}>
-            <span className="text-3xl">🐾</span>
-          </div>
-          <div className="absolute top-64 right-[30%] animate-float opacity-55" style={{ animationDelay: '1.5s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-80 left-[40%] animate-float opacity-65" style={{ animationDelay: '2s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-36 right-[8%] animate-float opacity-60" style={{ animationDelay: '2.5s' }}>
-            <span className="text-3xl">🐾</span>
-          </div>
-          <div className="absolute top-56 left-[18%] animate-float opacity-50" style={{ animationDelay: '3s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-72 right-[22%] animate-float opacity-70" style={{ animationDelay: '3.5s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
+          {/* Programmatically generated floating paws */}
+          {backgroundPaws.slice(0, 25).map((paw) => (
+            <div
+              key={`hero-paw-${paw.id}`}
+              className="absolute animate-float pointer-events-none"
+              style={{
+                top: paw.top,
+                left: paw.left,
+                opacity: paw.opacity,
+                animationDelay: `${paw.delay}s`,
+                fontSize: `${paw.size}rem`,
+              }}
+            >
+              🐾
+            </div>
+          ))}
 
           <div className="px-6 text-center w-full max-w-4xl mx-auto">
             <h1 className="font-serif text-[clamp(2.4rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow-md">
@@ -131,31 +134,22 @@ export default function HelpCenter() {
             overlay={<div className="absolute inset-0 bg-black/40" />}
           />
 
-          {/* More animated paws for categories section */}
-          <div className="absolute top-[10%] left-[12%] animate-float opacity-50" style={{ animationDelay: '0.3s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-[25%] right-[18%] animate-float opacity-60" style={{ animationDelay: '0.8s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-[40%] left-[8%] animate-float opacity-55" style={{ animationDelay: '1.3s' }}>
-            <span className="text-3xl">🐾</span>
-          </div>
-          <div className="absolute top-[55%] right-[10%] animate-float opacity-65" style={{ animationDelay: '1.8s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-[70%] left-[15%] animate-float opacity-50" style={{ animationDelay: '2.3s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-[85%] right-[12%] animate-float opacity-70" style={{ animationDelay: '2.8s' }}>
-            <span className="text-3xl">🐾</span>
-          </div>
-          <div className="absolute top-[15%] left-[35%] animate-float opacity-60" style={{ animationDelay: '3.3s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-[50%] right-[35%] animate-float opacity-55" style={{ animationDelay: '3.8s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
+          {/* Programmatically generated floating paws */}
+          {backgroundPaws.slice(25, 50).map((paw) => (
+            <div
+              key={`categories-paw-${paw.id}`}
+              className="absolute animate-float pointer-events-none"
+              style={{
+                top: paw.top,
+                left: paw.left,
+                opacity: paw.opacity,
+                animationDelay: `${paw.delay}s`,
+                fontSize: `${paw.size}rem`,
+              }}
+            >
+              🐾
+            </div>
+          ))}
 
           <div className="px-6 w-full max-w-6xl mx-auto">
             <h2 className="text-center font-serif text-[clamp(2rem,5vw,3.5rem)] leading-tight font-semibold drop-shadow mb-12">
@@ -218,31 +212,22 @@ export default function HelpCenter() {
             overlay={<div className="absolute inset-0 bg-black/40" />}
           />
 
-          {/* More animated paws for FAQ section */}
-          <div className="absolute top-[8%] right-[20%] animate-float opacity-65" style={{ animationDelay: '0.5s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-[20%] left-[10%] animate-float opacity-50" style={{ animationDelay: '1s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-[35%] right-[8%] animate-float opacity-70" style={{ animationDelay: '1.5s' }}>
-            <span className="text-3xl">🐾</span>
-          </div>
-          <div className="absolute top-[50%] left-[22%] animate-float opacity-55" style={{ animationDelay: '2s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-[65%] right-[25%] animate-float opacity-60" style={{ animationDelay: '2.5s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-[80%] left-[18%] animate-float opacity-65" style={{ animationDelay: '3s' }}>
-            <span className="text-3xl">🐾</span>
-          </div>
-          <div className="absolute top-[28%] left-[45%] animate-float opacity-50" style={{ animationDelay: '3.5s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-[72%] right-[40%] animate-float opacity-70" style={{ animationDelay: '4s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
+          {/* Programmatically generated floating paws */}
+          {backgroundPaws.slice(50, 75).map((paw) => (
+            <div
+              key={`faq-paw-${paw.id}`}
+              className="absolute animate-float pointer-events-none"
+              style={{
+                top: paw.top,
+                left: paw.left,
+                opacity: paw.opacity,
+                animationDelay: `${paw.delay}s`,
+                fontSize: `${paw.size}rem`,
+              }}
+            >
+              🐾
+            </div>
+          ))}
 
           <div className="px-6 w-full max-w-4xl mx-auto">
             <h2 className="text-center font-serif text-[clamp(2rem,5vw,3.5rem)] leading-tight font-semibold drop-shadow mb-8">
@@ -325,31 +310,22 @@ export default function HelpCenter() {
             overlay={<div className="absolute inset-0 bg-black/40" />}
           />
 
-          {/* More animated paws for contact section */}
-          <div className="absolute top-[12%] left-[8%] animate-float opacity-60" style={{ animationDelay: '0.2s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-[22%] right-[15%] animate-float opacity-55" style={{ animationDelay: '0.7s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-[38%] left-[20%] animate-float opacity-70" style={{ animationDelay: '1.2s' }}>
-            <span className="text-3xl">🐾</span>
-          </div>
-          <div className="absolute top-[52%] right-[12%] animate-float opacity-50" style={{ animationDelay: '1.7s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
-          <div className="absolute top-[68%] left-[25%] animate-float opacity-65" style={{ animationDelay: '2.2s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-[82%] right-[18%] animate-float opacity-60" style={{ animationDelay: '2.7s' }}>
-            <span className="text-3xl">🐾</span>
-          </div>
-          <div className="absolute top-[18%] left-[42%] animate-float opacity-55" style={{ animationDelay: '3.2s' }}>
-            <span className="text-5xl">🐾</span>
-          </div>
-          <div className="absolute top-[58%] right-[38%] animate-float opacity-70" style={{ animationDelay: '3.7s' }}>
-            <span className="text-4xl">🐾</span>
-          </div>
+          {/* Programmatically generated floating paws */}
+          {backgroundPaws.slice(75, 100).map((paw) => (
+            <div
+              key={`contact-paw-${paw.id}`}
+              className="absolute animate-float pointer-events-none"
+              style={{
+                top: paw.top,
+                left: paw.left,
+                opacity: paw.opacity,
+                animationDelay: `${paw.delay}s`,
+                fontSize: `${paw.size}rem`,
+              }}
+            >
+              🐾
+            </div>
+          ))}
 
           <div className="px-6 w-full max-w-4xl mx-auto text-center">
             <GlassCard padding="p-12">
