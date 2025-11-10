@@ -44,7 +44,7 @@ export default function HelpCenter() {
         aria-label="Help Center content"
       >
         {/* Hero Section - Now scrollable */}
-        <section className="relative pt-20 pb-10 px-4">
+        <section className="relative min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
