@@ -209,6 +209,99 @@ export type Database = {
         }
         Relationships: []
       }
+      help_articles: {
+        Row: {
+          active: boolean | null
+          body: string
+          created_at: string
+          excerpt: string
+          href: string
+          id: string
+          keywords: string[] | null
+          requires_auth: boolean | null
+          slug: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          body: string
+          created_at?: string
+          excerpt: string
+          href: string
+          id?: string
+          keywords?: string[] | null
+          requires_auth?: boolean | null
+          slug: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          body?: string
+          created_at?: string
+          excerpt?: string
+          href?: string
+          id?: string
+          keywords?: string[] | null
+          requires_auth?: boolean | null
+          slug?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      help_search_logs: {
+        Row: {
+          client_ts: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          q: string
+          results_count: number
+          user_id: string | null
+        }
+        Insert: {
+          client_ts?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          q: string
+          results_count?: number
+          user_id?: string | null
+        }
+        Update: {
+          client_ts?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          q?: string
+          results_count?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      help_synonyms: {
+        Row: {
+          id: string
+          synonyms: string[]
+          term: string
+        }
+        Insert: {
+          id?: string
+          synonyms?: string[]
+          term: string
+        }
+        Update: {
+          id?: string
+          synonyms?: string[]
+          term?: string
+        }
+        Relationships: []
+      }
       kenzie_messages: {
         Row: {
           content: string
@@ -579,6 +672,8 @@ export type Database = {
       }
       ppp_session_id: { Args: never; Returns: string }
       require_ppp_session_id: { Args: never; Returns: boolean }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "user"

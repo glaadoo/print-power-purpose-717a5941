@@ -32,3 +32,10 @@ verify_jwt = false
 
 [functions.verify-checkout]
 verify_jwt = false
+
+[functions.help-search]
+verify_jwt = false
+
+[functions.help-log]
+verify_jwt = false
+

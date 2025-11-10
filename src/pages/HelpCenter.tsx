@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
 import VideoBackground from "@/components/VideoBackground";
 import MenuOverlay from "@/components/MenuOverlay";
 import ScrollDots from "@/components/ScrollDots";
+import HelpSearch from "@/components/HelpSearch";
 import useToggle from "@/hooks/useToggle";
 import {
   Accordion,
@@ -16,7 +16,6 @@ import {
 export default function HelpCenter() {
   const nav = useNavigate();
   const menu = useToggle(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Set document title
   useEffect(() => {
@@ -105,21 +104,10 @@ export default function HelpCenter() {
 
             {/* Search bar */}
             <div className="mt-8 mx-auto max-w-2xl">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search for help..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="
-                    w-full px-6 py-4 pl-14 rounded-2xl
-                    bg-white/10 backdrop-blur border border-white/30
-                    text-white placeholder:text-white/60
-                    focus:outline-none focus:ring-2 focus:ring-white/50
-                  "
-                />
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60" size={24} />
-              </div>
+              <HelpSearch onOpenChat={() => {
+                const event = new CustomEvent('open-kenzie-chat');
+                window.dispatchEvent(event);
+              }} />
             </div>
           </div>
         </section>
