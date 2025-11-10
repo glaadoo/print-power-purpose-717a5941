@@ -53,12 +53,6 @@ export default function KenzieChat() {
   const [flowState, setFlowState] = useState<FlowState>("initial");
   const [userEmail, setUserEmail] = useState<string>("");
   const [conversationEnded, setConversationEnded] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [pastSessions, setPastSessions] = useState<Array<{ id: string; created_at: string; preview: string; pinned: boolean }>>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState("");
-  const [suppressGreeting, setSuppressGreeting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleStartOver = () => {
@@ -66,205 +60,6 @@ export default function KenzieChat() {
     setFlowState("initial");
     setUserEmail("");
     setConversationEnded(false);
-  };
-
-  const filteredSessions = pastSessions.filter(session => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return session.preview.toLowerCase().includes(query);
-  });
-
-  const loadPastSessions = async () => {
-    if (!sb) return;
-    try {
-      // Get all sessions from local storage history
-      const allSessionIds = JSON.parse(localStorage.getItem("ppp:kenzie:session_history") || "[]");
-      
-      const sessionsData = await Promise.all(
-        allSessionIds.slice(0, 10).map(async (sid: string) => {
-          const scopedClient = makeScopedClient(sid);
-          
-          const { data: sessionData } = await scopedClient
-            .from("kenzie_sessions")
-            .select("created_at, title, pinned")
-            .eq("id", sid)
-            .maybeSingle();
-          
-          return {
-            id: sid,
-            created_at: sessionData?.created_at || new Date().toISOString(),
-            preview: sessionData?.title || "New Conversation",
-            pinned: sessionData?.pinned || false
-          };
-        })
-      );
-      
-      // Sort: pinned conversations first, then by creation date
-      const sorted = sessionsData.filter(Boolean).sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
-      
-      setPastSessions(sorted);
-    } catch (err) {
-      console.error("Error loading past sessions:", err);
-    }
-  };
-
-  const loadSession = async (sid: string) => {
-    try {
-      const scopedClient = makeScopedClient(sid);
-      const { data: msgs, error } = await scopedClient
-        .from("kenzie_messages")
-        .select("role, content, created_at")
-        .eq("session_id", sid)
-        .order("created_at", { ascending: true })
-        .limit(1000);
-
-      // Switch context immediately
-      setSessionId(sid);
-      localStorage.setItem("ppp:kenzie:session_id", sid);
-      setSb(scopedClient);
-      setShowHistory(false);
-      setFlowState("initial");
-      setConversationEnded(false);
-      setUserEmail("");
-      setInput("");
-      setSearchQuery("");
-      setSuppressGreeting(true);
-
-      if (!error && msgs) {
-        if (msgs.length > 0) {
-          const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
-          console.debug("Loaded messages for session", sid, m.length);
-          setMessages(m);
-        } else {
-          // Do not inject greeting for existing sessions with no messages
-          console.debug("No messages found for session", sid);
-          setMessages([]);
-        }
-      } else {
-        // On error, don't show greeting. Keep messages as-is or empty.
-        console.warn("Error loading messages for session", sid, error);
-        setMessages([]);
-      }
-      // Re-enable greeting logic after we finish switching
-      setSuppressGreeting(false);
-    } catch (err) {
-      console.error("Error loading session:", err);
-      setSessionId(sid);
-      setSb(makeScopedClient(sid));
-      setMessages([]);
-      setShowHistory(false);
-      setSuppressGreeting(false);
-    }
-  };
-
-  const startEditingTitle = (sid: string, currentTitle: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingSessionId(sid);
-    setEditingTitle(currentTitle);
-  };
-
-  const saveTitle = async (sid: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!editingTitle.trim()) {
-      setEditingSessionId(null);
-      return;
-    }
-
-    try {
-      const scopedClient = makeScopedClient(sid);
-      await scopedClient
-        .from("kenzie_sessions")
-        .update({ title: editingTitle.trim() })
-        .eq("id", sid);
-
-      // Update local state
-      setPastSessions(prev => prev.map(session => 
-        session.id === sid ? { ...session, preview: editingTitle.trim() } : session
-      ));
-      
-      setEditingSessionId(null);
-    } catch (err) {
-      console.error("Error updating title:", err);
-    }
-  };
-
-  const cancelEditingTitle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingSessionId(null);
-    setEditingTitle("");
-  };
-
-  const togglePinSession = async (sid: string, currentPinned: boolean, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    try {
-      const scopedClient = makeScopedClient(sid);
-      await scopedClient
-        .from("kenzie_sessions")
-        .update({ pinned: !currentPinned })
-        .eq("id", sid);
-
-      // Update local state and re-sort
-      setPastSessions(prev => {
-        const updated = prev.map(session => 
-          session.id === sid ? { ...session, pinned: !currentPinned } : session
-        );
-        
-        // Sort: pinned first, then by date
-        return updated.sort((a, b) => {
-          if (a.pinned && !b.pinned) return -1;
-          if (!a.pinned && b.pinned) return 1;
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        });
-      });
-    } catch (err) {
-      console.error("Error toggling pin:", err);
-    }
-  };
-
-  const deleteSession = async (sid: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!confirm("Are you sure you want to delete this conversation?")) {
-      return;
-    }
-
-    try {
-      const scopedClient = makeScopedClient(sid);
-      
-      // Delete messages for this session
-      await scopedClient
-        .from("kenzie_messages")
-        .delete()
-        .eq("session_id", sid);
-      
-      // Delete the session
-      await scopedClient
-        .from("kenzie_sessions")
-        .delete()
-        .eq("id", sid);
-      
-      // Remove from local storage history
-      const history = JSON.parse(localStorage.getItem("ppp:kenzie:session_history") || "[]");
-      const updatedHistory = history.filter((id: string) => id !== sid);
-      localStorage.setItem("ppp:kenzie:session_history", JSON.stringify(updatedHistory));
-      
-      // If we deleted the current session, start a new one
-      if (sessionId === sid) {
-        await handleStartNewConversation();
-      }
-      
-      // Refresh the history list
-      await loadPastSessions();
-    } catch (err) {
-      console.error("Error deleting session:", err);
-      alert("Failed to delete conversation. Please try again.");
-    }
   };
 
   // Show paw intro on first open
@@ -280,7 +75,7 @@ export default function KenzieChat() {
 
   // Display greeting messages with 1-second delay when chat opens (only for new sessions)
   useEffect(() => {
-    if (open && messages.length === 0 && sessionId && !suppressGreeting) {
+    if (open && messages.length === 0 && sessionId) {
       // Check if this is a new session by seeing if there are any messages in the database
       const checkAndSetGreeting = async () => {
         if (!sb) return;
@@ -291,7 +86,7 @@ export default function KenzieChat() {
           .limit(1);
         
         // Only show greeting if no messages exist in database
-        if ((!data || data.length === 0) && !suppressGreeting) {
+        if (!data || data.length === 0) {
           setMessages(STARTER_MESSAGES);
         }
       };
@@ -301,7 +96,7 @@ export default function KenzieChat() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [open, messages.length, sessionId, sb, suppressGreeting]);
+  }, [open, messages.length, sessionId, sb]);
 
   // open on custom event
   useEffect(() => {
@@ -912,19 +707,6 @@ export default function KenzieChat() {
           <div className="font-semibold">Chat with Kenzie 🐾</div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                setShowHistory(!showHistory);
-                if (!showHistory) loadPastSessions();
-              }}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/5 hover:bg-black/10 transition-colors"
-              title="View chat history"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </button>
-            <button
               onClick={handleStartOver}
               className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/5 hover:bg-black/10 transition-colors"
             >
@@ -941,169 +723,6 @@ export default function KenzieChat() {
             </button>
           </div>
         </div>
-
-        {/* History Panel */}
-        {showHistory && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col">
-            <div className="px-4 py-3 border-b border-black/10 flex items-center justify-between bg-white/70">
-              <div className="font-semibold">Chat History</div>
-              <button
-                onClick={() => {
-                  setShowHistory(false);
-                  setSearchQuery("");
-                }}
-                className="size-9 rounded-full border border-black/10 bg-black/5 hover:bg-black/10 grid place-items-center"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            
-            {/* Search Input */}
-            <div className="px-4 py-3 border-b border-black/10">
-              <div className="relative">
-                <svg 
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40"
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <circle cx="11" cy="11" r="8" strokeWidth="2"/>
-                  <path d="m21 21-4.35-4.35" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search conversations..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-black/10 bg-white focus:outline-none focus:ring-2 focus:ring-black/20"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 hover:text-black/60"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-auto p-4 space-y-2">
-              {filteredSessions.length === 0 ? (
-                <div className="text-center text-black/40 py-8">
-                  {searchQuery ? "No conversations found" : "No past conversations"}
-                </div>
-              ) : (
-                filteredSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="relative group"
-                  >
-                    {editingSessionId === session.id ? (
-                      <div className="w-full p-3 pr-32 rounded-lg bg-black/5">
-                        <input
-                          type="text"
-                          value={editingTitle}
-                          onChange={(e) => setEditingTitle(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveTitle(session.id, e as any);
-                            if (e.key === 'Escape') cancelEditingTitle(e as any);
-                          }}
-                          className="w-full px-2 py-1 text-sm font-medium rounded border border-black/20 focus:outline-none focus:ring-2 focus:ring-black/20"
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div className="text-xs text-black/50 mt-1">
-                          Press Enter to save, Esc to cancel
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => loadSession(session.id)}
-                        className="w-full text-left p-3 pr-32 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          {session.pinned && (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-500 flex-shrink-0">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          )}
-                          <div className="text-sm font-medium text-black/80 truncate">{session.preview}</div>
-                        </div>
-                        <div className="text-xs text-black/50 mt-1">
-                          {new Date(session.created_at).toLocaleDateString()} {new Date(session.created_at).toLocaleTimeString()}
-                        </div>
-                      </button>
-                    )}
-                    
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {editingSessionId === session.id ? (
-                        <>
-                          <button
-                            onClick={(e) => saveTitle(session.id, e)}
-                            className="p-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-600"
-                            title="Save title"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
-                          <button
-                            onClick={cancelEditingTitle}
-                            className="p-2 rounded-lg bg-black/10 hover:bg-black/20 text-black/60"
-                            title="Cancel"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={(e) => togglePinSession(session.id, session.pinned, e)}
-                            className={`p-2 rounded-lg ${session.pinned ? 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30' : 'bg-black/10 hover:bg-black/20 text-black/60'}`}
-                            title={session.pinned ? "Unpin conversation" : "Pin conversation"}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill={session.pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          </button>
-                          <button
-                            onClick={(e) => startEditingTitle(session.id, session.preview, e)}
-                            className="p-2 rounded-lg bg-black/10 hover:bg-black/20 text-black/60"
-                            title="Edit title"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
-                          <button
-                            onClick={(e) => deleteSession(session.id, e)}
-                            className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600"
-                            title="Delete conversation"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6"/>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                              <line x1="10" y1="11" x2="10" y2="17"/>
-                              <line x1="14" y1="11" x2="14" y2="17"/>
-                            </svg>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
 
         <div ref={containerRef} className="flex-1 overflow-auto p-4 space-y-3">
           {messages.map((m, i) => (
