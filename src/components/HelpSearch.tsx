@@ -178,23 +178,23 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <div className="relative w-full max-w-2xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search common questions... try 'orders'"
-            value={query}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            className="pl-12 pr-4 h-14 text-base bg-background/10 backdrop-blur-md border-border/20 ring-border/20 focus-visible:ring-border/40 rounded-2xl"
-            role="combobox"
-            aria-expanded={isOpen}
-            aria-controls="search-results"
-            aria-activedescendant={highlightedIndex >= 0 ? `result-${highlightedIndex}` : undefined}
-          />
-        </div>
-      </PopoverTrigger>
+      <div className="relative w-full max-w-2xl">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+        <Input
+          type="search"
+          placeholder="Search common questions... try 'orders'"
+          value={query}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => query.length >= 2 && setIsOpen(true)}
+          autoFocus
+          className="pl-12 pr-4 h-14 text-base bg-background/10 backdrop-blur-md border-border/20 ring-border/20 focus-visible:ring-border/40 rounded-2xl"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls="search-results"
+          aria-activedescendant={highlightedIndex >= 0 ? `result-${highlightedIndex}` : undefined}
+        />
+      </div>
       <PopoverContent 
         className="w-[var(--radix-popover-trigger-width)] p-0 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl z-50"
         align="start"
