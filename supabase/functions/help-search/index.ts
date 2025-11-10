@@ -47,11 +47,25 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const q = url.searchParams.get('q')?.trim().toLowerCase() || '';
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '6'), 50);
-    const offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0);
-    const section = url.searchParams.get('section') || 'all';
+    // Read from request body (POST) or URL params (GET)
+    let q = '';
+    let limit = 6;
+    let offset = 0;
+    let section = 'all';
+
+    if (req.method === 'POST') {
+      const body = await req.json();
+      q = body.q?.trim().toLowerCase() || '';
+      limit = Math.min(parseInt(body.limit || '6'), 50);
+      offset = Math.max(parseInt(body.offset || '0'), 0);
+      section = body.section || 'all';
+    } else {
+      const url = new URL(req.url);
+      q = url.searchParams.get('q')?.trim().toLowerCase() || '';
+      limit = Math.min(parseInt(url.searchParams.get('limit') || '6'), 50);
+      offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0);
+      section = url.searchParams.get('section') || 'all';
+    }
 
     // Validation
     if (!q || q.length < 1 || q.length > 64) {
