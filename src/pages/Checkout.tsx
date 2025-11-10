@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
 import { useCart } from "../context/CartContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";

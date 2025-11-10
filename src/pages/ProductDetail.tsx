@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";

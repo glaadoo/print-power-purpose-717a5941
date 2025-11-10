@@ -1,7 +1,7 @@
 // src/pages/Products.tsx
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";

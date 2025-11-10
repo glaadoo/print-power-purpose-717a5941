@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import DonationBarometer from "../components/DonationBarometer";
 import { useCause } from "../context/CauseContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
