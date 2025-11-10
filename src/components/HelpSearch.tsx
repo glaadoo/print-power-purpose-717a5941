@@ -84,13 +84,20 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
     const value = e.target.value;
     setQuery(value);
 
+    // Open popover immediately when typing
+    if (value.length >= 2) {
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     debounceRef.current = setTimeout(() => {
       searchHelp(value);
-    }, 180);
+    }, 150);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -109,7 +116,11 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         break;
       case 'Enter':
         e.preventDefault();
-        if (highlightedIndex >= 0) {
+        if (!isOpen && query.trim().length >= 2) {
+          // Open popover and trigger search if closed
+          setIsOpen(true);
+          searchHelp(query);
+        } else if (highlightedIndex >= 0) {
           handleResultClick(allResults[highlightedIndex]);
         } else {
           handleFullSearch();
