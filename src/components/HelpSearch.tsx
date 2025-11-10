@@ -200,6 +200,8 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         align="start"
         side="bottom"
         sideOffset={8}
+        avoidCollisions={false}
+        collisionPadding={0}
       >
         <div 
           id="search-results" 
