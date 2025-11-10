@@ -67,6 +67,21 @@ export default function Welcome() {
         // Stay on page in guest mode
         setUserProfile(null);
         setLoading(false);
+      } else if (session.user) {
+        // Reload profile when session changes
+        setTimeout(() => {
+          supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single()
+            .then(({ data, error }) => {
+              if (!error && data) {
+                setUserProfile(data);
+              }
+              setLoading(false);
+            });
+        }, 0);
       }
     });
 
