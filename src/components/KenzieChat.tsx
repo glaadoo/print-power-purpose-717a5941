@@ -137,21 +137,27 @@ export default function KenzieChat() {
       if (!error && msgs) {
         if (msgs.length > 0) {
           const m = msgs.map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
+          console.debug("Loaded messages for session", sid, m.length);
           setMessages(m);
         } else {
           // Do not inject greeting for existing sessions with no messages
+          console.debug("No messages found for session", sid);
           setMessages([]);
         }
       } else {
         // On error, don't show greeting. Keep messages as-is or empty.
+        console.warn("Error loading messages for session", sid, error);
         setMessages([]);
       }
+      // Re-enable greeting logic after we finish switching
+      setSuppressGreeting(false);
     } catch (err) {
       console.error("Error loading session:", err);
       setSessionId(sid);
       setSb(makeScopedClient(sid));
       setMessages([]);
       setShowHistory(false);
+      setSuppressGreeting(false);
     }
   };
 
@@ -274,7 +280,7 @@ export default function KenzieChat() {
 
   // Display greeting messages with 1-second delay when chat opens (only for new sessions)
   useEffect(() => {
-    if (open && messages.length === 0 && sessionId) {
+    if (open && messages.length === 0 && sessionId && !suppressGreeting) {
       // Check if this is a new session by seeing if there are any messages in the database
       const checkAndSetGreeting = async () => {
         if (!sb) return;
@@ -285,7 +291,7 @@ export default function KenzieChat() {
           .limit(1);
         
         // Only show greeting if no messages exist in database
-        if (!data || data.length === 0) {
+        if ((!data || data.length === 0) && !suppressGreeting) {
           setMessages(STARTER_MESSAGES);
         }
       };
@@ -295,7 +301,7 @@ export default function KenzieChat() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [open, messages.length, sessionId, sb]);
+  }, [open, messages.length, sessionId, sb, suppressGreeting]);
 
   // open on custom event
   useEffect(() => {
