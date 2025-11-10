@@ -138,10 +138,11 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
   };
 
   const logSearch = async (count: number) => {
+    if (!query.trim()) return; // Don't log empty queries
     try {
       await supabase.functions.invoke('help-log', {
         body: {
-          q: query,
+          q: query.trim(),
           resultsCount: count,
           clientTs: new Date().toISOString()
         }
