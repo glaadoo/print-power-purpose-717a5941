@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useCause } from "../context/CauseContext";
 import VideoBackground from "@/components/VideoBackground";
@@ -46,8 +46,8 @@ export default function Success() {
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
         {/* Left: Home */}
-        <a
-          href="/"
+        <Link
+          to="/"
           className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
           aria-label="Home"
         >
@@ -56,22 +56,22 @@ export default function Success() {
             <polyline points="9 22 9 12 15 12 15 22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span className="hidden sm:inline">Home</span>
-        </a>
+        </Link>
 
         {/* Center: Brand */}
         <div className="absolute left-1/2 -translate-x-1/2">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
             aria-label="Print Power Purpose Home"
           >
             PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
+          </Link>
         </div>
 
         {/* Right: Find Causes */}
-        <a
-          href="/causes"
+        <Link
+          to="/causes"
           className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
           aria-label="Find causes"
         >
@@ -80,7 +80,7 @@ export default function Success() {
             <path d="M20 20l-3.2-3.2" stroke="white" strokeWidth="2" strokeLinecap="round" />
           </svg>
           <span className="hidden sm:inline">Find Causes</span>
-        </a>
+        </Link>
       </header>
 
       {/* Main content */}
@@ -118,19 +118,19 @@ export default function Success() {
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
                 <button 
                   className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
-                  onClick={() => window.location.assign("/")}
+                  onClick={() => navigate("/")}
                 >
                   Back to Home
                 </button>
                 <button 
                   className="rounded-full px-6 py-3 bg-white/20 border border-white/30 text-white font-semibold hover:bg-white/30"
-                  onClick={() => window.location.assign("/welcome")}
+                  onClick={() => navigate("/welcome")}
                 >
                   Continue Shopping
                 </button>
                 <button 
                   className="rounded-full px-6 py-3 bg-white/20 border border-white/30 text-white font-semibold hover:bg-white/30"
-                  onClick={() => window.location.assign("/causes")}
+                  onClick={() => navigate("/causes")}
                 >
                   Choose Another Cause
                 </button>

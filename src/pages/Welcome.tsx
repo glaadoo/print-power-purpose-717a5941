@@ -60,7 +60,10 @@ export default function Welcome() {
         setUserProfile(null);
         setLoading(false);
       } else if (session.user) {
-        loadUserProfile(session.user.id);
+        // Defer Supabase calls to avoid deadlocks
+        setTimeout(() => {
+          loadUserProfile(session.user.id);
+        }, 0);
       }
     });
 
@@ -77,6 +80,19 @@ export default function Welcome() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const displayName = useMemo(() => {
+    const p = userProfile;
+    const u = session?.user;
+    const fromMeta = (u?.user_metadata as any) || {};
+    return (
+      p?.first_name ||
+      fromMeta.first_name ||
+      (fromMeta.full_name ? String(fromMeta.full_name).split(" ")[0] : undefined) ||
+      (u?.email ? String(u.email).split("@")[0] : undefined) ||
+      ""
+    );
+  }, [userProfile, session]);
 
   function onSelect(value: string) {
     if (!value) return;
@@ -190,7 +206,7 @@ export default function Welcome() {
                     )}
 
                     <h1 className="font-serif text-[clamp(2rem,4.5vw,3.2rem)] leading-tight font-semibold drop-shadow">
-                      Welcome{userProfile && ` ${userProfile.first_name}`}
+                      {`Welcome${displayName ? `, ${displayName}` : ""}`}
                     </h1>
                     {step >= 2 && (
                       <div
