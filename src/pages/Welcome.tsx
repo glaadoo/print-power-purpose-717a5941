@@ -32,6 +32,20 @@ export default function Welcome() {
   useEffect(() => {
     document.title = "Welcome - Print Power Purpose";
 
+    // Function to load user profile
+    const loadUserProfile = async (userId: string) => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
+      
+      if (!error && data) {
+        setUserProfile(data);
+      }
+      setLoading(false);
+    };
+
     // Allow guest mode: don't redirect to /auth when no session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -43,19 +57,7 @@ export default function Welcome() {
 
       // Load user profile for signed-in users
       if (session.user) {
-        setTimeout(() => {
-          supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single()
-            .then(({ data, error }) => {
-              if (!error && data) {
-                setUserProfile(data);
-              }
-              setLoading(false);
-            });
-        }, 0);
+        loadUserProfile(session.user.id);
       } else {
         setLoading(false);
       }
@@ -69,19 +71,7 @@ export default function Welcome() {
         setLoading(false);
       } else if (session.user) {
         // Reload profile when session changes
-        setTimeout(() => {
-          supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single()
-            .then(({ data, error }) => {
-              if (!error && data) {
-                setUserProfile(data);
-              }
-              setLoading(false);
-            });
-        }, 0);
+        loadUserProfile(session.user.id);
       }
     });
 
