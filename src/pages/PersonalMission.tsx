@@ -1,9 +1,11 @@
 import { useCause } from "../context/CauseContext";
 import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
 
 export default function PersonalMission() {
   const { setCause } = useCause();
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [about, setAbout] = useState("");
 
@@ -14,20 +16,20 @@ export default function PersonalMission() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    window.location.href = "/causes";
+    navigate("/causes");
   }
 
   return (
     <div className="fixed inset-0 text-white">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <a
-          href="/"
+        <Link
+          to="/"
           className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
           aria-label="Print Power Purpose Home"
         >
           PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
+        </Link>
       </header>
 
       {/* Scrollable content */}

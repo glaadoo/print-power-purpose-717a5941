@@ -37,19 +37,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Clear cart for guest users on mount/refresh
+  // Clear cart only on explicit logout (not on mount/refresh)
   useEffect(() => {
-    const checkAuthAndClearCart = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        // Guest user - clear cart
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Only clear cart when user explicitly signs out
+      if (event === 'SIGNED_OUT') {
         setState({ items: [] });
         try {
           localStorage.removeItem(LS_KEY);
         } catch {}
       }
-    };
-    checkAuthAndClearCart();
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // persist
