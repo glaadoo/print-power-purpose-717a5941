@@ -430,7 +430,7 @@ export default function AdminLegal() {
                         size="sm"
                         variant="outline"
                         onClick={() =>
-                          navigate(`/${doc.type}?version=${doc.version}`)
+                          navigate(`/policies/${doc.type}?version=${doc.version}`)
                         }
                       >
                         <Eye className="w-4 h-4" />

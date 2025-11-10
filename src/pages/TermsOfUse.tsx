@@ -156,7 +156,7 @@ export default function TermsOfUse() {
                       {versions.map((v) => (
                         <a
                           key={v.id}
-                          href={`/terms?version=${v.version}`}
+                          href={`/policies/terms?version=${v.version}`}
                           className="block p-3 rounded border hover:bg-secondary/50 transition-colors"
                         >
                           <div className="flex items-center justify-between">

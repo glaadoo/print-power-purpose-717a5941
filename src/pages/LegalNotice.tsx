@@ -156,7 +156,7 @@ export default function LegalNotice() {
                       {versions.map((v) => (
                         <a
                           key={v.id}
-                          href={`/legal?version=${v.version}`}
+                          href={`/policies/legal?version=${v.version}`}
                           className="block p-3 rounded border hover:bg-secondary/50 transition-colors"
                         >
                           <div className="flex items-center justify-between">

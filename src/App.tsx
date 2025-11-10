@@ -393,7 +393,7 @@ export default function App() {
 
           {/* Legal Pages */}
           <Route
-            path="/privacy"
+            path="/policies/privacy"
             element={
               <RouteBoundary name="PrivacyPolicy">
                 <PrivacyPolicy />
@@ -401,7 +401,7 @@ export default function App() {
             }
           />
           <Route
-            path="/terms"
+            path="/policies/terms"
             element={
               <RouteBoundary name="TermsOfUse">
                 <TermsOfUse />
@@ -409,7 +409,7 @@ export default function App() {
             }
           />
           <Route
-            path="/legal"
+            path="/policies/legal"
             element={
               <RouteBoundary name="LegalNotice">
                 <LegalNotice />

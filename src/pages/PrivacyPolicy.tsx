@@ -156,7 +156,7 @@ export default function PrivacyPolicy() {
                       {versions.map((v) => (
                         <a
                           key={v.id}
-                          href={`/privacy?version=${v.version}`}
+                          href={`/policies/privacy?version=${v.version}`}
                           className="block p-3 rounded border hover:bg-secondary/50 transition-colors"
                         >
                           <div className="flex items-center justify-between">
