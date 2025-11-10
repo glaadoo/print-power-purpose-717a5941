@@ -196,7 +196,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         </div>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-background border-2 border-primary/20 rounded-2xl shadow-2xl z-50"
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl z-50"
         align="start"
         side="bottom"
         sideOffset={8}
@@ -208,16 +208,16 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
           aria-label="Search results"
         >
           {isLoading ? (
-            <div className="p-6 text-center bg-background">
-              <div className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="p-6 text-center bg-white">
+              <div className="inline-block w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : allResults.length === 0 && query.trim() ? (
             <EmptyState />
           ) : (
-            <div className="py-2 bg-background">
+            <div className="py-2 bg-white">
               {results.faqs.length > 0 && (
-                <div className="mb-2">
-                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider bg-muted/30">
+                <div className="mb-1">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">
                     FAQs
                   </div>
                   {results.faqs.map((result, idx) => (
@@ -227,19 +227,19 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
                       role="option"
                       aria-selected={highlightedIndex === idx}
                       onClick={() => handleResultClick(result)}
-                      className={`w-full px-4 py-3 text-left hover:bg-accent transition-colors border-b border-border/30 ${
-                        highlightedIndex === idx ? 'bg-accent' : ''
+                      className={`w-full px-4 py-3 text-left hover:bg-amber-50 transition-colors border-b border-gray-100 ${
+                        highlightedIndex === idx ? 'bg-amber-100' : ''
                       }`}
                     >
-                      <div className="font-semibold text-sm text-foreground">{result.title}</div>
-                      <div className="text-xs text-muted-foreground mt-1 line-clamp-1">{result.excerpt}</div>
+                      <div className="font-semibold text-sm text-gray-900">{result.title}</div>
+                      <div className="text-xs text-gray-600 mt-1 line-clamp-1">{result.excerpt}</div>
                     </button>
                   ))}
                 </div>
               )}
               {results.topics.length > 0 && (
-                <div className="mb-2">
-                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider bg-muted/30">
+                <div className="mb-1">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">
                     Topics
                   </div>
                   {results.topics.map((result, idx) => {
@@ -251,12 +251,12 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
                         role="option"
                         aria-selected={highlightedIndex === globalIdx}
                         onClick={() => handleResultClick(result)}
-                        className={`w-full px-4 py-3 text-left hover:bg-accent transition-colors border-b border-border/30 ${
-                          highlightedIndex === globalIdx ? 'bg-accent' : ''
+                        className={`w-full px-4 py-3 text-left hover:bg-amber-50 transition-colors border-b border-gray-100 ${
+                          highlightedIndex === globalIdx ? 'bg-amber-100' : ''
                         }`}
                       >
-                        <div className="font-semibold text-sm text-foreground">{result.title}</div>
-                        <div className="text-xs text-muted-foreground mt-1 line-clamp-1">{result.excerpt}</div>
+                        <div className="font-semibold text-sm text-gray-900">{result.title}</div>
+                        <div className="text-xs text-gray-600 mt-1 line-clamp-1">{result.excerpt}</div>
                       </button>
                     );
                   })}
@@ -264,7 +264,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
               )}
               {results.actions.length > 0 && (
                 <div>
-                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider bg-muted/30">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">
                     Quick Actions
                   </div>
                   {results.actions.map((result, idx) => {
@@ -276,12 +276,12 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
                         role="option"
                         aria-selected={highlightedIndex === globalIdx}
                         onClick={() => handleResultClick(result)}
-                        className={`w-full px-4 py-3 text-left hover:bg-accent transition-colors border-b border-border/30 last:border-b-0 ${
-                          highlightedIndex === globalIdx ? 'bg-accent' : ''
+                        className={`w-full px-4 py-3 text-left hover:bg-amber-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                          highlightedIndex === globalIdx ? 'bg-amber-100' : ''
                         }`}
                       >
-                        <div className="font-semibold text-sm text-foreground">{result.title}</div>
-                        <div className="text-xs text-muted-foreground mt-1 line-clamp-1">{result.excerpt}</div>
+                        <div className="font-semibold text-sm text-gray-900">{result.title}</div>
+                        <div className="text-xs text-gray-600 mt-1 line-clamp-1">{result.excerpt}</div>
                       </button>
                     );
                   })}
