@@ -20,7 +20,7 @@ export default function HelpCenter() {
       <header
         className="
           fixed top-0 inset-x-0 z-50
-          px-4 md:px-6 py-3
+          h-14 px-4 md:px-6
           flex items-center justify-center
           text-white
           backdrop-blur bg-black/20
@@ -39,7 +39,7 @@ export default function HelpCenter() {
 
       {/* Main scrollable content */}
       <div 
-        className="pt-16 min-h-screen overflow-y-auto"
+        className="pt-14 min-h-screen"
         role="main"
         aria-label="Help Center content"
       >
