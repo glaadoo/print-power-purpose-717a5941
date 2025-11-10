@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import VideoBackground from "@/components/VideoBackground";
@@ -127,13 +127,13 @@ export default function Welcome() {
           <Menu className="h-6 w-6" />
         </button>
 
-        <a
-          href="/"
+        <Link
+          to="/"
           className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
           aria-label="Print Power Purpose Home"
         >
           PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
+        </Link>
       </header>
 
       {/* Fullscreen content with animated paws background */}

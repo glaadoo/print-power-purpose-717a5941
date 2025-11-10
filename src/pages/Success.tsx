@@ -8,17 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Success() {
   const [sp] = useSearchParams();
   const sessionId = sp.get("session_id");
-  // Guard hooks to avoid runtime crashes if providers are missing
-  let clearCart: () => void = () => {};
-  let causeName: string | undefined;
-  try {
-    clearCart = useCart().clear;
-  } catch {}
-  try {
-    const c = useCause().cause as any;
-    causeName = c?.name;
-  } catch {}
   const navigate = useNavigate();
+  const { clear: clearCart } = useCart();
+  const { cause } = useCause();
+  const causeName = (cause as any)?.name;
 
   useEffect(() => {
     // Clear cart & any pending checkout selection so badges/state reset immediately.
