@@ -84,20 +84,13 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
     const value = e.target.value;
     setQuery(value);
 
-    // Open popover immediately when typing
-    if (value.length >= 2) {
-      setIsOpen(true);
-    } else {
-      setIsOpen(false);
-    }
-
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     debounceRef.current = setTimeout(() => {
       searchHelp(value);
-    }, 150);
+    }, 180);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -116,11 +109,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         break;
       case 'Enter':
         e.preventDefault();
-        if (!isOpen && query.trim().length >= 2) {
-          // Open popover and trigger search if closed
-          setIsOpen(true);
-          searchHelp(query);
-        } else if (highlightedIndex >= 0) {
+        if (highlightedIndex >= 0) {
           handleResultClick(allResults[highlightedIndex]);
         } else {
           handleFullSearch();
@@ -189,25 +178,23 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <div className="relative w-full max-w-2xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none z-10" />
-          <Input
-            type="search"
-            placeholder="Search common questions... try 'orders'"
-            value={query}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onFocus={() => query.length >= 2 && setIsOpen(true)}
-            autoFocus
-            className="pl-12 pr-4 h-14 text-base bg-background/10 backdrop-blur-md border-border/20 ring-border/20 focus-visible:ring-border/40 rounded-2xl"
-            role="combobox"
-            aria-expanded={isOpen}
-            aria-controls="search-results"
-            aria-activedescendant={highlightedIndex >= 0 ? `result-${highlightedIndex}` : undefined}
-          />
-        </div>
-      </PopoverTrigger>
+      <div className="relative w-full max-w-2xl">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+        <Input
+          type="search"
+          placeholder="Search common questions... try 'orders'"
+          value={query}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => query.length >= 2 && setIsOpen(true)}
+          autoFocus
+          className="pl-12 pr-4 h-14 text-base bg-background/10 backdrop-blur-md border-border/20 ring-border/20 focus-visible:ring-border/40 rounded-2xl"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls="search-results"
+          aria-activedescendant={highlightedIndex >= 0 ? `result-${highlightedIndex}` : undefined}
+        />
+      </div>
       <PopoverContent 
         className="w-[var(--radix-popover-trigger-width)] p-0 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl z-50"
         align="start"
