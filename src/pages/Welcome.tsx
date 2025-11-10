@@ -34,43 +34,43 @@ export default function Welcome() {
 
     // Function to load user profile
     const loadUserProfile = async (userId: string) => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-      
-      if (!error && data) {
-        setUserProfile(data);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle();
+        
+        if (!error && data) {
+          setUserProfile(data);
+        } else if (error) {
+          console.error("Error loading profile:", error);
+        }
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    // Allow guest mode: don't redirect to /auth when no session
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session) {
+        setUserProfile(null);
+        setLoading(false);
+      } else if (session.user) {
+        loadUserProfile(session.user.id);
+      }
+    });
+
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (!session) {
         setUserProfile(null);
         setLoading(false);
-        return;
-      }
-
-      // Load user profile for signed-in users
-      if (session.user) {
-        loadUserProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (!session) {
-        // Stay on page in guest mode
-        setUserProfile(null);
-        setLoading(false);
       } else if (session.user) {
-        // Reload profile when session changes
         loadUserProfile(session.user.id);
       }
     });
