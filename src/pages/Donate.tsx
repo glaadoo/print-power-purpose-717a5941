@@ -7,6 +7,8 @@ import VideoBackground from "@/components/VideoBackground";
 import DonationBarometer from "@/components/DonationBarometer";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { calculateWithTransactionFees } from "@/lib/donation-utils";
+import { invokeWithRetry } from "@/lib/api-retry";
 
 type RecentDonation = {
   id: string;
@@ -155,35 +157,39 @@ export default function Donate() {
     const donationAmount = parseFloat(amount);
     let finalAmount = donationAmount;
     
-    // Add transaction costs if checked (approximately 2.9% + $0.30)
+    // Add transaction costs if checked
     if (coverTransactionCosts) {
-      finalAmount = Math.round((donationAmount + 0.30) / 0.971 * 100) / 100;
+      finalAmount = calculateWithTransactionFees(donationAmount);
     }
     
     setProcessing(true);
 
     try {
       if (frequency === "monthly") {
-        // Create Stripe checkout session for monthly recurring donation
-        const { data, error } = await supabase.functions.invoke("create-monthly-donation", {
-          body: {
-            causeId: cause.id,
-            causeName: cause.name,
-            amountCents: Math.round(finalAmount * 100),
-            customerEmail: donorEmail,
-            firstName: donorFirstName,
-            lastName: donorLastName,
-            phone: donorPhone,
-            address: {
-              street: donorStreetAddress,
-              apartment: donorApartment,
-              city: donorCity,
-              state: donorState,
-              zipCode: donorZipCode,
-              country: donorCountry,
+        // Create Stripe checkout session for monthly recurring donation with retry
+        const { data, error } = await invokeWithRetry(
+          supabase,
+          "create-monthly-donation",
+          {
+            body: {
+              causeId: cause.id,
+              causeName: cause.name,
+              amountCents: Math.round(finalAmount * 100),
+              customerEmail: donorEmail,
+              firstName: donorFirstName,
+              lastName: donorLastName,
+              phone: donorPhone,
+              address: {
+                street: donorStreetAddress,
+                apartment: donorApartment,
+                city: donorCity,
+                state: donorState,
+                zipCode: donorZipCode,
+                country: donorCountry,
+              },
             },
-          },
-        });
+          }
+        );
 
         if (error) throw error;
 
@@ -193,19 +199,23 @@ export default function Donate() {
           throw new Error("No checkout URL returned");
         }
       } else {
-        // Create Stripe checkout session for one-time donation (Direct flow)
-        const { data, error } = await supabase.functions.invoke("checkout-session", {
-          body: {
-            productName: `Donation to ${cause.name}`,
-            unitAmountCents: Math.round(finalAmount * 100),
-            quantity: 1,
-            causeId: cause.id,
-            donationUsd: finalAmount, // This is a pure donation, so donation = full amount
-            currency: "usd",
-            successPath: `/?payment=success&cause=${cause.id}`,
-            cancelPath: `/donate?cause=${cause.id}&payment=cancelled`,
-          },
-        });
+        // Create Stripe checkout session for one-time donation (Direct flow) with retry
+        const { data, error } = await invokeWithRetry(
+          supabase,
+          "checkout-session",
+          {
+            body: {
+              productName: `Donation to ${cause.name}`,
+              unitAmountCents: Math.round(finalAmount * 100),
+              quantity: 1,
+              causeId: cause.id,
+              donationUsd: finalAmount, // This is a pure donation, so donation = full amount
+              currency: "usd",
+              successPath: `/?payment=success&cause=${cause.id}`,
+              cancelPath: `/donate?cause=${cause.id}&payment=cancelled`,
+            },
+          }
+        );
 
         if (error) throw error;
 
@@ -217,7 +227,7 @@ export default function Donate() {
       }
     } catch (err: any) {
       console.error("Donation error:", err);
-      toast.error(err.message || "Failed to process donation");
+      toast.error(err.message || "Failed to process donation. Please try again.");
       setProcessing(false);
     }
   };

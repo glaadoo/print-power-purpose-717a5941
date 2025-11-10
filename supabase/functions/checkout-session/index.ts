@@ -4,7 +4,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 // Rate limiting: Track requests per IP
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const MAX_REQUESTS = 10; // 10 requests per minute per IP
+const MAX_REQUESTS = 20; // 20 requests per minute per IP (reduced from 10 for shared networks)
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();

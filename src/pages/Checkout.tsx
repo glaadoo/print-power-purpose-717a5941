@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { normalizeDonationCents } from "@/lib/donation-utils";
+import { withRetry } from "@/lib/api-retry";
 
 type ProductRow = {
   id: string;
@@ -165,7 +167,7 @@ export default function Checkout() {
     }
   }, [merged]);
 
-  // Create Stripe Checkout by calling your Edge Function directly (with required headers)
+  // Create Stripe Checkout with retry logic
   async function continueToCheckout() {
     const causeIdForCheckout = selectedCauseId || merged.causeId;
     if (!causeIdForCheckout) return;
@@ -174,6 +176,9 @@ export default function Checkout() {
     if (cartItems.length === 0 && !product) return;
     
     setLoading(true);
+
+    // Normalize donation amount
+    const normalizedDonation = normalizeDonationCents(donation);
 
     const payload = {
       items: cartItems.map(item => ({
@@ -184,7 +189,7 @@ export default function Checkout() {
         imageUrl: item.imageUrl || undefined,
       })),
       causeId: causeIdForCheckout,
-      donationCents: donation,
+      donationCents: normalizedDonation,
     };
 
     const fnUrl = `${import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co"}/functions/v1/checkout-session`;
@@ -193,28 +198,34 @@ export default function Checkout() {
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw";
 
     try {
-      const r = await fetch(fnUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // REQUIRED for Supabase Edge Functions that expect JWT
-          "apikey": supaAnon,
-          "Authorization": `Bearer ${supaAnon}`,
-        },
-        body: JSON.stringify(payload),
+      // Use retry logic for API call
+      const { url } = await withRetry(async () => {
+        const r = await fetch(fnUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": supaAnon,
+            "Authorization": `Bearer ${supaAnon}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const txt = await r.text();
+        if (!r.ok) {
+          console.error("[checkout-session FAILED]", r.status, txt);
+          const error: any = new Error(txt || `HTTP ${r.status}`);
+          error.status = r.status;
+          throw error;
+        }
+
+        const data = JSON.parse(txt || "{}");
+        if (!data.url) {
+          console.error("[checkout-session MISSING URL]", txt);
+          throw new Error("Stripe did not return a URL");
+        }
+
+        return data;
       });
-
-      const txt = await r.text(); // read raw so we can surface errors
-      if (!r.ok) {
-        console.error("[checkout-session FAILED]", r.status, txt);
-        throw new Error(txt || `HTTP ${r.status}`);
-      }
-
-      const { url } = JSON.parse(txt || "{}");
-      if (!url) {
-        console.error("[checkout-session MISSING URL]", txt);
-        throw new Error("Stripe did not return a URL");
-      }
 
       window.location.href = url; // Redirect to Stripe Hosted Checkout
     } catch (e: any) {
