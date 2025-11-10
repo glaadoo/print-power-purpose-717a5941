@@ -78,6 +78,10 @@ const Contact         = lazyPage("Contact",         () => import("./pages/Contac
 const SystemLogs      = lazyPage("SystemLogs",      () => import("./pages/SystemLogs"));
 const HelpCenter      = lazyPage("HelpCenter",      () => import("./pages/HelpCenter"));
 const HelpSearchResults = lazyPage("HelpSearchResults", () => import("./pages/HelpSearchResults"));
+const PrivacyPolicy   = lazyPage("PrivacyPolicy",   () => import("./pages/PrivacyPolicy"));
+const TermsOfUse      = lazyPage("TermsOfUse",      () => import("./pages/TermsOfUse"));
+const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalNotice"));
+const AdminLegal      = lazyPage("AdminLegal",      () => import("./pages/AdminLegal"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -383,6 +387,42 @@ export default function App() {
             element={
               <RouteBoundary name="HelpSearchResults">
                 <HelpSearchResults />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Legal Pages */}
+          <Route
+            path="/privacy"
+            element={
+              <RouteBoundary name="PrivacyPolicy">
+                <PrivacyPolicy />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/terms"
+            element={
+              <RouteBoundary name="TermsOfUse">
+                <TermsOfUse />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/legal"
+            element={
+              <RouteBoundary name="LegalNotice">
+                <LegalNotice />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Legal */}
+          <Route
+            path="/admin/legal"
+            element={
+              <RouteBoundary name="AdminLegal">
+                <AdminLegal />
               </RouteBoundary>
             }
           />

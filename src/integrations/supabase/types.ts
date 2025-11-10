@@ -358,6 +358,51 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_documents: {
+        Row: {
+          changelog: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          id: string
+          published_at: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          changelog?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          id?: string
+          published_at?: string | null
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          changelog?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          published_at?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       nonprofits: {
         Row: {
           created_at: string
