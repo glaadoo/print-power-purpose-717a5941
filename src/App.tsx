@@ -71,6 +71,8 @@ const PersonalMission = lazyPage("PersonalMission", () => import("./pages/Person
 const Cart            = lazyPage("Cart",            () => import("./pages/Cart"));
 const Checkout        = lazyPage("Checkout",        () => import("./pages/Checkout"));
 const Auth            = lazyPage("Auth",            () => import("./pages/Auth"));
+const ForgotPassword  = lazyPage("ForgotPassword",  () => import("./pages/ForgotPassword"));
+const ResetPassword   = lazyPage("ResetPassword",   () => import("./pages/ResetPassword"));
 const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
 const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
 const JotFormPayment = lazyPage("JotFormPayment", () => import("./pages/JotFormPayment"));
@@ -327,6 +329,26 @@ export default function App() {
             element={
               <RouteBoundary name="Auth">
                 <Auth />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Forgot Password */}
+          <Route
+            path="/forgot-password"
+            element={
+              <RouteBoundary name="ForgotPassword">
+                <ForgotPassword />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Reset Password */}
+          <Route
+            path="/reset-password"
+            element={
+              <RouteBoundary name="ResetPassword">
+                <ResetPassword />
               </RouteBoundary>
             }
           />

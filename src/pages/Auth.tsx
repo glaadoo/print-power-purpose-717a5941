@@ -197,6 +197,14 @@ export default function Auth() {
                   >
                     {loading ? "Signing In..." : "Sign In"}
                   </Button>
+                  <div className="text-center">
+                    <a
+                      href="/forgot-password"
+                      className="text-white/80 hover:text-white text-sm underline"
+                    >
+                      Forgot Password?
+                    </a>
+                  </div>
                 </form>
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
