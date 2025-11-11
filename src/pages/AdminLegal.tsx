@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { FileText, Plus, Edit, Archive, Eye, Download } from "lucide-react";
+import GlassCard from "@/components/GlassCard";
+import VideoBackground from "@/components/VideoBackground";
 import { exportToPDF } from "@/lib/pdf-export";
 
 interface LegalDoc {
@@ -270,10 +271,16 @@ export default function AdminLegal() {
 
   if (!isAdmin || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+      <div className="fixed inset-0 flex items-center justify-center bg-black text-white">
+        <VideoBackground 
+          srcMp4="/media/hero.mp4"
+          srcWebm="/media/hero.webm"
+          poster="/media/hero-poster.jpg"
+          overlay={<div className="absolute inset-0 bg-black/70" />}
+        />
+        <div className="relative text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Loading...</p>
         </div>
       </div>
     );
@@ -286,237 +293,265 @@ export default function AdminLegal() {
   }, {} as Record<string, LegalDoc[]>);
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold">Legal Document Manager</h1>
-            <p className="text-muted-foreground mt-2">
-              Create, version, and publish legal policies
-            </p>
-          </div>
-          <Button onClick={() => navigate("/admin")}>
-            Back to Admin
-          </Button>
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col">
+      <VideoBackground 
+        srcMp4="/media/hero.mp4"
+        srcWebm="/media/hero.webm"
+        poster="/media/hero-poster.jpg"
+        overlay={<div className="absolute inset-0 bg-black/70" />}
+      />
+      
+      {/* Header */}
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <div>
+          <h1 className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
+            Legal Document Manager
+          </h1>
+          <p className="text-white/70 text-xs mt-1">
+            Create, version, and publish legal policies
+          </p>
         </div>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/admin")}
+          className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+        >
+          Back to Admin
+        </Button>
+      </header>
 
-        {/* Editor Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {editMode ? "Edit Document" : "Create New Version"}
-            </CardTitle>
-            <CardDescription>
-              {editMode 
-                ? "Update the selected document" 
-                : "Create a new version of a legal document"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="type">Document Type</Label>
-                  <Select
-                    value={formData.type}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, type: value })
-                    }
-                    disabled={editMode}
-                  >
-                    <SelectTrigger id="type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="privacy">Privacy Policy</SelectItem>
-                      <SelectItem value="terms">Terms of Use</SelectItem>
-                      <SelectItem value="legal">Legal Notice</SelectItem>
-                    </SelectContent>
-                  </Select>
+      {/* Main Content */}
+      <div className="relative flex-1 overflow-y-auto pt-24 pb-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 space-y-6">
+
+          {/* Editor Form */}
+          <GlassCard className="bg-white/5 border-white/10">
+            <div className="space-y-4 p-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white">
+                  {editMode ? "Edit Document" : "Create New Version"}
+                </h2>
+                <p className="text-white/70 text-sm mt-1">
+                  {editMode 
+                    ? "Update the selected document" 
+                    : "Create a new version of a legal document"}
+                </p>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="type" className="text-white">Document Type</Label>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, type: value })
+                      }
+                      disabled={editMode}
+                    >
+                      <SelectTrigger id="type" className="bg-white/10 border-white/20 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="privacy">Privacy Policy</SelectItem>
+                        <SelectItem value="terms">Terms of Use</SelectItem>
+                        <SelectItem value="legal">Legal Notice</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="effective_date" className="text-white">Effective Date</Label>
+                    <Input
+                      id="effective_date"
+                      type="date"
+                      value={formData.effective_date}
+                      onChange={(e) =>
+                        setFormData({ ...formData, effective_date: e.target.value })
+                      }
+                      required
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="effective_date">Effective Date</Label>
+                  <Label htmlFor="title" className="text-white">Title</Label>
                   <Input
-                    id="effective_date"
-                    type="date"
-                    value={formData.effective_date}
+                    id="title"
+                    value={formData.title}
                     onChange={(e) =>
-                      setFormData({ ...formData, effective_date: e.target.value })
+                      setFormData({ ...formData, title: e.target.value })
                     }
+                    placeholder="e.g., Privacy Policy"
+                    required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="content" className="text-white">Content</Label>
+                  <Textarea
+                    id="content"
+                    value={formData.content}
+                    onChange={(e) =>
+                      setFormData({ ...formData, content: e.target.value })
+                    }
+                    placeholder="Enter the full legal text..."
+                    className="min-h-[300px] font-mono text-sm bg-white/10 border-white/20 text-white placeholder:text-white/50"
                     required
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  placeholder="e.g., Privacy Policy"
-                  required
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="changelog" className="text-white">Changelog (optional)</Label>
+                  <Textarea
+                    id="changelog"
+                    value={formData.changelog}
+                    onChange={(e) =>
+                      setFormData({ ...formData, changelog: e.target.value })
+                    }
+                    placeholder="What changed in this version?"
+                    className="min-h-[100px] bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
-                  value={formData.content}
-                  onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
-                  }
-                  placeholder="Enter the full legal text..."
-                  className="min-h-[300px] font-mono text-sm"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="changelog">Changelog (optional)</Label>
-                <Textarea
-                  id="changelog"
-                  value={formData.changelog}
-                  onChange={(e) =>
-                    setFormData({ ...formData, changelog: e.target.value })
-                  }
-                  placeholder="What changed in this version?"
-                  className="min-h-[100px]"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit">
-                  <Plus className="w-4 h-4 mr-2" />
-                  {editMode ? "Update Document" : "Create Draft"}
-                </Button>
-                {editMode && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setEditMode(false);
-                      setSelectedDoc(null);
-                      setFormData({
-                        type: "privacy",
-                        title: "",
-                        content: "",
-                        effective_date: "",
-                        changelog: "",
-                      });
-                    }}
-                  >
-                    Cancel
+                <div className="flex gap-2">
+                  <Button type="submit" className="bg-white text-black hover:bg-white/90">
+                    <Plus className="w-4 h-4 mr-2" />
+                    {editMode ? "Update Document" : "Create Draft"}
                   </Button>
-                )}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                  {editMode && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setEditMode(false);
+                        setSelectedDoc(null);
+                        setFormData({
+                          type: "privacy",
+                          title: "",
+                          content: "",
+                          effective_date: "",
+                          changelog: "",
+                        });
+                      }}
+                      className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </div>
+          </GlassCard>
 
-        {/* Document Lists */}
-        {Object.entries(groupedDocs).map(([type, docs]) => (
-          <Card key={type}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                {type === "privacy" && "Privacy Policy"}
-                {type === "terms" && "Terms of Use"}
-                {type === "legal" && "Legal Notice"}
-              </CardTitle>
-              <CardDescription>
-                {docs.length} version{docs.length !== 1 ? "s" : ""}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {docs.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold">v{doc.version}</span>
-                        <Badge
-                          variant={
-                            doc.status === "published"
-                              ? "default"
-                              : doc.status === "draft"
-                              ? "secondary"
-                              : "outline"
-                          }
-                        >
-                          {doc.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {doc.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Effective: {new Date(doc.effective_date).toLocaleDateString()}
-                      </p>
-                      {doc.changelog && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Changes: {doc.changelog}
+          {/* Document Lists */}
+          {Object.entries(groupedDocs).map(([type, docs]) => (
+            <GlassCard key={type} className="bg-white/5 border-white/10">
+              <div className="space-y-4 p-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <FileText className="w-6 h-6" />
+                    {type === "privacy" && "Privacy Policy"}
+                    {type === "terms" && "Terms of Use"}
+                    {type === "legal" && "Legal Notice"}
+                  </h2>
+                  <p className="text-white/70 text-sm mt-1">
+                    {docs.length} version{docs.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  {docs.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-white">v{doc.version}</span>
+                          <Badge
+                            variant={
+                              doc.status === "published"
+                                ? "default"
+                                : doc.status === "draft"
+                                ? "secondary"
+                                : "outline"
+                            }
+                          >
+                            {doc.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-white/80">
+                          {doc.title}
                         </p>
-                      )}
-                    </div>
+                        <p className="text-xs text-white/60 mt-1">
+                          Effective: {new Date(doc.effective_date).toLocaleDateString()}
+                        </p>
+                        {doc.changelog && (
+                          <p className="text-xs text-white/60 mt-1">
+                            Changes: {doc.changelog}
+                          </p>
+                        )}
+                      </div>
 
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleExport(doc)}
-                      >
-                        <Download className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          navigate(`/policies/${doc.type}?version=${doc.version}`)
-                        }
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      {doc.status === "draft" && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(doc)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handlePublish(doc)}
-                          >
-                            Publish
-                          </Button>
-                        </>
-                      )}
-                      {doc.status === "published" && (
+                      <div className="flex gap-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleArchive(doc)}
+                          onClick={() => handleExport(doc)}
+                          className="border-white/30 bg-white/10 text-white hover:bg-white/20"
                         >
-                          <Archive className="w-4 h-4" />
+                          <Download className="w-4 h-4" />
                         </Button>
-                      )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            navigate(`/policies/${doc.type}?version=${doc.version}`)
+                          }
+                          className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {doc.status === "draft" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(doc)}
+                              className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handlePublish(doc)}
+                              className="bg-white text-black hover:bg-white/90"
+                            >
+                              Publish
+                            </Button>
+                          </>
+                        )}
+                        {doc.status === "published" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleArchive(doc)}
+                            className="border-white/30 bg-white/10 text-white hover:bg-white/20"
+                          >
+                            <Archive className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </GlassCard>
+          ))}
+        </div>
       </div>
     </div>
   );
