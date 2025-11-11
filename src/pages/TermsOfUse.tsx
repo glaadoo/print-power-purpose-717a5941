@@ -264,9 +264,10 @@ export default function TermsOfUse() {
 
             {/* Content */}
             <article className="prose prose-invert max-w-none mt-8">
-              <div className="whitespace-pre-wrap leading-relaxed text-white/90">
-                {document.content}
-              </div>
+              <div 
+                className="leading-relaxed text-white/90"
+                dangerouslySetInnerHTML={{ __html: document.content }}
+              />
             </article>
 
             {/* Footer */}
