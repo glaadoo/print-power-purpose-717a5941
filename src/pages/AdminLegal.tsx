@@ -43,32 +43,40 @@ export default function AdminLegal() {
 
   useEffect(() => {
     checkAdminStatus();
-    fetchDocuments();
   }, []);
 
   const checkAdminStatus = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      toast.error("Please log in to access this page");
-      navigate("/auth");
-      return;
+    setLoading(true);
+    try {
+      const sessionToken = sessionStorage.getItem("admin_session");
+      
+      if (!sessionToken) {
+        toast.error("Please log in to access this page");
+        navigate("/admin");
+        return;
+      }
+
+      // Verify session with admin endpoint
+      const { data, error } = await supabase.functions.invoke('verify-admin-key', {
+        body: { sessionToken }
+      });
+
+      if (error || !data?.valid) {
+        sessionStorage.removeItem("admin_session");
+        toast.error("Session expired. Please log in again.");
+        navigate("/admin");
+        return;
+      }
+
+      setIsAdmin(true);
+      await fetchDocuments();
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      toast.error("Failed to verify admin access");
+      navigate("/admin");
+    } finally {
+      setLoading(false);
     }
-
-    const { data: roles, error: roleError } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-
-    if (roleError || !roles) {
-      toast.error("Unauthorized: Admin access required");
-      navigate("/");
-      return;
-    }
-
-    setIsAdmin(true);
   };
 
   const fetchDocuments = async () => {
@@ -92,9 +100,6 @@ export default function AdminLegal() {
     e.preventDefault();
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
       // Get the highest version for this type
       const { data: existingDocs } = await supabase
         .from("legal_documents")
@@ -133,7 +138,6 @@ export default function AdminLegal() {
             effective_date: formData.effective_date,
             changelog: formData.changelog,
             status: "draft",
-            created_by: user.id,
           });
 
         if (error) throw error;
