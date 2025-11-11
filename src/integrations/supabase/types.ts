@@ -138,6 +138,9 @@ export type Database = {
           created_at: string
           customer_email: string | null
           id: string
+          nonprofit_ein: string | null
+          nonprofit_id: string | null
+          nonprofit_name: string | null
           order_id: string | null
         }
         Insert: {
@@ -146,6 +149,9 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           id?: string
+          nonprofit_ein?: string | null
+          nonprofit_id?: string | null
+          nonprofit_name?: string | null
           order_id?: string | null
         }
         Update: {
@@ -154,6 +160,9 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           id?: string
+          nonprofit_ein?: string | null
+          nonprofit_id?: string | null
+          nonprofit_name?: string | null
           order_id?: string | null
         }
         Relationships: [
@@ -162,6 +171,13 @@ export type Database = {
             columns: ["cause_id"]
             isOneToOne: false
             referencedRelation: "causes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
             referencedColumns: ["id"]
           },
           {
@@ -435,19 +451,49 @@ export type Database = {
       }
       nonprofits: {
         Row: {
+          approved: boolean | null
+          city: string | null
+          country: string | null
           created_at: string
+          description: string | null
+          ein: string | null
           id: string
+          indexed_name: string | null
+          irs_status: string | null
           name: string
+          source: string | null
+          state: string | null
+          updated_at: string | null
         }
         Insert: {
+          approved?: boolean | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          description?: string | null
+          ein?: string | null
           id?: string
+          indexed_name?: string | null
+          irs_status?: string | null
           name: string
+          source?: string | null
+          state?: string | null
+          updated_at?: string | null
         }
         Update: {
+          approved?: boolean | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          description?: string | null
+          ein?: string | null
           id?: string
+          indexed_name?: string | null
+          irs_status?: string | null
           name?: string
+          source?: string | null
+          state?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -461,6 +507,9 @@ export type Database = {
           customer_email: string | null
           donation_cents: number
           id: string
+          nonprofit_ein: string | null
+          nonprofit_id: string | null
+          nonprofit_name: string | null
           order_number: string
           product_name: string | null
           quantity: number
@@ -477,6 +526,9 @@ export type Database = {
           customer_email?: string | null
           donation_cents?: number
           id?: string
+          nonprofit_ein?: string | null
+          nonprofit_id?: string | null
+          nonprofit_name?: string | null
           order_number: string
           product_name?: string | null
           quantity?: number
@@ -493,6 +545,9 @@ export type Database = {
           customer_email?: string | null
           donation_cents?: number
           id?: string
+          nonprofit_ein?: string | null
+          nonprofit_id?: string | null
+          nonprofit_name?: string | null
           order_number?: string
           product_name?: string | null
           quantity?: number
