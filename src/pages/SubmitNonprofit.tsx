@@ -78,6 +78,20 @@ export default function SubmitNonprofit() {
 
       if (error) throw error;
 
+      // Send notification to admins (don't block on failure)
+      try {
+        await supabase.functions.invoke('send-nonprofit-notification', {
+          body: {
+            nonprofitName: formData.name,
+            nonprofitEin: formData.ein,
+            submitterEmail: 'user@example.com', // Could get from auth if logged in
+          },
+        });
+      } catch (notifError) {
+        console.error('Failed to send notification:', notifError);
+        // Don't show error to user, submission was successful
+      }
+
       toast.success("Nonprofit submitted for review! Admins will review shortly.");
       navigate("/causes");
     } catch (error: any) {

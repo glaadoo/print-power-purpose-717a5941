@@ -58,6 +58,8 @@ type Nonprofit = {
   approved: boolean;
   created_at: string;
   updated_at?: string;
+  tags?: string[] | null;
+  logo_url?: string | null;
 };
 
 export default function AdminNonprofits() {
@@ -81,6 +83,8 @@ export default function AdminNonprofits() {
     city: "",
     state: "",
     description: "",
+    tags: [] as string[],
+    logo_url: "",
   });
 
   // Sync status
@@ -248,7 +252,7 @@ export default function AdminNonprofits() {
       if (error) throw error;
       toast.success("Nonprofit added");
       setAddDialog(false);
-      setNewNonprofit({ name: "", ein: "", city: "", state: "", description: "" });
+      setNewNonprofit({ name: "", ein: "", city: "", state: "", description: "", tags: [], logo_url: "" });
       setDuplicateWarnings([]);
       fetchNonprofits();
       fetchStats();
