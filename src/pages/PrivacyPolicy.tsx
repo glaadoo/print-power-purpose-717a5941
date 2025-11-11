@@ -51,7 +51,7 @@ export default function PrivacyPolicy() {
       const { data, error } = await query
         .order("version", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setDocument(data);
