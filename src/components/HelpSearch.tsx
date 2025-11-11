@@ -34,6 +34,35 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
   const lastQueryRef = useRef("");
   const navigate = useNavigate();
 
+  // Refs for dynamic sizing and focus control
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const triggerRef = useRef<HTMLDivElement | null>(null);
+  const [availableHeight, setAvailableHeight] = useState<number | null>(null);
+
+  const computeAvailableHeight = useCallback(() => {
+    const triggerEl = triggerRef.current;
+    if (!triggerEl) return;
+    const rect = triggerEl.getBoundingClientRect();
+    const viewportH = window.innerHeight || document.documentElement.clientHeight;
+    const bottomSpace = viewportH - rect.bottom - 16; // leave 16px padding from bottom
+    const topSpace = rect.top - 16; // padding from top
+    const space = Math.max(bottomSpace, topSpace);
+    const capped = Math.min(space, 512); // cap at 32rem
+    setAvailableHeight(Math.max(capped, 200)); // enforce a reasonable minimum
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    computeAvailableHeight();
+    const handler = () => computeAvailableHeight();
+    window.addEventListener('resize', handler);
+    window.addEventListener('scroll', handler, { passive: true } as AddEventListenerOptions);
+    return () => {
+      window.removeEventListener('resize', handler);
+      window.removeEventListener('scroll', handler as unknown as EventListener);
+    };
+  }, [isOpen, computeAvailableHeight]);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
   }, []);
@@ -133,6 +162,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
     logSearch(allResults.length);
     setIsOpen(false);
     setQuery("");
+    inputRef.current?.blur();
     navigate(result.href);
   };
 
@@ -187,32 +217,36 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <div className="relative w-full max-w-2xl">
+        <div ref={triggerRef} className="relative w-full max-w-2xl">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none z-10" />
-          <Input
-            type="search"
-            placeholder="Search common questions... try 'orders'"
-            value={query}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onFocus={() => query.length >= 2 && setIsOpen(true)}
-            autoFocus
-            className="pl-12 pr-4 h-14 text-base bg-background/10 backdrop-blur-md border-border/20 ring-border/20 focus-visible:ring-border/40 rounded-2xl"
-            role="combobox"
-            aria-expanded={isOpen}
-            aria-controls="search-results"
-            aria-activedescendant={highlightedIndex >= 0 ? `result-${highlightedIndex}` : undefined}
-          />
+           <Input
+             ref={inputRef}
+             type="search"
+             placeholder="Search common questions... try 'orders'"
+             value={query}
+             onChange={handleInputChange}
+             onKeyDown={handleKeyDown}
+             onFocus={() => query.length >= 2 && setIsOpen(true)}
+             autoFocus
+             className="pl-12 pr-4 h-14 text-base bg-background/10 backdrop-blur-md border-border/20 ring-border/20 focus-visible:ring-border/40 rounded-2xl"
+             role="combobox"
+             aria-expanded={isOpen}
+             aria-controls="search-results"
+             aria-activedescendant={highlightedIndex >= 0 ? `result-${highlightedIndex}` : undefined}
+           />
         </div>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-[80] overscroll-contain max-h-[70vh] md:max-h-[32rem] overflow-hidden"
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-[80] overscroll-contain"
         align="start"
         side="bottom"
         sideOffset={8}
-        collisionPadding={8}
+        collisionPadding={16}
       >
-        <ScrollArea className="max-h-[70vh] md:max-h-[32rem] overflow-y-auto overscroll-contain">
+        <ScrollArea
+          className="max-h-[calc(100dvh-24px)] md:max-h-[32rem] overflow-y-auto overscroll-contain"
+          style={{ maxHeight: availableHeight ?? undefined }}
+        >
           <div 
             id="search-results" 
             role="listbox"
