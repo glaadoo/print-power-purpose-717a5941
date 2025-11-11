@@ -206,11 +206,10 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         </div>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-[80] overscroll-contain"
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-[80] overscroll-contain max-h-[70vh] md:max-h-[32rem] overflow-hidden"
         align="start"
         side="bottom"
         sideOffset={8}
-        avoidCollisions={false}
         collisionPadding={8}
       >
         <ScrollArea className="max-h-[70vh] md:max-h-[32rem] overflow-y-auto overscroll-contain">
