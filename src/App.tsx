@@ -59,6 +59,11 @@ function lazyPage<T extends { default: React.ComponentType<any> }>(
 
 const Home            = lazyPage("Home",            () => import("./pages/Home"));
 const About           = lazyPage("About",           () => import("./pages/About"));
+const Team            = lazyPage("Team",            () => import("./pages/Team"));
+const Press           = lazyPage("Press",           () => import("./pages/Press"));
+const Schools         = lazyPage("Schools",         () => import("./pages/Schools"));
+const Blog            = lazyPage("Blog",            () => import("./pages/Blog"));
+const FundraisingGuide = lazyPage("FundraisingGuide", () => import("./pages/FundraisingGuide"));
 const Causes          = lazyPage("Causes",          () => import("./pages/Causes"));
 const Donate          = lazyPage("Donate",          () => import("./pages/Donate"));
 const Products        = lazyPage("Products",        () => import("./pages/Products"));
@@ -264,6 +269,46 @@ export default function App() {
             element={
               <RouteBoundary name="About">
                 <About />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/team"
+            element={
+              <RouteBoundary name="Team">
+                <Team />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/press"
+            element={
+              <RouteBoundary name="Press">
+                <Press />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/schools"
+            element={
+              <RouteBoundary name="Schools">
+                <Schools />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/blog"
+            element={
+              <RouteBoundary name="Blog">
+                <Blog />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/guides/fundraising"
+            element={
+              <RouteBoundary name="FundraisingGuide">
+                <FundraisingGuide />
               </RouteBoundary>
             }
           />

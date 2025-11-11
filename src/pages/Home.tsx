@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import GlassCard from "../components/GlassCard";
@@ -561,7 +561,11 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
       <h4 className="font-semibold">{title}</h4>
       <ul className="mt-2 space-y-1 text-sm">
         {links.map(([t, href]) => (
-          <li key={href}><a href={href} className="hover:underline">{t}</a></li>
+          <li key={href}>
+            <Link to={href} className="hover:underline">
+              {t}
+            </Link>
+          </li>
         ))}
       </ul>
     </div>
