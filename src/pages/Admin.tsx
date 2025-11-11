@@ -560,6 +560,12 @@ export default function Admin() {
               <p className="text-white/70">Manage your Print Power Purpose platform</p>
             </div>
             <div className="flex gap-2">
+              <Link to="/admin/nonprofits">
+                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                  <Heart className="h-4 w-4" />
+                  Nonprofits
+                </Button>
+              </Link>
               <Link to="/admin/legal">
                 <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
                   <FileText className="h-4 w-4" />

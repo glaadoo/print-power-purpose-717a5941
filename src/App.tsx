@@ -90,6 +90,7 @@ const TermsOfUse      = lazyPage("TermsOfUse",      () => import("./pages/TermsO
 const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalNotice"));
 const Legal           = lazyPage("Legal",           () => import("./pages/Legal"));
 const AdminLegal      = lazyPage("AdminLegal",      () => import("./pages/AdminLegal"));
+const AdminNonprofits = lazyPage("AdminNonprofits", () => import("./pages/AdminNonprofits"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -499,6 +500,16 @@ export default function App() {
             element={
               <RouteBoundary name="AdminLegal">
                 <AdminLegal />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Nonprofits */}
+          <Route
+            path="/admin/nonprofits"
+            element={
+              <RouteBoundary name="AdminNonprofits">
+                <AdminNonprofits />
               </RouteBoundary>
             }
           />
