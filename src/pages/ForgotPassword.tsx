@@ -22,12 +22,17 @@ export default function ForgotPassword() {
     });
 
     if (error) {
-      toast.error(error.message);
+      // Handle rate limiting errors specifically
+      if (error.message.includes("rate") || error.status === 429) {
+        toast.error("Please wait 60 seconds before requesting another reset email.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
-      toast.success("Password reset email sent! Check your inbox.");
+      toast.success("Password reset email sent! Check your inbox and spam folder.");
       setTimeout(() => {
         navigate("/auth?mode=signin");
-      }, 2000);
+      }, 3000);
     }
     setLoading(false);
   };
