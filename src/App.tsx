@@ -83,6 +83,7 @@ const HelpSearchResults = lazyPage("HelpSearchResults", () => import("./pages/He
 const PrivacyPolicy   = lazyPage("PrivacyPolicy",   () => import("./pages/PrivacyPolicy"));
 const TermsOfUse      = lazyPage("TermsOfUse",      () => import("./pages/TermsOfUse"));
 const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalNotice"));
+const Legal           = lazyPage("Legal",           () => import("./pages/Legal"));
 const AdminLegal      = lazyPage("AdminLegal",      () => import("./pages/AdminLegal"));
 
 /* ---------- Fallback UI ---------- */
@@ -435,6 +436,14 @@ export default function App() {
             element={
               <RouteBoundary name="LegalNotice">
                 <LegalNotice />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/legal"
+            element={
+              <RouteBoundary name="Legal">
+                <Legal />
               </RouteBoundary>
             }
           />

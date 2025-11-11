@@ -94,6 +94,9 @@ export default function Checkout() {
     Math.max(0, Math.round(Number(merged.donationUsd || 0) * 100))
   );
 
+  // Legal consent state
+  const [legalConsent, setLegalConsent] = useState(false);
+
 
   // Fetch product & persist merged selection (refresh-proof). If no cause provided, auto-pick first.
   useEffect(() => {
@@ -449,13 +452,47 @@ export default function Checkout() {
                 </div>
               </div>
 
+              {/* Legal Consent */}
+              <div className="border-t border-white/20 pt-6 mb-4">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={legalConsent}
+                    onChange={(e) => setLegalConsent(e.target.checked)}
+                    className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-white checked:border-white focus:ring-2 focus:ring-white/50 cursor-pointer"
+                    required
+                  />
+                  <span className="text-sm text-white/80 group-hover:text-white transition-colors">
+                    I agree to the{" "}
+                    <a
+                      href="/policies/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-white"
+                    >
+                      Terms of Use
+                    </a>{" "}
+                    and{" "}
+                    <a
+                      href="/policies/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-white"
+                    >
+                      Privacy Policy
+                    </a>
+                    .
+                  </span>
+                </label>
+              </div>
+
               {/* Continue button */}
               <button
                 onClick={continueToCheckout}
-                disabled={loading}
-                className="w-full bg-white/20 text-white hover:bg-white/30 border border-white/50 backdrop-blur-sm shadow-lg rounded-2xl px-6 py-4 text-base font-semibold transition-all disabled:opacity-50 mt-6"
+                disabled={loading || !legalConsent}
+                className="w-full bg-white/20 text-white hover:bg-white/30 border border-white/50 backdrop-blur-sm shadow-lg rounded-2xl px-6 py-4 text-base font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Processing..." : "Continue to Payment"}
+                {loading ? "Processing..." : !legalConsent ? "Please Accept Terms to Continue" : "Continue to Payment"}
               </button>
             </div>
           </div>

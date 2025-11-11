@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, ChevronDown } from "lucide-react";
+import { Download, ChevronDown, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
 import { exportToPDF } from "@/lib/pdf-export";
+import VideoBackground from "@/components/VideoBackground";
+import GlassCard from "@/components/GlassCard";
 
 interface LegalDoc {
   id: string;
@@ -88,12 +89,32 @@ export default function TermsOfUse() {
     }
   };
 
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading terms of use...</p>
+      <div className="min-h-screen flex items-center justify-center text-white relative">
+        <VideoBackground
+          srcMp4="/media/hero.mp4"
+          srcWebm="/media/hero.webm"
+          poster="/media/hero-poster.jpg"
+          overlay={<div className="absolute inset-0 bg-black/60" />}
+        />
+        <div className="relative text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+          <p className="mt-4 text-white/80">Loading terms of use...</p>
         </div>
       </div>
     );
@@ -101,36 +122,64 @@ export default function TermsOfUse() {
 
   if (!document) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              Terms of use not available
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center text-white relative">
+        <VideoBackground
+          srcMp4="/media/hero.mp4"
+          srcWebm="/media/hero.webm"
+          poster="/media/hero-poster.jpg"
+          overlay={<div className="absolute inset-0 bg-black/60" />}
+        />
+        <GlassCard className="relative max-w-md">
+          <p className="text-center text-white/80">
+            Terms of use not available
+          </p>
+        </GlassCard>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <Card className="shadow-lg">
-          <CardContent className="p-8">
+    <div className="min-h-screen relative text-white">
+      <VideoBackground
+        srcMp4="/media/hero.mp4"
+        srcWebm="/media/hero.webm"
+        poster="/media/hero-poster.jpg"
+        parallaxVh={12}
+        overlay={<div className="absolute inset-0 bg-black/50" />}
+      />
+
+      <div className="relative min-h-screen pt-24 pb-20 px-6 md:px-10">
+        <div className="max-w-5xl mx-auto">
+          <GlassCard className="relative" padding="p-6 md:p-10">
             {/* Header */}
             <div className="mb-8">
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-4 flex-wrap gap-4">
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">{document.title}</h1>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <Badge variant="outline">Version {document.version}</Badge>
+                  <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white">
+                    {document.title}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-white/70 uppercase tracking-wide">
+                    <Badge variant="outline" className="bg-white/10 border-white/30 text-white">
+                      Version {document.version}
+                    </Badge>
                     <span>
-                      Effective: {new Date(document.effective_date).toLocaleDateString()}
+                      Effective: {new Date(document.effective_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </span>
+                    <span>·</span>
+                    <span>
+                      Last updated: {document.published_at 
+                        ? new Date(document.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                        : new Date(document.effective_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
                 </div>
-                <Button onClick={handleExport} variant="outline" size="sm">
+                <Button 
+                  onClick={handleExport} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                  aria-label="Download PDF"
+                >
                   <Download className="w-4 h-4 mr-2" />
                   Download PDF
                 </Button>
@@ -138,10 +187,11 @@ export default function TermsOfUse() {
 
               {/* Version Selector */}
               {versions.length > 1 && (
-                <div className="mt-4 border-t pt-4">
+                <div className="mt-6 pt-6 border-t border-white/20">
                   <button
                     onClick={() => setShowVersions(!showVersions)}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors"
+                    aria-expanded={showVersions}
                   >
                     <ChevronDown
                       className={`w-4 h-4 transition-transform ${
@@ -152,28 +202,29 @@ export default function TermsOfUse() {
                   </button>
                   
                   {showVersions && (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-4 space-y-2">
+                      <h3 className="text-lg font-semibold text-white mb-3">Version History</h3>
                       {versions.map((v) => (
                         <a
                           key={v.id}
                           href={`/policies/terms?version=${v.version}`}
-                          className="block p-3 rounded border hover:bg-secondary/50 transition-colors"
+                          className="block p-4 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <span className="font-medium">Version {v.version}</span>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-white">Version {v.version}</span>
                               {v.version === document.version && (
-                                <Badge variant="default" className="ml-2">
+                                <Badge variant="default" className="bg-white/20 text-white border-none">
                                   Current
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(v.effective_date).toLocaleDateString()}
+                            <span className="text-sm text-white/60">
+                              {new Date(v.effective_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                           </div>
                           {v.changelog && (
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="text-sm text-white/70">
                               {v.changelog}
                             </p>
                           )}
@@ -186,26 +237,38 @@ export default function TermsOfUse() {
             </div>
 
             {/* Content */}
-            <div className="prose prose-sm max-w-none">
-              <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+            <article className="prose prose-invert max-w-none mt-8">
+              <div className="whitespace-pre-wrap leading-relaxed text-white/90">
                 {document.content}
               </div>
-            </div>
+            </article>
 
             {/* Footer */}
-            <div className="mt-12 pt-6 border-t text-center text-sm text-muted-foreground">
-              <p>
-                Last updated: {document.published_at 
-                  ? new Date(document.published_at).toLocaleDateString()
-                  : new Date(document.effective_date).toLocaleDateString()}
+            <div className="mt-12 pt-6 border-t border-white/20 text-center text-sm text-white/60">
+              <p className="mb-2">
+                Questions about our terms?{" "}
+                <a href="/contact" className="text-white hover:underline">
+                  Contact us
+                </a>
               </p>
-              <p className="mt-2">
-                Questions about our terms? <a href="/contact" className="text-primary hover:underline">Contact us</a>
+              <p className="text-xs">
+                © {new Date().getFullYear()} Print Power Purpose
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </GlassCard>
+        </div>
       </div>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all shadow-lg"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }
