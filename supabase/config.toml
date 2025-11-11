@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.send-policy-notification]
 verify_jwt = false
+
+[functions.sync-irs-nonprofits]
+verify_jwt = false
