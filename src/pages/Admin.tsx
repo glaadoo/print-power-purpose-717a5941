@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import {
   Trash2, KeyRound, RefreshCw, Download, Search,
   AlertCircle, CheckCircle, X, ArrowLeft, Check,
-  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity
+  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity, FileText
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import VideoBackground from "@/components/VideoBackground";
@@ -559,12 +559,20 @@ export default function Admin() {
               <h2 className="text-3xl font-bold text-white">Dashboard Overview</h2>
               <p className="text-white/70">Manage your Print Power Purpose platform</p>
             </div>
-            <Link to="/system-logs">
-              <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
-                <Activity className="h-4 w-4" />
-                View System Logs
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link to="/admin/legal">
+                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                  <FileText className="h-4 w-4" />
+                  Legal Docs
+                </Button>
+              </Link>
+              <Link to="/system-logs">
+                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                  <Activity className="h-4 w-4" />
+                  System Logs
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Analytics Overview */}
