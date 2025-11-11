@@ -39,3 +39,5 @@ verify_jwt = false
 [functions.help-log]
 verify_jwt = false
 
+[functions.send-policy-notification]
+verify_jwt = false

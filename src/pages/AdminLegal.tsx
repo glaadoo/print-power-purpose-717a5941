@@ -175,7 +175,52 @@ export default function AdminLegal() {
         .eq("id", doc.id);
 
       if (error) throw error;
-      toast.success(`Version ${doc.version} published successfully`);
+      
+      // Send email notifications
+      toast.loading("Sending notifications...", { id: "notifications" });
+      
+      try {
+        const { data: notificationResult, error: notificationError } = await supabase.functions.invoke(
+          "send-policy-notification",
+          {
+            body: {
+              policyType: doc.type,
+              policyTitle: doc.title,
+              version: doc.version,
+              effectiveDate: new Date(doc.effective_date).toLocaleDateString('en-US', { 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+              }),
+              changelog: doc.changelog,
+              notifyAdmins: true,
+              notifyUsers: true,
+            },
+          }
+        );
+
+        if (notificationError) {
+          console.error("Notification error:", notificationError);
+          toast.error("Published but failed to send some notifications", { id: "notifications" });
+        } else {
+          const { adminEmailsSent, userEmailsSent, errors } = notificationResult;
+          if (errors && errors.length > 0) {
+            toast.warning(
+              `Published! Sent ${adminEmailsSent} admin & ${userEmailsSent} user notifications (${errors.length} failed)`,
+              { id: "notifications", duration: 5000 }
+            );
+          } else {
+            toast.success(
+              `Published & notified ${adminEmailsSent} admins and ${userEmailsSent} users!`,
+              { id: "notifications", duration: 5000 }
+            );
+          }
+        }
+      } catch (notifError: any) {
+        console.error("Failed to send notifications:", notifError);
+        toast.warning(`Published successfully, but notifications failed`, { id: "notifications" });
+      }
+
       fetchDocuments();
     } catch (error: any) {
       toast.error("Failed to publish: " + error.message);
