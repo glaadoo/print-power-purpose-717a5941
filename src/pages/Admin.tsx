@@ -26,6 +26,7 @@ export default function Admin() {
   const [adminKey, setAdminKey] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   
   // Data states
   const [products, setProducts] = useState<any[]>([]);
@@ -86,6 +87,41 @@ export default function Admin() {
       setCheckingAuth(false);
     }
   }, []);
+
+  // Real-time subscription for pending nonprofits
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const fetchPendingCount = async () => {
+      const { count } = await supabase
+        .from("nonprofits")
+        .select("*", { count: "exact", head: true })
+        .eq("approved", false);
+      setPendingCount(count || 0);
+    };
+
+    fetchPendingCount();
+
+    const channel = supabase
+      .channel("nonprofit-pending-count")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "nonprofits",
+          filter: "approved=eq.false"
+        },
+        () => {
+          fetchPendingCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated]);
 
   const verifySession = async (sessionToken: string) => {
     try {
@@ -561,9 +597,14 @@ export default function Admin() {
             </div>
             <div className="flex gap-2">
               <Link to="/admin/nonprofits">
-                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20 relative">
                   <Heart className="h-4 w-4" />
                   Nonprofits
+                  {pendingCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center p-1 bg-red-500 text-white text-xs font-bold border-2 border-background">
+                      {pendingCount}
+                    </Badge>
+                  )}
                 </Button>
               </Link>
               <Link to="/admin/legal">
