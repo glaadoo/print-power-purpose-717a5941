@@ -403,6 +403,36 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_logs: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          id: string
+          order_id: string | null
+          policy_type: string
+          user_id: string | null
+          version: number
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          policy_type: string
+          user_id?: string | null
+          version: number
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          policy_type?: string
+          user_id?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       nonprofits: {
         Row: {
           created_at: string
