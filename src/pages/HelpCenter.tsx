@@ -39,12 +39,12 @@ export default function HelpCenter() {
 
       {/* Main scrollable content */}
       <div 
-        className="pt-14 min-h-screen"
+        className="pt-14 min-h-screen overflow-y-auto scroll-smooth pb-24"
         role="main"
         aria-label="Help Center content"
       >
         {/* Hero Section - Centered */}
-        <section className="relative h-[calc(100vh-3.5rem)] flex items-center justify-center px-4">
+        <section className="relative min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"

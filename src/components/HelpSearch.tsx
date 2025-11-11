@@ -31,6 +31,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [user, setUser] = useState<any>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const lastQueryRef = useRef("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,9 +49,14 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
 
     setIsLoading(true);
     try {
+      lastQueryRef.current = q.trim();
+      const current = lastQueryRef.current;
       const { data, error } = await supabase.functions.invoke('help-search', {
-        body: { q: q.trim() }
+        body: { q: current }
       });
+
+      // Ignore stale responses
+      if (current !== lastQueryRef.current) return;
 
       if (error) throw error;
 
@@ -91,7 +97,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
 
     debounceRef.current = setTimeout(() => {
       searchHelp(value);
-    }, 180);
+    }, 280);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -200,12 +206,12 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         </div>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-[70]"
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-[80] overscroll-contain"
         align="start"
         side="bottom"
         sideOffset={8}
         avoidCollisions={false}
-        collisionPadding={0}
+        collisionPadding={8}
       >
         <ScrollArea className="max-h-[min(70vh,32rem)]">
           <div 
