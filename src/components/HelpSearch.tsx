@@ -200,7 +200,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         </div>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl z-50"
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-[70]"
         align="start"
         side="bottom"
         sideOffset={8}
@@ -296,6 +296,8 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
             </div>
           )}
           </div>
+          {/* Spacer to prevent last item from being hidden behind safe areas / keyboard */}
+          <div aria-hidden className="h-4" style={{ height: 'max(env(safe-area-inset-bottom, 16px), 16px)' }} />
         </ScrollArea>
       </PopoverContent>
     </Popover>
