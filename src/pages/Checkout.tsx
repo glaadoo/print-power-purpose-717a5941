@@ -61,7 +61,7 @@ export default function Checkout() {
     try {
       return useCause();
     } catch {
-      return { cause: null as any };
+      return { cause: null as any, nonprofit: null as any };
     }
   })();
 
@@ -394,11 +394,24 @@ export default function Checkout() {
                     </div>
                   </div>
                 ))}
-                <div className="flex justify-between pt-2">
-                  <span className="opacity-90">Supporting</span>
-                  <span className="font-semibold">
-                    {selectedCauseName || causeCtx?.cause?.name || merged.causeId}
-                  </span>
+                <div className="border-b border-white/20 pb-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="opacity-90">Supporting Cause</span>
+                    <span className="font-semibold">
+                      {selectedCauseName || causeCtx?.cause?.name || "General Fund"}
+                    </span>
+                  </div>
+                  {causeCtx?.nonprofit && (
+                    <div className="flex justify-between">
+                      <span className="opacity-90">Nonprofit</span>
+                      <span className="font-semibold">
+                        {causeCtx.nonprofit.name}
+                        {causeCtx.nonprofit.ein && (
+                          <span className="text-sm opacity-75 ml-2">(EIN: {causeCtx.nonprofit.ein})</span>
+                        )}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
