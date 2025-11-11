@@ -55,14 +55,14 @@ export default function AdminLegal() {
       return;
     }
 
-    const { data: roles } = await supabase
+    const { data: roles, error: roleError } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin")
-      .single();
+      .maybeSingle();
 
-    if (!roles) {
+    if (roleError || !roles) {
       toast.error("Unauthorized: Admin access required");
       navigate("/");
       return;
