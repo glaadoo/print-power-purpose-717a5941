@@ -110,7 +110,7 @@ export default function TermsOfUse() {
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
           poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/40" />}
+          overlay={<div className="absolute inset-0 bg-black/70" />}
         />
         <div className="relative text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
@@ -127,7 +127,7 @@ export default function TermsOfUse() {
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
           poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/40" />}
+          overlay={<div className="absolute inset-0 bg-black/70" />}
         />
         <GlassCard className="relative max-w-md">
           <p className="text-center text-white/80">
@@ -146,7 +146,7 @@ export default function TermsOfUse() {
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
           poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/40" />}
+          overlay={<div className="absolute inset-0 bg-black/70" />}
         />
       </div>
 
