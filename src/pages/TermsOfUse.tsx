@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -110,7 +110,7 @@ export default function TermsOfUse() {
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
           poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/60" />}
+          overlay={<div className="absolute inset-0 bg-black/40" />}
         />
         <div className="relative text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
@@ -127,7 +127,7 @@ export default function TermsOfUse() {
           srcMp4="/media/hero.mp4"
           srcWebm="/media/hero.webm"
           poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/60" />}
+          overlay={<div className="absolute inset-0 bg-black/40" />}
         />
         <GlassCard className="relative max-w-md">
           <p className="text-center text-white/80">
@@ -139,40 +139,66 @@ export default function TermsOfUse() {
   }
 
   return (
-    <div className="min-h-screen relative text-white">
-      <VideoBackground
-        srcMp4="/media/hero.mp4"
-        srcWebm="/media/hero.webm"
-        poster="/media/hero-poster.jpg"
-        parallaxVh={12}
-        overlay={<div className="absolute inset-0 bg-black/50" />}
-      />
+    <div className="min-h-screen text-white">
+      {/* Fixed video background */}
+      <div className="fixed inset-0">
+        <VideoBackground
+          srcMp4="/media/hero.mp4"
+          srcWebm="/media/hero.webm"
+          poster="/media/hero-poster.jpg"
+          overlay={<div className="absolute inset-0 bg-black/40" />}
+        />
+      </div>
 
-      <div className="relative min-h-screen pt-24 pb-20 px-6 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <GlassCard className="relative" padding="p-6 md:p-10">
+      {/* Top Navigation */}
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+        <Link
+          to="/"
+          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+          aria-label="Home"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <polyline points="9 22 9 12 15 12 15 22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className="hidden sm:inline">Home</span>
+        </Link>
+
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <Link
+            to="/"
+            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+            aria-label="Print Power Purpose Home"
+          >
+            PRINT&nbsp;POWER&nbsp;PURPOSE
+          </Link>
+        </div>
+
+        <Link
+          to="/legal"
+          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+          aria-label="Legal Overview"
+        >
+          <span className="hidden sm:inline">Legal</span>
+        </Link>
+      </header>
+
+      {/* Scrollable content */}
+      <div className="relative min-h-screen pt-24 pb-20 px-6 md:px-16 py-10 md:py-20">
+        <div className="mx-auto max-w-5xl">
+          <GlassCard padding="p-6 md:p-10">
             {/* Header */}
             <div className="mb-8">
-              <div className="flex items-start justify-between mb-4 flex-wrap gap-4">
-                <div>
-                  <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white">
-                    {document.title}
-                  </h1>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-white/70 uppercase tracking-wide">
-                    <Badge variant="outline" className="bg-white/10 border-white/30 text-white">
-                      Version {document.version}
-                    </Badge>
-                    <span>
-                      Effective: {new Date(document.effective_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </span>
-                    <span>·</span>
-                    <span>
-                      Last updated: {document.published_at 
-                        ? new Date(document.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-                        : new Date(document.effective_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </span>
-                  </div>
-                </div>
+              <h1 className="text-4xl md:text-5xl font-serif font-semibold text-white mb-3">
+                {document.title}
+              </h1>
+              <p className="text-white/70 mt-2 uppercase tracking-wide text-xs">
+                Version v{document.version}.0.0 · Effective {new Date(document.effective_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                {document.published_at && ` · Last updated ${new Date(document.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
+              </p>
+
+              {/* PDF Download Button */}
+              <div className="mt-6">
                 <Button 
                   onClick={handleExport} 
                   variant="outline" 
@@ -185,7 +211,7 @@ export default function TermsOfUse() {
                 </Button>
               </div>
 
-              {/* Version Selector */}
+              {/* Version History */}
               {versions.length > 1 && (
                 <div className="mt-6 pt-6 border-t border-white/20">
                   <button
@@ -205,9 +231,9 @@ export default function TermsOfUse() {
                     <div className="mt-4 space-y-2">
                       <h3 className="text-lg font-semibold text-white mb-3">Version History</h3>
                       {versions.map((v) => (
-                        <a
+                        <Link
                           key={v.id}
-                          href={`/policies/terms?version=${v.version}`}
+                          to={`/policies/terms?version=${v.version}`}
                           className="block p-4 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -228,7 +254,7 @@ export default function TermsOfUse() {
                               {v.changelog}
                             </p>
                           )}
-                        </a>
+                        </Link>
                       ))}
                     </div>
                   )}
@@ -247,9 +273,9 @@ export default function TermsOfUse() {
             <div className="mt-12 pt-6 border-t border-white/20 text-center text-sm text-white/60">
               <p className="mb-2">
                 Questions about our terms?{" "}
-                <a href="/contact" className="text-white hover:underline">
+                <Link to="/contact" className="text-white hover:underline">
                   Contact us
-                </a>
+                </Link>
               </p>
               <p className="text-xs">
                 © {new Date().getFullYear()} Print Power Purpose

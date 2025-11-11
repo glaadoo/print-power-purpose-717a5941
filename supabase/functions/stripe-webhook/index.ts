@@ -107,6 +107,39 @@ serve(async (req) => {
       } else {
         console.log(`Order created successfully`);
         
+        // Log legal acceptance if versions are present in metadata
+        if (orderData && session.metadata) {
+          const privacyVersion = session.metadata.privacy_version;
+          const termsVersion = session.metadata.terms_version;
+          const userId = session.metadata.user_id;
+
+          if (privacyVersion && termsVersion) {
+            try {
+              // Log both policy acceptances
+              await supabase.from('legal_logs').insert([
+                {
+                  user_id: userId || null,
+                  order_id: orderData.id,
+                  policy_type: 'privacy',
+                  version: parseInt(privacyVersion),
+                  accepted_at: new Date().toISOString(),
+                },
+                {
+                  user_id: userId || null,
+                  order_id: orderData.id,
+                  policy_type: 'terms',
+                  version: parseInt(termsVersion),
+                  accepted_at: new Date().toISOString(),
+                }
+              ]);
+              console.log('Legal acceptance logged successfully');
+            } catch (legalLogError) {
+              // Don't block payment if logging fails
+              console.error('Error logging legal acceptance (non-blocking):', legalLogError);
+            }
+          }
+        }
+        
         // Create donation record if donation amount > 0
         if (causeId && donationCents > 0 && orderData) {
           const { error: donationError } = await supabase
