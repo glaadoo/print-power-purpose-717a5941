@@ -213,7 +213,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         avoidCollisions={false}
         collisionPadding={8}
       >
-        <ScrollArea className="max-h-[min(70vh,32rem)]">
+        <ScrollArea className="max-h-[70vh] md:max-h-[32rem] overflow-y-auto overscroll-contain">
           <div 
             id="search-results" 
             role="listbox"
