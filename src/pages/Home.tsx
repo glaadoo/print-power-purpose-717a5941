@@ -239,27 +239,53 @@ export default function Home() {
                 One platform for professional print orders and optional donations—connecting
                 communities and nonprofits in a single, seamless checkout.
               </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-6">
-                <div className="flex flex-col items-center gap-3">
-                  <p className="text-sm md:text-base opacity-90 text-center">
-                    If you are a new user, please Register.
+              <div className="mt-10 flex flex-wrap justify-center gap-6 max-w-3xl mx-auto">
+                <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/5 backdrop-blur border border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-300 animate-fade-in min-w-[280px]">
+                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <line x1="19" x2="19" y1="8" y2="14"/>
+                      <line x1="22" x2="16" y1="11" y2="11"/>
+                    </svg>
+                  </div>
+                  <p className="text-sm md:text-base opacity-90 text-center font-medium">
+                    New to Print Power Purpose?
                   </p>
                   <a
                     href="/auth"
-                    className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 border border-white/10 transition-all"
+                    className="w-full rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 hover:scale-105 border border-white/10 transition-all duration-200 text-center flex items-center justify-center gap-2"
                   >
-                    Sign Up
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <line x1="19" x2="19" y1="8" y2="14"/>
+                      <line x1="22" x2="16" y1="11" y2="11"/>
+                    </svg>
+                    Create Account
                   </a>
                 </div>
-                <div className="flex flex-col items-center gap-3">
-                  <p className="text-sm md:text-base opacity-90 text-center">
-                    Already have an account? Login.
+                <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/5 backdrop-blur border border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-300 animate-fade-in [animation-delay:100ms] min-w-[280px]">
+                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                      <polyline points="10 17 15 12 10 7"/>
+                      <line x1="15" x2="3" y1="12" y2="12"/>
+                    </svg>
+                  </div>
+                  <p className="text-sm md:text-base opacity-90 text-center font-medium">
+                    Already have an account?
                   </p>
                   <a
                     href="/auth"
-                    className="rounded-full px-6 py-3 bg-white/10 text-white font-semibold hover:bg-white/20 border border-white/30 backdrop-blur transition-all"
+                    className="w-full rounded-full px-6 py-3 bg-white/10 text-white font-semibold hover:bg-white/20 hover:scale-105 border border-white/30 backdrop-blur transition-all duration-200 text-center flex items-center justify-center gap-2"
                   >
-                    Login
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                      <polyline points="10 17 15 12 10 7"/>
+                      <line x1="15" x2="3" y1="12" y2="12"/>
+                    </svg>
+                    Sign In
                   </a>
                 </div>
               </div>
