@@ -91,6 +91,8 @@ const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalN
 const Legal           = lazyPage("Legal",           () => import("./pages/Legal"));
 const AdminLegal      = lazyPage("AdminLegal",      () => import("./pages/AdminLegal"));
 const AdminNonprofits = lazyPage("AdminNonprofits", () => import("./pages/AdminNonprofits"));
+const AdminNonprofitAnalytics = lazyPage("AdminNonprofitAnalytics", () => import("./pages/AdminNonprofitAnalytics"));
+const SubmitNonprofit = lazyPage("SubmitNonprofit", () => import("./pages/SubmitNonprofit"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -510,6 +512,26 @@ export default function App() {
             element={
               <RouteBoundary name="AdminNonprofits">
                 <AdminNonprofits />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Nonprofit Analytics */}
+          <Route
+            path="/admin/nonprofit-analytics"
+            element={
+              <RouteBoundary name="AdminNonprofitAnalytics">
+                <AdminNonprofitAnalytics />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Submit Nonprofit */}
+          <Route
+            path="/submit-nonprofit"
+            element={
+              <RouteBoundary name="SubmitNonprofit">
+                <SubmitNonprofit />
               </RouteBoundary>
             }
           />

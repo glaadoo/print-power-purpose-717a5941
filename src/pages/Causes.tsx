@@ -7,6 +7,7 @@ import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import NonprofitSearch from "@/components/NonprofitSearch";
+import { Link } from "react-router-dom";
 import GlassCard from "@/components/GlassCard";
 
 const LS_CAUSE = "ppp:cause";
@@ -170,6 +171,12 @@ export default function Causes() {
               onSelect={handleNonprofitSelect}
               selectedId={selectedNonprofit?.id}
             />
+            
+            <div className="text-center mt-4">
+              <Link to="/submit-nonprofit" className="text-sm text-white/80 hover:text-white underline">
+                Can't find your nonprofit? Submit it for review
+              </Link>
+            </div>
             {selectedNonprofit && (
               <div className="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
                 <div className="flex items-center justify-between">

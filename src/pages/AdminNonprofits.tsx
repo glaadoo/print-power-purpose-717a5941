@@ -14,8 +14,13 @@ import {
   Upload,
   RefreshCw,
   CheckCircle,
-  XCircle
+  XCircle,
+  BarChart3,
+  AlertTriangle
 } from "lucide-react";
+import BulkImportDialog from "@/components/admin/BulkImportDialog";
+import { checkDuplicates, type DuplicateWarning } from "@/lib/nonprofit-utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -80,6 +85,12 @@ export default function AdminNonprofits() {
 
   // Sync status
   const [syncing, setSyncing] = useState(false);
+  
+  // Bulk import
+  const [bulkImportDialog, setBulkImportDialog] = useState(false);
+  
+  // Duplicate warnings
+  const [duplicateWarnings, setDuplicateWarnings] = useState<DuplicateWarning[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -208,6 +219,19 @@ export default function AdminNonprofits() {
       return;
     }
 
+    // Check for duplicates
+    const warnings = await checkDuplicates(newNonprofit.name, newNonprofit.ein || undefined);
+    if (warnings.length > 0) {
+      setDuplicateWarnings(warnings);
+      // Show warning but allow proceeding
+      toast.warning(`Found ${warnings.length} potential duplicate(s). Review warnings below.`);
+      return;
+    }
+
+    await insertNonprofit();
+  }
+
+  async function insertNonprofit() {
     try {
       const { error } = await supabase
         .from("nonprofits")
@@ -225,6 +249,7 @@ export default function AdminNonprofits() {
       toast.success("Nonprofit added");
       setAddDialog(false);
       setNewNonprofit({ name: "", ein: "", city: "", state: "", description: "" });
+      setDuplicateWarnings([]);
       fetchNonprofits();
       fetchStats();
     } catch (error: any) {
@@ -316,6 +341,15 @@ export default function AdminNonprofits() {
           
           <div className="flex gap-2">
             <Button
+              onClick={() => navigate("/admin/nonprofit-analytics")}
+              variant="outline"
+              size="sm"
+              className="bg-purple-500/20 border-purple-500/30 text-purple-300 hover:bg-purple-500/30"
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Analytics
+            </Button>
+            <Button
               onClick={() => triggerIRSSync(true)}
               disabled={syncing}
               variant="outline"
@@ -399,6 +433,15 @@ export default function AdminNonprofits() {
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Nonprofit
+            </Button>
+
+            <Button
+              onClick={() => setBulkImportDialog(true)}
+              variant="outline"
+              className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Bulk Import
             </Button>
 
             <Button
@@ -577,11 +620,38 @@ export default function AdminNonprofits() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {duplicateWarnings.length > 0 && (
+              <Alert className="bg-yellow-500/20 border-yellow-500/30">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="font-semibold mb-2">Potential duplicates found:</div>
+                  {duplicateWarnings.map((warning, idx) => (
+                    <div key={idx} className="mb-2">
+                      <div className="text-sm font-medium">{warning.message}</div>
+                      <ul className="text-xs ml-4 mt-1">
+                        {warning.matches.map(match => (
+                          <li key={match.id}>
+                            {match.name} {match.ein && `(${match.ein})`}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                  <div className="text-sm mt-2">
+                    Click "Add Anyway" to proceed despite warnings.
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <div>
               <Label>Name *</Label>
               <Input
                 value={newNonprofit.name}
-                onChange={(e) => setNewNonprofit({ ...newNonprofit, name: e.target.value })}
+                onChange={(e) => {
+                  setNewNonprofit({ ...newNonprofit, name: e.target.value });
+                  setDuplicateWarnings([]);
+                }}
                 className="bg-white/10 border-white/30 text-white"
               />
             </div>
@@ -589,7 +659,10 @@ export default function AdminNonprofits() {
               <Label>EIN</Label>
               <Input
                 value={newNonprofit.ein}
-                onChange={(e) => setNewNonprofit({ ...newNonprofit, ein: e.target.value })}
+                onChange={(e) => {
+                  setNewNonprofit({ ...newNonprofit, ein: e.target.value });
+                  setDuplicateWarnings([]);
+                }}
                 className="bg-white/10 border-white/30 text-white"
                 placeholder="12-3456789"
               />
@@ -623,15 +696,34 @@ export default function AdminNonprofits() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setAddDialog(false)} variant="outline">
+            <Button onClick={() => {
+              setAddDialog(false);
+              setDuplicateWarnings([]);
+            }} variant="outline">
               Cancel
             </Button>
-            <Button onClick={handleAdd} className="bg-green-500 hover:bg-green-600">
-              Add Nonprofit
-            </Button>
+            {duplicateWarnings.length > 0 ? (
+              <Button onClick={insertNonprofit} className="bg-yellow-500 hover:bg-yellow-600">
+                Add Anyway
+              </Button>
+            ) : (
+              <Button onClick={handleAdd} className="bg-green-500 hover:bg-green-600">
+                Add Nonprofit
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Import Dialog */}
+      <BulkImportDialog
+        open={bulkImportDialog}
+        onOpenChange={setBulkImportDialog}
+        onSuccess={() => {
+          fetchNonprofits();
+          fetchStats();
+        }}
+      />
     </div>
   );
 }
