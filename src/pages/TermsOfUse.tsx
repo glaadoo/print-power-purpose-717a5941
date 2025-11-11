@@ -263,7 +263,7 @@ export default function TermsOfUse() {
             </div>
 
             {/* Content */}
-            <article className="prose prose-invert max-w-none mt-8">
+            <article className="prose prose-invert max-w-none mt-8 [&>*]:mb-6 [&>h2]:mt-8 [&>h2]:mb-4 [&>h3]:mt-6 [&>h3]:mb-3 [&>ul]:space-y-3 [&>ol]:space-y-3 [&>p]:leading-relaxed">
               <div 
                 className="leading-relaxed text-white/90"
                 dangerouslySetInnerHTML={{ __html: document.content }}
