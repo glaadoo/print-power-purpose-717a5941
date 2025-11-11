@@ -239,19 +239,29 @@ export default function Home() {
                 One platform for professional print orders and optional donations—connecting
                 communities and nonprofits in a single, seamless checkout.
               </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-4">
-                <a
-                  href="/auth"
-                  className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 border border-white/10 transition-all"
-                >
-                  Sign Up
-                </a>
-                <a
-                  href="/auth"
-                  className="rounded-full px-6 py-3 bg-white/10 text-white font-semibold hover:bg-white/20 border border-white/30 backdrop-blur transition-all"
-                >
-                  Login
-                </a>
+              <div className="mt-8 space-y-4 max-w-lg mx-auto">
+                <div className="text-center space-y-2">
+                  <p className="text-sm md:text-base opacity-90">
+                    If you are a new user, please Register.
+                  </p>
+                  <p className="text-sm md:text-base opacity-90">
+                    Already have an account? Login.
+                  </p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-4">
+                  <a
+                    href="/auth"
+                    className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 border border-white/10 transition-all"
+                  >
+                    Sign Up
+                  </a>
+                  <a
+                    href="/auth"
+                    className="rounded-full px-6 py-3 bg-white/10 text-white font-semibold hover:bg-white/20 border border-white/30 backdrop-blur transition-all"
+                  >
+                    Login
+                  </a>
+                </div>
               </div>
             </div>
           </div>
