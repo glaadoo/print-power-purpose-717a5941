@@ -36,6 +36,29 @@ export default function AdminNonprofitApprovals() {
 
   useEffect(() => {
     fetchPending();
+
+    // Set up realtime subscription for new submissions
+    const channel = supabase
+      .channel('nonprofit-submissions')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'nonprofits',
+          filter: 'approved=eq.false'
+        },
+        (payload) => {
+          const newNonprofit = payload.new as PendingNonprofit;
+          setPending((prev) => [newNonprofit, ...prev]);
+          toast.info(`New nonprofit submission: ${newNonprofit.name}`);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchPending = async () => {
