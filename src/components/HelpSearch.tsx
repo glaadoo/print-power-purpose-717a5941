@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SearchResult {
   id: string;
@@ -206,12 +207,12 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
         avoidCollisions={false}
         collisionPadding={0}
       >
-        <div 
-          id="search-results" 
-          role="listbox"
-          className="max-h-[60vh] overflow-y-auto"
-          aria-label="Search results"
-        >
+        <ScrollArea className="max-h-[min(70vh,32rem)]">
+          <div 
+            id="search-results" 
+            role="listbox"
+            aria-label="Search results"
+          >
           {isLoading ? (
             <div className="p-6 text-center bg-white">
               <div className="inline-block w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
@@ -294,7 +295,8 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
               )}
             </div>
           )}
-        </div>
+          </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   );
