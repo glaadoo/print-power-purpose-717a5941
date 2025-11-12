@@ -14,111 +14,12 @@ serve(async (req) => {
   try {
     const body = await req.json();
     
-    // Handle order fetching action
+    // SECURITY: Order lookup is disabled on this public endpoint
     if (body.action === 'fetch_orders') {
-      const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-      
-      if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error('Supabase configuration missing');
-      }
-
-      const emailRaw = String(body.email ?? '').trim();
-      const emailLower = emailRaw.toLowerCase();
-      if (!emailLower) {
-        return new Response(JSON.stringify({ orders: [], error: 'Email required' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('order_number, session_id, product_name, quantity, amount_total_cents, donation_cents, created_at, status, customer_email')
-        .ilike('customer_email', `%${emailLower}%`)
-        .order('created_at', { ascending: false});
-
-      if (error) {
-        console.error('fetch_orders error', { email: emailLower, error });
-        return new Response(JSON.stringify({ orders: [], error: 'Failed to fetch orders' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      let results = orders ?? [];
-
-      // Fallback: include donation records tied to this email (mapped to order-like objects)
-      if (results.length === 0) {
-        const { data: donations, error: donationsError } = await supabase
-          .from('donations')
-          .select('amount_cents, created_at, customer_email')
-          .ilike('customer_email', `%${emailLower}%`)
-          .order('created_at', { ascending: false });
-
-        if (donationsError) {
-          console.error('fetch_orders donations fallback error', { email: emailLower, error: donationsError });
-        } else if (donations && donations.length > 0) {
-          const donationOrders = donations.map((d) => ({
-            order_number: 'DONATION',
-            session_id: null,
-            product_name: 'Donation',
-            quantity: 1,
-            amount_total_cents: d.amount_cents,
-            donation_cents: 0,
-            created_at: d.created_at,
-            status: 'completed',
-            customer_email: d.customer_email,
-          }));
-          results = donationOrders;
-        }
-      }
-      // Enrich missing product details via Stripe if needed
-      const STRIPE_KEY = (Deno.env.get('STRIPE_SECRET_KEY') ?? '').trim();
-      if (STRIPE_KEY && results.length > 0) {
-        for (const order of results as Array<any>) {
-          const missing = !order.product_name || order.product_name === 'NA';
-          if (missing && order.session_id) {
-            try {
-              const resp = await fetch(
-                `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(order.session_id)}?expand[]=line_items.data.price.product`,
-                { headers: { Authorization: `Bearer ${STRIPE_KEY}` } }
-              );
-              if (resp.ok) {
-                const session = await resp.json();
-                const items = session?.line_items?.data
-                  ?.map((li: any) => {
-                    const name = li?.price?.product?.name || li?.description || 'Item';
-                    const qty = li?.quantity ?? 1;
-                    return { name, quantity: qty };
-                  })
-                  // Filter out donation items - they should only show in the donation field
-                  .filter((item: any) => !item.name.toLowerCase().includes('donation')) ?? [];
-                if (items.length > 0) {
-                  (order as any).items = items;
-                  order.product_name = items
-                    .map((i: any) => (i.quantity > 1 ? `${i.name} x${i.quantity}` : i.name))
-                    .join(', ');
-                  // Aggregate quantity for display when multiple items
-                  order.quantity = items.reduce((sum: number, i: any) => sum + (i.quantity || 0), 0) || order.quantity;
-                }
-              } else {
-                const t = await resp.text();
-                console.error('fetch_orders stripe line_items failed', { status: resp.status, body: t });
-              }
-            } catch (e) {
-              console.error('fetch_orders stripe error', e);
-            }
-          }
-        }
-      }
-
-      console.log('fetch_orders', { email: emailLower, count: results.length });
-      return new Response(JSON.stringify({ orders: results }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Order lookup is not available via this endpoint.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Handle chat AI flow

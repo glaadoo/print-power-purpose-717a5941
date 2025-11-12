@@ -151,6 +151,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Parse payload and verify admin session token
+    const payload = await req.json();
     const {
       policyType,
       policyTitle,
@@ -159,13 +161,35 @@ const handler = async (req: Request): Promise<Response> => {
       changelog,
       notifyAdmins = true,
       notifyUsers = true,
-    }: PolicyNotificationRequest = await req.json();
-
-    console.log("Sending policy notifications:", { policyType, version, notifyAdmins, notifyUsers });
+      sessionToken,
+    } = payload as any;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    if (!sessionToken) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Session token required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { data: sessionRow, error: sessionError } = await supabase
+      .from('admin_sessions')
+      .select('id')
+      .eq('token', sessionToken)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (sessionError || !sessionRow) {
+      return new Response(JSON.stringify({ error: 'Forbidden: Invalid or expired session' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log("Sending policy notifications:", { policyType, version, notifyAdmins, notifyUsers });
 
     const baseUrl = supabaseUrl.replace(".supabase.co", ".lovable.app");
     const policyUrl = `${baseUrl}/policies/${policyType}?version=${version}`;
