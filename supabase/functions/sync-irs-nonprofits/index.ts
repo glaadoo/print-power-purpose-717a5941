@@ -32,7 +32,7 @@ serve(async (req) => {
       }
     }
 
-    const { quickSeed = false, batchSize = 100 } = await req.json().catch(() => ({ quickSeed: false, batchSize: 100 }));
+    const { quickSeed = false, batchSize: requestedBatchSize = 100 } = await req.json().catch(() => ({ quickSeed: false, batchSize: 100 }));
 
     console.log(`Starting IRS nonprofit sync - Quick seed: ${quickSeed}`);
 
@@ -74,7 +74,7 @@ serve(async (req) => {
     let batch: any[] = [];
     
     // Limit for processing
-    const maxRecords = batchSize;
+    const maxRecords = requestedBatchSize;
     let processedCount = 0;
     
     console.log(`Processing up to ${maxRecords} records...`);
