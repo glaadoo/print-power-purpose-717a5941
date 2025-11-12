@@ -571,6 +571,7 @@ export type Database = {
           base_cost_cents: number
           category: string | null
           created_at: string
+          description: string | null
           id: string
           image_url: string | null
           name: string
@@ -581,6 +582,7 @@ export type Database = {
           base_cost_cents: number
           category?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           image_url?: string | null
           name: string
@@ -591,6 +593,7 @@ export type Database = {
           base_cost_cents?: number
           category?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           image_url?: string | null
           name?: string

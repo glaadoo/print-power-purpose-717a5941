@@ -1279,6 +1279,19 @@ export default function Admin() {
               <GlassCard className="bg-white/5 border-white/20">
                 <div className="space-y-6 max-w-md">
                   <h2 className="text-2xl font-serif font-semibold text-white mb-4">Sync Products</h2>
+                  
+                  <div className="mb-6">
+                    <Button 
+                      onClick={() => navigate("/admin/products")} 
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      <Activity className="mr-2 h-4 w-4" />
+                      Open Product Sync Management
+                    </Button>
+                    <p className="text-white/60 text-sm mt-2">
+                      Manage all vendor product syncs in one place with detailed logs and controls
+                    </p>
+                  </div>
 
                   <div className="flex items-center justify-between gap-4">
                     <Button onClick={syncSinaLite} disabled={syncing.sinalite} className="flex items-center gap-2 bg-white text-black hover:bg-white/90">

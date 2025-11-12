@@ -10,10 +10,9 @@ type ProductRow = {
   id: string;
   name: string;
   description?: string | null;
-  imageUrl?: string | null;
-  currency?: string | null;          // e.g., "USD"
-  priceCents?: number | null;        // optional final price
-  base_cost_cents: number;           // used to derive price if priceCents missing
+  image_url?: string | null;
+  currency?: string | null;
+  base_cost_cents: number;
 };
 
 const priceFromBase = (base?: number | null) =>
@@ -50,10 +49,7 @@ export default function ProductDetail() {
     document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
   }, [product]);
 
-  const unitCents =
-    product && Number(product.priceCents || 0) > 0
-      ? Number(product.priceCents)
-      : priceFromBase(product?.base_cost_cents);
+  const unitCents = priceFromBase(product?.base_cost_cents);
 
   const unitPrice = unitCents / 100;
 
@@ -64,7 +60,7 @@ export default function ProductDetail() {
         id: product.id,
         name: product.name,
         priceCents: unitCents,
-        imageUrl: product.imageUrl,
+        imageUrl: product.image_url,
         currency: product.currency || "USD",
       },
       Math.max(1, Number(qty))

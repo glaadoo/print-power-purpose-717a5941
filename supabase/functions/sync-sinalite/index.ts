@@ -22,7 +22,7 @@ serve(async (req) => {
     const clientId = Deno.env.get("SINALITE_CLIENT_ID");
     const clientSecret = Deno.env.get("SINALITE_CLIENT_SECRET");
     const authUrl = Deno.env.get("SINALITE_AUTH_URL") || "https://api.sinaliteuppy.com/auth/token";
-    const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinaliteuppy.com";
+    const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://apifrontend_stage.sinaliteuppy.com/demo/demo.php";
 
     if (!clientId || !clientSecret) {
       console.error("[SYNC-SINALITE] Missing SINALITE_CLIENT_ID or SINALITE_CLIENT_SECRET");
@@ -59,7 +59,7 @@ serve(async (req) => {
 
     // Step 2: Fetch products using access token
     console.log("[SYNC-SINALITE] Fetching products from SinaLite API");
-    const response = await fetch(`${apiUrl}/product`, {
+    const response = await fetch(apiUrl, {
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
@@ -75,12 +75,13 @@ serve(async (req) => {
 
     // Transform and upsert products
     const productsToSync = (products.data || products || []).map((p: any) => ({
-      name: p.name || p.title,
-      base_cost_cents: Math.round((p.price || p.cost || 0) * 100),
-      category: p.category || "print",
-      image_url: p.image || p.thumbnail || null,
+      name: p.name || p.title || p.product_name || "Unnamed Product",
+      description: p.description || p.details || p.product_description || null,
+      base_cost_cents: Math.round((p.price || p.cost || p.base_price || 0) * 100),
+      category: p.category || p.product_category || "print",
+      image_url: p.image || p.thumbnail || p.image_url || p.product_image || null,
       vendor: "sinalite",
-      vendor_id: String(p.id || p.sku),
+      vendor_id: String(p.id || p.sku || p.product_id || p.product_sku),
     }));
 
     let synced = 0;

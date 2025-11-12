@@ -12,6 +12,7 @@ import { toast } from "sonner";
 type ProductRow = {
   id: string;
   name: string;
+  description?: string | null;
   base_cost_cents: number;
   image_url?: string | null;
   category?: string | null;
