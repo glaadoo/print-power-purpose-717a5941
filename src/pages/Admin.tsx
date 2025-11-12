@@ -297,12 +297,19 @@ export default function Admin() {
   const handleAddNonprofit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const { error } = await supabase.from("nonprofits").insert({
-      name: nonprofitName
+    const sessionToken = sessionStorage.getItem("admin_session");
+    if (!sessionToken) {
+      toast.error("Session expired. Please log in again.");
+      setIsAuthenticated(false);
+      return;
+    }
+    
+    const { data, error } = await supabase.functions.invoke('bulk-import-nonprofits', {
+      body: { nonprofits: [{ name: nonprofitName, approved: true }], sessionToken }
     });
 
-    if (error) {
-      toast.error("Failed to add nonprofit: " + error.message);
+    if (error || !data?.success) {
+      toast.error("Failed to add nonprofit: " + (error?.message || data?.error || 'Unknown error'));
     } else {
       toast.success("Nonprofit added successfully!");
       setNonprofitName("");

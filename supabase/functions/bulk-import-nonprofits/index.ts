@@ -59,6 +59,13 @@ serve(async (req) => {
       if (sessionRow) isAdmin = true;
     }
 
+    console.log('bulk-import-nonprofits invoked', {
+      count: Array.isArray(nonprofits) ? nonprofits.length : null,
+      hasSessionToken: !!sessionToken,
+      hasAuthHeader: !!authHeader,
+      isAdmin
+    });
+
     if (!isAdmin) {
       return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
         status: 403,
