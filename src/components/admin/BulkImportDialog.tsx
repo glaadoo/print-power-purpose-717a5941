@@ -361,6 +361,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
   };
 
   const handleImport = async () => {
+    console.log('📥 Import clicked', { hasFile: !!file, fileName: file?.name });
     if (!file) return;
     
     setImporting(true);
@@ -463,7 +464,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
             <div className="mt-2">
               <input
                 type="file"
-                accept=".csv,.txt"
+                accept=".csv,.txt,.tsv,.psv,.pipe,.dat,.list,text/plain"
                 onChange={handleFileChange}
                 className="block w-full text-sm text-white/80
                   file:mr-4 file:py-2 file:px-4
@@ -473,6 +474,9 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
                   hover:file:bg-blue-500/30
                   cursor-pointer"
               />
+              {file && (
+                <p className="mt-2 text-xs text-white/70">Selected: {file.name} ({Math.round(file.size/1024)} KB)</p>
+              )}
             </div>
           </div>
           
