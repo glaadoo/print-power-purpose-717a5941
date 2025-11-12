@@ -40,39 +40,28 @@ serve(async (req) => {
       },
     });
 
-    // Parse payload early to support Supabase JWT authentication
+    // Parse payload early to support admin session token validation
     const payload = await req.json().catch(() => ({}));
     const nonprofits = payload?.nonprofits;
+    const sessionToken = payload?.sessionToken;
 
-    // Verify admin via JWT authentication (verify_jwt = true in config.toml)
-    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: Missing authentication token' }), {
+    if (!sessionToken) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Session token required' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Check if user has admin role
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
+    // Verify the admin session token
+    const { data: sessionRow, error: sessionError } = await supabase
+      .from('admin_sessions')
+      .select('id')
+      .eq('token', sessionToken)
+      .gt('expires_at', new Date().toISOString())
       .single();
     
-    if (!roles) {
-      return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
+    if (sessionError || !sessionRow) {
+      return new Response(JSON.stringify({ error: 'Forbidden: Invalid or expired session' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -80,7 +69,7 @@ serve(async (req) => {
 
     console.log('bulk-import-nonprofits invoked', {
       count: Array.isArray(nonprofits) ? nonprofits.length : null,
-      userId: user.id
+      hasValidSession: !!sessionRow
     });
 
     if (!nonprofits || !Array.isArray(nonprofits)) {
