@@ -444,10 +444,10 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="relative z-50 pointer-events-auto bg-gray-900 text-white border-white/20 max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="bg-gray-900 text-white border border-white/20 max-w-2xl max-h-[80vh] overflow-y-auto [&>button]:text-white [&>button]:hover:bg-white/10">
         <DialogHeader>
-          <DialogTitle>Bulk Import Nonprofits</DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogTitle className="text-white text-2xl">Bulk Import Nonprofits</DialogTitle>
+          <DialogDescription className="text-white/70">
             Upload a CSV or TXT file with nonprofit data. The system will automatically detect the delimiter and match column headers.
           </DialogDescription>
         </DialogHeader>
@@ -514,14 +514,20 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
           )}
         </div>
         
-        <DialogFooter>
-          <Button onClick={() => { console.log('🧹 Cancel clicked'); onOpenChange(false); }} variant="outline" type="button">
+        <DialogFooter className="gap-2">
+          <Button 
+            onClick={() => { console.log('🧹 Cancel clicked'); onOpenChange(false); }} 
+            variant="outline" 
+            type="button"
+            className="border-white/30 text-white hover:bg-white/10"
+          >
             Cancel
           </Button>
           <Button
             onClick={handleImport}
             disabled={!file || importing}
-            className="bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-600"
           >
             {importing ? (
               <>
