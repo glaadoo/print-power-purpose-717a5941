@@ -399,18 +399,14 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         approved: true,
       }));
       
-      // Get auth session for edge function call
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('You must be logged in to import nonprofits');
+      const sessionToken = sessionStorage.getItem("admin_session");
+      if (!sessionToken) {
+        throw new Error('Admin session missing. Please log in again.');
       }
       
-      // Call edge function with service role access
+      // Call edge function with service role access via admin session token
       const { data, error } = await supabase.functions.invoke('bulk-import-nonprofits', {
-        body: { nonprofits: toInsert },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+        body: { nonprofits: toInsert, sessionToken }
       });
       
       if (error) throw error;
