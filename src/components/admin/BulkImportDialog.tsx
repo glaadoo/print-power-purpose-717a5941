@@ -54,38 +54,55 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
   };
   
   const normalizeHeader = (header: string): string => {
-    // Remove special characters, extra spaces, and convert to lowercase
-    return header.trim().toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ');
+    // Remove quotes, special characters, extra spaces, and convert to lowercase
+    return header.trim().replace(/^["']|["']$/g, '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ');
   };
   
   const matchHeader = (header: string): string | null => {
     const normalized = normalizeHeader(header);
+    const original = header.trim().toLowerCase();
     
-    // Name variations
-    if (normalized.includes('name') || normalized.includes('legal') || normalized.includes('organization')) {
+    console.log('🔍 Matching header:', { original: header, normalized, comparing: original });
+    
+    // Name variations - check exact matches first, then contains
+    if (original === 'name' || normalized === 'name' || 
+        original === 'nonprofit name' || original === 'cause name' ||
+        normalized.includes('name') || normalized.includes('legal') || 
+        normalized.includes('organization') || normalized.includes('nonprofit') ||
+        normalized.includes('cause')) {
+      console.log('✅ Matched as: name');
       return 'name';
     }
     // EIN variations
-    if (normalized.includes('ein') || normalized.includes('tax') || normalized.includes('id number')) {
+    if (original === 'ein' || normalized === 'ein' || 
+        normalized.includes('ein') || normalized.includes('tax') || 
+        normalized.includes('id number')) {
+      console.log('✅ Matched as: ein');
       return 'ein';
     }
     // City variations
-    if (normalized.includes('city')) {
+    if (original === 'city' || normalized === 'city' || normalized.includes('city')) {
+      console.log('✅ Matched as: city');
       return 'city';
     }
     // State variations
-    if (normalized === 'st' || normalized === 'state') {
+    if (original === 'state' || original === 'st' || normalized === 'st' || normalized === 'state') {
+      console.log('✅ Matched as: state');
       return 'state';
     }
     // Country variations
-    if (normalized.includes('country')) {
+    if (original === 'country' || normalized === 'country' || normalized.includes('country')) {
+      console.log('✅ Matched as: country');
       return 'country';
     }
     // Description variations
-    if (normalized.includes('description') || normalized.includes('purpose') || normalized.includes('mission')) {
+    if (normalized.includes('description') || normalized.includes('purpose') || 
+        normalized.includes('mission') || normalized.includes('about')) {
+      console.log('✅ Matched as: description');
       return 'description';
     }
     
+    console.log('❌ No match found');
     return null;
   };
 
