@@ -42,7 +42,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
   const [preview, setPreview] = useState<ParsedRow[]>([]);
 
   const detectDelimiter = (text: string): string => {
-    const firstLine = (text.split(/\r?\n/)[0] || '').trim();
+    const firstLine = (text.split(/\r?\n/)[0] || '').replace(/^\uFEFF/, '').trim();
     // Heuristic: choose the delimiter that yields the most tokens (>1)
     const candidates: Array<{ d: string; tokens: number }> = [
       { d: '\t', tokens: firstLine.split('\t').length },
@@ -312,12 +312,12 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       const rows = parseCSV(text);
       
       if (rows.length === 0) {
-        const lines = text.split('\n').filter(l => l.trim());
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
         const delimiter = detectDelimiter(text);
         const rawHeaders = lines.length > 0 
           ? (delimiter === '\t' ? lines[0].split('\t') : lines[0].split(new RegExp(`\\s*\\${delimiter}\\s*`)))
           : [];
-        const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
+        const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : delimiter === ',' ? 'comma (,)' : 'semicolon (;)';
         
         toast.dismiss();
         toast.error(
@@ -335,7 +335,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         console.error('- Expected: A column matching "Name", "Nonprofit Name", "Cause Name", or similar');
         console.error('- No rows with valid nonprofit names (3+ chars) were found');
         
-        setFile(null);
+        // keep file selected to allow retry
         return;
       }
       
@@ -516,7 +516,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
           </Button>
           <Button
             onClick={handleImport}
-            disabled={!file || validationErrors.length > 0 || importing}
+            disabled={!file || importing}
             className="bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {importing ? (
