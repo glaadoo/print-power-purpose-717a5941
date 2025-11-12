@@ -62,6 +62,7 @@ serve(async (req) => {
     console.log("[SYNC-SINALITE] Fetching products from SinaLite API");
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      "Accept": "application/json",
     };
     
     if (accessToken) {
@@ -74,8 +75,27 @@ serve(async (req) => {
       throw new Error(`SinaLite API error: ${response.status}`);
     }
 
-    const products = await response.json();
-    console.log(`[SYNC-SINALITE] Fetched ${products.length || 0} products`);
+    const contentType = response.headers.get("content-type") || "";
+    let products: any = [];
+    if (contentType.includes("application/json")) {
+      products = await response.json();
+    } else {
+      const textBody = await response.text();
+      console.warn("[SYNC-SINALITE] Non-JSON response from SinaLite:", textBody.slice(0, 200));
+      return new Response(
+        JSON.stringify({
+          success: false,
+          synced: 0,
+          total: 0,
+          vendor: "sinalite",
+          note: "SinaLite endpoint returned non-JSON (e.g., Login Required). Configure API access to enable sync.",
+          preview: textBody.slice(0, 200)
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`[SYNC-SINALITE] Fetched ${(products?.data?.length ?? products?.length ?? 0)} products`);
 
     // Transform and upsert products
     const productsToSync = (products.data || products || []).map((p: any) => ({
