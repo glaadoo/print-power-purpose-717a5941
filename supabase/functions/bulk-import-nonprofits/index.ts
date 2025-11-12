@@ -1,10 +1,27 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schema
+const NonprofitSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200, "Name must be less than 200 characters").trim(),
+  ein: z.string().regex(/^\d{2}-?\d{7}$/, "EIN must be in format XX-XXXXXXX or XXXXXXXXX").transform(val => {
+    // Normalize EIN format to XX-XXXXXXX
+    const digits = val.replace(/\D/g, '');
+    return digits.length === 9 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : val;
+  }).optional().nullable(),
+  city: z.string().max(100, "City must be less than 100 characters").optional().nullable(),
+  state: z.string().length(2, "State must be 2-letter code").regex(/^[A-Z]{2}$/, "State must be uppercase").optional().nullable(),
+  country: z.string().length(2, "Country must be 2-letter ISO code").default("US"),
+  description: z.string().max(2000, "Description must be less than 2000 characters").optional().nullable(),
+  source: z.enum(["curated", "irs"]).default("irs"),
+  approved: z.boolean().default(true),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,55 +40,48 @@ serve(async (req) => {
       },
     });
 
-    // Parse payload early to support either Supabase JWT or admin session token
+    // Parse payload early to support Supabase JWT authentication
     const payload = await req.json().catch(() => ({}));
     const nonprofits = payload?.nonprofits;
-    const sessionToken = payload?.sessionToken;
 
-    // Verify admin via either user JWT (roles) or admin session token
-    let isAdmin = false;
-
+    // Verify admin via JWT authentication (verify_jwt = true in config.toml)
     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (!authError && user) {
-        // Check if user has admin role
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .single();
-        if (roles) isAdmin = true;
-      }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Missing authentication token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // Fallback to custom admin session token
-    if (!isAdmin && sessionToken) {
-      const { data: sessionRow } = await supabase
-        .from('admin_sessions')
-        .select('id')
-        .eq('token', sessionToken)
-        .gt('expires_at', new Date().toISOString())
-        .maybeSingle();
-      if (sessionRow) isAdmin = true;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    console.log('bulk-import-nonprofits invoked', {
-      count: Array.isArray(nonprofits) ? nonprofits.length : null,
-      hasSessionToken: !!sessionToken,
-      hasAuthHeader: !!authHeader,
-      isAdmin
-    });
-
-    if (!isAdmin) {
+    // Check if user has admin role
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+    
+    if (!roles) {
       return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    console.log('bulk-import-nonprofits invoked', {
+      count: Array.isArray(nonprofits) ? nonprofits.length : null,
+      userId: user.id
+    });
 
     if (!nonprofits || !Array.isArray(nonprofits)) {
       return new Response(JSON.stringify({ error: 'Invalid request: nonprofits array required' }), {
@@ -80,17 +90,36 @@ serve(async (req) => {
       });
     }
 
-    // Normalize input and split EINs for duplicate check
-    const inputNonprofits = (nonprofits as any[]).map((n) => ({
-      name: String(n.name).trim(),
-      ein: n.ein ? String(n.ein).trim() : null,
-      city: n.city ?? null,
-      state: n.state ?? null,
-      country: n.country ?? 'US',
-      description: n.description ?? null,
-      source: n.source ?? 'irs',
-      approved: n.approved ?? true,
-    }));
+    // Validate and normalize input
+    const validationErrors: Array<{ index: number; errors: string[] }> = [];
+    const inputNonprofits: any[] = [];
+
+    for (let i = 0; i < nonprofits.length; i++) {
+      const result = NonprofitSchema.safeParse(nonprofits[i]);
+      if (!result.success) {
+        validationErrors.push({
+          index: i,
+          errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        });
+      } else {
+        inputNonprofits.push(result.data);
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      console.error('Validation errors:', validationErrors);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Validation failed', 
+          validationErrors,
+          message: `${validationErrors.length} record(s) failed validation`
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Build set of EINs we are about to insert (only non-null values)
     const eins = inputNonprofits

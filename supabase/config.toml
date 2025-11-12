@@ -1,42 +1,21 @@
 project_id = "wgohndthjgeqamfuldov"
 
-[functions.bulk-import-nonprofits]
-verify_jwt = false
-
 [functions.stripe-webhook]
-verify_jwt = false
-
-[functions.send-welcome-email]
-verify_jwt = false
-
-[functions.kenzie-chat]
-verify_jwt = false
-
-[functions.verify-admin-key]
-verify_jwt = false
-
-[functions.checkdrop-evaluate]
 verify_jwt = false
 
 [functions.jotform-webhook]
 verify_jwt = false
 
+[functions.verify-admin-key]
+verify_jwt = false
+
 [functions.checkout-session]
 verify_jwt = false
 
-[functions.create-monthly-donation]
-verify_jwt = false
-
-[functions.admin-stats]
-verify_jwt = false
-
-[functions.weekly-story-post]
-verify_jwt = false
-
-[functions.send-nonprofit-notification]
-verify_jwt = false
-
 [functions.verify-checkout]
+verify_jwt = false
+
+[functions.kenzie-chat]
 verify_jwt = false
 
 [functions.help-search]
@@ -45,8 +24,29 @@ verify_jwt = false
 [functions.help-log]
 verify_jwt = false
 
+[functions.checkdrop-evaluate]
+verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-nonprofit-notification]
+verify_jwt = false
+
 [functions.send-policy-notification]
+verify_jwt = false
+
+[functions.create-monthly-donation]
+verify_jwt = false
+
+[functions.weekly-story-post]
 verify_jwt = false
 
 [functions.sync-irs-nonprofits]
 verify_jwt = false
+
+[functions.bulk-import-nonprofits]
+verify_jwt = true
+
+[functions.admin-stats]
+verify_jwt = true
