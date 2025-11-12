@@ -120,6 +120,19 @@ export default function AdminProducts() {
                       <div>
                         <div className="font-semibold">⚠ Configuration Needed</div>
                         <div className="mt-1">{syncResults[vendor.name].note}</div>
+                        {syncResults[vendor.name].authUrl && (
+                          <div className="mt-1 text-xs opacity-80">Auth URL: {syncResults[vendor.name].authUrl}</div>
+                        )}
+                        {Array.isArray(syncResults[vendor.name].attempts) && (
+                          <details className="mt-2 text-xs opacity-80">
+                            <summary className="cursor-pointer">Auth attempts</summary>
+                            <ul className="list-disc list-inside space-y-1 mt-1">
+                              {syncResults[vendor.name].attempts.map((a: string, i: number) => (
+                                <li key={i}>{a}</li>
+                              ))}
+                            </ul>
+                          </details>
+                        )}
                         {syncResults[vendor.name].preview && (
                           <details className="mt-2 text-xs opacity-75">
                             <summary className="cursor-pointer">View API response</summary>

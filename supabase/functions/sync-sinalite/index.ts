@@ -23,6 +23,7 @@ serve(async (req) => {
     const clientSecret = Deno.env.get("SINALITE_CLIENT_SECRET");
     const authUrl = Deno.env.get("SINALITE_AUTH_URL") || "https://api.sinaliteuppy.com/auth/token";
     const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinaliteuppy.com/v1/products";
+    const scope = Deno.env.get("SINALITE_SCOPE") || undefined;
 
     // Authenticate if credentials are provided
     const needsAuth = clientId && clientSecret;
@@ -49,6 +50,8 @@ serve(async (req) => {
 
     // Attempt 1: OAuth2 client_credentials with Basic auth and form-encoded body
     try {
+      const form = new URLSearchParams({ grant_type: "client_credentials" });
+      if (scope) form.append("scope", scope);
       const res1 = await fetch(authUrl, {
         method: "POST",
         headers: {
@@ -56,7 +59,7 @@ serve(async (req) => {
           "Accept": "application/json",
           "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
         },
-        body: new URLSearchParams({ grant_type: "client_credentials" }),
+        body: form,
       });
 
       const ct1 = res1.headers.get("content-type") || "";
@@ -85,6 +88,7 @@ serve(async (req) => {
             client_id: clientId,
             client_secret: clientSecret,
             grant_type: "client_credentials",
+            ...(scope ? { scope } : {})
           }),
         });
 
