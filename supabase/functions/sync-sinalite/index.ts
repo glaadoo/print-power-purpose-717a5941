@@ -24,47 +24,51 @@ serve(async (req) => {
     const authUrl = Deno.env.get("SINALITE_AUTH_URL") || "https://api.sinaliteuppy.com/auth/token";
     const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://apifrontend_stage.sinaliteuppy.com/demo/demo.php";
 
-    if (!clientId || !clientSecret) {
-      console.error("[SYNC-SINALITE] Missing SINALITE_CLIENT_ID or SINALITE_CLIENT_SECRET");
-      return new Response(
-        JSON.stringify({ error: "SinaLite API credentials not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    const isDemoEndpoint = apiUrl.includes("demo");
+    const needsAuth = !isDemoEndpoint && clientId && clientSecret;
+
+    let accessToken = null;
+
+    // Step 1: Authenticate if needed (skip for demo endpoint)
+    if (needsAuth) {
+      console.log("[SYNC-SINALITE] Authenticating with SinaLite");
+      const authResponse = await fetch(authUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          grant_type: "client_credentials"
+        }),
+      });
+
+      if (!authResponse.ok) {
+        throw new Error(`SinaLite Auth error: ${authResponse.status}`);
+      }
+
+      const authData = await authResponse.json();
+      accessToken = authData.access_token;
+
+      if (!accessToken) {
+        throw new Error("No access token received from SinaLite");
+      }
+    } else {
+      console.log("[SYNC-SINALITE] Skipping authentication for demo endpoint");
     }
 
-    // Step 1: Authenticate to get access token
-    console.log("[SYNC-SINALITE] Authenticating with SinaLite");
-    const authResponse = await fetch(authUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: "client_credentials"
-      }),
-    });
-
-    if (!authResponse.ok) {
-      throw new Error(`SinaLite Auth error: ${authResponse.status}`);
-    }
-
-    const authData = await authResponse.json();
-    const accessToken = authData.access_token;
-
-    if (!accessToken) {
-      throw new Error("No access token received from SinaLite");
-    }
-
-    // Step 2: Fetch products using access token
+    // Step 2: Fetch products
     console.log("[SYNC-SINALITE] Fetching products from SinaLite API");
-    const response = await fetch(apiUrl, {
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(apiUrl, { headers });
 
     if (!response.ok) {
       throw new Error(`SinaLite API error: ${response.status}`);
