@@ -444,7 +444,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gray-900 text-white border-white/20 max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="relative z-50 pointer-events-auto bg-gray-900 text-white border-white/20 max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Bulk Import Nonprofits</DialogTitle>
           <DialogDescription className="text-white/60">
@@ -515,7 +515,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         </div>
         
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button onClick={() => { console.log('🧹 Cancel clicked'); onOpenChange(false); }} variant="outline" type="button">
             Cancel
           </Button>
           <Button
