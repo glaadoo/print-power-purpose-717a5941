@@ -112,8 +112,9 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     const lines = text.split('\n').filter(l => l.trim());
     console.log('📊 Total lines after filtering:', lines.length);
     
-    if (lines.length < 2) {
-      console.error('❌ Not enough lines in file. Need at least 2 (header + 1 data row)');
+    // Support headerless files too; only error if completely empty
+    if (lines.length < 1) {
+      console.error('❌ Empty file: no lines found');
       return [];
     }
     
@@ -121,33 +122,61 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
     console.log('🔍 Detected delimiter:', delimiterName);
     
-    const rawHeaders = delimiter === '\t' 
-      ? lines[0].split('\t') 
-      : lines[0].split(new RegExp(`\\s*\\${delimiter}\\s*`));
-    const headers = rawHeaders.map(h => matchHeader(h));
-    console.log('📋 Raw headers:', rawHeaders);
-    console.log('📋 Matched headers:', headers);
-    
-    // Check if we have at least one 'name' column
-    const hasNameColumn = headers.some(h => h === 'name');
-    let adjustedHeaders = [...headers];
-    if (!hasNameColumn) {
-      const einIdx = headers.findIndex(h => h === 'ein');
-      if (einIdx !== -1 && rawHeaders[einIdx + 1]) {
-        adjustedHeaders[einIdx + 1] = 'name';
-        console.warn('⚠️ No explicit name column found. Using the column after EIN as Name:', rawHeaders[einIdx + 1]);
-      } else {
-        console.error('❌ No "name" column found in headers. Available headers:', rawHeaders);
-        console.error('💡 Expected headers like: "Name", "Nonprofit Name", "Cause Name", "Organization Name", etc.');
-        return [];
-      }
+    const splitLine = (line: string) =>
+      (delimiter === '\t'
+        ? line.split('\t')
+        : line.split(new RegExp(`\\s*\\${delimiter}\\s*`))
+      ).map(v => v.trim().replace(/^["']|["']$/g, ''));
+
+    const rawFirst = splitLine(lines[0]);
+    console.log('📋 First line tokens:', rawFirst);
+
+    // Try to interpret first line as header
+    const headerMatches = rawFirst.map(h => matchHeader(h));
+    console.log('📋 Header candidates:', headerMatches);
+
+    const einLike = (val?: string) => {
+      if (!val) return false;
+      const clean = val.replace(/[^0-9]/g, '');
+      return clean.length === 9;
+    };
+
+    let adjustedHeaders: (string | null)[] = [];
+    let startRow = 1;
+
+    const looksLikeData = einLike(rawFirst[0]) && !!rawFirst[1] && rawFirst[1].length >= 3;
+
+    if (looksLikeData && !headerMatches.some(h => h)) {
+      // No header row present; map by position
+      const positional = ['ein', 'name', 'city', 'state', 'country', 'description'];
+      adjustedHeaders = positional.slice(0, rawFirst.length);
+      startRow = 0;
+      console.warn('⚠️ No header row detected. Treating as headerless with order: EIN | Name | City | State | Country | Description');
     } else {
-      console.log('✅ Name column detected.');
+      // Use detected headers
+      console.log('📋 Raw headers:', rawFirst);
+      console.log('📋 Matched headers:', headerMatches);
+      adjustedHeaders = [...headerMatches];
+      // Ensure we have a name mapping
+      const hasNameColumn = headerMatches.some(h => h === 'name');
+      if (!hasNameColumn) {
+        const einIdx = headerMatches.findIndex(h => h === 'ein');
+        if (einIdx !== -1 && rawFirst[einIdx + 1]) {
+          adjustedHeaders[einIdx + 1] = 'name';
+          console.warn('⚠️ No explicit name column found. Using the column after EIN as Name:', rawFirst[einIdx + 1]);
+        } else {
+          console.error('❌ No "name" column found in headers. Available headers:', rawFirst);
+          console.error('💡 Expected headers like: "Name", "Nonprofit Name", "Cause Name", "Organization Name", etc. Or provide headerless file with order: EIN | Name | City | State | Country');
+          return [];
+        }
+      } else {
+        console.log('✅ Name column detected.');
+      }
     }
     
     const rows: ParsedRow[] = [];
     
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = startRow; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue; // Skip empty lines
       
@@ -399,10 +428,10 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
           <div>
             <Label>Data File (CSV or TXT)</Label>
             <p className="text-xs text-white/60 mt-1">
-              Supported formats: CSV, TXT (pipe or comma delimited)
+              Supported formats: CSV, TXT (tab, pipe |, or comma delimited). Headers optional.
             </p>
             <p className="text-xs text-white/60 mt-1">
-              Expected columns: Name, EIN, City, State, Country (optional), Description (optional)
+              Headerless order supported: EIN | Nonprofit Name | City | State | Country | Description
             </p>
             <div className="mt-2">
               <input
