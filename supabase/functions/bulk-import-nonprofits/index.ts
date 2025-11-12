@@ -17,7 +17,10 @@ const NonprofitSchema = z.object({
   }).optional().nullable(),
   city: z.string().max(100, "City must be less than 100 characters").optional().nullable(),
   state: z.string().length(2, "State must be 2-letter code").regex(/^[A-Z]{2}$/, "State must be uppercase").optional().nullable(),
-  country: z.string().length(2, "Country must be 2-letter ISO code").default("US"),
+  country: z.preprocess(
+    (val) => val || "US",
+    z.string().length(2, "Country must be 2-letter ISO code")
+  ),
   description: z.string().max(2000, "Description must be less than 2000 characters").optional().nullable(),
   source: z.enum(["curated", "irs"]).default("irs"),
   approved: z.boolean().default(true),
