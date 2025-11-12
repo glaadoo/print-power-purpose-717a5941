@@ -13,23 +13,30 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Require CRON_SECRET - no longer optional
+    const authHeader = req.headers.get('authorization');
     const cronSecret = Deno.env.get('CRON_SECRET');
     
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Verify cron secret if provided
-    const authHeader = req.headers.get('authorization');
-    if (cronSecret && authHeader) {
-      const providedSecret = authHeader.replace('Bearer ', '');
-      if (providedSecret !== cronSecret) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
+    if (!authHeader || !cronSecret) {
+      console.error('Unauthorized: Missing authorization header or CRON_SECRET');
+      return new Response(JSON.stringify({ error: 'Unauthorized - CRON_SECRET required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
+
+    const providedSecret = authHeader.replace('Bearer ', '');
+    if (providedSecret !== cronSecret) {
+      console.error('Unauthorized: Invalid CRON_SECRET');
+      return new Response(JSON.stringify({ error: 'Unauthorized - Invalid CRON_SECRET' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json().catch(() => ({}));
     const maxImport = body.maxRecords || 10000; // Default 10k records

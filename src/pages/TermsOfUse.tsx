@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { exportToPDF } from "@/lib/pdf-export";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
+import DOMPurify from "dompurify";
 
 interface LegalDoc {
   id: string;
@@ -266,7 +267,7 @@ export default function TermsOfUse() {
             <article className="prose prose-invert max-w-none mt-8">
               <div 
                 className="leading-relaxed text-white/90 [&_p]:mb-6 [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:mt-8 [&_h2]:mb-4 [&_h3]:mt-6 [&_h3]:mb-3 [&_h4]:mt-4 [&_h4]:mb-2 [&_ul]:mb-6 [&_ul]:space-y-3 [&_ol]:mb-6 [&_ol]:space-y-3 [&_li]:mb-2"
-                dangerouslySetInnerHTML={{ __html: document.content }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(document.content) }}
               />
             </article>
 
