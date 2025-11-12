@@ -408,6 +408,22 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       const { data, error } = await supabase.functions.invoke('bulk-import-nonprofits', {
         body: { nonprofits: toInsert, sessionToken }
       });
+
+      let result = data;
+      if (error || !result) {
+        console.warn('Edge invoke failed, falling back to direct fetch...', error);
+        const functionsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bulk-import-nonprofits`;
+        const resp = await fetch(functionsUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nonprofits: toInsert, sessionToken })
+        });
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(text || 'Function call failed');
+        }
+        result = await resp.json();
+      }
       
       if (error) throw error;
 
