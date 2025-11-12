@@ -48,11 +48,22 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
   };
 
   const parseCSV = (text: string): ParsedRow[] => {
+    console.log('📄 Raw file content (first 500 chars):', text.substring(0, 500));
+    
     const lines = text.split('\n').filter(l => l.trim());
-    if (lines.length < 2) return [];
+    console.log('📊 Total lines after filtering:', lines.length);
+    
+    if (lines.length < 2) {
+      console.error('❌ Not enough lines in file. Need at least 2 (header + 1 data row)');
+      return [];
+    }
     
     const delimiter = detectDelimiter(text);
+    console.log('🔍 Detected delimiter:', delimiter === '|' ? 'pipe (|)' : 'comma (,)');
+    
     const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase());
+    console.log('📋 Parsed headers:', headers);
+    
     const rows: ParsedRow[] = [];
     
     for (let i = 1; i < lines.length; i++) {
@@ -70,6 +81,11 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       });
       
       if (row.name) rows.push(row);
+    }
+    
+    console.log('✅ Successfully parsed rows:', rows.length);
+    if (rows.length > 0) {
+      console.log('📝 Sample row:', rows[0]);
     }
     
     return rows;
@@ -99,16 +115,41 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     if (!selectedFile) return;
     
     setFile(selectedFile);
+    setValidationErrors([]);
+    setPreview([]);
     
     try {
       toast.info(`Processing file: ${selectedFile.name}...`);
+      console.log('📁 File details:', {
+        name: selectedFile.name,
+        size: selectedFile.size,
+        type: selectedFile.type
+      });
       
       const text = await selectedFile.text();
       const rows = parseCSV(text);
       
       if (rows.length === 0) {
-        toast.error('No valid data found in file. Please check the format.');
+        const lines = text.split('\n').filter(l => l.trim());
+        const delimiter = detectDelimiter(text);
+        const headers = lines.length > 0 ? lines[0].split(delimiter).map(h => h.trim().toLowerCase()) : [];
+        
+        const errorDetails = [
+          `Expected headers: "name" or "Legal Name", "ein", "city", "state" or "ST"`,
+          `Found headers: ${headers.length > 0 ? headers.join(', ') : 'none'}`,
+          `Total lines: ${lines.length}`,
+          `Delimiter: ${delimiter === '|' ? 'pipe (|)' : 'comma (,)'}`
+        ];
+        
+        toast.error(
+          'No valid data found in file.',
+          { 
+            description: errorDetails.join('\n'),
+            duration: 8000 
+          }
+        );
         setFile(null);
+        console.error('❌ Parsing failed. Check console for details.');
         return;
       }
       
@@ -123,6 +164,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         toast.success(`File validated successfully! Found ${rows.length} records ready to import.`);
       }
     } catch (error: any) {
+      console.error('❌ File processing error:', error);
       toast.error(`Failed to read file: ${error.message}`);
       setFile(null);
       setPreview([]);
