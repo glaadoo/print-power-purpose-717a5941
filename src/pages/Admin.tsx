@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  Trash2, KeyRound, RefreshCw, Download, Search,
+  Trash2, KeyRound, RefreshCw, Download, Search, Upload,
   AlertCircle, CheckCircle, X, ArrowLeft, Check,
   Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity, FileText
 } from "lucide-react";
@@ -19,6 +19,7 @@ import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import VideoUpload from "@/components/VideoUpload";
+import BulkImportDialog from "@/components/admin/BulkImportDialog";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ export default function Admin() {
 
   // Nonprofit form
   const [nonprofitName, setNonprofitName] = useState("");
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
   // Orders filters
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
@@ -997,12 +999,32 @@ export default function Admin() {
               </GlassCard>
 
               <GlassCard className="bg-white/5 border-white/20 mt-6">
-                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Nonprofits List</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-serif font-semibold text-white">Import IRS Nonprofit Data</h2>
+                </div>
+                <p className="text-white/70 mb-4">
+                  Upload processed IRS Publication 78 data (pipe-delimited TXT or CSV format) to bulk import nonprofit organizations. 
+                  The file should contain columns: EIN, Legal Name, City, State.
+                </p>
+                <Button 
+                  onClick={() => setBulkImportOpen(true)}
+                  className="bg-white text-black hover:bg-white/90 gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload IRS Data File
+                </Button>
+              </GlassCard>
+
+              <GlassCard className="bg-white/5 border-white/20 mt-6">
+                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Nonprofits List ({nonprofits.length})</h2>
                 <ScrollArea className="max-h-[400px]">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-white/80">Name</TableHead>
+                        <TableHead className="text-white/80">EIN</TableHead>
+                        <TableHead className="text-white/80">Location</TableHead>
+                        <TableHead className="text-white/80">Source</TableHead>
                         <TableHead className="text-white/80">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1010,6 +1032,15 @@ export default function Admin() {
                       {nonprofits.map(np => (
                         <TableRow key={np.id}>
                           <TableCell className="text-white">{np.name}</TableCell>
+                          <TableCell className="text-white/70 text-xs">{np.ein || 'N/A'}</TableCell>
+                          <TableCell className="text-white/70 text-xs">
+                            {np.city && np.state ? `${np.city}, ${np.state}` : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={np.source === 'irs' ? 'default' : 'secondary'} className="text-xs">
+                              {np.source || 'curated'}
+                            </Badge>
+                          </TableCell>
                           <TableCell>
                             <Button variant="destructive" size="sm" onClick={() => handleDeleteNonprofit(np.id)} className="flex items-center gap-1">
                               <Trash2 size={16} /> Delete
@@ -1021,6 +1052,12 @@ export default function Admin() {
                   </Table>
                 </ScrollArea>
               </GlassCard>
+
+              <BulkImportDialog 
+                open={bulkImportOpen} 
+                onOpenChange={setBulkImportOpen}
+                onSuccess={loadAllData}
+              />
             </TabsContent>
 
             <TabsContent value="orders">

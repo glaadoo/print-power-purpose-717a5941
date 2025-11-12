@@ -40,23 +40,32 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [preview, setPreview] = useState<ParsedRow[]>([]);
 
+  const detectDelimiter = (text: string): string => {
+    const firstLine = text.split('\n')[0];
+    const pipeCount = (firstLine.match(/\|/g) || []).length;
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    return pipeCount > commaCount ? '|' : ',';
+  };
+
   const parseCSV = (text: string): ParsedRow[] => {
     const lines = text.split('\n').filter(l => l.trim());
     if (lines.length < 2) return [];
     
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const delimiter = detectDelimiter(text);
+    const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase());
     const rows: ParsedRow[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+      const values = lines[i].split(delimiter).map(v => v.trim().replace(/^"|"$/g, ''));
       const row: ParsedRow = { name: '' };
       
       headers.forEach((header, idx) => {
         const value = values[idx] || '';
-        if (header === 'name') row.name = value;
+        // Support both CSV and IRS pipe-delimited format
+        if (header === 'name' || header === 'legal name') row.name = value;
         else if (header === 'ein') row.ein = value;
         else if (header === 'city') row.city = value;
-        else if (header === 'state') row.state = value;
+        else if (header === 'state' || header === 'st') row.state = value;
         else if (header === 'description') row.description = value;
       });
       
@@ -162,17 +171,17 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         <DialogHeader>
           <DialogTitle>Bulk Import Nonprofits</DialogTitle>
           <DialogDescription className="text-white/60">
-            Upload a CSV file with columns: name, ein, city, state, description
+            Upload a CSV or pipe-delimited file with columns: name (or Legal Name), ein, city, state (or ST), description
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
           <div>
-            <Label>CSV File</Label>
+            <Label>Data File (CSV or TXT)</Label>
             <div className="mt-2">
               <input
                 type="file"
-                accept=".csv"
+                accept=".csv,.txt"
                 onChange={handleFileChange}
                 className="block w-full text-sm text-white/80
                   file:mr-4 file:py-2 file:px-4
