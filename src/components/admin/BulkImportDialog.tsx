@@ -444,7 +444,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gray-900 text-white border border-white/20 max-w-2xl max-h-[80vh] overflow-y-auto [&>button]:text-white [&>button]:hover:bg-white/10">
+      <DialogContent style={{ zIndex: 1001 }} className="bg-gray-900 text-white border border-white/20 max-w-2xl max-h-[80vh] overflow-y-auto [&>button]:text-white [&>button]:hover:bg-white/10">
         <DialogHeader>
           <DialogTitle className="text-white text-2xl">Bulk Import Nonprofits</DialogTitle>
           <DialogDescription className="text-white/70">
