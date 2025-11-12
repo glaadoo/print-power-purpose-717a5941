@@ -72,11 +72,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-      return new Response(JSON.stringify({ error: 'Invalid request: nonprofits array required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
 
     // Normalize input and split EINs for duplicate check
     const inputNonprofits = (nonprofits as any[]).map((n) => ({
