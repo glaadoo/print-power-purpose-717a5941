@@ -425,12 +425,10 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         result = await resp.json();
       }
       
-      if (error) throw error;
-
-      const importedCount = data?.imported ?? 0;
-      const skippedCount = data?.skipped ?? Math.max(0, rows.length - importedCount);
-      if (!data?.success && !importedCount) {
-        throw new Error((data && (data.error || data.message)) || 'Import failed');
+      const importedCount = result?.imported ?? 0;
+      const skippedCount = result?.skipped ?? Math.max(0, rows.length - importedCount);
+      if (!result?.success && !importedCount) {
+        throw new Error((result && (result.error || result.message)) || 'Import failed');
       }
       
       toast.dismiss();
