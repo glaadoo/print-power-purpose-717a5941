@@ -42,14 +42,21 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
   const [preview, setPreview] = useState<ParsedRow[]>([]);
 
   const detectDelimiter = (text: string): string => {
-    const firstLine = text.split('\n')[0];
-    const pipeCount = (firstLine.match(/\|/g) || []).length;
-    const commaCount = (firstLine.match(/,/g) || []).length;
-    const tabCount = (firstLine.match(/\t/g) || []).length;
-    
-    // Prioritize tab, then pipe, then comma
-    if (tabCount > pipeCount && tabCount > commaCount) return '\t';
-    if (pipeCount > commaCount) return '|';
+    const firstLine = (text.split(/\r?\n/)[0] || '').trim();
+    // Heuristic: choose the delimiter that yields the most tokens (>1)
+    const candidates: Array<{ d: string; tokens: number }> = [
+      { d: '\t', tokens: firstLine.split('\t').length },
+      { d: '|', tokens: firstLine.split('|').length },
+      { d: ',', tokens: firstLine.split(',').length },
+      { d: ';', tokens: firstLine.split(';').length },
+    ];
+    candidates.sort((a, b) => b.tokens - a.tokens);
+    const best = candidates.find(c => c.tokens > 1);
+    // Priority order on ties: tab > pipe > comma > semicolon
+    const ordered = ['\t', '|', ',', ';'];
+    if (best) return best.d;
+    // Default to pipe if present in raw line
+    if (firstLine.includes('|')) return '|';
     return ',';
   };
   
@@ -109,7 +116,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
   const parseCSV = (text: string): ParsedRow[] => {
     console.log('📄 Raw file content (first 500 chars):', text.substring(0, 500));
     
-    const lines = text.split('\n').filter(l => l.trim());
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
     console.log('📊 Total lines after filtering:', lines.length);
     
     // Support headerless files too; only error if completely empty
@@ -118,9 +125,9 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       return [];
     }
     
-    const delimiter = detectDelimiter(text);
-    const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
-    console.log('🔍 Detected delimiter:', delimiterName);
+    let delimiter = detectDelimiter(text);
+    const describeDelimiter = (d: string) => d === '\t' ? 'tab' : d === '|' ? 'pipe (|)' : d === ',' ? 'comma (,)' : 'semicolon (;)';
+    console.log('🔍 Detected delimiter:', describeDelimiter(delimiter));
     
     const splitLine = (line: string) =>
       (delimiter === '\t'
@@ -128,7 +135,24 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         : line.split(new RegExp(`\\s*\\${delimiter}\\s*`))
       ).map(v => v.trim().replace(/^["']|["']$/g, ''));
 
-    const rawFirst = splitLine(lines[0]);
+    let rawFirst = splitLine(lines[0]);
+
+    // Fallback override: if not split, but content contains common delimiters
+    if (rawFirst.length === 1) {
+      const candidates: string[] = ['\t', '|', ',', ';'];
+      for (const c of candidates) {
+        if (lines[0].includes(c) && c !== delimiter) {
+          delimiter = c;
+          rawFirst = (delimiter === '\t'
+            ? lines[0].split('\t')
+            : lines[0].split(new RegExp(`\\s*\\${delimiter}\\s*`))
+          ).map(v => v.trim().replace(/^["']|["']$/g, ''));
+          console.warn('🔁 Overriding delimiter based on content:', describeDelimiter(delimiter));
+          break;
+        }
+      }
+    }
+
     console.log('📋 First line tokens:', rawFirst);
 
     // Try to interpret first line as header
