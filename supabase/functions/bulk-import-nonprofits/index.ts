@@ -23,43 +23,55 @@ serve(async (req) => {
       },
     });
 
-    // Verify user is admin
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    // Parse payload early to support either Supabase JWT or admin session token
+    const payload = await req.json().catch(() => ({}));
+    const nonprofits = payload?.nonprofits;
+    const sessionToken = payload?.sessionToken;
+
+    // Verify admin via either user JWT (roles) or admin session token
+    let isAdmin = false;
+
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (!authError && user) {
+        // Check if user has admin role
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .single();
+        if (roles) isAdmin = true;
+      }
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    // Fallback to custom admin session token
+    if (!isAdmin && sessionToken) {
+      const { data: sessionRow } = await supabase
+        .from('admin_sessions')
+        .select('id')
+        .eq('token', sessionToken)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+      if (sessionRow) isAdmin = true;
     }
 
-    // Check if user has admin role
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single();
-
-    if (!roles) {
+    if (!isAdmin) {
       return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const { nonprofits } = await req.json();
-
     if (!nonprofits || !Array.isArray(nonprofits)) {
+      return new Response(JSON.stringify({ error: 'Invalid request: nonprofits array required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
       return new Response(JSON.stringify({ error: 'Invalid request: nonprofits array required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
