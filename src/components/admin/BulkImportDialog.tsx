@@ -414,14 +414,17 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       });
       
       if (error) throw error;
-      if (!data.success) throw new Error(data.error || 'Import failed');
+
+      const importedCount = data?.imported ?? 0;
+      const skippedCount = data?.skipped ?? Math.max(0, rows.length - importedCount);
+      if (!data?.success && !importedCount) {
+        throw new Error((data && (data.error || data.message)) || 'Import failed');
+      }
       
       toast.dismiss();
-      
-      const importedCount = rows.length - duplicateCount;
       toast.success(
         `Successfully imported ${importedCount} nonprofit${importedCount !== 1 ? 's' : ''}! ` +
-        (duplicateCount > 0 ? `(${duplicateCount} duplicates skipped)` : '')
+        (skippedCount > 0 ? `(${skippedCount} duplicates skipped)` : '')
       );
       
       onSuccess();
