@@ -41,7 +41,7 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
   async function searchNonprofits(searchQuery: string) {
     setLoading(true);
     try {
-      // Search by name or EIN
+      // Search by name or EIN (supports both formats: XX-XXXXXXX or XXXXXXXXX)
       const isEIN = /^\d{2}-?\d{7}$/.test(searchQuery.replace(/-/g, ""));
       
       let queryBuilder = supabase
@@ -50,9 +50,12 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
         .eq("approved", true);
 
       if (isEIN) {
+        // Format EIN with dash for database query (XX-XXXXXXX)
         const cleanEIN = searchQuery.replace(/-/g, "");
-        queryBuilder = queryBuilder.eq("ein", cleanEIN);
+        const formattedEIN = `${cleanEIN.slice(0, 2)}-${cleanEIN.slice(2)}`;
+        queryBuilder = queryBuilder.eq("ein", formattedEIN);
       } else {
+        // Use case-insensitive search for nonprofit names
         queryBuilder = queryBuilder.ilike("name", `%${searchQuery}%`);
       }
 
@@ -86,8 +89,13 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
       {showResults && (results.length > 0 || loading) && (
         <div className="absolute z-50 w-full mt-2 bg-black/90 backdrop-blur border border-white/30 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-white/60">Searching...</div>
-          ) : (
+            <div className="p-4 text-center text-white/60">
+              <div className="flex items-center justify-center gap-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent" />
+                Searching nonprofits...
+              </div>
+            </div>
+          ) : results.length > 0 ? (
             <ul className="divide-y divide-white/10">
               {results.map((nonprofit) => (
                 <li key={nonprofit.id}>
@@ -124,6 +132,10 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
                 </li>
               ))}
             </ul>
+          ) : (
+            <div className="p-4 text-center text-white/60">
+              No nonprofits found. Try a different search term.
+            </div>
           )}
         </div>
       )}
