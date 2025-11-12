@@ -99,50 +99,86 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     if (!selectedFile) return;
     
     setFile(selectedFile);
-    const text = await selectedFile.text();
-    const rows = parseCSV(text);
-    const errors = validateRows(rows);
     
-    setPreview(rows.slice(0, 5));
-    setValidationErrors(errors);
+    try {
+      toast.info(`Processing file: ${selectedFile.name}...`);
+      
+      const text = await selectedFile.text();
+      const rows = parseCSV(text);
+      
+      if (rows.length === 0) {
+        toast.error('No valid data found in file. Please check the format.');
+        setFile(null);
+        return;
+      }
+      
+      const errors = validateRows(rows);
+      
+      setPreview(rows.slice(0, 5));
+      setValidationErrors(errors);
+      
+      if (errors.length > 0) {
+        toast.warning(`File loaded with ${errors.length} validation errors that need fixing.`);
+      } else {
+        toast.success(`File validated successfully! Found ${rows.length} records ready to import.`);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to read file: ${error.message}`);
+      setFile(null);
+      setPreview([]);
+      setValidationErrors([]);
+    }
   };
 
   const handleImport = async () => {
     if (!file) return;
     
     setImporting(true);
+    toast.loading('Starting import process...');
+    
     try {
       const text = await file.text();
       const rows = parseCSV(text);
       const errors = validateRows(rows);
       
       if (errors.length > 0) {
-        toast.error(`Found ${errors.length} validation errors. Please fix and retry.`);
+        toast.dismiss();
+        toast.error(`Cannot import: Found ${errors.length} validation errors. Please fix and retry.`);
         setImporting(false);
         return;
       }
       
+      toast.dismiss();
+      toast.loading(`Checking for duplicates...`);
+      
       // Check for duplicates
       const eins = rows.filter(r => r.ein).map(r => r.ein!);
+      let duplicateCount = 0;
+      
       if (eins.length > 0) {
         const { data: existing } = await supabase
           .from('nonprofits')
           .select('ein')
           .in('ein', eins);
         
-        if (existing && existing.length > 0) {
-          toast.warning(`${existing.length} nonprofits with matching EINs already exist. They will be skipped.`);
+        duplicateCount = existing?.length || 0;
+        if (duplicateCount > 0) {
+          toast.dismiss();
+          toast.info(`Found ${duplicateCount} existing nonprofits. They will be skipped.`);
         }
       }
       
-      // Batch insert
+      toast.dismiss();
+      toast.loading(`Importing ${rows.length} nonprofits...`);
+      
+      // Batch insert with source marked as 'irs' for IRS data
       const toInsert = rows.map(row => ({
         name: row.name,
         ein: row.ein || null,
         city: row.city || null,
         state: row.state || null,
         description: row.description || null,
-        source: 'curated',
+        source: 'irs',
         approved: true,
       }));
       
@@ -152,14 +188,23 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       
       if (error) throw error;
       
-      toast.success(`Imported ${rows.length} nonprofits successfully`);
+      toast.dismiss();
+      
+      const importedCount = rows.length - duplicateCount;
+      toast.success(
+        `Successfully imported ${importedCount} nonprofit${importedCount !== 1 ? 's' : ''}! ` +
+        (duplicateCount > 0 ? `(${duplicateCount} duplicates skipped)` : '')
+      );
+      
       onSuccess();
       onOpenChange(false);
       setFile(null);
       setPreview([]);
       setValidationErrors([]);
     } catch (error: any) {
-      toast.error('Import failed: ' + error.message);
+      toast.dismiss();
+      console.error('Import error:', error);
+      toast.error(`Import failed: ${error.message || 'Unknown error occurred'}`);
     } finally {
       setImporting(false);
     }
@@ -235,10 +280,19 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
           <Button
             onClick={handleImport}
             disabled={!file || validationErrors.length > 0 || importing}
-            className="bg-green-500 hover:bg-green-600"
+            className="bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Upload className="mr-2 h-4 w-4" />
-            {importing ? 'Importing...' : 'Import'}
+            {importing ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Importing...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Import
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
