@@ -380,24 +380,9 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       }
       
       toast.dismiss();
-      toast.loading(`Checking for duplicates...`);
-      
-      // Check for duplicates
-      const eins = rows.filter(r => r.ein).map(r => r.ein!);
-      let duplicateCount = 0;
-      
-      if (eins.length > 0) {
-        const { data: existing } = await supabase
-          .from('nonprofits')
-          .select('ein')
-          .in('ein', eins);
-        
-        duplicateCount = existing?.length || 0;
-        if (duplicateCount > 0) {
-          toast.dismiss();
-          toast.info(`Found ${duplicateCount} existing nonprofits. They will be skipped.`);
-        }
-      }
+      // Skip client-side duplicate check; backend handles duplicates securely
+      // This avoids any RLS limitations on client SELECTs and relies on service-role insertion
+
       
       toast.dismiss();
       toast.loading(`Importing ${rows.length} nonprofits...`);
