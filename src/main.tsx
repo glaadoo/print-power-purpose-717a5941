@@ -8,6 +8,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { CauseProvider } from "./context/CauseContext";
 import { CartProvider } from "./context/CartContext";
 import { ToastProvider } from "./ui/Toast";
+import { Toaster } from "sonner";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -40,6 +41,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           </CartProvider>
         </CauseProvider>
       </ToastProvider>
+      <Toaster position="bottom-right" richColors />
     </div>
   </React.StrictMode>
 );
