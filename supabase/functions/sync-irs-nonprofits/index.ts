@@ -6,15 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface IRSRecord {
-  EIN: string;
-  LEGAL_NAME: string;
-  CITY: string;
-  STATE: string;
-  STATUS: string;
-  [key: string]: any;
-}
-
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -45,77 +36,93 @@ serve(async (req) => {
 
     console.log(`Starting IRS nonprofit sync - Quick seed: ${quickSeed}`);
 
-    // IRS Exempt Organizations Business Master File Extract (EO BMF)
-    // Format: CSV with pipe delimiter
-    const irsUrl = 'https://www.irs.gov/pub/irs-soi/eo_info.csv';
+    // IRS Publication 78 Data - Organizations eligible to receive tax-deductible contributions
+    // Using streaming to handle large file efficiently
+    const irsUrl = 'https://apps.irs.gov/pub/epostcard/data-download-pub78.zip';
     
-    console.log('Downloading IRS data from:', irsUrl);
+    console.log('Downloading IRS Publication 78 data from:', irsUrl);
     const response = await fetch(irsUrl);
     
     if (!response.ok) {
       throw new Error(`Failed to download IRS data: ${response.status} ${response.statusText}`);
     }
 
-    const csvText = await response.text();
-    const lines = csvText.split('\n');
+    // Download ZIP file
+    const zipBuffer = await response.arrayBuffer();
+    console.log(`Downloaded ZIP file: ${zipBuffer.byteLength} bytes`);
     
-    console.log(`Downloaded ${lines.length} total lines`);
-
-    // Parse CSV header
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    console.log('CSV Headers:', headers.slice(0, 10));
-
+    // Import JSZip for ZIP extraction
+    const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
+    const zip = await JSZip.loadAsync(zipBuffer);
+    
+    // Find the data file in the ZIP
+    const fileNames = Object.keys(zip.files);
+    const dataFile = fileNames.find(name => 
+      name.endsWith('.txt') || name.endsWith('.csv')
+    );
+    
+    if (!dataFile) {
+      throw new Error('No data file found in ZIP archive');
+    }
+    
+    console.log(`Extracting file: ${dataFile}`);
+    
     // Process records
     let rowsAdded = 0;
-    let rowsUpdated = 0;
     let rowsSkipped = 0;
-    const batchSize = 100;
+    const batchSize = 50; // Smaller batches for better performance
     let batch: any[] = [];
-
-    // Limit for quick seed mode
-    const maxRecords = quickSeed ? 5000 : Infinity;
+    
+    // Limit for processing
+    const maxRecords = quickSeed ? 100 : 1000; // Much smaller limits
     let processedCount = 0;
+    
+    console.log(`Processing up to ${maxRecords} records...`);
 
-    for (let i = 1; i < lines.length && processedCount < maxRecords; i++) {
+    // Stream the file content line by line
+    const dataStream = await zip.files[dataFile].async('string');
+    const lines = dataStream.split('\n');
+    
+    if (lines.length === 0) {
+      throw new Error('No data found in file');
+    }
+    
+    // Parse pipe-delimited header
+    const headers = lines[0].split('|').map(h => h.trim().replace(/"/g, ''));
+    console.log('First 5 headers:', headers.slice(0, 5));
+
+    // Process lines in small chunks to avoid timeout
+    for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
       const line = lines[i].trim();
-      if (!line) continue;
+      if (!line || processedCount >= maxRecords) break;
 
       try {
-        // Parse CSV line (handle quoted fields)
-        const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map(v => 
-          v.trim().replace(/^"/, '').replace(/"$/, '')
-        ) || [];
+        // Parse pipe-delimited line
+        const values = line.split('|').map(v => v.trim().replace(/^"/, '').replace(/"$/, ''));
 
-        if (values.length < headers.length) continue;
+        if (values.length < 3) continue;
 
         const record: any = {};
         headers.forEach((header, idx) => {
-          record[header] = values[idx] || '';
+          if (idx < values.length) {
+            record[header] = values[idx] || '';
+          }
         });
 
-        // Extract key fields (IRS CSV format varies, adjust field names as needed)
+        // Publication 78 typical fields: EIN, Name, City, State, Country
         const ein = (record.EIN || record.ein || '').replace(/[^0-9]/g, '');
-        const name = record.NAME || record.LEGAL_NAME || record.name || '';
-        const city = record.CITY || record.city || '';
-        const state = record.STATE || record.state || '';
-        const status = record.STATUS || record.status || record.DEDUCTIBILITY || 'unknown';
+        const name = record.NAME || record['Legal Name'] || record.name || '';
+        const city = record.CITY || record.City || record.city || '';
+        const state = record.STATE || record.State || record.state || '';
 
-        if (!ein || ein.length !== 9 || !name) {
+        if (!ein || ein.length !== 9 || !name || name.length < 2) {
           rowsSkipped++;
           continue;
         }
 
         // Normalize data
         const indexedName = name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-        let irsStatus = 'unknown';
         
-        // Map IRS status codes
-        if (status.toLowerCase().includes('active') || status === '1') {
-          irsStatus = 'active';
-        } else if (status.toLowerCase().includes('revoked') || status.toLowerCase().includes('terminated')) {
-          irsStatus = 'revoked';
-        }
-
         const nonprofit = {
           ein,
           name: name.trim(),
@@ -123,9 +130,9 @@ serve(async (req) => {
           state: state.trim() || null,
           country: 'US',
           source: 'irs',
-          irs_status: irsStatus,
+          irs_status: 'active',
           indexed_name: indexedName,
-          approved: true, // Auto-approve IRS records
+          approved: true,
         };
 
         batch.push(nonprofit);
@@ -133,7 +140,7 @@ serve(async (req) => {
 
         // Upsert batch when full
         if (batch.length >= batchSize) {
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('nonprofits')
             .upsert(batch, { 
               onConflict: 'ein',
@@ -144,6 +151,7 @@ serve(async (req) => {
             console.error('Batch upsert error:', error);
           } else {
             rowsAdded += batch.length;
+            console.log(`Imported ${rowsAdded} records so far...`);
           }
 
           batch = [];
@@ -156,7 +164,7 @@ serve(async (req) => {
 
     // Insert remaining batch
     if (batch.length > 0) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('nonprofits')
         .upsert(batch, { 
           onConflict: 'ein',
@@ -174,7 +182,6 @@ serve(async (req) => {
       success: true,
       quickSeed,
       rowsAdded,
-      rowsUpdated,
       rowsSkipped,
       totalProcessed: processedCount,
       timestamp: new Date().toISOString()
