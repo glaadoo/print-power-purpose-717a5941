@@ -319,6 +319,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
           : [];
         const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
         
+        toast.dismiss();
         toast.error(
           'No valid nonprofit records found',
           { 
@@ -343,6 +344,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       setPreview(rows.slice(0, 5));
       setValidationErrors(errors);
       
+      toast.dismiss();
       if (errors.length > 0) {
         toast.warning(`File loaded with ${errors.length} validation errors that need fixing.`);
       } else {
@@ -350,6 +352,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       }
     } catch (error: any) {
       console.error('❌ File processing error:', error);
+      toast.dismiss();
       toast.error(`Failed to read file: ${error.message}`);
       setFile(null);
       setPreview([]);
