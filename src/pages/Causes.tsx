@@ -5,7 +5,8 @@ import { useCause } from "../context/CauseContext";
 import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Search } from "lucide-react";
 import NonprofitSearch from "@/components/NonprofitSearch";
 import { Link } from "react-router-dom";
 import GlassCard from "@/components/GlassCard";
@@ -51,6 +52,7 @@ export default function Causes() {
   const [err, setErr] = useState<string | null>(null);
   const [selectedCause, setSelectedCause] = useState<Cause | null>(null);
   const [selectedNonprofit, setSelectedNonprofit] = useState<any | null>(nonprofit);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -204,9 +206,26 @@ export default function Causes() {
         {/* Causes Grid */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-4">Or Select a Featured Cause</h2>
+          {/* Search bar for causes */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
+            <Input
+              type="text"
+              placeholder="Search causes by name or description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:bg-white/15"
+            />
+          </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {causes.map((c) => {
+          {causes.filter((c) => {
+            if (!searchQuery.trim()) return true;
+            const query = searchQuery.toLowerCase();
+            const name = c.name?.toLowerCase() || "";
+            const description = pickBlurb(c)?.toLowerCase() || "";
+            return name.includes(query) || description.includes(query);
+          }).map((c) => {
             const description = pickBlurb(c) || "";
             const isSelected = selectedCause?.id === c.id;
 
@@ -239,6 +258,18 @@ export default function Causes() {
               </button>
             );
           })}
+          {causes.filter((c) => {
+            if (!searchQuery.trim()) return true;
+            const query = searchQuery.toLowerCase();
+            const name = c.name?.toLowerCase() || "";
+            const description = pickBlurb(c)?.toLowerCase() || "";
+            return name.includes(query) || description.includes(query);
+          }).length === 0 && searchQuery.trim() && (
+            <div className="col-span-full text-center py-12">
+              <p className="text-lg text-white/80">No causes found for "{searchQuery}"</p>
+              <p className="text-sm text-white/60 mt-2">Try a different search term</p>
+            </div>
+          )}
         </div>
 
         {(selectedCause || selectedNonprofit) && (
