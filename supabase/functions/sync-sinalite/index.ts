@@ -43,69 +43,76 @@ serve(async (req) => {
 
     // Step 1: Authenticate with SinaLite
     console.log("[SYNC-SINALITE] Authenticating with SinaLite");
-    const authResponse = await fetch(authUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: "client_credentials"
-      }),
-    });
 
-    if (!authResponse.ok) {
-      const authText = await authResponse.text();
-      console.error("[SYNC-SINALITE] Auth failed:", authResponse.status, authText);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          synced: 0,
-          total: 0,
-          vendor: "sinalite",
-          note: `Authentication failed (${authResponse.status}). Check credentials and auth URL.`,
-          preview: authText.slice(0, 200)
-        }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    let accessToken: string | null = null;
+    let attemptNotes: string[] = [];
+
+    // Attempt 1: OAuth2 client_credentials with Basic auth and form-encoded body
+    try {
+      const res1 = await fetch(authUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json",
+          "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+        },
+        body: new URLSearchParams({ grant_type: "client_credentials" }),
+      });
+
+      const ct1 = res1.headers.get("content-type") || "";
+      if (res1.ok && ct1.includes("application/json")) {
+        const j1 = await res1.json();
+        accessToken = j1.access_token || j1.accessToken || j1.token || null;
+        attemptNotes.push(`attempt1:${res1.status}`);
+      } else {
+        const t1 = await res1.text();
+        attemptNotes.push(`attempt1:${res1.status}:${t1.slice(0,100)}`);
+      }
+    } catch (e) {
+      attemptNotes.push(`attempt1:error:${(e as Error).message}`);
     }
 
-    const authContentType = authResponse.headers.get("content-type") || "";
-    let authData: any = {};
-    
-    if (authContentType.includes("application/json")) {
-      authData = await authResponse.json();
-    } else {
-      const authText = await authResponse.text();
-      console.error("[SYNC-SINALITE] Non-JSON auth response:", authText.slice(0, 200));
-      return new Response(
-        JSON.stringify({
-          success: false,
-          synced: 0,
-          total: 0,
-          vendor: "sinalite",
-          note: "Authentication endpoint returned non-JSON response. Check auth URL and credentials.",
-          preview: authText.slice(0, 200),
-          authUrl: authUrl
-        }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    // Attempt 2: JSON body without Basic auth (some providers accept this)
+    if (!accessToken) {
+      try {
+        const res2 = await fetch(authUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: "client_credentials",
+          }),
+        });
 
-    const accessToken = authData.access_token || authData.accessToken || authData.token;
+        const ct2 = res2.headers.get("content-type") || "";
+        if (res2.ok && ct2.includes("application/json")) {
+          const j2 = await res2.json();
+          accessToken = j2.access_token || j2.accessToken || j2.token || null;
+          attemptNotes.push(`attempt2:${res2.status}`);
+        } else {
+          const t2 = await res2.text();
+          attemptNotes.push(`attempt2:${res2.status}:${t2.slice(0,100)}`);
+        }
+      } catch (e) {
+        attemptNotes.push(`attempt2:error:${(e as Error).message}`);
+      }
+    }
 
     if (!accessToken) {
-      console.error("[SYNC-SINALITE] No access token in response. Response keys:", Object.keys(authData));
+      console.error("[SYNC-SINALITE] No access token in response after attempts", attemptNotes);
       return new Response(
         JSON.stringify({
           success: false,
           synced: 0,
           total: 0,
           vendor: "sinalite",
-          note: "No access token in auth response. Check API credentials and configuration.",
-          authResponse: JSON.stringify(authData).slice(0, 300),
-          authUrl: authUrl
+          note: "Authentication failed to return an access token. Verify client credentials and endpoints.",
+          attempts: attemptNotes,
+          authUrl
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
