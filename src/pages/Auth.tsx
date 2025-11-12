@@ -60,7 +60,29 @@ export default function Auth() {
     });
 
     if (error) {
-      toast.error(error.message);
+      // Check if the error is related to invalid credentials
+      if (error.message.toLowerCase().includes('invalid') || 
+          error.message.toLowerCase().includes('credentials')) {
+        
+        // Check if user exists by calling our edge function
+        try {
+          const { data: checkResult, error: checkError } = await supabase.functions.invoke('check-user-exists', {
+            body: { email: signInEmail }
+          });
+
+          if (checkError) {
+            toast.error("An error occurred. Please try again.");
+          } else if (checkResult?.exists) {
+            toast.error("Incorrect password. Please try again.");
+          } else {
+            toast.error("Account does not exist. Please sign up first.");
+          }
+        } catch (err) {
+          toast.error("An error occurred. Please try again.");
+        }
+      } else {
+        toast.error(error.message);
+      }
     } else {
       toast.success("Signed in successfully!");
     }
