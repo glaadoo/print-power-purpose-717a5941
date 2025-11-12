@@ -71,18 +71,41 @@ serve(async (req) => {
       );
     }
 
-    const authData = await authResponse.json();
-    const accessToken = authData.access_token;
-
-    if (!accessToken) {
-      console.error("[SYNC-SINALITE] No access token in response");
+    const authContentType = authResponse.headers.get("content-type") || "";
+    let authData: any = {};
+    
+    if (authContentType.includes("application/json")) {
+      authData = await authResponse.json();
+    } else {
+      const authText = await authResponse.text();
+      console.error("[SYNC-SINALITE] Non-JSON auth response:", authText.slice(0, 200));
       return new Response(
         JSON.stringify({
           success: false,
           synced: 0,
           total: 0,
           vendor: "sinalite",
-          note: "No access token received from SinaLite. Check API configuration."
+          note: "Authentication endpoint returned non-JSON response. Check auth URL and credentials.",
+          preview: authText.slice(0, 200),
+          authUrl: authUrl
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const accessToken = authData.access_token || authData.accessToken || authData.token;
+
+    if (!accessToken) {
+      console.error("[SYNC-SINALITE] No access token in response. Response keys:", Object.keys(authData));
+      return new Response(
+        JSON.stringify({
+          success: false,
+          synced: 0,
+          total: 0,
+          vendor: "sinalite",
+          note: "No access token in auth response. Check API credentials and configuration.",
+          authResponse: JSON.stringify(authData).slice(0, 300),
+          authUrl: authUrl
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
