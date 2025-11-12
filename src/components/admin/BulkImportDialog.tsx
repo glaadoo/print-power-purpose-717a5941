@@ -126,60 +126,85 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     console.log('📋 Raw headers:', rawHeaders);
     console.log('📋 Matched headers:', headers);
     
+    // Check if we have at least one 'name' column
+    const hasNameColumn = headers.some(h => h === 'name');
+    if (!hasNameColumn) {
+      console.error('❌ No "name" column found in headers. Available headers:', rawHeaders);
+      console.error('💡 Expected headers like: "Name", "Nonprofit Name", "Cause Name", "Organization Name", etc.');
+      return [];
+    }
+    
     const rows: ParsedRow[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(delimiter).map(v => {
+      const line = lines[i].trim();
+      if (!line) continue; // Skip empty lines
+      
+      const values = line.split(delimiter).map(v => {
         // Remove surrounding quotes and trim
         return v.trim().replace(/^["']|["']$/g, '');
       });
       
+      console.log(`📝 Processing row ${i}:`, values);
+      
       const row: ParsedRow = { name: '' };
+      let nameFound = false;
       
       headers.forEach((header, idx) => {
         const value = values[idx]?.trim() || '';
-        if (!value) return;
         
         switch (header) {
           case 'name':
-            row.name = value;
+            if (value && value.length > 0) {
+              row.name = value;
+              nameFound = true;
+              console.log(`✅ Found name in row ${i}:`, value);
+            }
             break;
           case 'ein':
-            // Format EIN to XX-XXXXXXX if it's just numbers
-            const cleanEIN = value.replace(/[^0-9]/g, '');
-            if (cleanEIN.length === 9) {
-              row.ein = `${cleanEIN.slice(0, 2)}-${cleanEIN.slice(2)}`;
-            } else {
-              row.ein = value;
+            if (value) {
+              // Format EIN to XX-XXXXXXX if it's just numbers
+              const cleanEIN = value.replace(/[^0-9]/g, '');
+              if (cleanEIN.length === 9) {
+                row.ein = `${cleanEIN.slice(0, 2)}-${cleanEIN.slice(2)}`;
+              } else {
+                row.ein = value;
+              }
             }
             break;
           case 'city':
-            row.city = value;
+            if (value) row.city = value;
             break;
           case 'state':
-            // Ensure state is uppercase 2-letter code
-            row.state = value.toUpperCase().slice(0, 2);
+            if (value) {
+              // Ensure state is uppercase 2-letter code
+              row.state = value.toUpperCase().slice(0, 2);
+            }
             break;
           case 'country':
-            row.country = value;
+            if (value) row.country = value;
             break;
           case 'description':
-            row.description = value;
+            if (value) row.description = value;
             break;
         }
       });
       
-      // Only add rows that have at least a name
-      if (row.name && row.name.length > 0) {
+      // Only add rows that have a valid name (at least 3 characters)
+      if (row.name && row.name.length >= 3) {
         rows.push(row);
+        console.log(`✅ Added row ${i} to import list`);
+      } else {
+        console.log(`⚠️ Skipping row ${i} - name too short or missing:`, row.name);
       }
     }
     
     console.log('✅ Successfully parsed rows:', rows.length);
     if (rows.length > 0) {
-      console.log('📝 Sample row:', rows[0]);
+      console.log('📝 First 3 sample rows:', rows.slice(0, 3));
     } else {
       console.error('❌ No rows with valid names found');
+      console.error('💡 Make sure your file has a column labeled "Name" and at least one row with a name that is 3+ characters');
     }
     
     return rows;
@@ -230,18 +255,19 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
         
         toast.error(
-          'No valid data found in file',
+          'No valid nonprofit records found',
           { 
-            description: `File has ${lines.length} lines but no valid nonprofit records were found. Check the console for details about the file format.`,
-            duration: 8000 
+            description: `Your file was processed but no valid nonprofit names were found. Check the browser console (F12) to see detailed parsing information. Make sure your file has:\n• A column labeled "Name" (or similar)\n• At least one row with a nonprofit name (3+ characters)\n• Delimiter: ${delimiterName}`,
+            duration: 10000 
           }
         );
         
-        console.error('❌ Parsing failed. Details:');
+        console.error('❌ Parsing failed. Summary:');
+        console.error('- File has', lines.length, 'lines');
+        console.error('- Detected delimiter:', delimiterName);
         console.error('- Found headers:', rawHeaders);
-        console.error('- Total lines:', lines.length);
-        console.error('- Delimiter:', delimiterName);
-        console.error('- Expected: At least one column matching "name", "organization", or "legal name"');
+        console.error('- Expected: A column matching "Name", "Nonprofit Name", "Cause Name", or similar');
+        console.error('- No rows with valid nonprofit names (3+ chars) were found');
         
         setFile(null);
         return;
