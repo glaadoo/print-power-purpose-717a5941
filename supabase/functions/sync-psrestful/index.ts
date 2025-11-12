@@ -36,15 +36,47 @@ serve(async (req) => {
       headers: {
         "X-API-Key": apiKey,
         "Content-Type": "application/json",
+        "Accept": "application/json",
       },
     });
 
     if (!response.ok) {
-      throw new Error(`PsRestful API error: ${response.status}`);
+      console.warn(`[SYNC-PSRESTFUL] API returned ${response.status}`);
+      const textBody = await response.text();
+      return new Response(
+        JSON.stringify({
+          success: false,
+          synced: 0,
+          total: 0,
+          vendor: "psrestful",
+          note: `PsRestful API returned ${response.status}. Check API URL and credentials.`,
+          preview: textBody.slice(0, 200)
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    const products = await response.json();
-    console.log(`[SYNC-PSRESTFUL] Fetched ${products.length || 0} products`);
+    const contentType = response.headers.get("content-type") || "";
+    let products: any = [];
+    if (contentType.includes("application/json")) {
+      products = await response.json();
+    } else {
+      const textBody = await response.text();
+      console.warn("[SYNC-PSRESTFUL] Non-JSON response:", textBody.slice(0, 200));
+      return new Response(
+        JSON.stringify({
+          success: false,
+          synced: 0,
+          total: 0,
+          vendor: "psrestful",
+          note: "PsRestful endpoint returned non-JSON. Configure API access to enable sync.",
+          preview: textBody.slice(0, 200)
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`[SYNC-PSRESTFUL] Fetched ${(products?.data?.length ?? products?.length ?? 0)} products`);
 
     // Transform and upsert products
     const productsToSync = (products.data || products || []).map((p: any) => ({
