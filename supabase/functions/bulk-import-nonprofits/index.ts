@@ -59,10 +59,50 @@ serve(async (req) => {
       });
     }
 
+    // Normalize input and split EINs for duplicate check
+    const inputNonprofits = (nonprofits as any[]).map((n) => ({
+      name: String(n.name).trim(),
+      ein: n.ein ? String(n.ein).trim() : null,
+      city: n.city ?? null,
+      state: n.state ?? null,
+      country: n.country ?? 'US',
+      description: n.description ?? null,
+      source: n.source ?? 'irs',
+      approved: n.approved ?? true,
+    }));
+
+    // Build set of EINs we are about to insert (only non-null values)
+    const eins = inputNonprofits
+      .map((n) => n.ein)
+      .filter((e: string | null): e is string => !!e);
+
+    let existingEins = new Set<string>();
+    if (eins.length > 0) {
+      const { data: existing, error: dupErr } = await supabase
+        .from('nonprofits')
+        .select('ein')
+        .in('ein', eins);
+      if (dupErr) {
+        console.error('Duplicate check error:', dupErr);
+        throw dupErr;
+      }
+      existingEins = new Set((existing || []).map((r: any) => r.ein).filter(Boolean));
+    }
+
+    // Filter out duplicates by EIN (keep rows with null EINs)
+    const toInsert = inputNonprofits.filter((n) => !n.ein || !existingEins.has(n.ein));
+
+    if (toInsert.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, imported: 0, skipped: inputNonprofits.length, message: 'All records were duplicates' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Insert nonprofits using service role (bypasses RLS)
-    const { error: insertError, data } = await supabase
+    const { error: insertError } = await supabase
       .from('nonprofits')
-      .upsert(nonprofits, { onConflict: 'ein', ignoreDuplicates: true });
+      .insert(toInsert);
 
     if (insertError) {
       console.error('Insert error:', insertError);
@@ -72,7 +112,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        imported: nonprofits.length,
+        imported: toInsert.length,
+        skipped: inputNonprofits.length - toInsert.length,
         message: 'Nonprofits imported successfully' 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
