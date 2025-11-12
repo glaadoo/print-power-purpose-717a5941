@@ -53,6 +53,7 @@ export default function Causes() {
   const [selectedCause, setSelectedCause] = useState<Cause | null>(null);
   const [selectedNonprofit, setSelectedNonprofit] = useState<any | null>(nonprofit);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -98,6 +99,56 @@ export default function Causes() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Debounced server-side search for causes
+  useEffect(() => {
+    let active = true;
+    const q = searchQuery.trim();
+
+    // Helper to load all causes when query is empty
+    const loadAll = async () => {
+      setSearching(true);
+      const { data, error } = await supabase
+        .from("causes")
+        .select("id,name,goal_cents,raised_cents,summary,created_at")
+        .order("created_at", { ascending: false });
+      if (!active) return;
+      if (!error) setCauses(data || []);
+      setSearching(false);
+    };
+
+    // If no query, load all (or rely on initial load if already present)
+    if (!q) {
+      // If we already have items, avoid extra fetch
+      if (causes.length === 0) loadAll();
+      return () => {
+        active = false;
+      };
+    }
+
+    const handle = setTimeout(async () => {
+      setSearching(true);
+      const wildcard = `%${q}%`;
+      const { data, error } = await supabase
+        .from("causes")
+        .select("id,name,goal_cents,raised_cents,summary,created_at")
+        .or(`name.ilike.${wildcard},summary.ilike.${wildcard}`)
+        .order("created_at", { ascending: false });
+
+      if (!active) return;
+      if (error) {
+        console.error("Cause search error:", error.message);
+      } else {
+        setCauses(data || []);
+      }
+      setSearching(false);
+    }, 250);
+
+    return () => {
+      active = false;
+      clearTimeout(handle);
+    };
+  }, [searchQuery]);
 
   const handleCauseClick = (c: Cause) => {
     const description = pickBlurb(c) || "";
@@ -258,18 +309,13 @@ export default function Causes() {
               </button>
             );
           })}
-          {causes.filter((c) => {
-            if (!searchQuery.trim()) return true;
-            const query = searchQuery.toLowerCase();
-            const name = c.name?.toLowerCase() || "";
-            const description = pickBlurb(c)?.toLowerCase() || "";
-            return name.includes(query) || description.includes(query);
-          }).length === 0 && searchQuery.trim() && (
+          {causes.length === 0 && searchQuery.trim() && (
             <div className="col-span-full text-center py-12">
               <p className="text-lg text-white/80">No causes found for "{searchQuery}"</p>
               <p className="text-sm text-white/60 mt-2">Try a different search term</p>
             </div>
           )}
+
         </div>
 
         {(selectedCause || selectedNonprofit) && (
