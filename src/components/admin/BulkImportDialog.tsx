@@ -402,7 +402,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       toast.dismiss();
       toast.loading(`Importing ${rows.length} nonprofits...`);
       
-      // Batch insert with source marked as 'irs' for IRS data
+      // Prepare data for edge function
       const toInsert = rows.map(row => ({
         name: row.name,
         ein: row.ein || null,
@@ -414,11 +414,22 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         approved: true,
       }));
       
-      const { error } = await supabase
-        .from('nonprofits')
-        .upsert(toInsert, { onConflict: 'ein', ignoreDuplicates: true });
+      // Get auth session for edge function call
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('You must be logged in to import nonprofits');
+      }
+      
+      // Call edge function with service role access
+      const { data, error } = await supabase.functions.invoke('bulk-import-nonprofits', {
+        body: { nonprofits: toInsert },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
       
       if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Import failed');
       
       toast.dismiss();
       
