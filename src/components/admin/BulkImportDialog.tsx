@@ -121,17 +121,28 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
     console.log('🔍 Detected delimiter:', delimiterName);
     
-    const rawHeaders = lines[0].split(delimiter);
+    const rawHeaders = delimiter === '\t' 
+      ? lines[0].split('\t') 
+      : lines[0].split(new RegExp(`\\s*\\${delimiter}\\s*`));
     const headers = rawHeaders.map(h => matchHeader(h));
     console.log('📋 Raw headers:', rawHeaders);
     console.log('📋 Matched headers:', headers);
     
     // Check if we have at least one 'name' column
     const hasNameColumn = headers.some(h => h === 'name');
+    let adjustedHeaders = [...headers];
     if (!hasNameColumn) {
-      console.error('❌ No "name" column found in headers. Available headers:', rawHeaders);
-      console.error('💡 Expected headers like: "Name", "Nonprofit Name", "Cause Name", "Organization Name", etc.');
-      return [];
+      const einIdx = headers.findIndex(h => h === 'ein');
+      if (einIdx !== -1 && rawHeaders[einIdx + 1]) {
+        adjustedHeaders[einIdx + 1] = 'name';
+        console.warn('⚠️ No explicit name column found. Using the column after EIN as Name:', rawHeaders[einIdx + 1]);
+      } else {
+        console.error('❌ No "name" column found in headers. Available headers:', rawHeaders);
+        console.error('💡 Expected headers like: "Name", "Nonprofit Name", "Cause Name", "Organization Name", etc.');
+        return [];
+      }
+    } else {
+      console.log('✅ Name column detected.');
     }
     
     const rows: ParsedRow[] = [];
@@ -140,17 +151,16 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       const line = lines[i].trim();
       if (!line) continue; // Skip empty lines
       
-      const values = line.split(delimiter).map(v => {
-        // Remove surrounding quotes and trim
-        return v.trim().replace(/^["']|["']$/g, '');
-      });
+      const values = delimiter === '\t'
+        ? line.split('\t').map(v => v.trim().replace(/^["']|["']$/g, ''))
+        : line.split(new RegExp(`\\s*\\${delimiter}\\s*`)).map(v => v.trim().replace(/^["']|["']$/g, ''));
       
       console.log(`📝 Processing row ${i}:`, values);
       
       const row: ParsedRow = { name: '' };
       let nameFound = false;
       
-      headers.forEach((header, idx) => {
+      adjustedHeaders.forEach((header, idx) => {
         const value = values[idx]?.trim() || '';
         
         switch (header) {
@@ -251,7 +261,9 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       if (rows.length === 0) {
         const lines = text.split('\n').filter(l => l.trim());
         const delimiter = detectDelimiter(text);
-        const rawHeaders = lines.length > 0 ? lines[0].split(delimiter) : [];
+        const rawHeaders = lines.length > 0 
+          ? (delimiter === '\t' ? lines[0].split('\t') : lines[0].split(new RegExp(`\\s*\\${delimiter}\\s*`)))
+          : [];
         const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
         
         toast.error(
