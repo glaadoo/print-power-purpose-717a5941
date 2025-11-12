@@ -9,23 +9,28 @@ import { toast } from "sonner";
 export default function AdminProducts() {
   const navigate = useNavigate();
   const [syncing, setSyncing] = useState<string | null>(null);
+  const [syncResults, setSyncResults] = useState<Record<string, any>>({});
 
   const handleSync = async (vendor: string, functionName: string) => {
     setSyncing(vendor);
+    setSyncResults((prev) => ({ ...prev, [vendor]: null }));
     
     try {
       const { data, error } = await supabase.functions.invoke(functionName);
       
       if (error) throw error;
       
-      if (data?.synced) {
-        toast.success(`✓ Synced ${data.synced} products from ${vendor}`);
+      setSyncResults((prev) => ({ ...prev, [vendor]: data }));
+      
+      if (data?.success) {
+        toast.success(`${vendor}: Synced ${data.synced} products successfully!`);
       } else {
-        toast.success(`Sync completed for ${vendor}`);
+        toast.warning(`${vendor}: ${data?.note || "Sync completed with issues"}`);
       }
     } catch (error: any) {
       console.error(`Error syncing ${vendor}:`, error);
       toast.error(`Failed to sync ${vendor}: ${error.message}`);
+      setSyncResults((prev) => ({ ...prev, [vendor]: { success: false, error: error.message } }));
     } finally {
       setSyncing(null);
     }
@@ -99,6 +104,34 @@ export default function AdminProducts() {
                     </>
                   )}
                 </Button>
+
+                {syncResults[vendor.name] && (
+                  <div className={`mt-3 p-3 rounded-lg text-sm ${
+                    syncResults[vendor.name].success 
+                      ? "bg-green-900/30 border border-green-500/50 text-green-100"
+                      : "bg-yellow-900/30 border border-yellow-500/50 text-yellow-100"
+                  }`}>
+                    {syncResults[vendor.name].success ? (
+                      <div>
+                        <div className="font-semibold">✓ Success</div>
+                        <div>Synced {syncResults[vendor.name].synced} of {syncResults[vendor.name].total} products</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="font-semibold">⚠ Configuration Needed</div>
+                        <div className="mt-1">{syncResults[vendor.name].note}</div>
+                        {syncResults[vendor.name].preview && (
+                          <details className="mt-2 text-xs opacity-75">
+                            <summary className="cursor-pointer">View API response</summary>
+                            <pre className="mt-1 p-2 bg-black/30 rounded overflow-x-auto">
+                              {syncResults[vendor.name].preview}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
