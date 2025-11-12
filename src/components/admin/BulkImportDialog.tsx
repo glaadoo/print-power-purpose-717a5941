@@ -31,6 +31,7 @@ type ParsedRow = {
   ein?: string;
   city?: string;
   state?: string;
+  country?: string;
   description?: string;
 };
 
@@ -44,7 +45,48 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     const firstLine = text.split('\n')[0];
     const pipeCount = (firstLine.match(/\|/g) || []).length;
     const commaCount = (firstLine.match(/,/g) || []).length;
-    return pipeCount > commaCount ? '|' : ',';
+    const tabCount = (firstLine.match(/\t/g) || []).length;
+    
+    // Prioritize tab, then pipe, then comma
+    if (tabCount > pipeCount && tabCount > commaCount) return '\t';
+    if (pipeCount > commaCount) return '|';
+    return ',';
+  };
+  
+  const normalizeHeader = (header: string): string => {
+    // Remove special characters, extra spaces, and convert to lowercase
+    return header.trim().toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ');
+  };
+  
+  const matchHeader = (header: string): string | null => {
+    const normalized = normalizeHeader(header);
+    
+    // Name variations
+    if (normalized.includes('name') || normalized.includes('legal') || normalized.includes('organization')) {
+      return 'name';
+    }
+    // EIN variations
+    if (normalized.includes('ein') || normalized.includes('tax') || normalized.includes('id number')) {
+      return 'ein';
+    }
+    // City variations
+    if (normalized.includes('city')) {
+      return 'city';
+    }
+    // State variations
+    if (normalized === 'st' || normalized === 'state') {
+      return 'state';
+    }
+    // Country variations
+    if (normalized.includes('country')) {
+      return 'country';
+    }
+    // Description variations
+    if (normalized.includes('description') || normalized.includes('purpose') || normalized.includes('mission')) {
+      return 'description';
+    }
+    
+    return null;
   };
 
   const parseCSV = (text: string): ParsedRow[] => {
@@ -59,33 +101,68 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     }
     
     const delimiter = detectDelimiter(text);
-    console.log('🔍 Detected delimiter:', delimiter === '|' ? 'pipe (|)' : 'comma (,)');
+    const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
+    console.log('🔍 Detected delimiter:', delimiterName);
     
-    const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase());
-    console.log('📋 Parsed headers:', headers);
+    const rawHeaders = lines[0].split(delimiter);
+    const headers = rawHeaders.map(h => matchHeader(h));
+    console.log('📋 Raw headers:', rawHeaders);
+    console.log('📋 Matched headers:', headers);
     
     const rows: ParsedRow[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(delimiter).map(v => v.trim().replace(/^"|"$/g, ''));
+      const values = lines[i].split(delimiter).map(v => {
+        // Remove surrounding quotes and trim
+        return v.trim().replace(/^["']|["']$/g, '');
+      });
+      
       const row: ParsedRow = { name: '' };
       
       headers.forEach((header, idx) => {
-        const value = values[idx] || '';
-        // Support both CSV and IRS pipe-delimited format
-        if (header === 'name' || header === 'legal name') row.name = value;
-        else if (header === 'ein') row.ein = value;
-        else if (header === 'city') row.city = value;
-        else if (header === 'state' || header === 'st') row.state = value;
-        else if (header === 'description') row.description = value;
+        const value = values[idx]?.trim() || '';
+        if (!value) return;
+        
+        switch (header) {
+          case 'name':
+            row.name = value;
+            break;
+          case 'ein':
+            // Format EIN to XX-XXXXXXX if it's just numbers
+            const cleanEIN = value.replace(/[^0-9]/g, '');
+            if (cleanEIN.length === 9) {
+              row.ein = `${cleanEIN.slice(0, 2)}-${cleanEIN.slice(2)}`;
+            } else {
+              row.ein = value;
+            }
+            break;
+          case 'city':
+            row.city = value;
+            break;
+          case 'state':
+            // Ensure state is uppercase 2-letter code
+            row.state = value.toUpperCase().slice(0, 2);
+            break;
+          case 'country':
+            row.country = value;
+            break;
+          case 'description':
+            row.description = value;
+            break;
+        }
       });
       
-      if (row.name) rows.push(row);
+      // Only add rows that have at least a name
+      if (row.name && row.name.length > 0) {
+        rows.push(row);
+      }
     }
     
     console.log('✅ Successfully parsed rows:', rows.length);
     if (rows.length > 0) {
       console.log('📝 Sample row:', rows[0]);
+    } else {
+      console.error('❌ No rows with valid names found');
     }
     
     return rows;
@@ -132,24 +209,24 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       if (rows.length === 0) {
         const lines = text.split('\n').filter(l => l.trim());
         const delimiter = detectDelimiter(text);
-        const headers = lines.length > 0 ? lines[0].split(delimiter).map(h => h.trim().toLowerCase()) : [];
-        
-        const errorDetails = [
-          `Expected headers: "name" or "Legal Name", "ein", "city", "state" or "ST"`,
-          `Found headers: ${headers.length > 0 ? headers.join(', ') : 'none'}`,
-          `Total lines: ${lines.length}`,
-          `Delimiter: ${delimiter === '|' ? 'pipe (|)' : 'comma (,)'}`
-        ];
+        const rawHeaders = lines.length > 0 ? lines[0].split(delimiter) : [];
+        const delimiterName = delimiter === '\t' ? 'tab' : delimiter === '|' ? 'pipe (|)' : 'comma (,)';
         
         toast.error(
-          'No valid data found in file.',
+          'No valid data found in file',
           { 
-            description: errorDetails.join('\n'),
+            description: `File has ${lines.length} lines but no valid nonprofit records were found. Check the console for details about the file format.`,
             duration: 8000 
           }
         );
+        
+        console.error('❌ Parsing failed. Details:');
+        console.error('- Found headers:', rawHeaders);
+        console.error('- Total lines:', lines.length);
+        console.error('- Delimiter:', delimiterName);
+        console.error('- Expected: At least one column matching "name", "organization", or "legal name"');
+        
         setFile(null);
-        console.error('❌ Parsing failed. Check console for details.');
         return;
       }
       
@@ -219,6 +296,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         ein: row.ein || null,
         city: row.city || null,
         state: row.state || null,
+        country: row.country || 'US',
         description: row.description || null,
         source: 'irs',
         approved: true,
@@ -258,13 +336,19 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         <DialogHeader>
           <DialogTitle>Bulk Import Nonprofits</DialogTitle>
           <DialogDescription className="text-white/60">
-            Upload a CSV or pipe-delimited file with columns: name (or Legal Name), ein, city, state (or ST), description
+            Upload a CSV or TXT file with nonprofit data. The system will automatically detect the delimiter and match column headers.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
           <div>
             <Label>Data File (CSV or TXT)</Label>
+            <p className="text-xs text-white/60 mt-1">
+              Supported formats: CSV, TXT (pipe or comma delimited)
+            </p>
+            <p className="text-xs text-white/60 mt-1">
+              Expected columns: Name, EIN, City, State, Country (optional), Description (optional)
+            </p>
             <div className="mt-2">
               <input
                 type="file"
