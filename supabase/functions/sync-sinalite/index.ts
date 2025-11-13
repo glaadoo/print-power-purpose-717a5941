@@ -1,6 +1,26 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
 
+// Retry utility with exponential backoff
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+  delayMs = 1000
+): Promise<T> {
+  let lastError: any;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
+      }
+    }
+  }
+  throw lastError;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -43,7 +63,8 @@ serve(async (req) => {
     }
 
     // Step 1: Authenticate with SinaLite
-    console.log("[SYNC-SINALITE] Authenticating with SinaLite");
+    console.log(`[SYNC-SINALITE] Authenticating with SinaLite at ${authUrl}`);
+    console.log(`[SYNC-SINALITE] Using client ID: ${clientId?.substring(0, 8)}...`);
 
     let accessToken: string | null = null;
     let attemptNotes: string[] = [];
@@ -52,7 +73,8 @@ serve(async (req) => {
     try {
       const form = new URLSearchParams({ grant_type: "client_credentials" });
       if (scope) form.append("scope", scope);
-      const res1 = await fetch(authUrl, {
+      
+      const res1 = await withRetry(() => fetch(authUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -60,15 +82,19 @@ serve(async (req) => {
           "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
         },
         body: form,
-      });
+      }));
 
       const ct1 = res1.headers.get("content-type") || "";
+      console.log(`[SYNC-SINALITE] Attempt 1 - Status: ${res1.status}, Content-Type: ${ct1}`);
+      
       if (res1.ok && ct1.includes("application/json")) {
         const j1 = await res1.json();
         accessToken = j1.access_token || j1.accessToken || j1.token || null;
-        attemptNotes.push(`attempt1:${res1.status}`);
+        attemptNotes.push(`attempt1:success:${res1.status}`);
+        console.log(`[SYNC-SINALITE] Attempt 1 - Got access token`);
       } else {
         const t1 = await res1.text();
+        console.error(`[SYNC-SINALITE] Attempt 1 failed - ${res1.status}: ${t1.slice(0,200)}`);
         attemptNotes.push(`attempt1:${res1.status}:${t1.slice(0,100)}`);
       }
     } catch (e) {
@@ -78,7 +104,8 @@ serve(async (req) => {
     // Attempt 2: JSON body without Basic auth (some providers accept this)
     if (!accessToken) {
       try {
-        const res2 = await fetch(authUrl, {
+        console.log(`[SYNC-SINALITE] Trying attempt 2 - JSON body`);
+        const res2 = await withRetry(() => fetch(authUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -90,15 +117,19 @@ serve(async (req) => {
             grant_type: "client_credentials",
             ...(scope ? { scope } : {})
           }),
-        });
+        }));
 
         const ct2 = res2.headers.get("content-type") || "";
+        console.log(`[SYNC-SINALITE] Attempt 2 - Status: ${res2.status}, Content-Type: ${ct2}`);
+        
         if (res2.ok && ct2.includes("application/json")) {
           const j2 = await res2.json();
           accessToken = j2.access_token || j2.accessToken || j2.token || null;
-          attemptNotes.push(`attempt2:${res2.status}`);
+          attemptNotes.push(`attempt2:success:${res2.status}`);
+          console.log(`[SYNC-SINALITE] Attempt 2 - Got access token`);
         } else {
           const t2 = await res2.text();
+          console.error(`[SYNC-SINALITE] Attempt 2 failed - ${res2.status}: ${t2.slice(0,200)}`);
           attemptNotes.push(`attempt2:${res2.status}:${t2.slice(0,100)}`);
         }
       } catch (e) {
