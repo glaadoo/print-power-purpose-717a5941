@@ -96,6 +96,8 @@ const AdminNonprofitApprovals = lazyPage("AdminNonprofitApprovals", () => import
 const AdminProducts = lazyPage("AdminProducts", () => import("./pages/AdminProducts"));
 const NonprofitProfile = lazyPage("NonprofitProfile", () => import("./pages/NonprofitProfile"));
 const SubmitNonprofit = lazyPage("SubmitNonprofit", () => import("./pages/SubmitNonprofit"));
+const WhoWeServeNonprofits = lazyPage("WhoWeServeNonprofits", () => import("./pages/WhoWeServeNonprofits"));
+const WhoWeServeSchools = lazyPage("WhoWeServeSchools", () => import("./pages/WhoWeServeSchools"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -299,6 +301,22 @@ export default function App() {
             element={
               <RouteBoundary name="Schools">
                 <Schools />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/who-we-serve/nonprofits"
+            element={
+              <RouteBoundary name="WhoWeServeNonprofits">
+                <WhoWeServeNonprofits />
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/who-we-serve/schools"
+            element={
+              <RouteBoundary name="WhoWeServeSchools">
+                <WhoWeServeSchools />
               </RouteBoundary>
             }
           />
