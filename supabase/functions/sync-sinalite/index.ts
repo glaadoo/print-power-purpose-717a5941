@@ -41,51 +41,55 @@ serve(async (req) => {
 
     const clientId = Deno.env.get("SINALITE_CLIENT_ID");
     const clientSecret = Deno.env.get("SINALITE_CLIENT_SECRET");
-    const authUrl = Deno.env.get("SINALITE_AUTH_URL") || "https://api.sinaliteuppy.com/auth/token";
-    const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinaliteuppy.com/v1/products";
-    const scope = Deno.env.get("SINALITE_SCOPE") || undefined;
-    const audience = Deno.env.get("SINALITE_AUDIENCE") || undefined;
+    const authUrl = Deno.env.get("SINALITE_AUTH_URL");
+    const apiUrl = Deno.env.get("SINALITE_API_URL");
+    const audience = Deno.env.get("SINALITE_AUDIENCE");
 
-    // Authenticate if credentials are provided
-    const needsAuth = clientId && clientSecret;
-
-    if (!needsAuth) {
-      console.warn("[SYNC-SINALITE] No credentials configured");
+    // Validate required configuration
+    if (!clientId || !clientSecret || !authUrl || !audience) {
+      const missing = [];
+      if (!clientId) missing.push("SINALITE_CLIENT_ID");
+      if (!clientSecret) missing.push("SINALITE_CLIENT_SECRET");
+      if (!authUrl) missing.push("SINALITE_AUTH_URL");
+      if (!audience) missing.push("SINALITE_AUDIENCE");
+      
+      console.error(`[SYNC-SINALITE] Missing required secrets: ${missing.join(", ")}`);
       return new Response(
         JSON.stringify({
           success: false,
           synced: 0,
           total: 0,
           vendor: "sinalite",
-          note: "Configure SINALITE_CLIENT_ID and SINALITE_CLIENT_SECRET to enable sync."
+          note: `Missing required secrets: ${missing.join(", ")}. Please configure all SinaLite credentials.`
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Step 1: Authenticate with SinaLite
+    // Step 1: Authenticate with SinaLite using exact format from user's cURL example
     console.log(`[SYNC-SINALITE] Authenticating with SinaLite at ${authUrl}`);
-    console.log(`[SYNC-SINALITE] Using client ID: ${clientId?.substring(0, 8)}...`);
+    console.log(`[SYNC-SINALITE] Using client ID: ${clientId.substring(0, 8)}...`);
+    console.log(`[SYNC-SINALITE] Using audience: ${audience}`);
 
     let accessToken: string | null = null;
     let attemptNotes: string[] = [];
 
-    // Attempt 1: OAuth2 client_credentials with Basic auth and form-encoded body
+    // Attempt 1: JSON body with all fields (matches user's cURL example exactly)
     try {
-      const form = new URLSearchParams({ grant_type: "client_credentials" });
-      if (scope) form.append("scope", scope);
-      if (audience) form.append("audience", audience);
-      
+      console.log(`[SYNC-SINALITE] Attempt 1 - JSON body (per user's cURL)`);
       const res1 = await withRetry(() => fetch(authUrl, {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Accept": "application/json",
-          "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+          "Content-Type": "application/json",
         },
-        body: form,
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          audience: audience,
+          grant_type: "client_credentials",
+        }),
       }));
-
+      
       const ct1 = res1.headers.get("content-type") || "";
       console.log(`[SYNC-SINALITE] Attempt 1 - Status: ${res1.status}, Content-Type: ${ct1}`);
       
@@ -109,23 +113,23 @@ serve(async (req) => {
       attemptNotes.push(`attempt1:error:${(e as Error).message}`);
     }
 
-    // Attempt 2: JSON body without Basic auth (some providers accept this)
+    // Attempt 2: Form-encoded with all credentials
     if (!accessToken) {
       try {
-        console.log(`[SYNC-SINALITE] Trying attempt 2 - JSON body`);
+        console.log(`[SYNC-SINALITE] Attempt 2 - Form-encoded`);
+        const form2 = new URLSearchParams({
+          grant_type: "client_credentials",
+          client_id: clientId,
+          client_secret: clientSecret,
+          audience: audience,
+        });
+        
         const res2 = await withRetry(() => fetch(authUrl, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: JSON.stringify({
-            client_id: clientId,
-            client_secret: clientSecret,
-            grant_type: "client_credentials",
-            ...(scope ? { scope } : {}),
-            ...(audience ? { audience } : {})
-          }),
+          body: form2,
         }));
 
         const ct2 = res2.headers.get("content-type") || "";
@@ -157,11 +161,10 @@ serve(async (req) => {
       try {
         const form3 = new URLSearchParams({
           grant_type: "client_credentials",
-          client_id: clientId || "",
-          client_secret: clientSecret || "",
+          client_id: clientId,
+          client_secret: clientSecret,
+          audience: audience,
         });
-        if (scope) form3.append("scope", scope);
-        if (audience) form3.append("audience", audience);
 
         const res3 = await withRetry(() => fetch(authUrl, {
           method: "POST",
@@ -221,7 +224,8 @@ serve(async (req) => {
       "Authorization": `Bearer ${accessToken}`,
     };
 
-    const response = await fetch(apiUrl, { headers });
+    const productUrl = apiUrl || "https://liveapi.sinalite.com/v1/products";
+    const response = await fetch(productUrl, { headers });
 
     if (!response.ok) {
       throw new Error(`SinaLite API error: ${response.status}`);
