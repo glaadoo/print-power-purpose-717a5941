@@ -370,6 +370,14 @@ export default function KenzieChat() {
       .limit(1);
 
     const isFirstUserMessage = !existingMessages || existingMessages.length === 0;
+    
+    // Build user context for AI
+    const userContext: any = { sessionId };
+    
+    // If user is asking about orders and we have email from flow state
+    if (flowState.includes("email") && userEmail) {
+      userContext.email = userEmail;
+    }
 
     // 1) write user message to DB
     await sb.from("kenzie_messages").insert({
@@ -552,7 +560,10 @@ export default function KenzieChat() {
           "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
         },
-        body: JSON.stringify({ messages: history.filter(m => !STARTER_MESSAGES.some(s => s.content === m.content)) }),
+        body: JSON.stringify({ 
+          messages: history.filter(m => !STARTER_MESSAGES.some(s => s.content === m.content)),
+          userContext 
+        }),
       });
       if (!res.ok || !res.body) throw new Error("Network error");
 
