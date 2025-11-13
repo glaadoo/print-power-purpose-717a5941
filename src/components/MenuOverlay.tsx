@@ -85,12 +85,16 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
               fixed left-0 top-0 h-full
               w-[min(420px,90vw)] sm:w-[min(460px,85vw)]
               lg:w-1/3 xl:w-1/4
-              bg-white/10 backdrop-blur-xl
-              border-r border-white/20
-              text-white shadow-2xl
+              backdrop-blur-xl
+              text-white
               flex flex-col
               rounded-r-2xl
             "
+            style={{
+              backgroundColor: "transparent",
+              border: "2px solid rgba(255,255,255,0.5)",
+              boxShadow: "0 4px 30px rgba(0, 0, 0, 0.3)",
+            }}
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
