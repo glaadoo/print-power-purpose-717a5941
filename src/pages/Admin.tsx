@@ -20,6 +20,7 @@ import GlassCard from "@/components/GlassCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import VideoUpload from "@/components/VideoUpload";
 import BulkImportDialog from "@/components/admin/BulkImportDialog";
+import WhoWeServeEditor from "@/components/admin/WhoWeServeEditor";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -750,6 +751,12 @@ export default function Admin() {
                 >
                   Videos
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="pages" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Pages
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -1334,6 +1341,10 @@ export default function Admin() {
                 <h2 className="text-2xl font-serif font-semibold text-white mb-6">Video Management</h2>
                 <VideoUpload />
               </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="pages">
+              <WhoWeServeEditor />
             </TabsContent>
           </Tabs>
         </div>

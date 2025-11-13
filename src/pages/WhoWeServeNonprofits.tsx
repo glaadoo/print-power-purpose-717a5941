@@ -1,7 +1,61 @@
+import { useEffect, useState } from "react";
 import VideoBackground from "@/components/VideoBackground";
 import KenzieBadge from "@/components/KenzieBadge";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
+
+interface PageContent {
+  h1: string;
+  subtitle: string;
+  overview: string;
+  who_we_serve: string[];
+  benefits: Array<{ title: string; description: string }>;
+  products: string[];
+  use_cases: Array<{ title: string; description: string }>;
+  selection_steps: string[];
+}
 
 export default function WhoWeServeNonprofits() {
+  const [content, setContent] = useState<PageContent | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("who_we_serve_pages")
+          .select("content")
+          .eq("page_slug", "nonprofits")
+          .single();
+
+        if (error) throw error;
+        if (data) setContent(data.content as PageContent);
+      } catch (error) {
+        console.error("Error fetching content:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContent();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    );
+  }
+
+  if (!content) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-white">
+        Failed to load page content
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen">
       <VideoBackground 
@@ -14,59 +68,32 @@ export default function WhoWeServeNonprofits() {
         <div className="min-h-screen bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl overflow-y-auto px-6 md:px-10 pt-32 pb-32 relative">
           
           <article className="prose prose-invert max-w-none">
-            <h1 className="text-5xl font-bold text-white mb-4">Nonprofits & Clubs</h1>
-            <p className="text-xl text-white/90 mb-12">Printing with purpose for your mission.</p>
+            <h1 className="text-5xl font-bold text-white mb-4">{content.h1}</h1>
+            <p className="text-xl text-white/90 mb-12">{content.subtitle}</p>
 
             <section className="mb-12">
               <h2 className="text-3xl font-bold text-white mb-4">Overview</h2>
-              <p className="text-white/80">
-                Transform supporter printing into meaningful donations for your cause. Every time someone prints 
-                products supporting your nonprofit, funds automatically flow to your mission. Watch your donation 
-                barometer grow as your community prints with purpose—no technical setup required.
-              </p>
+              <p className="text-white/80">{content.overview}</p>
             </section>
 
             <section className="mb-12">
               <h2 className="text-3xl font-bold text-white mb-4">Who We Serve</h2>
               <ul className="text-white/80 space-y-2">
-                <li>501(c)(3) nonprofits</li>
-                <li>Community clubs</li>
-                <li>Youth organizations</li>
-                <li>Faith-based groups</li>
-                <li>Environmental & advocacy groups</li>
-                <li>Alumni associations</li>
-                <li>Animal shelters & rescues</li>
-                <li>Cultural & arts organizations</li>
+                {content.who_we_serve.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
               </ul>
             </section>
 
             <section className="mb-12">
               <h2 className="text-3xl font-bold text-white mb-4">How Nonprofits Benefit</h2>
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white/5 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-white mb-2">Automatic Donations</h3>
-                  <p className="text-white/70">
-                    Earn donations with every supporter purchase—no manual processing needed.
-                  </p>
-                </div>
-                <div className="bg-white/5 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-white mb-2">Clear Progress Tracking</h3>
-                  <p className="text-white/70">
-                    Visual barometer shows real-time fundraising progress to motivate supporters.
-                  </p>
-                </div>
-                <div className="bg-white/5 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-white mb-2">Easy Discovery</h3>
-                  <p className="text-white/70">
-                    Supporters find you via curated lists or IRS-verified search.
-                  </p>
-                </div>
-                <div className="bg-white/5 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-white mb-2">Fast Selection</h3>
-                  <p className="text-white/70">
-                    Transparent, secure nonprofit selection process builds trust.
-                  </p>
-                </div>
+                {content.benefits.map((benefit, i) => (
+                  <div key={i} className="bg-white/5 p-6 rounded-xl">
+                    <h3 className="text-xl font-semibold text-white mb-2">{benefit.title}</h3>
+                    <p className="text-white/70">{benefit.description}</p>
+                  </div>
+                ))}
               </div>
             </section>
 
@@ -76,72 +103,34 @@ export default function WhoWeServeNonprofits() {
                 Support your outreach events and campaigns with professional printing:
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-white/5 p-4 rounded-lg text-center">
-                  <span className="text-2xl mb-2 block">🏴</span>
-                  <span className="text-white font-medium">Banners</span>
-                </div>
-                <div className="bg-white/5 p-4 rounded-lg text-center">
-                  <span className="text-2xl mb-2 block">📄</span>
-                  <span className="text-white font-medium">Posters</span>
-                </div>
-                <div className="bg-white/5 p-4 rounded-lg text-center">
-                  <span className="text-2xl mb-2 block">✨</span>
-                  <span className="text-white font-medium">Stickers</span>
-                </div>
-                <div className="bg-white/5 p-4 rounded-lg text-center">
-                  <span className="text-2xl mb-2 block">📋</span>
-                  <span className="text-white font-medium">Flyers</span>
-                </div>
-                <div className="bg-white/5 p-4 rounded-lg text-center">
-                  <span className="text-2xl mb-2 block">👕</span>
-                  <span className="text-white font-medium">Apparel</span>
-                </div>
-                <div className="bg-white/5 p-4 rounded-lg text-center">
-                  <span className="text-2xl mb-2 block">🎁</span>
-                  <span className="text-white font-medium">Promo Items</span>
-                </div>
+                {content.products.map((product, i) => (
+                  <div key={i} className="bg-white/5 p-4 rounded-lg text-center">
+                    <span className="text-white font-medium">{product}</span>
+                  </div>
+                ))}
               </div>
             </section>
 
             <section className="mb-12">
               <h2 className="text-3xl font-bold text-white mb-4">Real-World Use Cases</h2>
               <div className="space-y-6">
-                <div className="bg-white/5 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-white mb-2">🐾 Animal Rescue Fundraising</h3>
-                  <p className="text-white/70">
-                    Print adoption event posters and banners while raising funds for shelter operations.
-                  </p>
-                </div>
-                <div className="bg-white/5 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-white mb-2">⛪ Faith-Based Outreach</h3>
-                  <p className="text-white/70">
-                    Create event flyers and community materials that fund ministry programs.
-                  </p>
-                </div>
-                <div className="bg-white/5 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold text-white mb-2">📢 Advocacy Campaigns</h3>
-                  <p className="text-white/70">
-                    Produce campaign materials while building financial support for your cause.
-                  </p>
-                </div>
+                {content.use_cases.map((useCase, i) => (
+                  <div key={i} className="bg-white/5 p-6 rounded-xl">
+                    <h3 className="text-xl font-semibold text-white mb-2">{useCase.title}</h3>
+                    <p className="text-white/70">{useCase.description}</p>
+                  </div>
+                ))}
               </div>
             </section>
 
             <section className="mb-12">
               <h2 className="text-3xl font-bold text-white mb-4">How Supporters Select Your Nonprofit</h2>
               <div className="bg-white/5 p-6 rounded-xl space-y-4">
-                <p className="text-white/80">
-                  <strong>Step 1:</strong> Supporters choose your nonprofit from our curated list or search the IRS-verified database.
-                </p>
-                <p className="text-white/80">
-                  <strong>Step 2:</strong> If selecting from IRS search, new entries show "Pending approval" status during verification.
-                </p>
-                <p className="text-white/80">
-                  <strong>Step 3:</strong> Your nonprofit appears on the donation barometer, product pages, and throughout checkout.
-                </p>
-                <p className="text-white/80">
-                  <strong>Step 4:</strong> Track donations in real-time as supporters print with purpose.
-                </p>
+                {content.selection_steps.map((step, i) => (
+                  <p key={i} className="text-white/80">
+                    <strong>Step {i + 1}:</strong> {step}
+                  </p>
+                ))}
               </div>
             </section>
 
