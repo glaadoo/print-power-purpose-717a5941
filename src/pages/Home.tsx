@@ -242,8 +242,14 @@ export default function Home() {
               <div className="mt-10">
                 <a
                   href="/auth"
-                  className="inline-flex items-center justify-center rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" x2="19" y1="8" y2="14"/>
+                    <line x1="22" x2="16" y1="11" y2="11"/>
+                  </svg>
                   Sign Up/Sign In
                 </a>
               </div>
