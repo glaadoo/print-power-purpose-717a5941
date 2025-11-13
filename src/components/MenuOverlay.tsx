@@ -85,10 +85,11 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
               fixed left-0 top-0 h-full
               w-[min(420px,90vw)] sm:w-[min(460px,85vw)]
               lg:w-1/3 xl:w-1/4
-              bg-white/8 backdrop-blur-md
-              border-r border-white/15
+              bg-white/10 backdrop-blur-xl
+              border-r border-white/20
               text-white shadow-2xl
               flex flex-col
+              rounded-r-2xl
             "
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
@@ -209,7 +210,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                     border border-white/30
                   "
                 >
-                  Chat with Kenzie
+                  Kenzie
                 </button>
               </motion.div>
 
