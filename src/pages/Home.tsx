@@ -490,7 +490,7 @@ function FooterStrip() {
           ["Our mission", "/about"], ["Team", "/team"], ["Press", "/press"],
         ]}/>
         <FooterCol title="Who We Serve" links={[
-          ["Nonprofits & clubs", "/causes"], ["Schools & teams", "/schools"],
+          ["Nonprofits & clubs", "#disabled"], ["Schools & teams", "/schools"],
         ]}/>
         <FooterCol title="Print Catalog" links={[
           ["All products", "/products"], ["Apparel", "/products/apparel"], ["Promo items", "/products/promo"],
@@ -525,9 +525,18 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
       <ul className="mt-2 space-y-1 text-sm">
         {links.map(([t, href]) => (
           <li key={href}>
-            <Link to={href} className="hover:underline">
-              {t}
-            </Link>
+            {href === "#disabled" ? (
+              <button 
+                onClick={() => toast.error("This page is currently unavailable")}
+                className="hover:underline cursor-pointer text-left"
+              >
+                {t}
+              </button>
+            ) : (
+              <Link to={href} className="hover:underline">
+                {t}
+              </Link>
+            )}
           </li>
         ))}
       </ul>
