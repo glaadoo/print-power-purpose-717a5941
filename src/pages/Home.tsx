@@ -442,7 +442,6 @@ export default function Home() {
         open={menu.open}
         onClose={menu.off}
         items={[
-          { label: "Home", href: "#hero" },
           { label: "Solutions", href: "#solutions" },
           { label: "Learn", href: "#learn" },
           { label: "Products", href: "/products" },
