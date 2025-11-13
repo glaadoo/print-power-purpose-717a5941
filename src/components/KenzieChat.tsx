@@ -715,7 +715,7 @@ export default function KenzieChat() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleStartOver}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 transition-colors border border-white/30"
+              className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 hover:bg-white/20 transition-colors border border-white/30"
             >
               Start Over
             </button>
@@ -756,7 +756,7 @@ export default function KenzieChat() {
                       key={btnIdx}
                       onClick={() => handleButtonClick(btn.action)}
                       disabled={sending}
-                      className="px-3 py-2 rounded-lg bg-white/20 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-center text-sm font-medium border border-white/30"
+                      className="px-3 py-2 rounded-full bg-white/20 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-center text-sm font-medium border border-white/30"
                     >
                       {btn.label}
                     </button>
@@ -772,7 +772,7 @@ export default function KenzieChat() {
             <button
               type="button"
               onClick={handleStartNewConversation}
-              className="w-full rounded-xl px-4 py-3 text-white bg-white/20 hover:bg-white/30 transition-all transform active:scale-95 font-medium border border-white/30"
+              className="w-full rounded-full px-4 py-3 text-white bg-white/20 hover:bg-white/30 transition-all transform active:scale-95 font-medium border border-white/30"
             >
               Start Conversation Again
             </button>
@@ -780,7 +780,7 @@ export default function KenzieChat() {
             <>
               <div className="flex gap-2">
                 <input
-                  className="flex-1 rounded-xl border border-white/30 bg-white/10 text-white placeholder:text-white/50 px-3 py-2 outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex-1 rounded-full border border-white/30 bg-white/10 text-white placeholder:text-white/50 px-4 py-2 outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   placeholder={sending ? "Kenzie is responding..." : "Ask about products, donations, orders…"}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -790,7 +790,7 @@ export default function KenzieChat() {
                 <button 
                   type="submit" 
                   disabled={sending || !sb || !input.trim()} 
-                  className={`rounded-xl px-4 py-2 text-white disabled:opacity-60 disabled:cursor-not-allowed transition-all transform active:scale-95 border border-white/30 ${
+                  className={`rounded-full px-5 py-2 text-white disabled:opacity-60 disabled:cursor-not-allowed transition-all transform active:scale-95 border border-white/30 ${
                     sending ? 'bg-white/20' : input.trim() ? 'bg-white/30 hover:bg-white/40' : 'bg-white/10'
                   }`}
                 >
@@ -811,7 +811,7 @@ export default function KenzieChat() {
                 type="button"
                 onClick={handleEndConversation}
                 disabled={sending}
-                className="w-full rounded-xl px-4 py-2 text-sm text-white border border-white/30 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full rounded-full px-4 py-2 text-sm text-white border border-white/30 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 End Conversation
               </button>
