@@ -1,8 +1,5 @@
-import { Link } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
 import KenzieBadge from "@/components/KenzieBadge";
-import KenzieHelpButton from "@/components/KenzieHelpButton";
-import { Button } from "@/components/ui/button";
 
 export default function WhoWeServeNonprofits() {
   return (
@@ -148,24 +145,8 @@ export default function WhoWeServeNonprofits() {
               </div>
             </section>
 
-            <section className="mb-12">
-              <h2 className="text-3xl font-bold text-white mb-6">Get Started</h2>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/causes">
-                  <Button size="lg" className="text-lg">
-                    Find a Nonprofit
-                  </Button>
-                </Link>
-                <Link to="/products">
-                  <Button size="lg" variant="secondary" className="text-lg">
-                    Start Printing
-                  </Button>
-                </Link>
-              </div>
-            </section>
           </article>
 
-          <KenzieHelpButton />
           <KenzieBadge />
 
         </div>
