@@ -44,6 +44,7 @@ serve(async (req) => {
     const authUrl = Deno.env.get("SINALITE_AUTH_URL") || "https://api.sinaliteuppy.com/auth/token";
     const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinaliteuppy.com/v1/products";
     const scope = Deno.env.get("SINALITE_SCOPE") || undefined;
+    const audience = Deno.env.get("SINALITE_AUDIENCE") || undefined;
 
     // Authenticate if credentials are provided
     const needsAuth = clientId && clientSecret;
@@ -121,7 +122,8 @@ serve(async (req) => {
             client_id: clientId,
             client_secret: clientSecret,
             grant_type: "client_credentials",
-            ...(scope ? { scope } : {})
+            ...(scope ? { scope } : {}),
+            ...(audience ? { audience } : {})
           }),
         }));
 
@@ -158,6 +160,7 @@ serve(async (req) => {
           client_secret: clientSecret || "",
         });
         if (scope) form3.append("scope", scope);
+        if (audience) form3.append("audience", audience);
 
         const res3 = await withRetry(() => fetch(authUrl, {
           method: "POST",
