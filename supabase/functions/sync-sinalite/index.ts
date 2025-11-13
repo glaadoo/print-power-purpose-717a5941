@@ -140,15 +140,16 @@ serve(async (req) => {
     if (!accessToken) {
       console.error("[SYNC-SINALITE] No access token in response after attempts", attemptNotes);
       return new Response(
-        JSON.stringify({
-          success: false,
-          synced: 0,
-          total: 0,
-          vendor: "sinalite",
-          note: "Authentication failed to return an access token. Verify client credentials and endpoints.",
-          attempts: attemptNotes,
-          authUrl
-        }),
+      JSON.stringify({
+        success: false,
+        synced: 0,
+        total: 0,
+        vendor: "sinalite",
+        note: "Authentication failed to return an access token. Verify client credentials and endpoints.",
+        attempts: attemptNotes,
+        authUrl,
+        apiUrl
+      }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
