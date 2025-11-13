@@ -74,6 +74,7 @@ serve(async (req) => {
     try {
       const form = new URLSearchParams({ grant_type: "client_credentials" });
       if (scope) form.append("scope", scope);
+      if (audience) form.append("audience", audience);
       
       const res1 = await withRetry(() => fetch(authUrl, {
         method: "POST",
