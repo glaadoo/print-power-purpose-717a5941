@@ -266,16 +266,32 @@ serve(async (req) => {
 
     console.log(`[SYNC-SINALITE] Fetched ${(products?.data?.length ?? products?.length ?? 0)} products`);
 
+    // Log first product structure for debugging
+    const firstProduct = (products.data || products || [])[0];
+    if (firstProduct) {
+      console.log(`[SYNC-SINALITE] Sample product structure:`, JSON.stringify(firstProduct, null, 2).slice(0, 500));
+    }
+
     // Transform and upsert products
-    const productsToSync = (products.data || products || []).map((p: any) => ({
-      name: p.name || p.title || p.product_name || "Unnamed Product",
-      description: p.description || p.details || p.product_description || null,
-      base_cost_cents: Math.round((p.price || p.cost || p.base_price || 0) * 100),
-      category: p.category || p.product_category || "print",
-      image_url: p.image || p.thumbnail || p.image_url || p.product_image || null,
-      vendor: "sinalite",
-      vendor_id: String(p.id || p.sku || p.product_id || p.product_sku),
-    }));
+    const rawProducts = products.data || products || [];
+    const productsToSync = rawProducts
+      .map((p: any) => {
+        // Extract price - try multiple possible field names
+        const priceValue = p.price || p.cost || p.base_price || p.unitPrice || p.unit_price || 
+                          p.basePrice || p.base_cost || p.minPrice || p.min_price || 0;
+        const baseCostCents = Math.round(priceValue * 100);
+        
+        return {
+          name: p.name || p.title || p.product_name || "Unnamed Product",
+          description: p.description || p.details || p.product_description || null,
+          base_cost_cents: baseCostCents > 0 ? baseCostCents : 1, // Minimum 1 cent to satisfy constraint
+          category: p.category || p.product_category || "print",
+          image_url: p.image || p.thumbnail || p.image_url || p.product_image || null,
+          vendor: "sinalite",
+          vendor_id: String(p.id || p.sku || p.product_id || p.product_sku),
+        };
+      })
+      .filter((p: any) => p.vendor_id); // Only sync products with valid IDs
 
     let synced = 0;
     for (const product of productsToSync) {
