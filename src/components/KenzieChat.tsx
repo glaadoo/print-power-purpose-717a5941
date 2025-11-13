@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { supabase as singleton } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 
 declare global {
   interface Window {
@@ -711,7 +712,22 @@ export default function KenzieChat() {
         }}
       >
         <div className="px-4 py-3 border-b border-white/30 flex items-center justify-between">
-          <div className="font-semibold">Chat with Kenzie 🐾</div>
+          <div className="font-semibold flex items-center gap-2">
+            Kenzie
+            <motion.span
+              animate={{ 
+                rotate: [0, -10, 10, -10, 0],
+                scale: [1, 1.1, 1, 1.1, 1]
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatDelay: 2
+              }}
+            >
+              🐾
+            </motion.span>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleStartOver}
