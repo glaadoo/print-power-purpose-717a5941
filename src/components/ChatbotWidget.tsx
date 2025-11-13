@@ -12,14 +12,17 @@ export default function ChatbotWidget() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {/* Message bubble */}
-      <motion.div
+      <motion.button
+        onClick={handleClick}
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 1, duration: 0.5 }}
-        className="absolute bottom-20 right-0 bg-background/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-border whitespace-nowrap"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="absolute bottom-20 right-0 bg-background/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-border whitespace-nowrap hover:bg-background transition-colors cursor-pointer"
       >
         <p className="text-sm font-medium text-foreground">Need help?</p>
-      </motion.div>
+      </motion.button>
 
       {/* Small decorative paws */}
       <motion.div
