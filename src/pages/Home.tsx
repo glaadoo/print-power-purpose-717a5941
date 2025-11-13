@@ -239,32 +239,13 @@ export default function Home() {
                 One platform for professional print orders and optional donations—connecting
                 communities and nonprofits in a single, seamless checkout.
               </p>
-              <div className="mt-10 flex justify-center max-w-3xl mx-auto">
-                <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-white/5 backdrop-blur border border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-300 animate-fade-in min-w-[320px]">
-                  <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                      <circle cx="9" cy="7" r="4"/>
-                      <line x1="19" x2="19" y1="8" y2="14"/>
-                      <line x1="22" x2="16" y1="11" y2="11"/>
-                    </svg>
-                  </div>
-                  <p className="text-sm md:text-base opacity-90 text-center font-medium">
-                    Get started with Print Power Purpose
-                  </p>
-                  <a
-                    href="/auth"
-                    className="w-full rounded-full px-8 py-3 bg-white text-black font-semibold hover:bg-white/90 hover:scale-105 border border-white/10 transition-all duration-200 text-center flex items-center justify-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                      <circle cx="9" cy="7" r="4"/>
-                      <line x1="19" x2="19" y1="8" y2="14"/>
-                      <line x1="22" x2="16" y1="11" y2="11"/>
-                    </svg>
-                    Sign Up/Sign In
-                  </a>
-                </div>
+              <div className="mt-10">
+                <a
+                  href="/auth"
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
+                >
+                  Sign Up/Sign In
+                </a>
               </div>
             </div>
           </div>
