@@ -91,8 +91,8 @@ serve(async (req) => {
       
       if (res1.ok && ct1.includes("application/json")) {
         const j1 = await res1.json();
-        console.log(`[SYNC-SINALITE] Attempt 1 response body:`, JSON.stringify(j1));
-        accessToken = j1.access_token || j1.accessToken || j1.token || null;
+        console.log(`[SYNC-SINALITE] Attempt 1 full response:`, JSON.stringify(j1, null, 2));
+        accessToken = j1.access_token || j1.accessToken || j1.token || j1.bearer_token || j1.authToken || null;
         if (accessToken) {
           attemptNotes.push(`attempt1:success:${res1.status}`);
           console.log(`[SYNC-SINALITE] Attempt 1 - Found access token`);
@@ -133,8 +133,8 @@ serve(async (req) => {
         
         if (res2.ok && ct2.includes("application/json")) {
           const j2 = await res2.json();
-          console.log(`[SYNC-SINALITE] Attempt 2 response body:`, JSON.stringify(j2));
-          accessToken = j2.access_token || j2.accessToken || j2.token || null;
+          console.log(`[SYNC-SINALITE] Attempt 2 full response:`, JSON.stringify(j2, null, 2));
+          accessToken = j2.access_token || j2.accessToken || j2.token || j2.bearer_token || j2.authToken || null;
           if (accessToken) {
             attemptNotes.push(`attempt2:success:${res2.status}`);
             console.log(`[SYNC-SINALITE] Attempt 2 - Found access token`);
