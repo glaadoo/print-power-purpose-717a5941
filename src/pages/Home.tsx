@@ -239,10 +239,10 @@ export default function Home() {
                 One platform for professional print orders and optional donations—connecting
                 communities and nonprofits in a single, seamless checkout.
               </p>
-              <div className="mt-10 flex flex-wrap justify-center gap-6 max-w-3xl mx-auto">
-                <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/5 backdrop-blur border border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-300 animate-fade-in min-w-[280px]">
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="mt-10 flex justify-center max-w-3xl mx-auto">
+                <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-white/5 backdrop-blur border border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-300 animate-fade-in min-w-[320px]">
+                  <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                       <circle cx="9" cy="7" r="4"/>
                       <line x1="19" x2="19" y1="8" y2="14"/>
@@ -250,11 +250,11 @@ export default function Home() {
                     </svg>
                   </div>
                   <p className="text-sm md:text-base opacity-90 text-center font-medium">
-                    New to Print Power Purpose?
+                    Get started with Print Power Purpose
                   </p>
                   <a
-                    href="/auth?mode=signup"
-                    className="w-full rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 hover:scale-105 border border-white/10 transition-all duration-200 text-center flex items-center justify-center gap-2"
+                    href="/auth"
+                    className="w-full rounded-full px-8 py-3 bg-white text-black font-semibold hover:bg-white/90 hover:scale-105 border border-white/10 transition-all duration-200 text-center flex items-center justify-center gap-2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
@@ -262,30 +262,7 @@ export default function Home() {
                       <line x1="19" x2="19" y1="8" y2="14"/>
                       <line x1="22" x2="16" y1="11" y2="11"/>
                     </svg>
-                    Create Account
-                  </a>
-                </div>
-                <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/5 backdrop-blur border border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-300 animate-fade-in [animation-delay:100ms] min-w-[280px]">
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                      <polyline points="10 17 15 12 10 7"/>
-                      <line x1="15" x2="3" y1="12" y2="12"/>
-                    </svg>
-                  </div>
-                  <p className="text-sm md:text-base opacity-90 text-center font-medium">
-                    Already have an account?
-                  </p>
-                  <a
-                    href="/auth?mode=signin"
-                    className="w-full rounded-full px-6 py-3 bg-white/10 text-white font-semibold hover:bg-white/20 hover:scale-105 border border-white/30 backdrop-blur transition-all duration-200 text-center flex items-center justify-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                      <polyline points="10 17 15 12 10 7"/>
-                      <line x1="15" x2="3" y1="12" y2="12"/>
-                    </svg>
-                    Sign In
+                    Sign Up/Sign In
                   </a>
                 </div>
               </div>
