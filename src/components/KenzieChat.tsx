@@ -702,19 +702,26 @@ export default function KenzieChat() {
         </div>
       )}
 
-      <div className="absolute right-4 bottom-4 w-[min(500px,90vw)] h-[min(600px,70vh)] rounded-2xl bg-white/90 backdrop-blur text-black shadow-2xl border border-black/10 flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b border-black/10 flex items-center justify-between bg-white/70">
+      <div 
+        className="absolute right-4 bottom-4 w-[min(500px,90vw)] h-[min(600px,70vh)] rounded-2xl text-white flex flex-col overflow-hidden backdrop-blur-xl"
+        style={{
+          backgroundColor: "transparent",
+          border: "2px solid rgba(255,255,255,0.5)",
+          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.3)",
+        }}
+      >
+        <div className="px-4 py-3 border-b border-white/30 flex items-center justify-between">
           <div className="font-semibold">Chat with Kenzie 🐾</div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleStartOver}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/5 hover:bg-black/10 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 transition-colors border border-white/30"
             >
               Start Over
             </button>
             <button
               onClick={() => setOpen(false)}
-              className="size-9 rounded-full border border-black/10 bg-black/5 hover:bg-black/10 grid place-items-center"
+              className="size-9 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 grid place-items-center"
               aria-label="Close chat"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -730,15 +737,15 @@ export default function KenzieChat() {
               key={i} 
               className={`max-w-[90%] animate-fade-in ${m.role === "user" ? "ml-auto" : ""}`}
             >
-              <div className={`rounded-2xl px-3 py-2 whitespace-pre-wrap ${m.role === "user" ? "bg-black text-white" : "bg-black/5 text-justify"}`}>
+              <div className={`rounded-2xl px-3 py-2 whitespace-pre-wrap ${m.role === "user" ? "bg-white/20 text-white border border-white/30" : "bg-white/10 text-justify text-white"}`}>
                 {m.content || (
                   <div className="flex items-center gap-2 py-1">
                     <div className="flex gap-1">
-                      <span className="w-2 h-2 rounded-full bg-black/40 animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                      <span className="w-2 h-2 rounded-full bg-black/40 animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                      <span className="w-2 h-2 rounded-full bg-black/40 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '300ms' }}></span>
                     </div>
-                    <span className="text-sm text-black/60">Kenzie is thinking...</span>
+                    <span className="text-sm text-white/70">Kenzie is thinking...</span>
                   </div>
                 )}
               </div>
@@ -749,7 +756,7 @@ export default function KenzieChat() {
                       key={btnIdx}
                       onClick={() => handleButtonClick(btn.action)}
                       disabled={sending}
-                      className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-center text-sm font-medium"
+                      className="px-3 py-2 rounded-lg bg-white/20 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-center text-sm font-medium border border-white/30"
                     >
                       {btn.label}
                     </button>
@@ -760,12 +767,12 @@ export default function KenzieChat() {
           ))}
         </div>
 
-        <form onSubmit={send} className="p-3 border-t border-black/10 bg-white/70 flex flex-col gap-2">
+        <form onSubmit={send} className="p-3 border-t border-white/30 flex flex-col gap-2">
           {conversationEnded ? (
             <button
               type="button"
               onClick={handleStartNewConversation}
-              className="w-full rounded-xl px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 transition-all transform active:scale-95 font-medium"
+              className="w-full rounded-xl px-4 py-3 text-white bg-white/20 hover:bg-white/30 transition-all transform active:scale-95 font-medium border border-white/30"
             >
               Start Conversation Again
             </button>
@@ -773,7 +780,7 @@ export default function KenzieChat() {
             <>
               <div className="flex gap-2">
                 <input
-                  className="flex-1 rounded-xl border border-black/10 px-3 py-2 outline-none focus:ring-2 focus:ring-black/20 disabled:bg-black/5 disabled:cursor-not-allowed transition-all"
+                  className="flex-1 rounded-xl border border-white/30 bg-white/10 text-white placeholder:text-white/50 px-3 py-2 outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   placeholder={sending ? "Kenzie is responding..." : "Ask about products, donations, orders…"}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -783,8 +790,8 @@ export default function KenzieChat() {
                 <button 
                   type="submit" 
                   disabled={sending || !sb || !input.trim()} 
-                  className={`rounded-xl px-4 py-2 text-white disabled:opacity-60 disabled:cursor-not-allowed transition-all transform active:scale-95 ${
-                    sending ? 'bg-gray-500' : input.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black/60'
+                  className={`rounded-xl px-4 py-2 text-white disabled:opacity-60 disabled:cursor-not-allowed transition-all transform active:scale-95 border border-white/30 ${
+                    sending ? 'bg-white/20' : input.trim() ? 'bg-white/30 hover:bg-white/40' : 'bg-white/10'
                   }`}
                 >
                   {sending ? (
@@ -804,7 +811,7 @@ export default function KenzieChat() {
                 type="button"
                 onClick={handleEndConversation}
                 disabled={sending}
-                className="w-full rounded-xl px-4 py-2 text-sm text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full rounded-xl px-4 py-2 text-sm text-white border border-white/30 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 End Conversation
               </button>
