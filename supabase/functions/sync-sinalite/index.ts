@@ -89,9 +89,15 @@ serve(async (req) => {
       
       if (res1.ok && ct1.includes("application/json")) {
         const j1 = await res1.json();
+        console.log(`[SYNC-SINALITE] Attempt 1 response body:`, JSON.stringify(j1));
         accessToken = j1.access_token || j1.accessToken || j1.token || null;
-        attemptNotes.push(`attempt1:success:${res1.status}`);
-        console.log(`[SYNC-SINALITE] Attempt 1 - Got access token`);
+        if (accessToken) {
+          attemptNotes.push(`attempt1:success:${res1.status}`);
+          console.log(`[SYNC-SINALITE] Attempt 1 - Found access token`);
+        } else {
+          attemptNotes.push(`attempt1:no_token_in_response:${res1.status}`);
+          console.error(`[SYNC-SINALITE] Attempt 1 - No token field found in:`, Object.keys(j1));
+        }
       } else {
         const t1 = await res1.text();
         console.error(`[SYNC-SINALITE] Attempt 1 failed - ${res1.status}: ${t1.slice(0,200)}`);
@@ -124,9 +130,15 @@ serve(async (req) => {
         
         if (res2.ok && ct2.includes("application/json")) {
           const j2 = await res2.json();
+          console.log(`[SYNC-SINALITE] Attempt 2 response body:`, JSON.stringify(j2));
           accessToken = j2.access_token || j2.accessToken || j2.token || null;
-          attemptNotes.push(`attempt2:success:${res2.status}`);
-          console.log(`[SYNC-SINALITE] Attempt 2 - Got access token`);
+          if (accessToken) {
+            attemptNotes.push(`attempt2:success:${res2.status}`);
+            console.log(`[SYNC-SINALITE] Attempt 2 - Found access token`);
+          } else {
+            attemptNotes.push(`attempt2:no_token_in_response:${res2.status}`);
+            console.error(`[SYNC-SINALITE] Attempt 2 - No token field found in:`, Object.keys(j2));
+          }
         } else {
           const t2 = await res2.text();
           console.error(`[SYNC-SINALITE] Attempt 2 failed - ${res2.status}: ${t2.slice(0,200)}`);
