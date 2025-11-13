@@ -217,14 +217,15 @@ serve(async (req) => {
     }
 
     // Step 2: Fetch products
-    console.log("[SYNC-SINALITE] Fetching products from SinaLite API");
+    const productUrl = apiUrl || "https://liveapi.sinalite.com/v1/products";
+    console.log(`[SYNC-SINALITE] Fetching products from: ${productUrl}`);
+    
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "Accept": "application/json",
       "Authorization": `Bearer ${accessToken}`,
     };
 
-    const productUrl = apiUrl || "https://liveapi.sinalite.com/v1/products";
     const response = await fetch(productUrl, { headers });
 
     if (!response.ok) {
@@ -237,15 +238,27 @@ serve(async (req) => {
       products = await response.json();
     } else {
       const textBody = await response.text();
-      console.warn("[SYNC-SINALITE] Non-JSON response from SinaLite:", textBody.slice(0, 200));
+      const htmlPreview = textBody.slice(0, 300);
+      console.warn("[SYNC-SINALITE] Non-JSON response from SinaLite:", htmlPreview);
+      
+      // Check if it's an HTML page (likely documentation or login page)
+      const isHtml = textBody.trim().toLowerCase().startsWith("<!doctype") || textBody.trim().toLowerCase().startsWith("<html");
+      
       return new Response(
         JSON.stringify({
           success: false,
           synced: 0,
           total: 0,
           vendor: "sinalite",
-          note: "SinaLite endpoint returned non-JSON (e.g., Login Required). Configure API access to enable sync.",
-          preview: textBody.slice(0, 200)
+          note: isHtml 
+            ? "Configuration Needed: SINALITE_API_URL points to an HTML page (likely documentation). Please update to the actual products API endpoint."
+            : "SinaLite endpoint returned non-JSON. Configure API access to enable sync.",
+          details: isHtml 
+            ? "Update SINALITE_API_URL to point to the products endpoint (e.g., https://api.sinaliteuppy.com/v1/products or https://liveapi.sinalite.com/v1/products)"
+            : undefined,
+          requestedUrl: productUrl,
+          receivedContentType: contentType,
+          htmlPreview: isHtml ? htmlPreview : undefined
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
