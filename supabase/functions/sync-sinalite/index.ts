@@ -150,18 +150,61 @@ serve(async (req) => {
     }
 
     if (!accessToken) {
+      // Attempt 3: Form-encoded with client_id and client_secret in body (no Basic auth)
+      try {
+        const form3 = new URLSearchParams({
+          grant_type: "client_credentials",
+          client_id: clientId || "",
+          client_secret: clientSecret || "",
+        });
+        if (scope) form3.append("scope", scope);
+
+        const res3 = await withRetry(() => fetch(authUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+          },
+          body: form3,
+        }));
+
+        const ct3 = res3.headers.get("content-type") || "";
+        console.log(`[SYNC-SINALITE] Attempt 3 - Status: ${res3.status}, Content-Type: ${ct3}`);
+
+        if (res3.ok && ct3.includes("application/json")) {
+          const j3 = await res3.json();
+          console.log(`[SYNC-SINALITE] Attempt 3 response body:`, JSON.stringify(j3));
+          accessToken = j3.access_token || j3.accessToken || j3.token || null;
+          if (accessToken) {
+            attemptNotes.push(`attempt3:success:${res3.status}`);
+            console.log(`[SYNC-SINALITE] Attempt 3 - Found access token`);
+          } else {
+            attemptNotes.push(`attempt3:no_token_in_response:${res3.status}`);
+            console.error(`[SYNC-SINALITE] Attempt 3 - No token field found in:`, Object.keys(j3));
+          }
+        } else {
+          const t3 = await res3.text();
+          console.error(`[SYNC-SINALITE] Attempt 3 failed - ${res3.status}: ${t3.slice(0,200)}`);
+          attemptNotes.push(`attempt3:${res3.status}:${t3.slice(0,100)}`);
+        }
+      } catch (e) {
+        attemptNotes.push(`attempt3:error:${(e as Error).message}`);
+      }
+    }
+
+    if (!accessToken) {
       console.error("[SYNC-SINALITE] No access token in response after attempts", attemptNotes);
       return new Response(
-      JSON.stringify({
-        success: false,
-        synced: 0,
-        total: 0,
-        vendor: "sinalite",
-        note: "Authentication failed to return an access token. Verify client credentials and endpoints.",
-        attempts: attemptNotes,
-        authUrl,
-        apiUrl
-      }),
+        JSON.stringify({
+          success: false,
+          synced: 0,
+          total: 0,
+          vendor: "sinalite",
+          note: "Authentication failed to return an access token. Verify client credentials and endpoints.",
+          attempts: attemptNotes,
+          authUrl,
+          apiUrl
+        }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
