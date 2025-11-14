@@ -271,26 +271,55 @@ serve(async (req) => {
       console.log(`[SYNC-SINALITE] Sample product structure:`, JSON.stringify(firstProduct, null, 2).slice(0, 500));
     }
 
-    // Transform and upsert products
+    // Transform and fetch pricing for each product
     const rawProducts = products.data || products || [];
-    const productsToSync = rawProducts
-      .filter((p: any) => p.enabled === 1) // Only sync enabled products
-      .map((p: any) => {
-        // SinaLite products don't include price in GET /product
-        // Set a default base cost that can be updated later
-        const baseCostCents = 1000; // Default $10.00
+    const enabledProducts = rawProducts.filter((p: any) => p.enabled === 1);
+    
+    console.log(`[SYNC-SINALITE] Processing ${enabledProducts.length} enabled products`);
+    
+    const productsToSync = [];
+    for (const p of enabledProducts) {
+      let baseCostCents = 1000; // Default $10.00
+      let pricingData = null;
+      
+      // Fetch pricing for US store (storeCode=9)
+      try {
+        const pricingUrl = `${productUrl}/${p.id}/9`;
+        console.log(`[SYNC-SINALITE] Fetching pricing for product ${p.id}`);
         
-        return {
-          name: p.name || "Unnamed Product",
-          description: p.sku || null, // Use SKU as description since no description field
-          base_cost_cents: baseCostCents,
-          category: p.category || "print",
-          image_url: null, // No image in basic product list
-          vendor: "sinalite",
-          vendor_id: String(p.id),
-        };
-      })
-      .filter((p: any) => p.vendor_id); // Only sync products with valid IDs
+        const pricingResponse = await fetch(pricingUrl, { headers });
+        if (pricingResponse.ok) {
+          const pricing = await pricingResponse.json();
+          pricingData = pricing;
+          
+          // Extract lowest price from pricing combinations (2nd array)
+          const pricingCombos = pricing[1] || [];
+          const prices = pricingCombos
+            .map((combo: any) => parseFloat(combo.value))
+            .filter((v: number) => !isNaN(v) && v > 0);
+          
+          if (prices.length > 0) {
+            const minPrice = Math.min(...prices);
+            baseCostCents = Math.round(minPrice * 100);
+            console.log(`[SYNC-SINALITE] Product ${p.id}: Found min price $${minPrice}`);
+          }
+        } else {
+          console.warn(`[SYNC-SINALITE] Failed to fetch pricing for product ${p.id}: ${pricingResponse.status}`);
+        }
+      } catch (error) {
+        console.error(`[SYNC-SINALITE] Error fetching pricing for product ${p.id}:`, error);
+      }
+      
+      productsToSync.push({
+        name: p.name || "Unnamed Product",
+        description: p.sku || null,
+        base_cost_cents: baseCostCents,
+        category: p.category || "print",
+        image_url: null,
+        vendor: "sinalite",
+        vendor_id: String(p.id),
+      });
+    }
 
     let synced = 0;
     for (const product of productsToSync) {
