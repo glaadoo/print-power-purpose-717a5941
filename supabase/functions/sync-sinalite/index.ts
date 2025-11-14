@@ -297,16 +297,29 @@ serve(async (req) => {
           const pricing = await pricingResponse.json();
           pricingData = pricing;
           
+          // Log full pricing structure for first product to debug
+          if (enabledProducts.indexOf(p) === 0) {
+            console.log(`[SYNC-SINALITE] Sample pricing structure for product ${p.id}:`, JSON.stringify(pricing, null, 2).slice(0, 1000));
+          }
+          
           // Extract lowest price from pricing combinations (2nd array)
           const pricingCombos = pricing[1] || [];
+          console.log(`[SYNC-SINALITE] Product ${p.id}: Found ${pricingCombos.length} pricing combinations`);
+          
           const prices = pricingCombos
-            .map((combo: any) => parseFloat(combo.value))
+            .map((combo: any) => {
+              const val = parseFloat(combo.value);
+              console.log(`[SYNC-SINALITE] Product ${p.id}: Combo value = ${combo.value}, parsed = ${val}`);
+              return val;
+            })
             .filter((v: number) => !isNaN(v) && v > 0);
           
           if (prices.length > 0) {
             const minPrice = Math.min(...prices);
             baseCostCents = Math.round(minPrice * 100);
-            console.log(`[SYNC-SINALITE] Product ${p.id}: Found min price $${minPrice}`);
+            console.log(`[SYNC-SINALITE] Product ${p.id}: Min price $${minPrice} -> ${baseCostCents} cents`);
+          } else {
+            console.warn(`[SYNC-SINALITE] Product ${p.id}: No valid prices found in ${pricingCombos.length} combos`);
           }
         } else {
           console.warn(`[SYNC-SINALITE] Failed to fetch pricing for product ${p.id}: ${pricingResponse.status}`);
