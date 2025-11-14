@@ -32,7 +32,12 @@ serve(async (req) => {
   }
 
   try {
-    console.log("[SYNC-SINALITE] Starting product sync");
+    // Parse request body for store selection
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const storeCode = body.storeCode || 9; // Default to US (9)
+    const storeName = storeCode === 6 ? "Canada" : "US";
+    
+    console.log(`[SYNC-SINALITE] Starting product sync for ${storeName} store (${storeCode})`);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -282,10 +287,10 @@ serve(async (req) => {
       let baseCostCents = 1000; // Default $10.00
       let pricingData = null;
       
-      // Fetch pricing for US store (storeCode=9)
+      // Fetch pricing for selected store
       try {
-        const pricingUrl = `${productUrl}/${p.id}/9`;
-        console.log(`[SYNC-SINALITE] Fetching pricing for product ${p.id}`);
+        const pricingUrl = `${productUrl}/${p.id}/${storeCode}`;
+        console.log(`[SYNC-SINALITE] Fetching pricing for product ${p.id} in ${storeName} store`);
         
         const pricingResponse = await fetch(pricingUrl, { headers });
         if (pricingResponse.ok) {
@@ -311,13 +316,13 @@ serve(async (req) => {
       }
       
       productsToSync.push({
-        name: p.name || "Unnamed Product",
+        name: `${p.name || "Unnamed Product"} (${storeName})`,
         description: p.sku || null,
         base_cost_cents: baseCostCents,
         category: p.category || "print",
         image_url: null,
         vendor: "sinalite",
-        vendor_id: String(p.id),
+        vendor_id: `${p.id}_${storeCode}`, // Unique ID per store
       });
     }
 
@@ -344,7 +349,9 @@ serve(async (req) => {
         success: true, 
         synced, 
         total: productsToSync.length,
-        vendor: "sinalite"
+        vendor: "sinalite",
+        store: storeName,
+        storeCode
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
