@@ -299,11 +299,7 @@ serve(async (req) => {
           // Extract pricing combinations (2nd array element)
           const pricingCombos = pricing[1] || [];
           
-          // Filter for realistic product prices:
-          // - Must be numeric
-          // - Must be positive
-          // - Must be >= $1 (filters out multipliers, percentages, invalid flags)
-          // - Must be <= $10,000 (filters out extreme outliers)
+          // Filter for realistic product prices and store pricing data
           const prices = pricingCombos
             .map((combo: any) => parseFloat(combo.value))
             .filter((v: number) => !isNaN(v) && v >= 1 && v <= 10000);
@@ -336,6 +332,8 @@ serve(async (req) => {
         image_url: null,
         vendor: "sinalite",
         vendor_id: `${p.id}_${storeCode}`, // Unique ID per store
+        vendor_product_id: p.id.toString(),
+        pricing_data: pricingData, // Store full pricing data for configuration UI
       });
     }
 
