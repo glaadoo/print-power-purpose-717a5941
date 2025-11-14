@@ -32,6 +32,7 @@ export default function ProductDetail() {
   const [err, setErr] = useState<string | null>(null);
   const [configuredPriceCents, setConfiguredPriceCents] = useState<number | null>(null);
   const [productConfig, setProductConfig] = useState<Record<string, string>>({});
+  const [packageInfo, setPackageInfo] = useState<any>(null);
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -157,7 +158,37 @@ export default function ProductDetail() {
                         pricingData={product.pricing_data}
                         onPriceChange={setConfiguredPriceCents}
                         onConfigChange={setProductConfig}
+                        onPackageInfoChange={setPackageInfo}
                       />
+                    )}
+
+                    {/* Package Information */}
+                    {packageInfo && (
+                      <div className="mt-4 p-4 bg-background/60 backdrop-blur-sm rounded-lg border border-border/40 space-y-2">
+                        <h4 className="text-sm font-semibold text-foreground">Package Information</h4>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                          {packageInfo["total weight"] && (
+                            <div>
+                              <span className="font-medium">Total Weight:</span> {packageInfo["total weight"]} lbs
+                            </div>
+                          )}
+                          {packageInfo["box size"] && (
+                            <div>
+                              <span className="font-medium">Box Size:</span> {packageInfo["box size"]}"
+                            </div>
+                          )}
+                          {packageInfo["Units Per Box"] && (
+                            <div>
+                              <span className="font-medium">Units Per Box:</span> {packageInfo["Units Per Box"]}
+                            </div>
+                          )}
+                          {packageInfo["number of boxes"] && (
+                            <div>
+                              <span className="font-medium">Number of Boxes:</span> {packageInfo["number of boxes"]}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
 
                     <div className="w-full max-w-xs">
