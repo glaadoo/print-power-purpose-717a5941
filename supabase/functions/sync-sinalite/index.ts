@@ -217,12 +217,11 @@ serve(async (req) => {
     }
 
     // Step 2: Fetch products
-    const productUrl = apiUrl || "https://liveapi.sinalite.com/v1/products";
+    const productUrl = apiUrl || "https://api.sinaliteuppy.com/product";
     console.log(`[SYNC-SINALITE] Fetching products from: ${productUrl}`);
     
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "Accept": "application/json",
       "Authorization": `Bearer ${accessToken}`,
     };
 
@@ -275,20 +274,20 @@ serve(async (req) => {
     // Transform and upsert products
     const rawProducts = products.data || products || [];
     const productsToSync = rawProducts
+      .filter((p: any) => p.enabled === 1) // Only sync enabled products
       .map((p: any) => {
-        // Extract price - try multiple possible field names
-        const priceValue = p.price || p.cost || p.base_price || p.unitPrice || p.unit_price || 
-                          p.basePrice || p.base_cost || p.minPrice || p.min_price || 0;
-        const baseCostCents = Math.round(priceValue * 100);
+        // SinaLite products don't include price in GET /product
+        // Set a default base cost that can be updated later
+        const baseCostCents = 1000; // Default $10.00
         
         return {
-          name: p.name || p.title || p.product_name || "Unnamed Product",
-          description: p.description || p.details || p.product_description || null,
-          base_cost_cents: baseCostCents > 0 ? baseCostCents : 1, // Minimum 1 cent to satisfy constraint
-          category: p.category || p.product_category || "print",
-          image_url: p.image || p.thumbnail || p.image_url || p.product_image || null,
+          name: p.name || "Unnamed Product",
+          description: p.sku || null, // Use SKU as description since no description field
+          base_cost_cents: baseCostCents,
+          category: p.category || "print",
+          image_url: null, // No image in basic product list
           vendor: "sinalite",
-          vendor_id: String(p.id || p.sku || p.product_id || p.product_sku),
+          vendor_id: String(p.id),
         };
       })
       .filter((p: any) => p.vendor_id); // Only sync products with valid IDs
