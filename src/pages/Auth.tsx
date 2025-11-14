@@ -8,6 +8,43 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import VideoBackground from "@/components/VideoBackground";
 import { Session } from "@supabase/supabase-js";
+import { z } from "zod";
+
+// Password validation schema with strong security requirements
+const passwordSchema = z.string()
+  .min(12, "Password must be at least 12 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
+
+// HaveIBeenPwned k-anonymity check
+async function checkPasswordBreached(password: string): Promise<boolean> {
+  try {
+    // Hash password with SHA-1
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    
+    // Send only first 5 chars for k-anonymity
+    const prefix = hashHex.substring(0, 5);
+    const suffix = hashHex.substring(5);
+    
+    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+    if (!response.ok) return false; // Fail open if API unavailable
+    
+    const text = await response.text();
+    const hashes = text.split('\n');
+    
+    // Check if our hash suffix appears in the response
+    return hashes.some(line => line.startsWith(suffix));
+  } catch (error) {
+    console.error('HIBP check failed:', error);
+    return false; // Fail open on error
+  }
+}
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -93,31 +130,54 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email: signUpData.email,
-      password: signUpData.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/welcome`,
-        data: {
-          first_name: signUpData.firstName,
-          last_name: signUpData.lastName,
-          phone: signUpData.phone,
-          street_address: signUpData.streetAddress,
-          city: signUpData.city,
-          state: signUpData.state,
-          zip_code: signUpData.zipCode,
-          country: signUpData.country,
-        }
+    try {
+      // Validate password strength
+      const passwordValidation = passwordSchema.safeParse(signUpData.password);
+      if (!passwordValidation.success) {
+        const errors = passwordValidation.error.errors.map(err => err.message);
+        toast.error(errors[0]); // Show first validation error
+        setLoading(false);
+        return;
       }
-    });
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Account created! You can now sign in.");
-      setMode("signin");
-      setSignInEmail(signUpData.email);
+      // Check if password has been breached (HaveIBeenPwned k-anonymity)
+      toast.info("Checking password security...");
+      const isBreached = await checkPasswordBreached(signUpData.password);
+      if (isBreached) {
+        toast.error("This password has appeared in data breaches. Please choose a different password.");
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signUp({
+        email: signUpData.email,
+        password: signUpData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/welcome`,
+          data: {
+            first_name: signUpData.firstName,
+            last_name: signUpData.lastName,
+            phone: signUpData.phone,
+            street_address: signUpData.streetAddress,
+            city: signUpData.city,
+            state: signUpData.state,
+            zip_code: signUpData.zipCode,
+            country: signUpData.country,
+          }
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Account created! You can now sign in.");
+        setMode("signin");
+        setSignInEmail(signUpData.email);
+      }
+    } catch (error) {
+      toast.error("An error occurred during signup. Please try again.");
     }
+    
     setLoading(false);
   };
 
