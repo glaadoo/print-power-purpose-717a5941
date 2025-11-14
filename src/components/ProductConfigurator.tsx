@@ -90,7 +90,8 @@ export function ProductConfigurator({
       onPriceChange(priceCents);
       onConfigChange(selectedOptions);
     }
-  }, [selectedOptions, pricingCombos, onPriceChange, onConfigChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOptions, pricingCombos]);
 
   const handleOptionChange = (category: string, value: string) => {
     setSelectedOptions((prev) => ({
