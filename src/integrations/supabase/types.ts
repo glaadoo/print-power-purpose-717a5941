@@ -575,8 +575,11 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          price_override_cents: number | null
+          pricing_data: Json | null
           vendor: string
           vendor_id: string
+          vendor_product_id: string | null
         }
         Insert: {
           base_cost_cents: number
@@ -586,8 +589,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          price_override_cents?: number | null
+          pricing_data?: Json | null
           vendor?: string
           vendor_id: string
+          vendor_product_id?: string | null
         }
         Update: {
           base_cost_cents?: number
@@ -597,8 +603,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          price_override_cents?: number | null
+          pricing_data?: Json | null
           vendor?: string
           vendor_id?: string
+          vendor_product_id?: string | null
         }
         Relationships: []
       }
@@ -790,6 +799,30 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      who_we_serve_pages: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          page_slug: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          page_slug: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          page_slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
