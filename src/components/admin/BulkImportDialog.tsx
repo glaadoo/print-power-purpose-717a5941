@@ -69,7 +69,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     const normalized = normalizeHeader(header);
     const original = header.trim().toLowerCase();
     
-    console.log('🔍 Matching header:', { original: header, normalized, comparing: original });
+    // console.log('🔍 Matching header:', { original: header, normalized, comparing: original });
     
     // Name variations - check exact matches first, then contains
     if (original === 'name' || normalized === 'name' || 
@@ -77,57 +77,57 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         normalized.includes('name') || normalized.includes('legal') || 
         normalized.includes('organization') || normalized.includes('nonprofit') ||
         normalized.includes('cause')) {
-      console.log('✅ Matched as: name');
+      // console.log('✅ Matched as: name');
       return 'name';
     }
     // EIN variations
     if (original === 'ein' || normalized === 'ein' || 
         normalized.includes('ein') || normalized.includes('tax') || 
         normalized.includes('id number')) {
-      console.log('✅ Matched as: ein');
+      // console.log('✅ Matched as: ein');
       return 'ein';
     }
     // City variations
     if (original === 'city' || normalized === 'city' || normalized.includes('city')) {
-      console.log('✅ Matched as: city');
+      // console.log('✅ Matched as: city');
       return 'city';
     }
     // State variations
     if (original === 'state' || original === 'st' || normalized === 'st' || normalized === 'state') {
-      console.log('✅ Matched as: state');
+      // console.log('✅ Matched as: state');
       return 'state';
     }
     // Country variations
     if (original === 'country' || normalized === 'country' || normalized.includes('country')) {
-      console.log('✅ Matched as: country');
+      // console.log('✅ Matched as: country');
       return 'country';
     }
     // Description variations
     if (normalized.includes('description') || normalized.includes('purpose') || 
         normalized.includes('mission') || normalized.includes('about')) {
-      console.log('✅ Matched as: description');
+      // console.log('✅ Matched as: description');
       return 'description';
     }
     
-    console.log('❌ No match found');
+    // console.log('❌ No match found');
     return null;
   };
 
   const parseCSV = (text: string): ParsedRow[] => {
-    console.log('📄 Raw file content (first 500 chars):', text.substring(0, 500));
+    // console.log('📄 Raw file content (first 500 chars):', text.substring(0, 500));
     
     const lines = text.split(/\r?\n/).filter(l => l.trim());
-    console.log('📊 Total lines after filtering:', lines.length);
+    // console.log('📊 Total lines after filtering:', lines.length);
     
-    // Support headerless files too; only error if completely empty
+     // Support headerless files too; only error if completely empty
     if (lines.length < 1) {
-      console.error('❌ Empty file: no lines found');
+      // console.error('❌ Empty file: no lines found');
       return [];
     }
     
     let delimiter = detectDelimiter(text);
     const describeDelimiter = (d: string) => d === '\t' ? 'tab' : d === '|' ? 'pipe (|)' : d === ',' ? 'comma (,)' : 'semicolon (;)';
-    console.log('🔍 Detected delimiter:', describeDelimiter(delimiter));
+    // console.log('🔍 Detected delimiter:', describeDelimiter(delimiter));
     
     const splitLine = (line: string) =>
       (delimiter === '\t'
@@ -147,17 +147,17 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
             ? lines[0].split('\t')
             : lines[0].split(new RegExp(`\\s*\\${delimiter}\\s*`))
           ).map(v => v.trim().replace(/^["']|["']$/g, ''));
-          console.warn('🔁 Overriding delimiter based on content:', describeDelimiter(delimiter));
+          // console.warn('🔁 Overriding delimiter based on content:', describeDelimiter(delimiter));
           break;
         }
       }
     }
 
-    console.log('📋 First line tokens:', rawFirst);
+    // console.log('📋 First line tokens:', rawFirst);
 
     // Try to interpret first line as header
     const headerMatches = rawFirst.map(h => matchHeader(h));
-    console.log('📋 Header candidates:', headerMatches);
+    // console.log('📋 Header candidates:', headerMatches);
 
     const einLike = (val?: string) => {
       if (!val) return false;
@@ -175,11 +175,11 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       const positional = ['ein', 'name', 'city', 'state', 'country', 'description'];
       adjustedHeaders = positional.slice(0, rawFirst.length);
       startRow = 0;
-      console.warn('⚠️ No header row detected. Treating as headerless with order: EIN | Name | City | State | Country | Description');
+      // console.warn('⚠️ No header row detected. Treating as headerless with order: EIN | Name | City | State | Country | Description');
     } else {
       // Use detected headers
-      console.log('📋 Raw headers:', rawFirst);
-      console.log('📋 Matched headers:', headerMatches);
+      // console.log('📋 Raw headers:', rawFirst);
+      // console.log('📋 Matched headers:', headerMatches);
       adjustedHeaders = [...headerMatches];
       // Ensure we have a name mapping
       const hasNameColumn = headerMatches.some(h => h === 'name');
@@ -187,14 +187,14 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         const einIdx = headerMatches.findIndex(h => h === 'ein');
         if (einIdx !== -1 && rawFirst[einIdx + 1]) {
           adjustedHeaders[einIdx + 1] = 'name';
-          console.warn('⚠️ No explicit name column found. Using the column after EIN as Name:', rawFirst[einIdx + 1]);
+          // console.warn('⚠️ No explicit name column found. Using the column after EIN as Name:', rawFirst[einIdx + 1]);
         } else {
-          console.error('❌ No "name" column found in headers. Available headers:', rawFirst);
-          console.error('💡 Expected headers like: "Name", "Nonprofit Name", "Cause Name", "Organization Name", etc. Or provide headerless file with order: EIN | Name | City | State | Country');
+          // console.error('❌ No "name" column found in headers. Available headers:', rawFirst);
+          // console.error('💡 Expected headers like: "Name", "Nonprofit Name", "Cause Name", "Organization Name", etc. Or provide headerless file with order: EIN | Name | City | State | Country');
           return [];
         }
       } else {
-        console.log('✅ Name column detected.');
+        // console.log('✅ Name column detected.');
       }
     }
     
@@ -208,7 +208,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         ? line.split('\t').map(v => v.trim().replace(/^["']|["']$/g, ''))
         : line.split(new RegExp(`\\s*\\${delimiter}\\s*`)).map(v => v.trim().replace(/^["']|["']$/g, ''));
       
-      console.log(`📝 Processing row ${i}:`, values);
+      // console.log(`📝 Processing row ${i}:`, values);
       
       const row: ParsedRow = { name: '' };
       let nameFound = false;
@@ -221,7 +221,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
             if (value && value.length > 0) {
               row.name = value;
               nameFound = true;
-              console.log(`✅ Found name in row ${i}:`, value);
+              // console.log(`✅ Found name in row ${i}:`, value);
             }
             break;
           case 'ein':
@@ -256,18 +256,18 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
       // Only add rows that have a valid name (at least 3 characters)
       if (row.name && row.name.length >= 3) {
         rows.push(row);
-        console.log(`✅ Added row ${i} to import list`);
+        // console.log(`✅ Added row ${i} to import list`);
       } else {
-        console.log(`⚠️ Skipping row ${i} - name too short or missing:`, row.name);
+        // console.log(`⚠️ Skipping row ${i} - name too short or missing:`, row.name);
       }
     }
     
-    console.log('✅ Successfully parsed rows:', rows.length);
+    // console.log('✅ Successfully parsed rows:', rows.length);
     if (rows.length > 0) {
-      console.log('📝 First 3 sample rows:', rows.slice(0, 3));
+      // console.log('📝 First 3 sample rows:', rows.slice(0, 3));
     } else {
-      console.error('❌ No rows with valid names found');
-      console.error('💡 Make sure your file has a column labeled "Name" and at least one row with a name that is 3+ characters');
+      // console.error('❌ No rows with valid names found');
+      // console.error('💡 Make sure your file has a column labeled "Name" and at least one row with a name that is 3+ characters');
     }
     
     return rows;
@@ -302,11 +302,11 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
     
     try {
       toast.info(`Processing file: ${selectedFile.name}...`);
-      console.log('📁 File details:', {
-        name: selectedFile.name,
-        size: selectedFile.size,
-        type: selectedFile.type
-      });
+      // console.log('📁 File details:', {
+      //   name: selectedFile.name,
+      //   size: selectedFile.size,
+      //   type: selectedFile.type
+      // });
       
       const text = await selectedFile.text();
       const rows = parseCSV(text);
@@ -328,12 +328,12 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
           }
         );
         
-        console.error('❌ Parsing failed. Summary:');
-        console.error('- File has', lines.length, 'lines');
-        console.error('- Detected delimiter:', delimiterName);
-        console.error('- Found headers:', rawHeaders);
-        console.error('- Expected: A column matching "Name", "Nonprofit Name", "Cause Name", or similar');
-        console.error('- No rows with valid nonprofit names (3+ chars) were found');
+        // console.error('❌ Parsing failed. Summary:');
+        // console.error('- File has', lines.length, 'lines');
+        // console.error('- Detected delimiter:', delimiterName);
+        // console.error('- Found headers:', rawHeaders);
+        // console.error('- Expected: A column matching "Name", "Nonprofit Name", "Cause Name", or similar');
+        // console.error('- No rows with valid nonprofit names (3+ chars) were found');
         
         // keep file selected to allow retry
         return;
@@ -351,7 +351,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         toast.success(`File validated successfully! Found ${rows.length} records ready to import.`);
       }
     } catch (error: any) {
-      console.error('❌ File processing error:', error);
+      // console.error('❌ File processing error:', error);
       toast.dismiss();
       toast.error(`Failed to read file: ${error.message}`);
       setFile(null);
@@ -361,7 +361,7 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
   };
 
   const handleImport = async () => {
-    console.log('📥 Import clicked', { hasFile: !!file, fileName: file?.name });
+    // console.log('📥 Import clicked', { hasFile: !!file, fileName: file?.name });
     if (!file) return;
     
     setImporting(true);
@@ -529,7 +529,10 @@ export default function BulkImportDialog({ open, onOpenChange, onSuccess }: Bulk
         
         <DialogFooter className="gap-2">
           <Button 
-            onClick={() => { console.log('🧹 Cancel clicked'); onOpenChange(false); }} 
+            onClick={() => { 
+              // console.log('🧹 Cancel clicked'); 
+              onOpenChange(false); 
+            }}
             variant="outline" 
             type="button"
             className="border-white/30 text-white hover:bg-white/10"

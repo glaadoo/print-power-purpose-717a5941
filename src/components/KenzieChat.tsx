@@ -141,7 +141,7 @@ export default function KenzieChat() {
               .select("id")
               .maybeSingle();
           } catch (dbErr) {
-            console.warn("Could not create session in DB, using local ID only:", dbErr);
+            // console.warn("Could not create session in DB, using local ID only:", dbErr);
             // Continue anyway - we have a local session ID
           }
         }
@@ -165,11 +165,11 @@ export default function KenzieChat() {
           }
           // Messages will be set by the greeting delay useEffect if empty
         } catch (loadErr) {
-          console.warn("Could not load message history:", loadErr);
+          // console.warn("Could not load message history:", loadErr);
           // Continue anyway - we'll just start with the starter message
         }
       } catch (err) {
-        console.error("KenzieChat initialization error:", err);
+        // console.error("KenzieChat initialization error:", err);
         // Generate a fallback session ID so chat still works
         const fallbackSid = crypto.randomUUID();
         localStorage.setItem("ppp:kenzie:session_id", fallbackSid);
@@ -191,7 +191,7 @@ export default function KenzieChat() {
     try {
       await sb.from("kenzie_messages").delete().eq("session_id", sessionId);
     } catch (err) {
-      console.warn("Could not clear messages:", err);
+      // console.warn("Could not clear messages:", err);
     }
     
     // Clear local storage session
@@ -234,7 +234,7 @@ export default function KenzieChat() {
         const newScoped = makeScopedClient(newSid);
         setSb(newScoped);
       } catch (dbErr) {
-        console.warn("Could not create new session in DB, using local ID only:", dbErr);
+        // console.warn("Could not create new session in DB, using local ID only:", dbErr);
         // Continue anyway - we have a local session ID
         setSb(makeScopedClient(newSid));
       }
@@ -603,10 +603,10 @@ export default function KenzieChat() {
                     return cp;
                   });
                 }
-              } catch (e) {
-                console.error("Failed to parse SSE chunk:", e);
+                } catch (e) {
+                  // console.error("Failed to parse SSE chunk:", e);
+                }
               }
-            }
           }
         }
       }
