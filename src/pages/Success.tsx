@@ -4,6 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { useCause } from "../context/CauseContext";
 import VideoBackground from "@/components/VideoBackground";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export default function Success() {
   const [sp] = useSearchParams();
@@ -111,27 +112,30 @@ export default function Success() {
               <p className="mt-6 text-base opacity-90">What would you like to do next?</p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                <button 
-                  type="button"
-                  className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors cursor-pointer"
+                <Button 
+                  variant="default"
+                  size="lg"
+                  className="rounded-full bg-white text-black hover:bg-white/90"
                   onClick={() => navigate("/")}
                 >
                   Back to Home
-                </button>
-                <button 
-                  type="button"
-                  className="rounded-full px-6 py-3 bg-white/20 border border-white/30 text-white font-semibold hover:bg-white/30 transition-colors cursor-pointer"
+                </Button>
+                <Button 
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30"
                   onClick={() => navigate("/welcome")}
                 >
                   Continue Shopping
-                </button>
-                <button 
-                  type="button"
-                  className="rounded-full px-6 py-3 bg-white/20 border border-white/30 text-white font-semibold hover:bg-white/30 transition-colors cursor-pointer"
+                </Button>
+                <Button 
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30"
                   onClick={() => navigate("/causes")}
                 >
                   Choose Another Cause
-                </button>
+                </Button>
               </div>
             </div>
           </div>
