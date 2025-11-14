@@ -17,7 +17,7 @@ export default function ProductConfiguratorLoader({
   const [productData, setProductData] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   const fetchPricing = async () => {
     if (productData || loading) return;
