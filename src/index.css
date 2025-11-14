@@ -40,13 +40,13 @@ html, body, #root {
     @apply border-white/80 hover:bg-white/15;
   }
 
-  /* Transparent rectangular input/select to match buttons */
+  /* Transparent pill-shaped input/select */
   .input-rect {
     @apply w-full h-11
       bg-transparent text-white
       border border-white/60
-      rounded-none
-      px-3
+      rounded-full
+      px-4
       focus:outline-none focus:ring-2 focus:ring-white/70;
   }
 
