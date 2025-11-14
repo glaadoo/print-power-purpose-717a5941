@@ -54,14 +54,29 @@ export default function Products() {
     (async () => {
       setLoading(true);
       setErr(null);
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, pricing_data")
-        .order("category", { ascending: true })
-        .order("name", { ascending: true });
-      if (error) setErr(error.message);
-      else setRows((data as ProductRow[]) ?? []);
-      setLoading(false);
+      try {
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Request timed out. Please try again.")), 15000)
+        );
+        const query = supabase
+          .from("products")
+          .select("id, name, base_cost_cents, price_override_cents, image_url, category")
+          .order("category", { ascending: true })
+          .order("name", { ascending: true })
+          .limit(200);
+        const result = (await Promise.race([query, timeout])) as { data: ProductRow[] | null; error: any };
+        if (result && "data" in result) {
+          const { data, error } = result as any;
+          if (error) setErr(error.message);
+          else setRows((data as ProductRow[]) ?? []);
+        } else {
+          setErr("Unexpected response while loading products.");
+        }
+      } catch (e: any) {
+        setErr(e?.message || "Failed to load products.");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -74,20 +89,22 @@ export default function Products() {
   };
 
   const handleAddToCart = (product: ProductRow) => {
-    const requiresConfiguration = product.pricing_data && 
-      Array.isArray(product.pricing_data) && 
-      product.pricing_data.length > 0;
     const isConfigured = !!configuredPrices[product.id];
-    
-    // Don't allow add to cart if configuration is required but not done
-    if (requiresConfiguration && !isConfigured) {
+
+    // Enforce configuration before adding to cart
+    if (!isConfigured) {
       toast.error("Please configure product options first");
       return;
     }
-    
+
     const qty = quantities[product.id] || 1;
-    const unitCents = configuredPrices[product.id] || getProductPrice(product);
-    
+    const unitCents = configuredPrices[product.id];
+
+    if (!unitCents) {
+      toast.error("Price unavailable. Please configure product options.");
+      return;
+    }
+
     add(
       {
         id: product.id,
@@ -196,11 +213,8 @@ export default function Products() {
                         const unitPrice = unitCents / 100;
                         const qty = quantities[product.id] || 0;
                         
-                        const requiresConfiguration = product.pricing_data && 
-                          Array.isArray(product.pricing_data) && 
-                          product.pricing_data.length > 0;
                         const isConfigured = !!configuredPrices[product.id];
-                        const canAddToCart = !requiresConfiguration || isConfigured;
+                        const canAddToCart = isConfigured;
 
                         return (
                           <GlassCard key={product.id} padding="p-6">
@@ -250,7 +264,7 @@ export default function Products() {
                                 </div>
                               </div>
 
-                              {requiresConfiguration && !isConfigured && (
+                              {!isConfigured && (
                                 <p className="text-xs text-yellow-300 w-full">
                                   Configure options above before adding to cart
                                 </p>
