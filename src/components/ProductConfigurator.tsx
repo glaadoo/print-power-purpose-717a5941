@@ -112,11 +112,11 @@ export function ProductConfigurator({
   }
 
   return (
-    <div className="space-y-4 w-full max-w-md">
-      <h3 className="text-lg font-semibold text-center mb-4">Configure Product</h3>
+    <div className="space-y-3 w-full">
+      <h3 className="text-sm font-semibold text-foreground mb-2">Price this item:</h3>
       {Object.entries(optionCategories).map(([category, values]) => (
         <div key={category} className="space-y-2">
-          <Label htmlFor={category} className="text-white">
+          <Label htmlFor={category} className="text-foreground font-medium">
             {formatCategoryName(category)}
           </Label>
           <Select

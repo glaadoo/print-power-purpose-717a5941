@@ -8,6 +8,7 @@ import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Plus, Minus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { ProductConfigurator } from "@/components/ProductConfigurator";
 
 type ProductRow = {
   id: string;
@@ -17,6 +18,7 @@ type ProductRow = {
   price_override_cents?: number | null;
   image_url?: string | null;
   category?: string | null;
+  pricing_data?: any;
 };
 
 const getProductPrice = (product: ProductRow) => {
@@ -34,6 +36,8 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [configuredPrices, setConfiguredPrices] = useState<Record<string, number>>({});
+  const [productConfigs, setProductConfigs] = useState<Record<string, Record<string, string>>>({});
 
   // Sync quantities with cart items
   useEffect(() => {
@@ -52,7 +56,7 @@ export default function Products() {
       setErr(null);
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category")
+        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, pricing_data")
         .order("category", { ascending: true })
         .order("name", { ascending: true });
       if (error) setErr(error.message);
@@ -71,7 +75,7 @@ export default function Products() {
 
   const handleAddToCart = (product: ProductRow) => {
     const qty = quantities[product.id] || 1;
-    const unitCents = getProductPrice(product);
+    const unitCents = configuredPrices[product.id] || getProductPrice(product);
     
     add(
       {
@@ -85,6 +89,14 @@ export default function Products() {
     );
 
     toast.success(`Added ${qty} ${product.name} to cart`);
+  };
+
+  const handlePriceChange = (productId: string, priceCents: number) => {
+    setConfiguredPrices(prev => ({ ...prev, [productId]: priceCents }));
+  };
+
+  const handleConfigChange = (productId: string, config: Record<string, string>) => {
+    setProductConfigs(prev => ({ ...prev, [productId]: config }));
   };
 
   // Group products by category
