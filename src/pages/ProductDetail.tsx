@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { ProductConfigurator } from "@/components/ProductConfigurator";
 
 type ProductRow = {
   id: string;
@@ -13,6 +14,7 @@ type ProductRow = {
   image_url?: string | null;
   currency?: string | null;
   base_cost_cents: number;
+  pricing_data?: any;
 };
 
 const priceFromBase = (base?: number | null) =>
@@ -27,6 +29,8 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [configuredPriceCents, setConfiguredPriceCents] = useState<number | null>(null);
+  const [productConfig, setProductConfig] = useState<Record<string, string>>({});
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -49,7 +53,7 @@ export default function ProductDetail() {
     document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
   }, [product]);
 
-  const unitCents = priceFromBase(product?.base_cost_cents);
+  const unitCents = configuredPriceCents ?? priceFromBase(product?.base_cost_cents);
 
   const unitPrice = unitCents / 100;
 
@@ -135,12 +139,23 @@ export default function ProductDetail() {
                   <h1 className="text-3xl font-serif font-semibold text-center mb-4">
                     {product.name}
                   </h1>
-                  <p className="text-center text-xl mb-2">${unitPrice.toFixed(2)}</p>
+                  <p className="text-center text-xl font-bold mb-2">
+                    Price: ${unitPrice.toFixed(2)}
+                  </p>
                   {product.description && (
                     <p className="text-center opacity-90 mb-6">{product.description}</p>
                   )}
 
-                  <div className="flex flex-col gap-4 items-center">
+                  <div className="flex flex-col gap-6 items-center">
+                    {/* Product Configuration */}
+                    {product.pricing_data && (
+                      <ProductConfigurator
+                        pricingData={product.pricing_data}
+                        onPriceChange={setConfiguredPriceCents}
+                        onConfigChange={setProductConfig}
+                      />
+                    )}
+
                     <div className="w-full max-w-xs">
                       <label className="block text-sm font-medium mb-2 text-center">Quantity</label>
                       <input
