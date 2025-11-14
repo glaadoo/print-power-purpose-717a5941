@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.check-user-exists]
 verify_jwt = false
+
+[functions.sinalite-price]
+verify_jwt = false

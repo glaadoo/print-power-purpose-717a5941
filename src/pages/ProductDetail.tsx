@@ -15,6 +15,7 @@ type ProductRow = {
   currency?: string | null;
   base_cost_cents: number;
   pricing_data?: any;
+  vendor_product_id?: string | null;
 };
 
 const priceFromBase = (base?: number | null) =>
@@ -150,6 +151,9 @@ export default function ProductDetail() {
                     {/* Product Configuration */}
                     {product.pricing_data && (
                       <ProductConfigurator
+                        productId={product.id}
+                        vendorProductId={product.vendor_product_id || product.id}
+                        storeCode={9}
                         pricingData={product.pricing_data}
                         onPriceChange={setConfiguredPriceCents}
                         onConfigChange={setProductConfig}
