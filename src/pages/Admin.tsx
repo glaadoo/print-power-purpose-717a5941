@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import {
   Trash2, KeyRound, RefreshCw, Download, Search, Upload,
   AlertCircle, CheckCircle, X, ArrowLeft, Check,
-  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity, FileText
+  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity, FileText, CreditCard
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import VideoBackground from "@/components/VideoBackground";
@@ -819,6 +819,24 @@ export default function Admin() {
                     </div>
                   </div>
                 </GlassCard>
+
+                <div onClick={() => navigate("/admin/stripe-analytics")} className="cursor-pointer">
+                  <GlassCard className="bg-white/5 border-white/20 hover:bg-white/10 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-serif font-bold text-white">Stripe Analytics</h3>
+                      <CreditCard className="h-6 w-6 text-white/60" />
+                    </div>
+                    <p className="text-white/70 mb-4">
+                      View detailed payment analytics including revenue trends, failed payments, and top customers
+                    </p>
+                    <div className="flex items-center text-white/80 hover:text-white transition-colors">
+                      <span className="text-sm font-medium">View Dashboard</span>
+                      <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </GlassCard>
+                </div>
 
                 <GlassCard className="bg-white/5 border-white/20">
                   <h3 className="text-xl font-serif font-bold text-white mb-4">Cause Progress</h3>

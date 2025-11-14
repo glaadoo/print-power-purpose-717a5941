@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@18.5.0';
 import { Resend } from 'https://esm.sh/resend@4.0.0';
+import jsPDF from 'https://esm.sh/jspdf@2.5.2';
 
 const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
@@ -12,6 +13,62 @@ const log = (level: 'info' | 'warn' | 'error', message: string, data?: any) => {
   const timestamp = new Date().toISOString();
   const logData = data ? ` | ${JSON.stringify(data)}` : '';
   console.log(`[${timestamp}] [${level.toUpperCase()}] ${message}${logData}`);
+};
+
+// Generate PDF receipt
+const generateReceiptPDF = (orderData: any, session: any) => {
+  const doc = new jsPDF();
+  
+  // Header
+  doc.setFontSize(24);
+  doc.setTextColor(102, 126, 234); // Primary color
+  doc.text('Print Power Purpose', 20, 30);
+  
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Order Receipt', 20, 40);
+  
+  // Order details
+  doc.setFontSize(10);
+  doc.text(`Order #: ${orderData.order_number}`, 20, 55);
+  doc.text(`Date: ${new Date(orderData.created_at).toLocaleDateString()}`, 20, 62);
+  doc.text(`Email: ${session.customer_details?.email || 'N/A'}`, 20, 69);
+  
+  // Line separator
+  doc.setDrawColor(200, 200, 200);
+  doc.line(20, 75, 190, 75);
+  
+  // Items
+  doc.setFontSize(12);
+  doc.text('Order Summary', 20, 85);
+  doc.setFontSize(10);
+  doc.text(`Product: ${orderData.product_name || 'Custom Print Product'}`, 20, 95);
+  doc.text(`Quantity: ${orderData.quantity}`, 20, 102);
+  doc.text(`Subtotal: $${((session.amount_total || 0) / 100).toFixed(2)}`, 20, 109);
+  
+  // Donation section
+  if (orderData.donation_cents > 0) {
+    doc.line(20, 115, 190, 115);
+    doc.setFontSize(12);
+    doc.setTextColor(76, 175, 80); // Green for donation
+    doc.text('Your Impact', 20, 125);
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Donation to ${orderData.cause_name || 'a cause'}: $${(orderData.donation_cents / 100).toFixed(2)}`, 20, 135);
+  }
+  
+  // Total
+  doc.line(20, 145, 190, 145);
+  doc.setFontSize(14);
+  doc.text(`Total: $${((session.amount_total || 0) / 100).toFixed(2)}`, 20, 155);
+  
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Thank you for your order!', 20, 270);
+  doc.text('Print Power Purpose - Printing with Purpose', 20, 277);
+  
+  return doc.output('arraybuffer');
 };
 
 serve(async (req) => {
@@ -194,9 +251,13 @@ serve(async (req) => {
           }
         }
         
-        // Send auto-receipt email
-        if (session.customer_details?.email) {
+        // Send auto-receipt email with PDF attachment
+        if (session.customer_details?.email && orderData) {
           try {
+            // Generate PDF receipt
+            const pdfBuffer = generateReceiptPDF(orderData, session);
+            const pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(pdfBuffer)));
+            
             const receiptHtml = `
               <!DOCTYPE html>
               <html>
@@ -221,6 +282,7 @@ serve(async (req) => {
                     <div class="content">
                       <p>Hi there,</p>
                       <p>Thank you for your purchase! Your order has been confirmed and is being processed.</p>
+                      <p><strong>A detailed PDF receipt is attached to this email.</strong></p>
                       
                       <div class="order-details">
                         <h2>Order Summary</h2>
@@ -254,12 +316,18 @@ serve(async (req) => {
               to: [session.customer_details.email],
               subject: `Order Confirmation #${orderNumber}`,
               html: receiptHtml,
+              attachments: [
+                {
+                  filename: `receipt-${orderNumber}.pdf`,
+                  content: pdfBase64,
+                },
+              ],
             });
             
             if (emailError) {
               console.error('Error sending receipt email:', emailError);
             } else {
-              console.log(`Receipt email sent successfully`);
+              console.log(`Receipt email with PDF sent successfully`);
             }
           } catch (emailErr) {
             console.error('Failed to send receipt email:', emailErr);
