@@ -67,8 +67,9 @@ serve(async (req) => {
       );
     }
 
-    // Call pricing API
-    const pricingUrl = `${apiUrl}/price/${productId}/${storeCode}`;
+    // Call pricing API - remove /product prefix if present
+    const baseUrl = apiUrl.replace(/\/product\/?$/, '');
+    const pricingUrl = `${baseUrl}/price/${productId}/${storeCode}`;
     console.log("[SINALITE-PRICE] Calling:", pricingUrl);
     console.log("[SINALITE-PRICE] Options:", productOptions);
 
