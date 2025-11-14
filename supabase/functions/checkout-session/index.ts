@@ -465,8 +465,18 @@ serve(async (req) => {
 
     const out = await stripeResp.json();
     if (!stripeResp.ok) {
-      console.error("[STRIPE_ERROR]", out);
-      return new Response(JSON.stringify({ error: out?.error?.message || "Stripe session failed" }), {
+      // Log detailed Stripe error server-side only
+      console.error("[STRIPE_ERROR]", {
+        status: stripeResp.status,
+        error: out?.error,
+        message: out?.error?.message
+      });
+      
+      // Return generic error to client
+      return new Response(JSON.stringify({ 
+        error: "Payment processing unavailable. Please try again.",
+        code: "PAYMENT_ERROR"
+      }), {
         status: 502, headers: { "Content-Type": "application/json", ...cors },
       });
     }
@@ -475,8 +485,18 @@ serve(async (req) => {
       status: 201, headers: { "Content-Type": "application/json", ...cors },
     });
   } catch (err) {
-    console.error("[CHECKOUT_SESSION_ERROR]", err);
-    return new Response(JSON.stringify({ error: "Checkout session crashed" }), {
+    // Log detailed error server-side only
+    console.error("[CHECKOUT_SESSION_ERROR]", {
+      error: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      type: err?.constructor?.name
+    });
+    
+    // Return generic error to client
+    return new Response(JSON.stringify({ 
+      error: "Unable to create checkout session. Please try again.",
+      code: "CHECKOUT_ERROR"
+    }), {
       status: 500, headers: { "Content-Type": "application/json", ...cors },
     });
   }
