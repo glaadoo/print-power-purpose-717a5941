@@ -8,7 +8,7 @@ import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Plus, Minus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { ProductConfigurator } from "@/components/ProductConfigurator";
+import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 
 type ProductRow = {
   id: string;
@@ -56,7 +56,7 @@ export default function Products() {
       setErr(null);
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, pricing_data")
+        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category")
         .order("category", { ascending: true })
         .order("name", { ascending: true });
       if (error) setErr(error.message);
@@ -192,22 +192,16 @@ export default function Products() {
                                 {product.name}
                               </h3>
                               
-                              {product.pricing_data && Array.isArray(product.pricing_data) && product.pricing_data.length > 0 ? (
-                                <div className="w-full space-y-3">
-                                  <ProductConfigurator
-                                    pricingData={product.pricing_data}
-                                    onPriceChange={(price) => handlePriceChange(product.id, price)}
-                                    onConfigChange={(config) => handleConfigChange(product.id, config)}
-                                  />
-                                  <p className="text-2xl font-bold text-white">
-                                    Price: ${((configuredPrices[product.id] || unitCents) / 100).toFixed(2)}
-                                  </p>
-                                </div>
-                              ) : (
+                              <div className="w-full space-y-3">
+                                <ProductConfiguratorLoader
+                                  productId={product.id}
+                                  onPriceChange={(price) => handlePriceChange(product.id, price)}
+                                  onConfigChange={(config) => handleConfigChange(product.id, config)}
+                                />
                                 <p className="text-2xl font-bold text-white">
-                                  ${unitPrice.toFixed(2)}
+                                  Price: ${((configuredPrices[product.id] || unitCents) / 100).toFixed(2)}
                                 </p>
-                              )}
+                              </div>
 
                               <div className="flex items-center gap-2 w-full justify-between py-2">
                                 <span className="text-sm text-white/80">Quantity:</span>
