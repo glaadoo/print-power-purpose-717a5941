@@ -290,36 +290,30 @@ serve(async (req) => {
       // Fetch pricing for selected store
       try {
         const pricingUrl = `${productUrl}/${p.id}/${storeCode}`;
-        console.log(`[SYNC-SINALITE] Fetching pricing for product ${p.id} in ${storeName} store`);
         
         const pricingResponse = await fetch(pricingUrl, { headers });
         if (pricingResponse.ok) {
           const pricing = await pricingResponse.json();
           pricingData = pricing;
           
-          // Log full pricing structure for first product to debug
-          if (enabledProducts.indexOf(p) === 0) {
-            console.log(`[SYNC-SINALITE] Sample pricing structure for product ${p.id}:`, JSON.stringify(pricing, null, 2).slice(0, 1000));
-          }
-          
-          // Extract lowest price from pricing combinations (2nd array)
+          // Extract pricing combinations (2nd array element)
           const pricingCombos = pricing[1] || [];
-          console.log(`[SYNC-SINALITE] Product ${p.id}: Found ${pricingCombos.length} pricing combinations`);
           
+          // Filter for realistic product prices:
+          // - Must be numeric
+          // - Must be positive
+          // - Must be >= $1 (filters out multipliers, percentages, invalid flags)
+          // - Must be <= $10,000 (filters out extreme outliers)
           const prices = pricingCombos
-            .map((combo: any) => {
-              const val = parseFloat(combo.value);
-              console.log(`[SYNC-SINALITE] Product ${p.id}: Combo value = ${combo.value}, parsed = ${val}`);
-              return val;
-            })
-            .filter((v: number) => !isNaN(v) && v > 0);
+            .map((combo: any) => parseFloat(combo.value))
+            .filter((v: number) => !isNaN(v) && v >= 1 && v <= 10000);
           
           if (prices.length > 0) {
             const minPrice = Math.min(...prices);
             baseCostCents = Math.round(minPrice * 100);
-            console.log(`[SYNC-SINALITE] Product ${p.id}: Min price $${minPrice} -> ${baseCostCents} cents`);
+            console.log(`[SYNC-SINALITE] Product ${p.id} (${p.name}): $${minPrice.toFixed(2)} (${prices.length} valid prices)`);
           } else {
-            console.warn(`[SYNC-SINALITE] Product ${p.id}: No valid prices found in ${pricingCombos.length} combos`);
+            console.warn(`[SYNC-SINALITE] Product ${p.id} (${p.name}): No valid prices found`);
           }
         } else {
           console.warn(`[SYNC-SINALITE] Failed to fetch pricing for product ${p.id}: ${pricingResponse.status}`);
