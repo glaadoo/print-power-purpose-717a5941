@@ -41,9 +41,9 @@ serve(async (req) => {
       }
     }
 
-    console.log('Jotform webhook payload received:', JSON.stringify(payload).substring(0, 500));
-    console.log('Full payload keys:', Object.keys(payload));
-    console.log('Payload sample:', JSON.stringify(payload, null, 2).substring(0, 2000));
+    // console.log('Jotform webhook payload received:', JSON.stringify(payload).substring(0, 500));
+    // console.log('Full payload keys:', Object.keys(payload));
+    // console.log('Payload sample:', JSON.stringify(payload, null, 2).substring(0, 2000));
 
     // Verify webhook secret if configured
     if (webhookSecret) {
@@ -109,14 +109,14 @@ serve(async (req) => {
     const causeId = submission.causeId || findByKey('cause');
     const orderNumber = payload.submissionID || submission.submissionID || `JF-${Date.now()}`;
 
-    console.log('Parsed submission:', {
-      formType,
-      customerEmail,
-      amount,
-      donationAmount,
-      productName,
-      causeId
-    });
+    // console.log('Parsed submission:', {
+    //   formType,
+    //   customerEmail,
+    //   amount,
+    //   donationAmount,
+    //   productName,
+    //   causeId
+    // });
 
     // Create audit log entry
     await supabase.from('audit_log').insert({
@@ -138,7 +138,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingOrder) {
-      console.log('Submission already processed, skipping:', orderNumber);
+      // console.log('Submission already processed, skipping:', orderNumber);
       return new Response(
         JSON.stringify({ 
           success: true, 
