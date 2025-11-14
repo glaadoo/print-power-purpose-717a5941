@@ -25,7 +25,7 @@ serve(async (req) => {
     const clientId = Deno.env.get("SINALITE_CLIENT_ID");
     const clientSecret = Deno.env.get("SINALITE_CLIENT_SECRET");
     const authUrl = Deno.env.get("SINALITE_AUTH_URL");
-    const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinaliteuppy.com/product";
+    const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinaliteuppy.com";
     const audience = Deno.env.get("SINALITE_AUDIENCE");
 
     if (!clientId || !clientSecret || !authUrl || !audience) {
