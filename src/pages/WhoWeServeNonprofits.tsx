@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
-import KenzieBadge from "@/components/KenzieBadge";
+import GlassCard from "@/components/GlassCard";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUp } from "lucide-react";
 
 interface PageContent {
   h1: string;
@@ -18,6 +19,7 @@ interface PageContent {
 export default function WhoWeServeNonprofits() {
   const [content, setContent] = useState<PageContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -40,18 +42,51 @@ export default function WhoWeServeNonprofits() {
     fetchContent();
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="min-h-screen flex items-center justify-center text-white relative">
+        <div className="fixed inset-0">
+          <VideoBackground
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            overlay={<div className="absolute inset-0 bg-black/70" />}
+          />
+        </div>
+        <div className="relative text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-white mx-auto" />
+          <p className="mt-4 text-white/80">Loading content...</p>
+        </div>
       </div>
     );
   }
 
   if (!content) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-white">
-        Failed to load page content
+      <div className="min-h-screen flex items-center justify-center text-white relative">
+        <div className="fixed inset-0">
+          <VideoBackground
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            overlay={<div className="absolute inset-0 bg-black/70" />}
+          />
+        </div>
+        <GlassCard className="relative max-w-md">
+          <p className="text-center text-white/80">Content not available</p>
+        </GlassCard>
       </div>
     );
   }
@@ -135,8 +170,6 @@ export default function WhoWeServeNonprofits() {
             </section>
 
           </article>
-
-          <KenzieBadge />
 
         </div>
       </div>
