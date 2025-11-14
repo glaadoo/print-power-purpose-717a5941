@@ -197,9 +197,11 @@ export default function Products() {
                                   onPriceChange={(price) => handlePriceChange(product.id, price)}
                                   onConfigChange={(config) => handleConfigChange(product.id, config)}
                                 />
-                                <p className="text-2xl font-bold text-white">
-                                  Price: ${((configuredPrices[product.id] || unitCents) / 100).toFixed(2)}
-                                </p>
+                                {configuredPrices[product.id] && (
+                                  <p className="text-2xl font-bold text-white">
+                                    Price: ${(configuredPrices[product.id] / 100).toFixed(2)}
+                                  </p>
+                                )}
                               </div>
 
                               <div className="flex items-center gap-2 w-full justify-between py-2">
