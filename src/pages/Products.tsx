@@ -14,12 +14,18 @@ type ProductRow = {
   name: string;
   description?: string | null;
   base_cost_cents: number;
+  price_override_cents?: number | null;
   image_url?: string | null;
   category?: string | null;
 };
 
-const priceFromBase = (base?: number | null) =>
-  Math.max(100, Math.round((Number(base) || 0) * 1.6));
+const getProductPrice = (product: ProductRow) => {
+  // Use price override if available, otherwise calculate from base cost
+  if (product.price_override_cents && product.price_override_cents > 0) {
+    return product.price_override_cents;
+  }
+  return Math.max(100, Math.round((product.base_cost_cents || 0) * 1.6));
+};
 
 export default function Products() {
   const navigate = useNavigate();
@@ -47,7 +53,8 @@ export default function Products() {
       const { data, error } = await supabase
         .from("products")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("category", { ascending: true })
+        .order("name", { ascending: true });
       if (error) setErr(error.message);
       else setRows((data as ProductRow[]) ?? []);
       setLoading(false);
@@ -64,7 +71,7 @@ export default function Products() {
 
   const handleAddToCart = (product: ProductRow) => {
     const qty = quantities[product.id] || 1;
-    const unitCents = priceFromBase(product.base_cost_cents);
+    const unitCents = getProductPrice(product);
     
     add(
       {
@@ -80,66 +87,18 @@ export default function Products() {
     toast.success(`Added ${qty} ${product.name} to cart`);
   };
 
-  const productCards = useMemo(() => {
-    return rows.map((product) => {
-      const unitCents = priceFromBase(product.base_cost_cents);
-      const unitPrice = unitCents / 100;
-      const qty = quantities[product.id] || 0;
-
-      return (
-        <GlassCard key={product.id} padding="p-6">
-          <div className="flex flex-col items-center text-center space-y-3">
-            <h3 className="text-xl font-bold text-white">
-              {product.name}
-            </h3>
-            
-            {product.category && (
-              <p className="text-sm text-white/80">{product.category}</p>
-            )}
-            
-            <p className="text-3xl font-bold text-white">
-              ${unitPrice.toFixed(2)}
-            </p>
-
-            <div className="flex items-center justify-center gap-3 py-2">
-              <Button
-                size="icon"
-                variant="outline"
-                className="rounded-full w-10 h-10 border-white/50 bg-white/10 text-white hover:bg-white/20"
-                onClick={() => updateQuantity(product.id, -1)}
-                disabled={qty === 0}
-              >
-                <Minus className="w-4 h-4" />
-              </Button>
-              
-              <span className="text-2xl font-semibold text-white min-w-[3rem] text-center">
-                {qty}
-              </span>
-              
-              <Button
-                size="icon"
-                variant="outline"
-                className="rounded-full w-10 h-10 border-white/50 bg-white/10 text-white hover:bg-white/20"
-                onClick={() => updateQuantity(product.id, 1)}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <Button
-              onClick={() => handleAddToCart(product)}
-              disabled={qty === 0}
-              variant="outline"
-              className="w-full rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed py-4 text-sm"
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Add to Cart
-            </Button>
-          </div>
-        </GlassCard>
-      );
+  // Group products by category
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, ProductRow[]> = {};
+    rows.forEach(product => {
+      const category = product.category || "Uncategorized";
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(product);
     });
-  }, [rows, quantities]);
+    return groups;
+  }, [rows]);
 
   return (
     <div className="fixed inset-0 text-white">
@@ -202,8 +161,70 @@ export default function Products() {
             )}
 
             {!loading && !err && (
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
-                {productCards}
+              <div className="space-y-12">
+                {Object.entries(groupedProducts).map(([category, products]) => (
+                  <div key={category} className="space-y-6">
+                    <h2 className="text-3xl font-bold text-white uppercase tracking-wider border-b border-white/20 pb-3">
+                      {category}
+                    </h2>
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
+                      {products.map((product) => {
+                        const unitCents = getProductPrice(product);
+                        const unitPrice = unitCents / 100;
+                        const qty = quantities[product.id] || 0;
+
+                        return (
+                          <GlassCard key={product.id} padding="p-6">
+                            <div className="flex flex-col items-center text-center space-y-3">
+                              <h3 className="text-xl font-bold text-white">
+                                {product.name}
+                              </h3>
+                              
+                              <p className="text-3xl font-bold text-white">
+                                ${unitPrice.toFixed(2)}
+                              </p>
+
+                              <div className="flex items-center justify-center gap-3 py-2">
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="rounded-full w-10 h-10 border-white/50 bg-white/10 text-white hover:bg-white/20"
+                                  onClick={() => updateQuantity(product.id, -1)}
+                                  disabled={qty === 0}
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </Button>
+                                
+                                <span className="text-2xl font-semibold text-white min-w-[3rem] text-center">
+                                  {qty}
+                                </span>
+                                
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="rounded-full w-10 h-10 border-white/50 bg-white/10 text-white hover:bg-white/20"
+                                  onClick={() => updateQuantity(product.id, 1)}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+
+                              <Button
+                                onClick={() => handleAddToCart(product)}
+                                disabled={qty === 0}
+                                variant="outline"
+                                className="w-full rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <ShoppingCart className="w-4 h-4 mr-2" />
+                                Add to Cart
+                              </Button>
+                            </div>
+                          </GlassCard>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
