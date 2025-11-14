@@ -89,8 +89,8 @@ export default function Success() {
             />
           </div>
 
-          <div className="relative w-full max-w-2xl mx-auto z-10">
-            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 text-center">
+          <div className="relative w-full max-w-2xl mx-auto z-10 pointer-events-auto">
+            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 text-center pointer-events-auto">
               <div className="mb-6">
                 <svg className="w-20 h-20 mx-auto text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
