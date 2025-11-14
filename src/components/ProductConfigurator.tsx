@@ -9,6 +9,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { invokeWithRetry } from "@/lib/api-retry";
 
 type ProductOption = {
   id: number;
@@ -110,13 +111,21 @@ export function ProductConfigurator({
       try {
         console.log('[ProductConfigurator] Fetching price for options:', optionIds);
         
-        const { data, error } = await supabase.functions.invoke('sinalite-price', {
-          body: {
-            productId: vendorProductId,
-            storeCode: storeCode,
-            productOptions: optionIds,
+        const { data, error } = await invokeWithRetry(
+          supabase,
+          'sinalite-price',
+          {
+            body: {
+              productId: vendorProductId,
+              storeCode: storeCode,
+              productOptions: optionIds,
+            },
           },
-        });
+          {
+            maxAttempts: 2,
+            initialDelayMs: 500,
+          }
+        );
 
         if (error) {
           console.error('[ProductConfigurator] Price fetch error:', error);

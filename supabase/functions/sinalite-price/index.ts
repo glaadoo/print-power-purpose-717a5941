@@ -5,6 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Token cache to avoid re-authenticating on every request
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,36 +38,51 @@ serve(async (req) => {
       );
     }
 
-    // Authenticate
-    console.log("[SINALITE-PRICE] Authenticating...");
-    const authResponse = await fetch(authUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        audience: audience,
-        grant_type: "client_credentials",
-      }),
-    });
+    // Check for cached token
+    let accessToken = cachedToken?.token;
+    const now = Date.now();
 
-    if (!authResponse.ok) {
-      console.error("[SINALITE-PRICE] Auth failed:", authResponse.status);
-      return new Response(
-        JSON.stringify({ error: "Authentication failed" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    if (!accessToken || !cachedToken || cachedToken.expiresAt <= now) {
+      // Authenticate
+      console.log("[SINALITE-PRICE] Authenticating...");
+      const authResponse = await fetch(authUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          audience: audience,
+          grant_type: "client_credentials",
+        }),
+      });
 
-    const authData = await authResponse.json();
-    const accessToken = authData.access_token;
+      if (!authResponse.ok) {
+        console.error("[SINALITE-PRICE] Auth failed:", authResponse.status);
+        return new Response(
+          JSON.stringify({ error: "Authentication failed" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
 
-    if (!accessToken) {
-      console.error("[SINALITE-PRICE] No access token received");
-      return new Response(
-        JSON.stringify({ error: "No access token" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      const authData = await authResponse.json();
+      accessToken = authData.access_token;
+
+      if (!accessToken) {
+        console.error("[SINALITE-PRICE] No access token received");
+        return new Response(
+          JSON.stringify({ error: "No access token" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // Cache token for 50 minutes (tokens typically last 1 hour)
+      cachedToken = {
+        token: accessToken,
+        expiresAt: now + (50 * 60 * 1000),
+      };
+      console.log("[SINALITE-PRICE] Token cached");
+    } else {
+      console.log("[SINALITE-PRICE] Using cached token");
     }
 
     // Call pricing API - remove /product prefix if present
