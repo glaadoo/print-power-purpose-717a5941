@@ -21,6 +21,14 @@ type OptionGroup = {
   options: ProductOption[];
 };
 
+type PackageInfo = {
+  "total weight"?: string;
+  "weight per box"?: string;
+  "Units Per Box"?: string;
+  "box size"?: string;
+  "number of boxes"?: string;
+};
+
 type ProductConfiguratorProps = {
   productId: string;
   vendorProductId: string;
@@ -28,6 +36,7 @@ type ProductConfiguratorProps = {
   pricingData: any;
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
+  onPackageInfoChange?: (info: PackageInfo | null) => void;
 };
 
 export function ProductConfigurator({
@@ -37,6 +46,7 @@ export function ProductConfigurator({
   pricingData,
   onPriceChange,
   onConfigChange,
+  onPackageInfoChange,
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
@@ -118,6 +128,11 @@ export function ProductConfigurator({
           const priceCents = Math.round(priceFloat * 100);
           console.log('[ProductConfigurator] Price received:', { price: data.price, priceCents });
           onPriceChange(priceCents);
+          
+          // Pass package info to parent if available
+          if (onPackageInfoChange && data.packageInfo) {
+            onPackageInfoChange(data.packageInfo);
+          }
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
         }
