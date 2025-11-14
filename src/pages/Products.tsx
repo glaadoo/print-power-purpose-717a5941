@@ -52,7 +52,7 @@ export default function Products() {
       setErr(null);
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category")
         .order("category", { ascending: true })
         .order("name", { ascending: true });
       if (error) setErr(error.message);
