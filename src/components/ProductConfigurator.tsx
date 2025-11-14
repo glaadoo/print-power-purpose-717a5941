@@ -26,10 +26,20 @@ export function ProductConfigurator({
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
 
-  // Parse pricing combinations
+  // Parse pricing combinations from SinaLite structure
   const pricingCombos: PricingCombo[] = useMemo(() => {
     if (!pricingData || !Array.isArray(pricingData)) return [];
+    
+    // SinaLite structure: [0] = options array, [1] = combinations array
     const combos = pricingData[1] || [];
+    
+    // Check if combos have the expected attributes field
+    const hasAttributes = combos.length > 0 && combos[0]?.attributes;
+    
+    if (!hasAttributes) {
+      console.warn('[ProductConfigurator] Pricing data lacks attribute mappings. Cannot build configurator.');
+      return [];
+    }
     
     return combos
       .filter((combo: any) => {
