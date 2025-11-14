@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useCause } from "../context/CauseContext";
@@ -13,6 +13,7 @@ export default function Success() {
   const { clear: clearCart } = useCart();
   const { cause } = useCause();
   const causeName = (cause as any)?.name;
+  const [orderInfo, setOrderInfo] = useState<{ order_number?: string; order_id?: string } | null>(null);
 
   useEffect(() => {
     // Clear cart & any pending checkout selection so badges/state reset immediately.
@@ -28,7 +29,10 @@ export default function Success() {
     if (!sessionId) return;
     (async () => {
       try {
-        await supabase.functions.invoke('verify-checkout', { body: { session_id: sessionId } });
+        const { data, error } = await supabase.functions.invoke('verify-checkout', { body: { session_id: sessionId } });
+        if (!error && data) {
+          setOrderInfo(data as any);
+        }
       } catch (e) {
         console.error('Finalize order failed', e);
       }
@@ -105,7 +109,14 @@ export default function Success() {
                 {causeName ? `Thank you for supporting ${causeName}!` : "Thank you for your support."}
               </p>
 
-              {sessionId && (
+              {orderInfo?.order_number && (
+                <div className="mt-6 p-4 rounded-lg bg-white/10 border border-white/20">
+                  <p className="text-sm opacity-70 mb-1">Your Order Number:</p>
+                  <p className="text-2xl font-semibold tracking-wider">{orderInfo.order_number}</p>
+                </div>
+              )}
+
+              {!orderInfo?.order_number && sessionId && (
                 <p className="mt-4 text-sm opacity-70">Session ID: {sessionId}</p>
               )}
 
