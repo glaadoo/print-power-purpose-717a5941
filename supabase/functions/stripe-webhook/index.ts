@@ -1,26 +1,48 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import Stripe from 'https://esm.sh/stripe@14.21.0';
+import Stripe from 'https://esm.sh/stripe@18.5.0';
 import { Resend } from 'https://esm.sh/resend@4.0.0';
 
 const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
 const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
 
+// Enhanced logging for production debugging
+const log = (level: 'info' | 'warn' | 'error', message: string, data?: any) => {
+  const timestamp = new Date().toISOString();
+  const logData = data ? ` | ${JSON.stringify(data)}` : '';
+  console.log(`[${timestamp}] [${level.toUpperCase()}] ${message}${logData}`);
+};
+
 serve(async (req) => {
   const signature = req.headers.get('stripe-signature');
   
-  if (!signature || !webhookSecret) {
-    return new Response('Missing signature or webhook secret', { status: 400 });
+  if (!signature) {
+    log('error', 'Missing Stripe signature header');
+    return new Response(JSON.stringify({ error: 'Missing Stripe signature' }), { 
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  if (!webhookSecret) {
+    log('error', 'STRIPE_WEBHOOK_SECRET not configured');
+    return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   try {
     const stripe = new Stripe(stripeKey, {
-      apiVersion: '2023-10-16',
+      apiVersion: '2025-08-27.basil',
       httpClient: Stripe.createFetchHttpClient(),
     });
 
     const body = await req.text();
+    
+    // Verify webhook signature - critical security step
+    log('info', 'Verifying webhook signature');
     const event = await stripe.webhooks.constructEventAsync(
       body,
       signature,
@@ -29,7 +51,7 @@ serve(async (req) => {
       Stripe.createSubtleCryptoProvider()
     );
 
-    console.log('Webhook event type:', event.type);
+    log('info', 'Webhook verified successfully', { eventType: event.type, eventId: event.id });
 
     // Handle checkout.session.completed
     if (event.type === 'checkout.session.completed') {
