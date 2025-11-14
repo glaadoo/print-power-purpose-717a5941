@@ -35,7 +35,7 @@ export default function VideoBackground({
   );
 
   return (
-    <div ref={ref} className={`absolute inset-0 -z-10 overflow-hidden ${className}`}>
+    <div ref={ref} className={`absolute inset-0 -z-10 overflow-hidden pointer-events-none ${className}`}>
       <motion.video
         style={{ y }}
         className="w-full h-full object-cover"
