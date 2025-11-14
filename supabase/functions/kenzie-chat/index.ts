@@ -1,6 +1,20 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Input validation schema
+const chatRequestSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string().trim().min(1).max(10000, { message: "Message too long (max 10,000 characters)" })
+  })).min(1, { message: "At least one message required" }),
+  userContext: z.object({
+    email: z.string().email().optional(),
+    orderId: z.string().optional()
+  }).optional(),
+  action: z.string().optional()
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -94,10 +108,31 @@ serve(async (req) => {
   }
 
   try {
+    // Validate input with Zod
     const body = await req.json();
+    let validatedData;
+    
+    try {
+      validatedData = chatRequestSchema.parse(body);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error('[VALIDATION] Input validation failed:', error.errors);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Invalid input data',
+            details: error.errors.map(e => ({ path: e.path.join('.'), message: e.message }))
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      throw error;
+    }
     
     // SECURITY: Explicitly disable any admin or sensitive actions
-    if (body.action === 'fetch_orders' || body.action === 'admin' || body.action === 'internal') {
+    if (validatedData.action === 'fetch_orders' || validatedData.action === 'admin' || validatedData.action === 'internal') {
       return new Response(
         JSON.stringify({ error: 'This action is not available via this endpoint.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -114,7 +149,7 @@ serve(async (req) => {
       throw new Error('Session ID is required');
     }
 
-    const { messages, userContext } = body;
+    const { messages, userContext } = validatedData;
     
     // Initialize Supabase client for safe read-only operations
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

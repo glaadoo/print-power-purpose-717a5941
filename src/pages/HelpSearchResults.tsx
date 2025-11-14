@@ -67,10 +67,26 @@ export default function HelpSearchResults() {
     }
   };
 
-  const highlightMatch = (text: string) => {
-    if (!query) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
-    return text.replace(regex, '<mark class="bg-primary/30 text-foreground">$1</mark>');
+  // Secure highlighting component to prevent XSS
+  const HighlightedText = ({ text }: { text: string }) => {
+    if (!query) return <>{text}</>;
+    
+    try {
+      const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      const parts = text.split(regex);
+      
+      return (
+        <>
+          {parts.map((part, i) => 
+            part.toLowerCase() === query.toLowerCase() ? 
+              <mark key={i} className="bg-primary/30 text-foreground">{part}</mark> : 
+              part
+          )}
+        </>
+      );
+    } catch {
+      return <>{text}</>;
+    }
   };
 
   const groupedResults = {
@@ -89,14 +105,12 @@ export default function HelpSearchResults() {
                 {result.type}
               </span>
             </div>
-            <h3 
-              className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors"
-              dangerouslySetInnerHTML={{ __html: highlightMatch(result.title) }}
-            />
-            <p 
-              className="text-sm text-muted-foreground line-clamp-2"
-              dangerouslySetInnerHTML={{ __html: highlightMatch(result.excerpt) }}
-            />
+            <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+              <HighlightedText text={result.title} />
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              <HighlightedText text={result.excerpt} />
+            </p>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
         </div>
