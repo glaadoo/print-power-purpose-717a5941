@@ -20,7 +20,7 @@ class RouteBoundary extends React.Component<
     return { error };
   }
   componentDidCatch(error: any) {
-    // console.error(`[RouteBoundary] ${this.props.name} crashed:`, error);
+    // Error caught by boundary
   }
   render() {
     if (this.state.error) {
@@ -51,7 +51,6 @@ function lazyPage<T extends { default: React.ComponentType<any> }>(
       const mod = await loader();
       return mod;
     } catch (e) {
-      // console.error(`Failed to load ${label}`, e);
       throw e;
     }
   });
@@ -162,10 +161,10 @@ function NotFound() {
 export default function App() {
   useEffect(() => {
     const onError = (ev: ErrorEvent) => {
-      // console.error("Application error:", ev.message, ev.error);
+      // Error handler placeholder
     };
     const onRejection = (ev: PromiseRejectionEvent) => {
-      // console.error("Unhandled promise rejection:", ev.reason);
+      // Rejection handler placeholder
     };
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
@@ -176,11 +175,6 @@ export default function App() {
   }, []);
 
   const location = useLocation();
-
-  // Debug: Log current page
-  useEffect(() => {
-    // console.log("📍 Current page:", location.pathname);
-  }, [location.pathname]);
 
   return (
     <>
