@@ -7,147 +7,203 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
-type PricingCombo = {
-  value: string;
-  attributes: Record<string, string>;
+type ProductOption = {
+  id: number;
+  group: string;
+  name: string;
+};
+
+type OptionGroup = {
+  group: string;
+  options: ProductOption[];
 };
 
 type ProductConfiguratorProps = {
+  productId: string;
+  vendorProductId: string;
+  storeCode: number;
   pricingData: any;
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
 };
 
 export function ProductConfigurator({
+  productId,
+  vendorProductId,
+  storeCode,
   pricingData,
   onPriceChange,
   onConfigChange,
 }: ProductConfiguratorProps) {
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
+  const [fetchingPrice, setFetchingPrice] = useState(false);
 
-  // Parse pricing combinations from SinaLite structure
-  const pricingCombos: PricingCombo[] = useMemo(() => {
-    if (!pricingData || !Array.isArray(pricingData)) return [];
-    
-    // SinaLite structure: [0] = options array, [1] = combinations array
-    const combos = pricingData[1] || [];
-    
-    // Check if combos have the expected attributes field
-    const hasAttributes = combos.length > 0 && combos[0]?.attributes;
-    
-    if (!hasAttributes) {
-      console.warn('[ProductConfigurator] Pricing data lacks attribute mappings. Cannot build configurator.');
+  // Parse product options from SinaLite structure
+  const optionGroups: OptionGroup[] = useMemo(() => {
+    if (!pricingData || !Array.isArray(pricingData)) {
+      console.warn('[ProductConfigurator] Invalid pricing data structure');
       return [];
     }
     
-    return combos
-      .filter((combo: any) => {
-        const price = parseFloat(combo.value);
-        return !isNaN(price) && price >= 1 && price <= 10000;
-      })
-      .map((combo: any) => ({
-        value: combo.value,
-        attributes: combo.attributes || {},
-      }));
+    // SinaLite structure: [0] = options array, [1] = combinations, [2] = metadata
+    const options: ProductOption[] = pricingData[0] || [];
+    
+    if (options.length === 0) {
+      console.warn('[ProductConfigurator] No options found in pricing data');
+      return [];
+    }
+
+    // Group options by their "group" field
+    const groupMap: Record<string, ProductOption[]> = {};
+    options.forEach((option) => {
+      if (!option.group) return;
+      if (!groupMap[option.group]) {
+        groupMap[option.group] = [];
+      }
+      groupMap[option.group].push(option);
+    });
+
+    // Convert to array of groups
+    return Object.entries(groupMap).map(([group, opts]) => ({
+      group,
+      options: opts,
+    }));
   }, [pricingData]);
 
-  // Extract unique option categories and their values
-  const optionCategories = useMemo(() => {
-    const categories: Record<string, Set<string>> = {};
-
-    pricingCombos.forEach((combo) => {
-      Object.entries(combo.attributes).forEach(([key, value]) => {
-        if (!categories[key]) {
-          categories[key] = new Set();
-        }
-        if (value && String(value).trim()) {
-          categories[key].add(String(value));
-        }
-      });
-    });
-
-    // Convert Sets to sorted arrays
-    const result: Record<string, string[]> = {};
-    Object.entries(categories).forEach(([key, values]) => {
-      result[key] = Array.from(values).sort();
-    });
-
-    return result;
-  }, [pricingCombos]);
-
-  // Initialize with first available options
+  // Initialize with first option from each group
   useEffect(() => {
-    const initial: Record<string, string> = {};
-    Object.entries(optionCategories).forEach(([key, values]) => {
-      if (values.length > 0) {
-        initial[key] = values[0];
+    if (optionGroups.length === 0) return;
+
+    const initial: Record<string, number> = {};
+    optionGroups.forEach((group) => {
+      if (group.options.length > 0) {
+        initial[group.group] = group.options[0].id;
       }
     });
+
     setSelectedOptions(initial);
-  }, [optionCategories]);
+  }, [optionGroups]);
 
-  // Calculate price based on selected options
+  // Fetch price whenever selections change
   useEffect(() => {
-    const matchingCombo = pricingCombos.find((combo) => {
-      return Object.entries(selectedOptions).every(
-        ([key, value]) => combo.attributes[key] === value
-      );
-    });
+    const optionIds = Object.values(selectedOptions);
+    
+    // Only fetch if we have selections for all groups
+    if (optionIds.length !== optionGroups.length) return;
+    if (optionIds.some(id => !id)) return;
 
-    if (matchingCombo) {
-      const priceCents = Math.round(parseFloat(matchingCombo.value) * 100);
-      onPriceChange(priceCents);
-      onConfigChange(selectedOptions);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOptions, pricingCombos]);
+    const fetchPrice = async () => {
+      setFetchingPrice(true);
+      try {
+        console.log('[ProductConfigurator] Fetching price for options:', optionIds);
+        
+        const { data, error } = await supabase.functions.invoke('sinalite-price', {
+          body: {
+            productId: vendorProductId,
+            storeCode: storeCode,
+            productOptions: optionIds,
+          },
+        });
 
-  const handleOptionChange = (category: string, value: string) => {
+        if (error) {
+          console.error('[ProductConfigurator] Price fetch error:', error);
+          return;
+        }
+
+        if (data && data.price) {
+          const priceFloat = parseFloat(data.price);
+          const priceCents = Math.round(priceFloat * 100);
+          console.log('[ProductConfigurator] Price received:', { price: data.price, priceCents });
+          onPriceChange(priceCents);
+        } else {
+          console.warn('[ProductConfigurator] No price in response:', data);
+        }
+      } catch (err) {
+        console.error('[ProductConfigurator] Price fetch exception:', err);
+      } finally {
+        setFetchingPrice(false);
+      }
+    };
+
+    fetchPrice();
+  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode]);
+
+  const handleOptionChange = (group: string, optionId: string) => {
+    const id = parseInt(optionId, 10);
     setSelectedOptions((prev) => ({
       ...prev,
-      [category]: value,
+      [group]: id,
     }));
+
+    // Update config for parent
+    const optionName = optionGroups
+      .find(g => g.group === group)
+      ?.options.find(o => o.id === id)?.name || optionId;
+    
+    onConfigChange({
+      ...Object.fromEntries(
+        Object.entries(selectedOptions).map(([g, oId]) => {
+          const name = optionGroups
+            .find(og => og.group === g)
+            ?.options.find(o => o.id === oId)?.name || String(oId);
+          return [g, name];
+        })
+      ),
+      [group]: optionName,
+    });
   };
 
-  // Format category name for display
-  const formatCategoryName = (key: string) => {
-    return key
+  // Format group name for display
+  const formatGroupName = (group: string) => {
+    return group
       .split(/[-_]/)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 
-  if (Object.keys(optionCategories).length === 0) {
-    return null;
+  if (optionGroups.length === 0) {
+    return (
+      <div className="text-sm text-white/70 space-y-2 p-3 bg-amber-900/20 border border-amber-600/30 rounded">
+        <p className="font-semibold">⚠️ Configuration unavailable</p>
+        <p className="text-xs">This product's pricing data doesn't include configurable options.</p>
+        <p className="text-xs">The product can still be ordered at the base price shown above.</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-3 w-full">
-      <h3 className="text-sm font-semibold text-foreground mb-2">Price this item:</h3>
-      {Object.entries(optionCategories).map(([category, values]) => (
-        <div key={category} className="space-y-2">
-          <Label htmlFor={category} className="text-foreground font-medium">
-            {formatCategoryName(category)}
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground">Configure Options:</h3>
+        {fetchingPrice && <Loader2 className="h-4 w-4 animate-spin text-white/60" />}
+      </div>
+      
+      {optionGroups.map((group) => (
+        <div key={group.group} className="space-y-2">
+          <Label htmlFor={group.group} className="text-foreground font-medium">
+            {formatGroupName(group.group)}
           </Label>
           <Select
-            value={selectedOptions[category] || ""}
-            onValueChange={(value) => handleOptionChange(category, value)}
+            value={String(selectedOptions[group.group] || "")}
+            onValueChange={(value) => handleOptionChange(group.group, value)}
           >
             <SelectTrigger
-              id={category}
-              className="w-full bg-white/90 text-black border-white/20 focus:ring-2 focus:ring-white/40 z-50"
+              id={group.group}
+              className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40 z-50"
             >
-              <SelectValue placeholder={`Select ${formatCategoryName(category)}`} />
+              <SelectValue placeholder={`Select ${formatGroupName(group.group)}`} />
             </SelectTrigger>
             <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
-              {values.map((value) => (
+              {group.options.map((option) => (
                 <SelectItem
-                  key={value}
-                  value={value}
+                  key={option.id}
+                  value={String(option.id)}
                   className="cursor-pointer hover:bg-gray-100"
                 >
-                  {value}
+                  {option.name}
                 </SelectItem>
               ))}
             </SelectContent>
