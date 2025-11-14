@@ -23,13 +23,20 @@ export default function ProductConfiguratorLoader({
     if (pricingData || loading) return;
     setLoading(true);
     setError(null);
+    console.log('[ProductConfiguratorLoader] Fetching pricing for product:', productId);
     const { data, error } = await supabase
       .from("products")
       .select("pricing_data")
       .eq("id", productId)
       .maybeSingle();
-    if (error) setError(error.message);
-    else setPricingData(data?.pricing_data ?? null);
+    console.log('[ProductConfiguratorLoader] Response:', { data, error });
+    if (error) {
+      console.error('[ProductConfiguratorLoader] Error:', error);
+      setError(error.message);
+    } else {
+      console.log('[ProductConfiguratorLoader] Pricing data:', data?.pricing_data);
+      setPricingData(data?.pricing_data ?? null);
+    }
     setLoading(false);
   };
 
@@ -58,22 +65,35 @@ export default function ProductConfiguratorLoader({
       )}
 
       {visible && (
-        <div className="w-full">
+        <div className="w-full space-y-2">
           {loading && <p className="text-sm text-white/80">Loading options…</p>}
           {error && (
             <p className="text-sm text-red-300">Failed to load options: {error}</p>
           )}
-          {pricingData && Array.isArray(pricingData) && pricingData.length > 0 ? (
-            <ProductConfigurator
-              pricingData={pricingData}
-              onPriceChange={onPriceChange}
-              onConfigChange={onConfigChange}
-            />
-          ) : (
-            !loading && !error && (
-              <p className="text-sm text-white/70">No configurable options available.</p>
-            )
-          )}
+          {!loading && !error && pricingData && Array.isArray(pricingData) && pricingData.length > 0 ? (
+            <div className="space-y-2">
+              <ProductConfigurator
+                pricingData={pricingData}
+                onPriceChange={onPriceChange}
+                onConfigChange={onConfigChange}
+              />
+              <details className="text-xs text-white/50">
+                <summary className="cursor-pointer hover:text-white/70">Debug Info</summary>
+                <div className="mt-2 p-2 bg-black/30 rounded">
+                  <p>Pricing data structure: {pricingData.length} elements</p>
+                  <p>Options: {pricingData[0]?.length || 0}</p>
+                  <p>Combinations: {pricingData[1]?.length || 0}</p>
+                  <p>Has attributes: {pricingData[1]?.[0]?.attributes ? 'Yes' : 'No'}</p>
+                </div>
+              </details>
+            </div>
+          ) : !loading && !error ? (
+            <div className="text-sm text-white/70 space-y-2 p-3 bg-amber-900/20 border border-amber-600/30 rounded">
+              <p className="font-semibold">⚠️ Configuration unavailable</p>
+              <p className="text-xs">This product's pricing data doesn't include option-to-price mappings needed for the configurator.</p>
+              <p className="text-xs">The product can still be ordered at the base price shown above.</p>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
