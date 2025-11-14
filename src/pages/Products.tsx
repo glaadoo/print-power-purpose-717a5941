@@ -18,9 +18,6 @@ type ProductRow = {
   price_override_cents?: number | null;
   image_url?: string | null;
   category?: string | null;
-  pricing_data?: any;
-  vendor_product_id?: string | null;
-  vendor?: string | null;
 };
 
 const getProductPrice = (product: ProductRow) => {
@@ -58,7 +55,7 @@ export default function Products() {
       setErr(null);
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, pricing_data, vendor_product_id, vendor")
+        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category")
         .order("category", { ascending: true })
         .order("name", { ascending: true });
       if (error) setErr(error.message);
@@ -197,9 +194,6 @@ export default function Products() {
                               <div className="w-full space-y-3">
                                 <ProductConfiguratorLoader
                                   productId={product.id}
-                                  pricingData={product.pricing_data}
-                                  vendorProductId={product.vendor_product_id || product.id}
-                                  vendor={product.vendor || 'sinalite'}
                                   onPriceChange={(price) => handlePriceChange(product.id, price)}
                                   onConfigChange={(config) => handleConfigChange(product.id, config)}
                                 />
