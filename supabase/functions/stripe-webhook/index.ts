@@ -342,9 +342,19 @@ serve(async (req) => {
     });
 
   } catch (err) {
-    console.error('Webhook error:', err);
+    // Log detailed error server-side only
+    console.error('Webhook processing failed:', {
+      error: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      type: err?.constructor?.name
+    });
+    
+    // Return generic error to client
     return new Response(
-      JSON.stringify({ error: 'Webhook handler failed' }),
+      JSON.stringify({ 
+        error: 'Webhook processing failed',
+        code: 'WEBHOOK_ERROR'
+      }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }

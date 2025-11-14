@@ -239,10 +239,23 @@ Remember: Stay helpful, stay safe, stay within public boundaries.`;
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
     });
   } catch (error) {
-    console.error('kenzie-chat error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Log detailed error server-side only
+    console.error('Chat processing failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      type: error?.constructor?.name
     });
+    
+    // Return generic error to client
+    return new Response(
+      JSON.stringify({ 
+        error: 'Unable to process your message. Please try again.',
+        code: 'CHAT_ERROR'
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
 });

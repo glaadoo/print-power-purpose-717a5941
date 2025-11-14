@@ -80,10 +80,19 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in verify-admin-key:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Log detailed error server-side only
+    console.error('Admin verification failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    // Return generic error to client
     return new Response(
-      JSON.stringify({ error: errorMessage, valid: false }),
+      JSON.stringify({ 
+        valid: false, 
+        error: 'Verification failed',
+        code: 'AUTH_ERROR'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
