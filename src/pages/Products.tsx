@@ -187,45 +187,61 @@ export default function Products() {
 
                         return (
                           <GlassCard key={product.id} padding="p-6">
-                            <div className="flex flex-col items-center text-center space-y-3">
-                              <h3 className="text-xl font-bold text-white">
+                            <div className="flex flex-col items-start text-left space-y-4 w-full">
+                              <h3 className="text-lg font-bold text-white w-full">
                                 {product.name}
                               </h3>
                               
-                              <p className="text-3xl font-bold text-white">
-                                ${unitPrice.toFixed(2)}
-                              </p>
+                              {product.pricing_data && Array.isArray(product.pricing_data) && product.pricing_data.length > 0 ? (
+                                <div className="w-full space-y-3">
+                                  <ProductConfigurator
+                                    pricingData={product.pricing_data}
+                                    onPriceChange={(price) => handlePriceChange(product.id, price)}
+                                    onConfigChange={(config) => handleConfigChange(product.id, config)}
+                                  />
+                                  <p className="text-2xl font-bold text-white">
+                                    Price: ${((configuredPrices[product.id] || unitCents) / 100).toFixed(2)}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="text-2xl font-bold text-white">
+                                  ${unitPrice.toFixed(2)}
+                                </p>
+                              )}
 
-                              <div className="flex items-center justify-center gap-3 py-2">
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  className="rounded-full w-10 h-10 border-white/50 bg-white/10 text-white hover:bg-white/20"
-                                  onClick={() => updateQuantity(product.id, -1)}
-                                  disabled={qty === 0}
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </Button>
-                                
-                                <span className="text-2xl font-semibold text-white min-w-[3rem] text-center">
-                                  {qty}
-                                </span>
-                                
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  className="rounded-full w-10 h-10 border-white/50 bg-white/10 text-white hover:bg-white/20"
-                                  onClick={() => updateQuantity(product.id, 1)}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </Button>
+                              <div className="flex items-center gap-2 w-full justify-between py-2">
+                                <span className="text-sm text-white/80">Quantity:</span>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-8 w-8 rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
+                                    onClick={() => updateQuantity(product.id, -1)}
+                                    disabled={qty === 0}
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </Button>
+                                  
+                                  <span className="text-lg font-semibold text-white min-w-[2.5rem] text-center">
+                                    {qty}
+                                  </span>
+                                  
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-8 w-8 rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
+                                    onClick={() => updateQuantity(product.id, 1)}
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </Button>
+                                </div>
                               </div>
 
                               <Button
                                 onClick={() => handleAddToCart(product)}
                                 disabled={qty === 0}
                                 variant="outline"
-                                className="w-full rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full rounded-lg border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                               >
                                 <ShoppingCart className="w-4 h-4 mr-2" />
                                 Add to Cart
