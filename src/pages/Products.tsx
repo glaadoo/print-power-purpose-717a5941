@@ -18,6 +18,7 @@ type ProductRow = {
   price_override_cents?: number | null;
   image_url?: string | null;
   category?: string | null;
+  pricing_data?: any;
 };
 
 const getProductPrice = (product: ProductRow) => {
@@ -55,7 +56,7 @@ export default function Products() {
       setErr(null);
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category")
+        .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, pricing_data")
         .order("category", { ascending: true })
         .order("name", { ascending: true });
       if (error) setErr(error.message);
@@ -73,6 +74,17 @@ export default function Products() {
   };
 
   const handleAddToCart = (product: ProductRow) => {
+    const requiresConfiguration = product.pricing_data && 
+      Array.isArray(product.pricing_data) && 
+      product.pricing_data.length > 0;
+    const isConfigured = !!configuredPrices[product.id];
+    
+    // Don't allow add to cart if configuration is required but not done
+    if (requiresConfiguration && !isConfigured) {
+      toast.error("Please configure product options first");
+      return;
+    }
+    
     const qty = quantities[product.id] || 1;
     const unitCents = configuredPrices[product.id] || getProductPrice(product);
     
@@ -183,6 +195,12 @@ export default function Products() {
                         const unitCents = getProductPrice(product);
                         const unitPrice = unitCents / 100;
                         const qty = quantities[product.id] || 0;
+                        
+                        const requiresConfiguration = product.pricing_data && 
+                          Array.isArray(product.pricing_data) && 
+                          product.pricing_data.length > 0;
+                        const isConfigured = !!configuredPrices[product.id];
+                        const canAddToCart = !requiresConfiguration || isConfigured;
 
                         return (
                           <GlassCard key={product.id} padding="p-6">
@@ -232,9 +250,15 @@ export default function Products() {
                                 </div>
                               </div>
 
+                              {requiresConfiguration && !isConfigured && (
+                                <p className="text-xs text-yellow-300 w-full">
+                                  Configure options above before adding to cart
+                                </p>
+                              )}
+
                               <Button
                                 onClick={() => handleAddToCart(product)}
-                                disabled={qty === 0}
+                                disabled={qty === 0 || !canAddToCart}
                                 variant="outline"
                                 className="w-full rounded-lg border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                               >

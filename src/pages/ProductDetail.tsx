@@ -55,12 +55,19 @@ export default function ProductDetail() {
     document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
   }, [product]);
 
-  const unitCents = configuredPriceCents ?? priceFromBase(product?.base_cost_cents);
+  // Check if product requires configuration
+  const requiresConfiguration = product?.pricing_data && 
+    Array.isArray(product.pricing_data) && 
+    product.pricing_data.length > 0;
+  
+  const isConfigured = configuredPriceCents !== null;
+  const canAddToCart = !requiresConfiguration || isConfigured;
 
+  const unitCents = configuredPriceCents ?? priceFromBase(product?.base_cost_cents);
   const unitPrice = unitCents / 100;
 
   function handleAddToCart() {
-    if (!product) return;
+    if (!product || !canAddToCart) return;
     add(
       {
         id: product.id,
@@ -202,22 +209,30 @@ export default function ProductDetail() {
                       />
                     </div>
 
+                    {requiresConfiguration && !isConfigured && (
+                      <p className="text-sm text-yellow-300 mb-3">
+                        Please select product options above before adding to cart
+                      </p>
+                    )}
+
                     <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-                      <button
+                      <Button
                         onClick={handleAddToCart}
-                        className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors"
+                        disabled={!canAddToCart}
+                        className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Add to Cart
-                      </button>
+                      </Button>
 
-                      <button
+                      <Button
                         onClick={() =>
                           nav("/checkout", { state: { productId: product.id, qty } })
                         }
-                        className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors"
+                        disabled={!canAddToCart}
+                        className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Checkout
-                      </button>
+                      </Button>
                     </div>
 
                     <button
