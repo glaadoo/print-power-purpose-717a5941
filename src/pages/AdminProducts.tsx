@@ -10,27 +10,33 @@ export default function AdminProducts() {
   const navigate = useNavigate();
   const [syncing, setSyncing] = useState<string | null>(null);
   const [syncResults, setSyncResults] = useState<Record<string, any>>({});
+  const [selectedStore, setSelectedStore] = useState<6 | 9>(9); // Default to US
 
-  const handleSync = async (vendor: string, functionName: string) => {
-    setSyncing(vendor);
-    setSyncResults((prev) => ({ ...prev, [vendor]: null }));
+  const handleSync = async (vendor: string, functionName: string, storeCode?: number) => {
+    const syncKey = storeCode ? `${vendor}-${storeCode}` : vendor;
+    setSyncing(syncKey);
+    setSyncResults((prev) => ({ ...prev, [syncKey]: null }));
     
     try {
-      const { data, error } = await supabase.functions.invoke(functionName);
+      const body = storeCode ? { storeCode } : undefined;
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body
+      });
       
       if (error) throw error;
       
-      setSyncResults((prev) => ({ ...prev, [vendor]: data }));
+      setSyncResults((prev) => ({ ...prev, [syncKey]: data }));
       
       if (data?.success) {
-        toast.success(`${vendor}: Synced ${data.synced} products successfully!`);
+        const storeInfo = data.store ? ` (${data.store})` : '';
+        toast.success(`${vendor}${storeInfo}: Synced ${data.synced} products successfully!`);
       } else {
         toast.warning(`${vendor}: ${data?.note || "Sync completed with issues"}`);
       }
     } catch (error: any) {
       console.error(`Error syncing ${vendor}:`, error);
       toast.error(`Failed to sync ${vendor}: ${error.message}`);
-      setSyncResults((prev) => ({ ...prev, [vendor]: { success: false, error: error.message } }));
+      setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
     } finally {
       setSyncing(null);
     }
@@ -86,13 +92,46 @@ export default function AdminProducts() {
                 <CardDescription className="text-white/70">{vendor.description}</CardDescription>
               </CardHeader>
               <CardContent>
+                {vendor.name === "SinaLite" && (
+                  <div className="mb-3">
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => setSelectedStore(9)}
+                        variant={selectedStore === 9 ? "default" : "outline"}
+                        size="sm"
+                        className={selectedStore === 9 
+                          ? "flex-1 bg-blue-500 hover:bg-blue-600 text-white" 
+                          : "flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                        }
+                      >
+                        US Store
+                      </Button>
+                      <Button
+                        onClick={() => setSelectedStore(6)}
+                        variant={selectedStore === 6 ? "default" : "outline"}
+                        size="sm"
+                        className={selectedStore === 6 
+                          ? "flex-1 bg-blue-500 hover:bg-blue-600 text-white" 
+                          : "flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                        }
+                      >
+                        Canada Store
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
                 <Button
-                  onClick={() => handleSync(vendor.name, vendor.functionName)}
+                  onClick={() => handleSync(
+                    vendor.name, 
+                    vendor.functionName,
+                    vendor.name === "SinaLite" ? selectedStore : undefined
+                  )}
                   disabled={syncing !== null}
                   className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
                   variant="outline"
                 >
-                  {syncing === vendor.name ? (
+                  {syncing === `${vendor.name}-${selectedStore}` || syncing === vendor.name ? (
                     <>
                       <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                       Syncing...
@@ -105,46 +144,36 @@ export default function AdminProducts() {
                   )}
                 </Button>
 
-                {syncResults[vendor.name] && (
-                  <div className={`mt-3 p-3 rounded-lg text-sm ${
-                    syncResults[vendor.name].success 
-                      ? "bg-green-900/30 border border-green-500/50 text-green-100"
-                      : "bg-yellow-900/30 border border-yellow-500/50 text-yellow-100"
-                  }`}>
-                    {syncResults[vendor.name].success ? (
-                      <div>
-                        <div className="font-semibold">✓ Success</div>
-                        <div>Synced {syncResults[vendor.name].synced} of {syncResults[vendor.name].total} products</div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="font-semibold">⚠ Configuration Needed</div>
-                        <div className="mt-1">{syncResults[vendor.name].note}</div>
-                        {syncResults[vendor.name].authUrl && (
-                          <div className="mt-1 text-xs opacity-80">Auth URL: {syncResults[vendor.name].authUrl}</div>
-                        )}
-                        {Array.isArray(syncResults[vendor.name].attempts) && (
-                          <details className="mt-2 text-xs opacity-80">
-                            <summary className="cursor-pointer">Auth attempts</summary>
-                            <ul className="list-disc list-inside space-y-1 mt-1">
-                              {syncResults[vendor.name].attempts.map((a: string, i: number) => (
-                                <li key={i}>{a}</li>
-                              ))}
-                            </ul>
-                          </details>
-                        )}
-                        {syncResults[vendor.name].preview && (
-                          <details className="mt-2 text-xs opacity-75">
-                            <summary className="cursor-pointer">View API response</summary>
-                            <pre className="mt-1 p-2 bg-black/30 rounded overflow-x-auto">
-                              {syncResults[vendor.name].preview}
-                            </pre>
-                          </details>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Display results for current vendor/store combination */}
+                {(() => {
+                  const syncKey = vendor.name === "SinaLite" 
+                    ? `${vendor.name}-${selectedStore}` 
+                    : vendor.name;
+                  const result = syncResults[syncKey];
+                  
+                  if (!result) return null;
+                  
+                  return (
+                    <div className={`mt-3 p-3 rounded-lg text-sm ${
+                      result.success 
+                        ? "bg-green-900/30 border border-green-500/50 text-green-100"
+                        : "bg-yellow-900/30 border border-yellow-500/50 text-yellow-100"
+                    }`}>
+                      {result.success ? (
+                        <>
+                          <p className="font-semibold mb-1">✓ Sync Complete{result.store ? ` (${result.store})` : ''}</p>
+                          <p>Synced {result.synced} of {result.total} products</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-semibold mb-1">⚠ {result.note || "Sync Issues"}</p>
+                          {result.details && <p className="text-xs mt-1 opacity-90">{result.details}</p>}
+                          {result.error && <p className="text-xs mt-1 opacity-75">Error: {result.error}</p>}
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           ))}
