@@ -91,8 +91,9 @@ const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalN
 const Legal           = lazyPage("Legal",           () => import("./pages/Legal"));
 const AdminLegal      = lazyPage("AdminLegal",      () => import("./pages/AdminLegal"));
 const AdminNonprofits = lazyPage("AdminNonprofits", () => import("./pages/AdminNonprofits"));
-const AdminNonprofitAnalytics = lazyPage("AdminNonprofitAnalytics", () => import("./pages/AdminNonprofitAnalytics"));
-const AdminNonprofitApprovals = lazyPage("AdminNonprofitApprovals", () => import("./pages/AdminNonprofitApprovals"));
+import AdminNonprofitAnalytics from "./pages/AdminNonprofitAnalytics";
+import AdminNonprofitApprovals from "./pages/AdminNonprofitApprovals";
+import AdminStripeAnalytics from "./pages/AdminStripeAnalytics";
 const AdminProducts = lazyPage("AdminProducts", () => import("./pages/AdminProducts"));
 const NonprofitProfile = lazyPage("NonprofitProfile", () => import("./pages/NonprofitProfile"));
 const SubmitNonprofit = lazyPage("SubmitNonprofit", () => import("./pages/SubmitNonprofit"));
@@ -573,6 +574,16 @@ export default function App() {
             element={
               <RouteBoundary name="AdminProducts">
                 <AdminProducts />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Stripe Analytics */}
+          <Route
+            path="/admin/stripe-analytics"
+            element={
+              <RouteBoundary name="AdminStripeAnalytics">
+                <AdminStripeAnalytics />
               </RouteBoundary>
             }
           />
