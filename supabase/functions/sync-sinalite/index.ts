@@ -315,6 +315,12 @@ serve(async (req) => {
         console.error(`[SYNC-SINALITE] Error fetching pricing for product ${p.id}:`, error);
       }
       
+      // Skip products with invalid pricing
+      if (baseCostCents <= 0) {
+        console.log(`[SYNC-SINALITE] Skipping product ${p.id}_${storeCode} (${p.name}) - invalid pricing: $${baseCostCents / 100}`);
+        continue;
+      }
+
       productsToSync.push({
         name: `${p.name || "Unnamed Product"} (${storeName})`,
         description: p.sku || null,
