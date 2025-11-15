@@ -127,7 +127,7 @@ export default function Success() {
                   variant="default"
                   size="lg"
                   className="rounded-full bg-white text-black hover:bg-white/90"
-                  onClick={() => navigate("/home")}
+                  onClick={() => navigate("/")}
                 >
                   Back to Home
                 </Button>
