@@ -127,7 +127,7 @@ export default function Success() {
                   variant="default"
                   size="lg"
                   className="rounded-full bg-white text-black hover:bg-white/90"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/home")}
                 >
                   Back to Home
                 </Button>
@@ -135,7 +135,7 @@ export default function Success() {
                   variant="outline"
                   size="lg"
                   className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30"
-                  onClick={() => navigate("/welcome")}
+                  onClick={() => navigate("/products")}
                 >
                   Continue Shopping
                 </Button>
