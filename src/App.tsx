@@ -79,6 +79,7 @@ const ForgotPassword  = lazyPage("ForgotPassword",  () => import("./pages/Forgot
 const ResetPassword   = lazyPage("ResetPassword",   () => import("./pages/ResetPassword"));
 const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
 const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
+const DogDoor         = lazyPage("DogDoor",         () => import("./pages/DogDoor"));
 const JotFormPayment = lazyPage("JotFormPayment", () => import("./pages/JotFormPayment"));
 const Contact         = lazyPage("Contact",         () => import("./pages/Contact"));
 const SystemLogs      = lazyPage("SystemLogs",      () => import("./pages/SystemLogs"));
@@ -394,6 +395,16 @@ export default function App() {
             element={
               <RouteBoundary name="ResetPassword">
                 <ResetPassword />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Dog Door - Hidden admin access */}
+          <Route
+            path="/dogdoor"
+            element={
+              <RouteBoundary name="DogDoor">
+                <DogDoor />
               </RouteBoundary>
             }
           />

@@ -81,14 +81,67 @@ export default function Admin() {
     psrestful: null
   });
 
-  // useEffect to check session on mount
+  // useEffect to check session/passcode on mount
   useEffect(() => {
-    const sessionToken = sessionStorage.getItem("admin_session");
-    if (sessionToken) {
-      verifySession(sessionToken);
-    } else {
-      setCheckingAuth(false);
-    }
+    const checkAuth = async () => {
+      // Get passcode from URL
+      const params = new URLSearchParams(window.location.search);
+      const passcode = params.get('key');
+      
+      // First try passcode if provided
+      if (passcode) {
+        try {
+          const { data, error } = await supabase.functions.invoke('verify-admin-passcode', {
+            body: { passcode, path: window.location.pathname }
+          });
+
+          if (!error && data?.valid) {
+            setIsAuthenticated(true);
+            // Store passcode in sessionStorage for subsequent checks
+            sessionStorage.setItem("admin_passcode", passcode);
+            loadAllData();
+            setCheckingAuth(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Passcode verification failed:', err);
+        }
+      }
+
+      // Then check if there's a stored passcode
+      const storedPasscode = sessionStorage.getItem("admin_passcode");
+      if (storedPasscode) {
+        try {
+          const { data, error } = await supabase.functions.invoke('verify-admin-passcode', {
+            body: { passcode: storedPasscode, path: window.location.pathname }
+          });
+
+          if (!error && data?.valid) {
+            setIsAuthenticated(true);
+            loadAllData();
+            setCheckingAuth(false);
+            return;
+          } else {
+            sessionStorage.removeItem("admin_passcode");
+          }
+        } catch (err) {
+          console.error('Stored passcode verification failed:', err);
+          sessionStorage.removeItem("admin_passcode");
+        }
+      }
+
+      // Finally, check old session token system for backwards compatibility
+      const sessionToken = sessionStorage.getItem("admin_session");
+      if (sessionToken) {
+        verifySession(sessionToken);
+      } else {
+        // No valid auth, redirect to help
+        setCheckingAuth(false);
+        navigate('/help');
+      }
+    };
+
+    checkAuth();
   }, []);
 
   // Real-time subscription for pending nonprofits
