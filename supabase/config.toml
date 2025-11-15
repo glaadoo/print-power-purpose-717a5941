@@ -3,6 +3,9 @@ project_id = "wgohndthjgeqamfuldov"
 [functions.stripe-webhook]
 verify_jwt = false
 
+[functions.verify-admin-passcode]
+verify_jwt = false
+
 [functions.jotform-webhook]
 verify_jwt = false
 
