@@ -85,6 +85,7 @@ const Contact         = lazyPage("Contact",         () => import("./pages/Contac
 const SystemLogs      = lazyPage("SystemLogs",      () => import("./pages/SystemLogs"));
 const HelpCenter      = lazyPage("HelpCenter",      () => import("./pages/HelpCenter"));
 const HelpSearchResults = lazyPage("HelpSearchResults", () => import("./pages/HelpSearchResults"));
+const ProtectedRoute  = lazy(() => import("./components/ProtectedRoute"));
 const PrivacyPolicy   = lazyPage("PrivacyPolicy",   () => import("./pages/PrivacyPolicy"));
 const TermsOfUse      = lazyPage("TermsOfUse",      () => import("./pages/TermsOfUse"));
 const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalNotice"));
@@ -201,32 +202,37 @@ export default function App() {
             }
           />
 
-          {/* Cart */}
+          {/* Protected Routes - Require onboarding */}
           <Route
             path="/cart"
             element={
               <RouteBoundary name="Cart">
-                <Cart />
+                <ProtectedRoute>
+                  <Cart />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
 
-          {/* Checkout (NEW) */}
           <Route
             path="/checkout"
             element={
               <RouteBoundary name="Checkout">
-                <Checkout />
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
 
-          {/* Selection flows */}
+          {/* Selection flows - Protected */}
           <Route
             path="/select/school"
             element={
               <RouteBoundary name="SelectSchool">
-                <SelectSchool />
+                <ProtectedRoute>
+                  <SelectSchool />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -234,7 +240,9 @@ export default function App() {
             path="/select/nonprofit"
             element={
               <RouteBoundary name="SelectNonprofit">
-                <SelectNonprofit />
+                <ProtectedRoute>
+                  <SelectNonprofit />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -242,7 +250,9 @@ export default function App() {
             path="/select/personal"
             element={
               <RouteBoundary name="PersonalMission">
-                <PersonalMission />
+                <ProtectedRoute>
+                  <PersonalMission />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -276,7 +286,9 @@ export default function App() {
             path="/schools"
             element={
               <RouteBoundary name="Schools">
-                <Schools />
+                <ProtectedRoute>
+                  <Schools />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -324,7 +336,9 @@ export default function App() {
             path="/causes"
             element={
               <RouteBoundary name="Causes">
-                <Causes />
+                <ProtectedRoute>
+                  <Causes />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -332,7 +346,9 @@ export default function App() {
             path="/donate"
             element={
               <RouteBoundary name="Donate">
-                <Donate />
+                <ProtectedRoute>
+                  <Donate />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -340,7 +356,9 @@ export default function App() {
             path="/products"
             element={
               <RouteBoundary name="Products">
-                <Products />
+                <ProtectedRoute>
+                  <Products />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -348,7 +366,9 @@ export default function App() {
             path="/products/:id"
             element={
               <RouteBoundary name="ProductDetail">
-                <ProductDetail />
+                <ProtectedRoute>
+                  <ProductDetail />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -356,7 +376,9 @@ export default function App() {
             path="/success"
             element={
               <RouteBoundary name="Success">
-                <Success />
+                <ProtectedRoute>
+                  <Success />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -364,7 +386,9 @@ export default function App() {
             path="/cancel"
             element={
               <RouteBoundary name="Cancel">
-                <Cancel />
+                <ProtectedRoute>
+                  <Cancel />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -429,12 +453,13 @@ export default function App() {
             }
           />
 
-          {/* JotForm Payment */}
           <Route
             path="/jotform-payment"
             element={
               <RouteBoundary name="JotFormPayment">
-                <JotFormPayment />
+                <ProtectedRoute>
+                  <JotFormPayment />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />

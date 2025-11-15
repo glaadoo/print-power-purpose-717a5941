@@ -97,6 +97,7 @@ export default function Auth() {
     });
 
     if (error) {
+      setLoading(false);
       // Check if the error is related to invalid credentials
       if (error.message.toLowerCase().includes('invalid') || 
           error.message.toLowerCase().includes('credentials')) {
@@ -121,6 +122,8 @@ export default function Auth() {
         toast.error(error.message);
       }
     } else {
+      // Set access flag for authenticated user
+      localStorage.setItem("ppp_access", "user");
       toast.success("Signed in successfully!");
     }
     setLoading(false);
@@ -170,6 +173,8 @@ export default function Auth() {
       if (error) {
         toast.error(error.message);
       } else {
+        // Set access flag for authenticated user
+        localStorage.setItem("ppp_access", "user");
         toast.success("Account created! You can now sign in.");
         setMode("signin");
         setSignInEmail(signUpData.email);
