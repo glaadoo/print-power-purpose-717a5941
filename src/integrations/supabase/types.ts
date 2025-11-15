@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_access_logs: {
+        Row: {
+          attempt_time: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          notes: string | null
+          path: string
+          provided_key: string | null
+          reason: string
+          success: boolean
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempt_time?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          path: string
+          provided_key?: string | null
+          reason: string
+          success?: boolean
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempt_time?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          path?: string
+          provided_key?: string | null
+          reason?: string
+          success?: boolean
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_sessions: {
         Row: {
           created_at: string
