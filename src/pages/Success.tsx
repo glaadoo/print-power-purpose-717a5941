@@ -11,18 +11,19 @@ export default function Success() {
   const sessionId = sp.get("session_id");
   const navigate = useNavigate();
   const { clear: clearCart } = useCart();
-  const { cause } = useCause();
+  const { cause, clearAll: clearCauseAndNonprofit } = useCause();
   const causeName = (cause as any)?.name;
   const [orderInfo, setOrderInfo] = useState<{ order_number?: string; order_id?: string } | null>(null);
 
   useEffect(() => {
-    // Clear cart & any pending checkout selection so badges/state reset immediately.
+    // Clear cart, cause, nonprofit & any pending checkout selection so badges/state reset immediately.
     clearCart();
+    clearCauseAndNonprofit();
     try {
       localStorage.removeItem("ppp:cart");
       localStorage.removeItem("ppp:checkout");
     } catch {}
-  }, [clearCart]);
+  }, [clearCart, clearCauseAndNonprofit]);
 
   // Fallback finalize to ensure order is saved even if webhook didn't run
   useEffect(() => {
