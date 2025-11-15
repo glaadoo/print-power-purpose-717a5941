@@ -98,7 +98,7 @@ export default function Checkout() {
   const [legalConsent, setLegalConsent] = useState(false);
 
 
-  // Fetch product & persist merged selection (refresh-proof). If no cause provided, auto-pick first.
+  // Fetch product & persist merged selection (refresh-proof)
   useEffect(() => {
     const { productId, qty, causeId, donationUsd } = merged;
 
@@ -112,29 +112,9 @@ export default function Checkout() {
       setError("Missing product. Please select a product first.");
       return;
     }
-    // If causeId missing, auto-select the first available cause
-    if (!causeId) {
-      (async () => {
-        const { data, error } = await supabase
-          .from("causes")
-          .select("id, name")
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .single();
-        if (!error && data?.id) {
-          setSelectedCauseId(data.id);
-          setSelectedCauseName(data.name ?? null);
-          try {
-            localStorage.setItem(
-              LS_KEY,
-              JSON.stringify({ productId, qty, causeId: data.id, donationUsd })
-            );
-          } catch {}
-        } else {
-          setError("No causes available. Please add a cause.");
-        }
-      })();
-    } else {
+    
+    // Only use cause if explicitly provided by user
+    if (causeId) {
       setSelectedCauseId(String(causeId));
       // Fetch the cause name for the selected causeId
       (async () => {
@@ -147,6 +127,10 @@ export default function Checkout() {
           setSelectedCauseName(data.name);
         }
       })();
+    } else {
+      // Clear cause selection if none provided
+      setSelectedCauseId(null);
+      setSelectedCauseName(null);
     }
     if (!qty || qty < 1) {
       setError("Quantity must be at least 1.");
