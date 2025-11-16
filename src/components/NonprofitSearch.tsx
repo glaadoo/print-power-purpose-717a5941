@@ -171,11 +171,11 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
               className={`
                 w-full rounded-xl backdrop-blur-md border px-4 py-3 cursor-pointer
                 transition transform animate-enter flex flex-col
-                hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5 hover:scale-105
+                hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5
                 focus:outline-none focus:ring-2 focus:ring-white/60
                 ${selectedId === nonprofit.id
-                  ? "scale-110 bg-white/25 border-white/60 ring-4 ring-primary/70 shadow-xl"
-                  : "bg-white/10 border-white/15 shadow-md"}
+                  ? "scale-110 bg-white/25 border-white/60 ring-4 ring-primary/70 shadow-xl hover:scale-115"
+                  : "bg-white/10 border-white/15 shadow-md hover:scale-105"}
               `}
             >
               <div className="text-base font-semibold text-white">{nonprofit.name}</div>
