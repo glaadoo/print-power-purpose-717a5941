@@ -44,6 +44,19 @@ export default function SelectNonprofit() {
         <div className="w-5" />
       </header>
 
+      {/* Fixed bottom header with Continue button */}
+      {selectedNonprofit && (
+        <header className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-t border-white/10">
+          <Button
+            onClick={handleContinue}
+            size="lg"
+            className="bg-white text-black hover:bg-white/90 font-bold px-8"
+          >
+            Continue with {selectedNonprofit.name}
+          </Button>
+        </header>
+      )}
+
       {/* Fullscreen content */}
       <div className="fixed inset-0 w-screen h-screen overflow-hidden">
         <VideoBackground
@@ -53,7 +66,7 @@ export default function SelectNonprofit() {
           overlay={<div className="absolute inset-0 bg-black/50" />}
         />
 
-        <div className="relative w-full h-full pt-16 pb-8 overflow-y-auto">
+        <div className="relative w-full h-full pt-16 pb-20 overflow-y-auto">
           <div className="w-full max-w-6xl mx-auto px-4 space-y-6">
             {/* Nonprofit Search Section */}
             <GlassCard className="w-full" padding="p-6">
@@ -87,19 +100,6 @@ export default function SelectNonprofit() {
                 )}
               </div>
             </GlassCard>
-
-            {/* Continue Button */}
-            {selectedNonprofit && (
-              <div className="sticky bottom-0 py-4">
-                <Button
-                  onClick={handleContinue}
-                  size="lg"
-                  className="w-full bg-white text-black hover:bg-white/90 font-bold py-6 text-lg"
-                >
-                  Continue with {selectedNonprofit.name}
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </div>
