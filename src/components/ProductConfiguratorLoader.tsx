@@ -29,8 +29,10 @@ export default function ProductConfiguratorLoader({
       .eq("id", productId)
       .maybeSingle();
     if (error) {
+      console.error('[ProductConfiguratorLoader] Error fetching pricing:', error);
       setError(error.message);
     } else {
+      console.log('[ProductConfiguratorLoader] Fetched product data:', data);
       setProductData(data);
     }
     setLoading(false);
