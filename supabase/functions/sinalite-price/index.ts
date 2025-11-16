@@ -73,15 +73,16 @@ serve(async (req) => {
     if (!accessToken || !cachedToken || cachedToken.expiresAt <= now) {
       // Authenticate
       console.log("[SINALITE-PRICE] Authenticating...");
+      const authBody = new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret,
+        audience: audience,
+      });
       const authResponse = await fetch(authUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          client_id: clientId,
-          client_secret: clientSecret,
-          audience: audience,
-          grant_type: "client_credentials",
-        }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: authBody.toString(),
       });
 
       if (!authResponse.ok) {
@@ -93,10 +94,14 @@ serve(async (req) => {
       }
 
       const authData = await authResponse.json();
-      accessToken = authData.access_token;
+      const tokenCandidate = authData?.access_token || authData?.token || authData?.data?.access_token;
+      accessToken = tokenCandidate;
 
       if (!accessToken) {
-        console.error("[SINALITE-PRICE] No access token received");
+        console.error("[SINALITE-PRICE] No access token received", {
+          authStatus: authResponse.status,
+          authDataKeys: authData ? Object.keys(authData) : []
+        });
         return new Response(
           JSON.stringify({ error: "No access token" }),
           { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
