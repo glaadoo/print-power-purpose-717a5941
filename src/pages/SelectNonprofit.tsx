@@ -91,18 +91,19 @@ export default function SelectNonprofit() {
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 <div
                   className="
-                    aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center text-center transition-all
-                    border-white/70 bg-white/15
+                    rounded-xl border-2 p-2 flex flex-col items-center justify-center text-center transition-all cursor-pointer
+                    border-white/70 bg-white/15 hover:bg-white/25 hover:scale-105 hover:border-white
+                    h-24 md:h-28
                   "
                 >
-                  <h3 className="text-sm md:text-base font-bold mb-1">{selectedNonprofit.name}</h3>
+                  <h3 className="text-xs md:text-sm font-bold mb-0.5 line-clamp-2">{selectedNonprofit.name}</h3>
                   
                   {selectedNonprofit.ein && (
-                    <p className="text-xs md:text-sm opacity-80 mb-1">EIN: {selectedNonprofit.ein}</p>
+                    <p className="text-[10px] md:text-xs opacity-70">EIN: {selectedNonprofit.ein}</p>
                   )}
                   
                   {(selectedNonprofit.city || selectedNonprofit.state) && (
-                    <p className="text-xs md:text-sm opacity-80">
+                    <p className="text-[10px] md:text-xs opacity-70 line-clamp-1">
                       {[selectedNonprofit.city, selectedNonprofit.state]
                         .filter(Boolean)
                         .join(", ")}
