@@ -83,23 +83,34 @@ export default function SelectNonprofit() {
                   onSelect={handleNonprofitSelect}
                   selectedId={selectedNonprofit?.id}
                 />
-                {selectedNonprofit && (
-                  <div className="mt-4 p-4 bg-white/10 rounded-lg border border-white/20">
-                    <p className="text-white font-medium">{selectedNonprofit.name}</p>
-                    {selectedNonprofit.ein && (
-                      <p className="text-white/60 text-sm">EIN: {selectedNonprofit.ein}</p>
-                    )}
-                    {(selectedNonprofit.city || selectedNonprofit.state) && (
-                      <p className="text-white/60 text-sm">
-                        {[selectedNonprofit.city, selectedNonprofit.state]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
             </GlassCard>
+
+            {/* Selected Nonprofit Card - same design as /causes page */}
+            {selectedNonprofit && (
+              <div className="grid grid-cols-1 gap-4">
+                <div
+                  className="
+                    aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
+                    border-white/70 bg-white/25
+                  "
+                >
+                  <h3 className="text-base md:text-lg font-bold mb-2">{selectedNonprofit.name}</h3>
+                  
+                  {selectedNonprofit.ein && (
+                    <p className="text-xs md:text-sm opacity-80 mb-2">EIN: {selectedNonprofit.ein}</p>
+                  )}
+                  
+                  {(selectedNonprofit.city || selectedNonprofit.state) && (
+                    <p className="text-xs md:text-sm opacity-80">
+                      {[selectedNonprofit.city, selectedNonprofit.state]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
