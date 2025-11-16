@@ -562,6 +562,7 @@ export type Database = {
           irs_status: string | null
           logo_url: string | null
           name: string
+          search_name: string | null
           source: string | null
           state: string | null
           tags: string[] | null
@@ -580,6 +581,7 @@ export type Database = {
           irs_status?: string | null
           logo_url?: string | null
           name: string
+          search_name?: string | null
           source?: string | null
           state?: string | null
           tags?: string[] | null
@@ -598,6 +600,7 @@ export type Database = {
           irs_status?: string | null
           logo_url?: string | null
           name?: string
+          search_name?: string | null
           source?: string | null
           state?: string | null
           tags?: string[] | null
