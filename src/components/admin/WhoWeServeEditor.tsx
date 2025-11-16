@@ -79,7 +79,7 @@ export default function WhoWeServeEditor() {
   }
 
   return (
-    <Card>
+    <Card className="bg-background text-foreground">
       <CardHeader>
         <CardTitle>Who We Serve Pages Editor</CardTitle>
         <CardDescription>
