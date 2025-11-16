@@ -88,11 +88,11 @@ export default function SelectNonprofit() {
 
             {/* Selected Nonprofit Card - same design as /causes page */}
             {selectedNonprofit && (
-              <div className="flex justify-center">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <div
                   className="
-                    max-w-sm w-full rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
-                    border-white/70 bg-white/25
+                    aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
+                    border-white/70 bg-white/15
                   "
                 >
                   <h3 className="text-base md:text-lg font-bold mb-2">{selectedNonprofit.name}</h3>
