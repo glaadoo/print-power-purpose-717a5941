@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search } from "lucide-react";
+import { Search, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 type Nonprofit = {
@@ -101,10 +101,42 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
   function handleSelect(nonprofit: Nonprofit) {
     saveToRecentNonprofits(nonprofit);
     onSelect(nonprofit);
+    // Clear search query to close results
+    setQuery("");
   }
+
+  // Find selected nonprofit details
+  const selectedNonprofit = selectedId 
+    ? [...results, ...recentNonprofits].find(n => n.id === selectedId)
+    : null;
 
   return (
     <div className="space-y-4">
+      {/* Your Selected Cause Section */}
+      {selectedNonprofit && (
+        <div className="bg-white/15 border border-white/30 rounded-lg p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <p className="text-xs text-white/70 mb-1 uppercase tracking-wider">Your Selected Cause</p>
+              <h3 className="text-white font-semibold text-base mb-1">{selectedNonprofit.name}</h3>
+              {selectedNonprofit.ein && (
+                <p className="text-xs text-white/60">EIN: {selectedNonprofit.ein}</p>
+              )}
+              {(selectedNonprofit.city || selectedNonprofit.state) && (
+                <p className="text-xs text-white/60">
+                  {[selectedNonprofit.city, selectedNonprofit.state].filter(Boolean).join(", ")}
+                </p>
+              )}
+            </div>
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
+                <Check className="w-5 h-5 text-green-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
@@ -126,17 +158,20 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
               <button
                 key={nonprofit.id}
                 onClick={() => handleSelect(nonprofit)}
-                className="
+                className={`
                   rounded-full
-                  bg-white/10
                   backdrop-blur-md
-                  border border-white/20
+                  border 
                   px-3 py-1
                   text-xs text-white
-                  hover:bg-white/20
                   transition
-                "
+                  flex items-center gap-1.5
+                  ${selectedId === nonprofit.id
+                    ? 'bg-green-500/20 border-green-500 hover:bg-green-500/30'
+                    : 'bg-white/10 border-white/20 hover:bg-white/20'}
+                `}
               >
+                {selectedId === nonprofit.id && <Check className="w-3 h-3" />}
                 {nonprofit.name} • {nonprofit.state}
               </button>
             ))}
@@ -170,7 +205,7 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
               data-selected={selectedId === nonprofit.id || undefined}
               className={`
                 w-full rounded-xl backdrop-blur-md border px-4 py-2 cursor-pointer
-                transition transform animate-enter flex flex-col
+                transition transform animate-enter flex flex-col relative
                 hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5
                 focus:outline-none focus:ring-2 focus:ring-white/60
                 ${selectedId === nonprofit.id
@@ -178,15 +213,26 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
                   : "bg-white/10 border-white/15 shadow-md hover:scale-105"}
               `}
             >
-              <div className="text-base font-semibold text-white">{nonprofit.name}</div>
-              {nonprofit.ein && (
-                <div className="text-xs text-white/70 mt-1">EIN: {nonprofit.ein}</div>
-              )}
-              {(nonprofit.city || nonprofit.state) && (
-                <div className="text-xs text-white/70">
-                  {[nonprofit.city, nonprofit.state].filter(Boolean).join(", ")}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <div className="text-base font-semibold text-white">{nonprofit.name}</div>
+                  {nonprofit.ein && (
+                    <div className="text-xs text-white/70 mt-1">EIN: {nonprofit.ein}</div>
+                  )}
+                  {(nonprofit.city || nonprofit.state) && (
+                    <div className="text-xs text-white/70">
+                      {[nonprofit.city, nonprofit.state].filter(Boolean).join(", ")}
+                    </div>
+                  )}
                 </div>
-              )}
+                {selectedId === nonprofit.id && (
+                  <div className="flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-green-500/30 border-2 border-green-500 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-green-500" />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
