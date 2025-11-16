@@ -1448,6 +1448,20 @@ export default function Admin() {
                   <h2 className="text-2xl font-serif font-semibold text-white mb-6">Payment Settings</h2>
                   <StripeModeToggle />
                 </GlassCard>
+
+                <GlassCard className="bg-white/5 border-white/20">
+                  <h2 className="text-2xl font-serif font-semibold text-white mb-4">Production Setup</h2>
+                  <p className="text-white/70 mb-4">
+                    Configure all LIVE mode credentials before switching to production
+                  </p>
+                  <Button 
+                    onClick={() => navigate("/admin/live-setup")} 
+                    className="w-full bg-white text-black hover:bg-white/90"
+                  >
+                    <Activity className="mr-2 h-4 w-4" />
+                    Live Mode Setup Checklist
+                  </Button>
+                </GlassCard>
               </div>
             </TabsContent>
           </Tabs>

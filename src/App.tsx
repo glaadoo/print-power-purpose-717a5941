@@ -101,6 +101,7 @@ import AdminNonprofitApprovals from "./pages/AdminNonprofitApprovals";
 import AdminStripeAnalytics from "./pages/AdminStripeAnalytics";
 import AdminTransactions from "./pages/AdminTransactions";
 const AdminProducts = lazyPage("AdminProducts", () => import("./pages/AdminProducts"));
+const AdminLiveModeSetup = lazyPage("AdminLiveModeSetup", () => import("./pages/AdminLiveModeSetup"));
 const NonprofitProfile = lazyPage("NonprofitProfile", () => import("./pages/NonprofitProfile"));
 const SubmitNonprofit = lazyPage("SubmitNonprofit", () => import("./pages/SubmitNonprofit"));
 const WhoWeServeNonprofits = lazyPage("WhoWeServeNonprofits", () => import("./pages/WhoWeServeNonprofits"));
@@ -589,6 +590,16 @@ export default function App() {
             element={
               <RouteBoundary name="AdminProducts">
                 <AdminProducts />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Live Mode Setup */}
+          <Route
+            path="/admin/live-setup"
+            element={
+              <RouteBoundary name="AdminLiveModeSetup">
+                <AdminLiveModeSetup />
               </RouteBoundary>
             }
           />
