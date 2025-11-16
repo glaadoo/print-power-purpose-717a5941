@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Check } from "lucide-react";
+import { Search, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 type Nonprofit = {
@@ -105,6 +105,11 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
     setQuery("");
   }
 
+  function handleClear() {
+    onSelect(null as any);
+    setQuery("");
+  }
+
   // Find selected nonprofit details
   const selectedNonprofit = selectedId 
     ? [...results, ...recentNonprofits].find(n => n.id === selectedId)
@@ -128,10 +133,17 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
                 </p>
               )}
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
                 <Check className="w-5 h-5 text-green-500" />
               </div>
+              <button
+                onClick={handleClear}
+                className="w-8 h-8 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center hover:bg-red-500/30 transition"
+                aria-label="Clear selection"
+              >
+                <X className="w-5 h-5 text-red-500" />
+              </button>
             </div>
           </div>
         </div>
