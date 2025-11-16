@@ -166,23 +166,16 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
                   handleSelect(nonprofit);
                 }
               }}
-              className="
-                w-full
-                rounded-xl
-                bg-white/10
-                backdrop-blur-md
-                border border-white/15
-                shadow-md
-                px-4 py-3
-                cursor-pointer
-                transition
-                hover:bg-white/15
-                hover:border-white/25
-                hover:-translate-y-0.5
-                focus:outline-none
-                focus:ring-2 focus:ring-white/60
-                flex flex-col
-              "
+              aria-selected={selectedId === nonprofit.id}
+              className={`
+                w-full rounded-xl backdrop-blur-md border px-4 py-3 cursor-pointer
+                transition transform animate-enter flex flex-col
+                hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5 hover:scale-105
+                focus:outline-none focus:ring-2 focus:ring-white/60
+                ${selectedId === nonprofit.id
+                  ? "scale-105 bg-white/20 border-white/40 ring-2 ring-white/60 shadow-lg"
+                  : "bg-white/10 border-white/15 shadow-md"}
+              `}
             >
               <div className="text-base font-semibold text-white">{nonprofit.name}</div>
               {nonprofit.ein && (
