@@ -75,12 +75,12 @@ export const StripeModeToggle = () => {
   }
 
   return (
-    <Card className="bg-background text-foreground">
+    <Card className="bg-card/50 backdrop-blur border-white/10">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Stripe Payment Mode</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Stripe Payment Mode</CardTitle>
+            <CardDescription className="text-white/70">
               Switch between test and live Stripe environments
             </CardDescription>
           </div>
@@ -99,10 +99,10 @@ export const StripeModeToggle = () => {
       <CardContent>
         <div className="flex items-center space-x-4">
           <div className="flex-1">
-            <Label htmlFor="stripe-mode" className="text-base">
+            <Label htmlFor="stripe-mode" className="text-base text-white">
               Enable Live Mode
             </Label>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-white/70 mt-1">
               {stripeMode === "test" 
                 ? "Currently using test API keys - no real charges will be made" 
                 : "⚠️ Currently using live API keys - REAL payments are being processed"}
@@ -116,11 +116,11 @@ export const StripeModeToggle = () => {
           />
         </div>
         
-        <div className="mt-4 p-3 bg-muted rounded-md">
-          <p className="text-sm text-muted-foreground">
-            <strong>Note:</strong> Make sure you have configured both{" "}
-            <code className="text-xs bg-background px-1 py-0.5 rounded">STRIPE_SECRET_KEY_TEST</code> and{" "}
-            <code className="text-xs bg-background px-1 py-0.5 rounded">STRIPE_SECRET_KEY_LIVE</code>{" "}
+        <div className="mt-4 p-3 bg-white/5 rounded-md border border-white/10">
+          <p className="text-sm text-white/70">
+            <strong className="text-white">Note:</strong> Make sure you have configured both{" "}
+            <code className="text-xs bg-white/10 px-1 py-0.5 rounded text-white">STRIPE_SECRET_KEY_TEST</code> and{" "}
+            <code className="text-xs bg-white/10 px-1 py-0.5 rounded text-white">STRIPE_SECRET_KEY_LIVE</code>{" "}
             secrets in your backend settings.
           </p>
         </div>

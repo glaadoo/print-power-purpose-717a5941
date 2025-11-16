@@ -79,10 +79,10 @@ export default function WhoWeServeEditor() {
   }
 
   return (
-    <Card className="bg-background text-foreground">
+    <Card className="bg-card/50 backdrop-blur border-white/10">
       <CardHeader>
-        <CardTitle>Who We Serve Pages Editor</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-white">Who We Serve Pages Editor</CardTitle>
+        <CardDescription className="text-white/70">
           Edit the content for the Nonprofits and Schools landing pages
         </CardDescription>
       </CardHeader>
@@ -134,57 +134,62 @@ function PageEditor({
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="h1">Page Title (H1)</Label>
+        <Label htmlFor="h1" className="text-white">Page Title (H1)</Label>
         <Input
           id="h1"
           value={content.h1}
           onChange={(e) => onChange({ ...content, h1: e.target.value })}
+          className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="subtitle">Subtitle</Label>
+        <Label htmlFor="subtitle" className="text-white">Subtitle</Label>
         <Input
           id="subtitle"
           value={content.subtitle}
           onChange={(e) => onChange({ ...content, subtitle: e.target.value })}
+          className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="overview">Overview</Label>
+        <Label htmlFor="overview" className="text-white">Overview</Label>
         <Textarea
           id="overview"
           value={content.overview}
           onChange={(e) => onChange({ ...content, overview: e.target.value })}
           rows={4}
+          className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Who We Serve (one per line)</Label>
+        <Label className="text-white">Who We Serve (one per line)</Label>
         <Textarea
           value={content.who_we_serve.join("\n")}
           onChange={(e) =>
             onChange({ ...content, who_we_serve: e.target.value.split("\n").filter(Boolean) })
           }
           rows={6}
+          className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Products (one per line)</Label>
+        <Label className="text-white">Products (one per line)</Label>
         <Textarea
           value={content.products.join("\n")}
           onChange={(e) =>
             onChange({ ...content, products: e.target.value.split("\n").filter(Boolean) })
           }
           rows={6}
+          className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Benefits (JSON format)</Label>
+        <Label className="text-white">Benefits (JSON format)</Label>
         <Textarea
           value={JSON.stringify(content.benefits, null, 2)}
           onChange={(e) => {
@@ -196,12 +201,12 @@ function PageEditor({
             }
           }}
           rows={10}
-          className="font-mono text-sm"
+          className="font-mono text-sm bg-white/10 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Use Cases (JSON format)</Label>
+        <Label className="text-white">Use Cases (JSON format)</Label>
         <Textarea
           value={JSON.stringify(content.use_cases, null, 2)}
           onChange={(e) => {
@@ -213,18 +218,19 @@ function PageEditor({
             }
           }}
           rows={10}
-          className="font-mono text-sm"
+          className="font-mono text-sm bg-white/10 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Selection Steps (one per line)</Label>
+        <Label className="text-white">Selection Steps (one per line)</Label>
         <Textarea
           value={content.selection_steps.join("\n")}
           onChange={(e) =>
             onChange({ ...content, selection_steps: e.target.value.split("\n").filter(Boolean) })
           }
           rows={6}
+          className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
 
