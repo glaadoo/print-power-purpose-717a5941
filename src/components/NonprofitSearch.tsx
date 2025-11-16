@@ -169,7 +169,7 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
               aria-selected={selectedId === nonprofit.id}
               data-selected={selectedId === nonprofit.id || undefined}
               className={`
-                w-full rounded-xl backdrop-blur-md border px-4 py-3 cursor-pointer
+                w-full rounded-xl backdrop-blur-md border px-4 py-2 cursor-pointer
                 transition transform animate-enter flex flex-col
                 hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5
                 focus:outline-none focus:ring-2 focus:ring-white/60
