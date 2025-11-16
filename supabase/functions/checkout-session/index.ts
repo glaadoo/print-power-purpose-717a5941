@@ -61,7 +61,13 @@ type CartBody = {
   cancelPath?: string;
 };
 
-const STRIPE_SECRET_KEY = (Deno.env.get("STRIPE_SECRET_KEY") ?? "")
+// Stripe keys - Use test or live key based on mode
+const STRIPE_MODE = Deno.env.get("STRIPE_MODE") || "test";
+const STRIPE_SECRET_KEY_RAW = STRIPE_MODE === "live"
+  ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")
+  : Deno.env.get("STRIPE_SECRET_KEY_TEST");
+
+const STRIPE_SECRET_KEY = (STRIPE_SECRET_KEY_RAW ?? "")
   .trim()
   .replace(/^['"]|['"]$/g, "");
 const PUBLIC_SITE_URL =
