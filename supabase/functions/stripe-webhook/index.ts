@@ -173,6 +173,7 @@ serve(async (req) => {
             customer_email: session.customer_details?.email || null,
             amount_total_cents: session.amount_total || 0,
             receipt_url: (session as any).receipt_url || null,
+            payment_mode: stripeMode,
           })
           .eq('id', existingOrderId)
           .select()
@@ -198,6 +199,7 @@ serve(async (req) => {
             cause_id: causeId,
             cause_name: causeName,
             receipt_url: (session as any).receipt_url || null,
+            payment_mode: stripeMode,
           })
           .select()
           .single();

@@ -622,6 +622,7 @@ export type Database = {
           nonprofit_id: string | null
           nonprofit_name: string | null
           order_number: string
+          payment_mode: string | null
           product_name: string | null
           quantity: number
           receipt_url: string | null
@@ -641,6 +642,7 @@ export type Database = {
           nonprofit_id?: string | null
           nonprofit_name?: string | null
           order_number: string
+          payment_mode?: string | null
           product_name?: string | null
           quantity?: number
           receipt_url?: string | null
@@ -660,6 +662,7 @@ export type Database = {
           nonprofit_id?: string | null
           nonprofit_name?: string | null
           order_number?: string
+          payment_mode?: string | null
           product_name?: string | null
           quantity?: number
           receipt_url?: string | null
