@@ -81,7 +81,10 @@ serve(async (req) => {
       });
       const authResponse = await fetch(authUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: { 
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json"
+        },
         body: authBody.toString(),
       });
 
@@ -98,12 +101,14 @@ serve(async (req) => {
       accessToken = tokenCandidate;
 
       if (!accessToken) {
+        const detail = authData && typeof authData === 'object' ? authData : { raw: String(authData) };
         console.error("[SINALITE-PRICE] No access token received", {
           authStatus: authResponse.status,
-          authDataKeys: authData ? Object.keys(authData) : []
+          authDataKeys: detail ? Object.keys(detail as any) : [],
+          authDetail: detail,
         });
         return new Response(
-          JSON.stringify({ error: "No access token" }),
+          JSON.stringify({ error: "No access token", authStatus: authResponse.status, authResponse: detail }),
           { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
