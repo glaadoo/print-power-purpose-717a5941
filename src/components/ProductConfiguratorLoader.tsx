@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
@@ -18,6 +18,11 @@ export default function ProductConfiguratorLoader({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
+
+  // Auto-fetch pricing data when component mounts to prepare for immediate display
+  useEffect(() => {
+    fetchPricing();
+  }, [productId]);
 
   const fetchPricing = async () => {
     if (productData || loading) return;
@@ -39,16 +44,7 @@ export default function ProductConfiguratorLoader({
   };
 
   const handleToggle = () => {
-    if (!visible) {
-      // Opening: fetch data if not already loaded
-      setVisible(true);
-      if (!productData) {
-        fetchPricing();
-      }
-    } else {
-      // Closing
-      setVisible(false);
-    }
+    setVisible(!visible);
   };
 
   return (
