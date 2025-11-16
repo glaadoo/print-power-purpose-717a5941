@@ -807,13 +807,13 @@ export default function Admin() {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="pages" 
-                  className="rounded-full px-6 py-2 data-[state=active]:bg-primary data-[state=active]:text-white text-white transition-all"
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
                 >
                   Pages
                 </TabsTrigger>
                 <TabsTrigger 
                   value="settings" 
-                  className="rounded-full px-6 py-2 data-[state=active]:bg-primary data-[state=active]:text-white text-white transition-all"
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
                 >
                   Settings
                 </TabsTrigger>
