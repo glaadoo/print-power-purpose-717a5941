@@ -224,16 +224,18 @@ export default function Products() {
                               </h3>
                               
                               <div className="w-full space-y-3">
+                                <p className="text-2xl font-bold text-white">
+                                  {configuredPrices[product.id] 
+                                    ? `$${(configuredPrices[product.id] / 100).toFixed(2)}`
+                                    : `Starting at $${(getProductPrice(product) / 100).toFixed(2)}`
+                                  }
+                                </p>
+                                
                                 <ProductConfiguratorLoader
                                   productId={product.id}
                                   onPriceChange={(price) => handlePriceChange(product.id, price)}
                                   onConfigChange={(config) => handleConfigChange(product.id, config)}
                                 />
-                                {configuredPrices[product.id] && (
-                                  <p className="text-2xl font-bold text-white">
-                                    Price: ${(configuredPrices[product.id] / 100).toFixed(2)}
-                                  </p>
-                                )}
                               </div>
 
                               <div className="flex items-center gap-2 w-full justify-between py-2">
