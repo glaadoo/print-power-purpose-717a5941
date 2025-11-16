@@ -124,30 +124,33 @@ export default function Success() {
               <p className="mt-6 text-base opacity-90">What would you like to do next?</p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                <Button 
-                  variant="default"
-                  size="lg"
-                  className="rounded-full bg-white text-black hover:bg-white/90"
-                  onClick={() => navigate("/")}
-                >
-                  Back to Home
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30"
-                  onClick={() => navigate("/products")}
-                >
-                  Continue Shopping
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30"
-                  onClick={() => navigate("/causes")}
-                >
-                  Choose Another Cause
-                </Button>
+                <Link to="/">
+                  <Button 
+                    variant="default"
+                    size="lg"
+                    className="rounded-full bg-white text-black hover:bg-white/90 w-full"
+                  >
+                    Back to Home
+                  </Button>
+                </Link>
+                <Link to="/products">
+                  <Button 
+                    variant="outline"
+                    size="lg"
+                    className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full"
+                  >
+                    Continue Shopping
+                  </Button>
+                </Link>
+                <Link to="/causes">
+                  <Button 
+                    variant="outline"
+                    size="lg"
+                    className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full"
+                  >
+                    Choose Another Cause
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
