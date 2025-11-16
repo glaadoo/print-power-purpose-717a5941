@@ -59,17 +59,23 @@ export const StripeModeIndicator = () => {
   return (
     <div className="fixed top-4 right-4 z-50">
       <Badge 
-        variant={stripeMode === "live" ? "destructive" : "secondary"}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold shadow-lg"
+        variant={stripeMode === "live" ? "destructive" : "default"}
+        className={`
+          flex items-center gap-2 px-4 py-2 text-sm font-bold shadow-2xl border-2
+          ${stripeMode === "live" 
+            ? "bg-red-600 text-white border-red-400" 
+            : "bg-green-600 text-white border-green-400 animate-pulse"
+          }
+        `}
       >
         {stripeMode === "live" ? (
           <>
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle className="h-5 w-5" />
             LIVE MODE
           </>
         ) : (
           <>
-            <CheckCircle2 className="h-4 w-4" />
+            <CheckCircle2 className="h-5 w-5" />
             TEST MODE
           </>
         )}
