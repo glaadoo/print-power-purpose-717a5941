@@ -4,7 +4,11 @@ import Stripe from 'https://esm.sh/stripe@18.5.0';
 import { Resend } from 'https://esm.sh/resend@4.0.0';
 import jsPDF from 'https://esm.sh/jspdf@2.5.2';
 
-const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
+// Stripe - Use test or live key based on mode
+const stripeMode = Deno.env.get("STRIPE_MODE") || "test";
+const stripeKey = stripeMode === "live" 
+  ? Deno.env.get("STRIPE_SECRET_KEY_LIVE") 
+  : Deno.env.get("STRIPE_SECRET_KEY_TEST");
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
 const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
 
