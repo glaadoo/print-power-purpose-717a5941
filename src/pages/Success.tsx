@@ -41,9 +41,9 @@ export default function Success() {
   }, [sessionId]);
 
   return (
-    <div className="fixed inset-0 text-white">
+    <div className="min-h-screen text-white relative">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+      <header className="sticky top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
         {/* Left: Home */}
         <Link
           to="/"
@@ -83,9 +83,9 @@ export default function Success() {
       </header>
 
       {/* Main content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
+      <div className="relative">
         <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-          <div className="pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none">
             <VideoBackground
               srcMp4="/media/hero.mp4"
               srcWebm="/media/hero.webm"
