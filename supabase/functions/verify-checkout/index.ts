@@ -186,6 +186,43 @@ serve(async (req) => {
       }
     }
 
+    // Send order confirmation email
+    if (customerEmail && productName) {
+      try {
+        const emailPayload = {
+          orderNumber,
+          customerEmail,
+          orderDetails: {
+            productName,
+            quantity,
+            totalAmount: amountTotal,
+            donationAmount: donationCents,
+            causeName: causeName || undefined,
+            nonprofitName: session?.metadata?.nonprofit_name || undefined,
+          },
+        };
+
+        const emailResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-order-confirmation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SERVICE_ROLE}`,
+          },
+          body: JSON.stringify(emailPayload),
+        });
+
+        if (!emailResponse.ok) {
+          const emailError = await emailResponse.json();
+          console.error('[VERIFY_CHECKOUT] Email send failed:', emailError);
+        } else {
+          console.log('[VERIFY_CHECKOUT] Order confirmation email sent successfully');
+        }
+      } catch (emailErr) {
+        console.error('[VERIFY_CHECKOUT] Email send error:', emailErr);
+        // Don't fail the checkout if email fails
+      }
+    }
+
     return new Response(JSON.stringify({ ok: true, order_number: orderNumber, session_id: sessionId }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
