@@ -55,11 +55,11 @@ export const StripeModeToggle = () => {
 
       setStripeMode(newMode);
       toast.success(
-        `Stripe mode switched to ${newMode.toUpperCase()}`,
+        `API mode switched to ${newMode.toUpperCase()}`,
         {
           description: newMode === "live" 
-            ? "⚠️ You are now processing real payments!" 
-            : "You are now in test mode using test API keys."
+            ? "⚠️ Now using live credentials for Stripe and Sinalite!" 
+            : "Now using test credentials for Stripe and Sinalite."
         }
       );
     } catch (error) {
@@ -79,9 +79,9 @@ export const StripeModeToggle = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-white">Stripe Payment Mode</CardTitle>
+            <CardTitle className="text-white">API Environment Mode</CardTitle>
             <CardDescription className="text-white/70">
-              Switch between test and live Stripe environments
+              Switch between test and live environments for Stripe and Sinalite
             </CardDescription>
           </div>
           <Badge 
@@ -104,8 +104,8 @@ export const StripeModeToggle = () => {
             </Label>
             <p className="text-sm text-white/70 mt-1">
               {stripeMode === "test" 
-                ? "Currently using test API keys - no real charges will be made" 
-                : "⚠️ Currently using live API keys - REAL payments are being processed"}
+                ? "Using test credentials - no real charges or orders" 
+                : "⚠️ Using live credentials - REAL payments and orders are being processed"}
             </p>
           </div>
           <Switch
@@ -117,12 +117,13 @@ export const StripeModeToggle = () => {
         </div>
         
         <div className="mt-4 p-3 bg-white/5 rounded-md border border-white/10">
-          <p className="text-sm text-white/70">
-            <strong className="text-white">Note:</strong> Make sure you have configured both{" "}
-            <code className="text-xs bg-white/10 px-1 py-0.5 rounded text-white">STRIPE_SECRET_KEY_TEST</code> and{" "}
-            <code className="text-xs bg-white/10 px-1 py-0.5 rounded text-white">STRIPE_SECRET_KEY_LIVE</code>{" "}
-            secrets in your backend settings.
+          <p className="text-sm text-white/70 mb-2">
+            <strong className="text-white">Required Secrets:</strong>
           </p>
+          <ul className="text-xs text-white/70 space-y-1 ml-4">
+            <li>• Stripe: <code className="bg-white/10 px-1 py-0.5 rounded text-white">STRIPE_SECRET_KEY_TEST</code> and <code className="bg-white/10 px-1 py-0.5 rounded text-white">STRIPE_SECRET_KEY_LIVE</code></li>
+            <li>• Sinalite: <code className="bg-white/10 px-1 py-0.5 rounded text-white">SINALITE_*_TEST</code> and <code className="bg-white/10 px-1 py-0.5 rounded text-white">SINALITE_*_LIVE</code> (5 secrets each)</li>
+          </ul>
         </div>
       </CardContent>
     </Card>

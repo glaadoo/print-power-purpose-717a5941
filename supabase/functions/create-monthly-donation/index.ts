@@ -79,8 +79,25 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Stripe with test or live key based on mode
-    const stripeMode = Deno.env.get("STRIPE_MODE") || "test";
+    // Get Stripe mode from database
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    
+    let stripeMode = "test";
+    try {
+      const modeResponse = await fetch(`${supabaseUrl}/rest/v1/app_settings?key=eq.stripe_mode&select=value`, {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`
+        }
+      });
+      const modeData = await modeResponse.json();
+      stripeMode = modeData[0]?.value || "test";
+    } catch (error) {
+      console.error('[MONTHLY_DONATION] Failed to fetch Stripe mode, using test:', error);
+    }
+    
+    // Initialize Stripe with test or live key based on database setting
     const stripeKey = stripeMode === "live"
       ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")
       : Deno.env.get("STRIPE_SECRET_KEY_TEST");

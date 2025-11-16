@@ -61,8 +61,29 @@ type CartBody = {
   cancelPath?: string;
 };
 
-// Stripe keys - Use test or live key based on mode
-const STRIPE_MODE = Deno.env.get("STRIPE_MODE") || "test";
+// Helper function to get Stripe mode from database
+async function getStripeMode(): Promise<string> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    
+    const response = await fetch(`${supabaseUrl}/rest/v1/app_settings?key=eq.stripe_mode&select=value`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`
+      }
+    });
+    
+    const data = await response.json();
+    return data[0]?.value || "test";
+  } catch (error) {
+    console.error("[STRIPE_MODE] Failed to fetch mode from database, defaulting to test:", error);
+    return "test";
+  }
+}
+
+// Stripe keys - Use test or live key based on database setting
+const STRIPE_MODE = await getStripeMode();
 const STRIPE_SECRET_KEY_RAW = STRIPE_MODE === "live"
   ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")
   : Deno.env.get("STRIPE_SECRET_KEY_TEST");
