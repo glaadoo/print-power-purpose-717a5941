@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import KenzieChat from "@/components/KenzieChat";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import ScrollToTop from "@/components/ScrollToTop";
+import { StripeModeIndicator } from "@/components/StripeModeIndicator";
 
 
 /** Per-route error boundary so crashes inside a page don't blank the whole app */
@@ -640,6 +641,11 @@ export default function App() {
           <ChatbotWidget />
         </RouteBoundary>
       )}
+
+      {/* Stripe Mode Indicator - shows current API mode */}
+      <RouteBoundary name="StripeModeIndicator">
+        <StripeModeIndicator />
+      </RouteBoundary>
     </>
   );
 }

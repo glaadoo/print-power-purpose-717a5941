@@ -1,23 +1,78 @@
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const StripeModeIndicator = () => {
-  // Read from environment variable
-  const stripeMode = import.meta.env.VITE_STRIPE_MODE || "test";
-  const isTestMode = stripeMode === "test";
+  const [stripeMode, setStripeMode] = useState<"test" | "live">("test");
+  const [loading, setLoading] = useState(true);
 
-  if (!isTestMode) {
-    return null; // Don't show indicator in live mode
-  }
+  useEffect(() => {
+    fetchStripeMode();
+    
+    // Subscribe to changes in app_settings
+    const channel = supabase
+      .channel('stripe-mode-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'app_settings',
+          filter: 'key=eq.stripe_mode'
+        },
+        (payload) => {
+          if (payload.new && 'value' in payload.new) {
+            setStripeMode(payload.new.value as "test" | "live");
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchStripeMode = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "stripe_mode")
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data) {
+        setStripeMode(data.value as "test" | "live");
+      }
+    } catch (error) {
+      console.error("Error fetching Stripe mode:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50">
       <Badge 
-        variant="destructive" 
+        variant={stripeMode === "live" ? "destructive" : "secondary"}
         className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold shadow-lg"
       >
-        <AlertCircle className="h-4 w-4" />
-        STRIPE TEST MODE
+        {stripeMode === "live" ? (
+          <>
+            <AlertCircle className="h-4 w-4" />
+            LIVE MODE
+          </>
+        ) : (
+          <>
+            <CheckCircle2 className="h-4 w-4" />
+            TEST MODE
+          </>
+        )}
       </Badge>
     </div>
   );
