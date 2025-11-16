@@ -92,9 +92,11 @@ export default function SelectNonprofit() {
                 <div
                   className="
                     rounded-xl border-2 p-2 flex flex-col items-center justify-center text-center transition-all cursor-pointer
-                    border-white bg-white/25 scale-105
-                    h-24 md:h-28 hover:scale-110 hover:bg-white/30 hover:brightness-110
+                    h-24 md:h-28
+                    scale-105 bg-white/20 border-white/80 ring-2 ring-primary/60 shadow-lg shadow-primary/20
+                    hover:scale-110 hover:bg-white/30 hover:border-white hover:ring-primary/80 hover:shadow-primary/30 hover:brightness-110 animate-enter
                   "
+                  aria-selected={true}
                 >
                   <h3 className="text-xs md:text-sm font-bold mb-0.5 line-clamp-2">{selectedNonprofit.name}</h3>
                   
