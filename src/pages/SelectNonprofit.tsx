@@ -92,8 +92,8 @@ export default function SelectNonprofit() {
                 <div
                   className="
                     rounded-xl border-2 p-2 flex flex-col items-center justify-center text-center transition-all cursor-pointer
-                    border-white/70 bg-white/15 hover:bg-white/25 hover:scale-105 hover:border-white
-                    h-24 md:h-28
+                    border-white bg-white/25 scale-105
+                    h-24 md:h-28 hover:brightness-110
                   "
                 >
                   <h3 className="text-xs md:text-sm font-bold mb-0.5 line-clamp-2">{selectedNonprofit.name}</h3>
