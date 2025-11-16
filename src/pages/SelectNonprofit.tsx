@@ -50,9 +50,9 @@ export default function SelectNonprofit() {
           <Button
             onClick={handleContinue}
             size="lg"
-            className="bg-white text-black hover:bg-white/90 font-bold px-8"
+            className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-bold px-8"
           >
-            Continue with {selectedNonprofit.name}
+            Continue
           </Button>
         </header>
       )}
