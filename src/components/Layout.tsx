@@ -1,7 +1,11 @@
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { LogOut } from "lucide-react";
 
 export default function Layout({
   children,
@@ -17,11 +21,35 @@ export default function Layout({
   const nav = useNavigate();
   const loc = useLocation();
   const { count } = useCart();
+  const [session, setSession] = useState<Session | null>(null);
+
+  // Check auth state
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Optional: update document title if provided
   useEffect(() => {
     if (title) document.title = title;
   }, [title]);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Failed to log out");
+    } else {
+      toast.success("Logged out successfully");
+      nav("/auth");
+    }
+  };
 
   const isHome = loc.pathname === "/";
   const showHoverHeader = showHeader && !isHome;
@@ -77,6 +105,21 @@ export default function Layout({
               <Link to="/donate" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">
                 Donate ❤️
               </Link>
+
+              {session ? (
+                <button
+                  onClick={handleLogout}
+                  className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg flex items-center gap-2"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              ) : (
+                <Link to="/auth" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">
+                  Login
+                </Link>
+              )}
             </div>
           </header>
         </div>
