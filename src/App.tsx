@@ -20,7 +20,7 @@ class RouteBoundary extends React.Component<
     return { error };
   }
   componentDidCatch(error: any) {
-    // Error caught by boundary
+    console.error(`[RouteBoundary] Error in ${this.props.name}:`, error);
   }
   render() {
     if (this.state.error) {
@@ -48,9 +48,12 @@ function lazyPage<T extends { default: React.ComponentType<any> }>(
 ) {
   return lazy(async () => {
     try {
+      console.log(`[LazyPage] Loading page: ${label}`);
       const mod = await loader();
+      console.log(`[LazyPage] Successfully loaded: ${label}`);
       return mod;
     } catch (e) {
+      console.error(`[LazyPage] Failed to load ${label}:`, e);
       throw e;
     }
   });
@@ -163,10 +166,10 @@ function NotFound() {
 export default function App() {
   useEffect(() => {
     const onError = (ev: ErrorEvent) => {
-      // Error handler placeholder
+      console.error("[App] Global error caught:", ev.error);
     };
     const onRejection = (ev: PromiseRejectionEvent) => {
-      // Rejection handler placeholder
+      console.error("[App] Unhandled promise rejection:", ev.reason);
     };
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
