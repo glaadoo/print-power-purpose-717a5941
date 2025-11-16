@@ -570,7 +570,7 @@ export default function SelectSchool() {
                       id={`school-${school.id}`}
                       onClick={() => handleSelectSchool(school)}
                       className={`
-                        aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
+                        aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center text-center transition-all
                         ${
                           selectedSchoolId === school.id
                             ? "border-white/70 bg-white/25 scale-105"
