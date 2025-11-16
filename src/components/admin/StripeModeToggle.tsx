@@ -75,7 +75,7 @@ export const StripeModeToggle = () => {
   }
 
   return (
-    <Card>
+    <Card className="bg-background text-foreground">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
