@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.sinalite-price]
 verify_jwt = false
+
+[functions.check-live-credentials]
+verify_jwt = false
