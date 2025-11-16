@@ -167,13 +167,14 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
                 }
               }}
               aria-selected={selectedId === nonprofit.id}
+              data-selected={selectedId === nonprofit.id || undefined}
               className={`
                 w-full rounded-xl backdrop-blur-md border px-4 py-3 cursor-pointer
                 transition transform animate-enter flex flex-col
                 hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5 hover:scale-105
                 focus:outline-none focus:ring-2 focus:ring-white/60
                 ${selectedId === nonprofit.id
-                  ? "scale-105 bg-white/20 border-white/40 ring-2 ring-white/60 shadow-lg"
+                  ? "scale-110 bg-white/25 border-white/60 ring-4 ring-primary/70 shadow-xl"
                   : "bg-white/10 border-white/15 shadow-md"}
               `}
             >
