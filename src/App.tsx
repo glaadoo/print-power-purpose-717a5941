@@ -197,7 +197,7 @@ export default function App() {
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
           <Suspense fallback={<Loading label="page" />}>
-        <Routes>
+        <Routes location={location} key={location.pathname}>
           {/* Home */}
           <Route
             path="/"
