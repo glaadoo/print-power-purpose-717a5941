@@ -7,7 +7,6 @@ import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search } from "lucide-react";
-import NonprofitSearch from "@/components/NonprofitSearch";
 import { Link } from "react-router-dom";
 import GlassCard from "@/components/GlassCard";
 
@@ -51,7 +50,6 @@ export default function Causes() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [selectedCause, setSelectedCause] = useState<Cause | null>(null);
-  const [selectedNonprofit, setSelectedNonprofit] = useState<any | null>(nonprofit);
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
 
@@ -175,30 +173,20 @@ export default function Causes() {
     }
   };
 
-  const handleNonprofitSelect = (np: any) => {
-    console.log("Nonprofit selected:", np.name, "ID:", np.id);
-    setSelectedNonprofit(np);
-    setNonprofit({ id: np.id, name: np.name, ein: np.ein, city: np.city, state: np.state });
-  };
 
   const handleContinue = () => {
-    console.log("Continue clicked. Flow:", flow, "Selections:", {
-      cause: selectedCause?.name,
-      nonprofit: selectedNonprofit?.name
-    });
+    console.log("Continue clicked. Flow:", flow, "Cause:", selectedCause?.name);
     
-    // User can select cause, nonprofit, or both - all valid
-    if (selectedCause || selectedNonprofit) {
-      // If coming from donation flow, go to donation form; otherwise go to products
+    if (selectedCause) {
       if (flow === "donation") {
         console.log("Navigating to donation form");
-        nav(`/donate?cause=${selectedCause?.id || ''}`);
+        nav(`/donate?cause=${selectedCause.id}`);
       } else {
         console.log("Navigating to products page");
         nav("/products");
       }
     } else {
-      console.log("No cause or nonprofit selected!");
+      console.log("No cause selected!");
     }
   };
 
@@ -213,47 +201,6 @@ export default function Causes() {
       </div>
     ) : (
       <>
-        {/* Nonprofit Search */}
-        <div className="mb-8">
-          <GlassCard className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Search Nonprofits</h2>
-            <p className="text-sm opacity-80 mb-4">
-              Search for a specific nonprofit organization by name or EIN
-            </p>
-            <NonprofitSearch 
-              onSelect={handleNonprofitSelect}
-              selectedId={selectedNonprofit?.id}
-            />
-            
-            <div className="text-center mt-4">
-              <Link to="/submit-nonprofit" className="text-sm text-white/80 hover:text-white underline">
-                Can't find your nonprofit? Submit it for review
-              </Link>
-            </div>
-            {selectedNonprofit && (
-              <div className="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold text-green-100">{selectedNonprofit.name}</div>
-                    {selectedNonprofit.ein && (
-                      <div className="text-sm text-green-200/80">EIN: {selectedNonprofit.ein}</div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSelectedNonprofit(null);
-                      setNonprofit(null);
-                    }}
-                    className="text-sm underline text-green-200 hover:text-green-100"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            )}
-          </GlassCard>
-        </div>
-
         {/* Causes Grid */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-4">Or Select a Featured Cause</h2>
@@ -318,13 +265,13 @@ export default function Causes() {
 
         </div>
 
-        {(selectedCause || selectedNonprofit) && (
+        {selectedCause && (
           <div className="flex justify-center mt-8">
             <button
               onClick={handleContinue}
               className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-base"
             >
-              Continue
+              Continue with {selectedCause.name}
             </button>
           </div>
         )}
