@@ -136,9 +136,8 @@ export default function Admin() {
       if (sessionToken) {
         verifySession(sessionToken);
       } else {
-        // No valid auth, redirect to help
+        // No valid auth, show login UI instead of redirecting away
         setCheckingAuth(false);
-        navigate('/help');
       }
     };
 
