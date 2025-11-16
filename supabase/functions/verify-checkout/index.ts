@@ -13,7 +13,25 @@ serve(async (req) => {
 
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
   const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-  const STRIPE_KEY = (Deno.env.get('STRIPE_SECRET_KEY') ?? '').trim();
+  
+  // Get Stripe mode from database
+  let stripeMode = "test";
+  try {
+    const modeResponse = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?key=eq.stripe_mode&select=value`, {
+      headers: {
+        'apikey': SERVICE_ROLE,
+        'Authorization': `Bearer ${SERVICE_ROLE}`
+      }
+    });
+    const modeData = await modeResponse.json();
+    stripeMode = modeData[0]?.value || "test";
+  } catch (error) {
+    console.error('[VERIFY_CHECKOUT] Failed to fetch Stripe mode, using test:', error);
+  }
+  
+  const STRIPE_KEY = ((stripeMode === "live" 
+    ? Deno.env.get('STRIPE_SECRET_KEY_LIVE') 
+    : Deno.env.get('STRIPE_SECRET_KEY_TEST')) ?? '').trim();
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },

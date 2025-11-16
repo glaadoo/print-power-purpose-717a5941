@@ -25,11 +25,39 @@ serve(async (req) => {
       );
     }
 
-    const clientId = Deno.env.get("SINALITE_CLIENT_ID");
-    const clientSecret = Deno.env.get("SINALITE_CLIENT_SECRET");
-    const authUrl = Deno.env.get("SINALITE_AUTH_URL");
-    const apiUrl = Deno.env.get("SINALITE_API_URL") || "https://api.sinaliteuppy.com";
-    const audience = Deno.env.get("SINALITE_AUDIENCE");
+    // Get Stripe mode from database to determine Sinalite credentials
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    
+    let sinaliteMode = "test";
+    try {
+      const modeResponse = await fetch(`${supabaseUrl}/rest/v1/app_settings?key=eq.stripe_mode&select=value`, {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`
+        }
+      });
+      const modeData = await modeResponse.json();
+      sinaliteMode = modeData[0]?.value || "test";
+    } catch (error) {
+      console.error('[SINALITE-PRICE] Failed to fetch mode, using test:', error);
+    }
+    
+    const clientId = sinaliteMode === "live" 
+      ? Deno.env.get("SINALITE_CLIENT_ID_LIVE")
+      : Deno.env.get("SINALITE_CLIENT_ID_TEST");
+    const clientSecret = sinaliteMode === "live"
+      ? Deno.env.get("SINALITE_CLIENT_SECRET_LIVE")
+      : Deno.env.get("SINALITE_CLIENT_SECRET_TEST");
+    const authUrl = sinaliteMode === "live"
+      ? Deno.env.get("SINALITE_AUTH_URL_LIVE")
+      : Deno.env.get("SINALITE_AUTH_URL_TEST");
+    const apiUrl = sinaliteMode === "live"
+      ? (Deno.env.get("SINALITE_API_URL_LIVE") || "https://api.sinaliteuppy.com")
+      : (Deno.env.get("SINALITE_API_URL_TEST") || "https://api.sinaliteuppy.com");
+    const audience = sinaliteMode === "live"
+      ? Deno.env.get("SINALITE_AUDIENCE_LIVE")
+      : Deno.env.get("SINALITE_AUDIENCE_TEST");
 
     if (!clientId || !clientSecret || !authUrl || !audience) {
       return new Response(

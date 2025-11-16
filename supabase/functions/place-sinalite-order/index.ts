@@ -74,11 +74,32 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get SinaLite credentials
-    const clientId = Deno.env.get("SINALITE_CLIENT_ID");
-    const clientSecret = Deno.env.get("SINALITE_CLIENT_SECRET");
-    const authUrl = Deno.env.get("SINALITE_AUTH_URL");
-    const audience = Deno.env.get("SINALITE_AUDIENCE");
+    // Get Stripe mode from database to determine Sinalite credentials
+    let sinaliteMode = "test";
+    try {
+      const { data: settingData } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'stripe_mode')
+        .single();
+      sinaliteMode = settingData?.value || "test";
+    } catch (error) {
+      console.error('[PLACE-SINALITE-ORDER] Failed to fetch mode, using test:', error);
+    }
+
+    // Get SinaLite credentials based on mode
+    const clientId = sinaliteMode === "live"
+      ? Deno.env.get("SINALITE_CLIENT_ID_LIVE")
+      : Deno.env.get("SINALITE_CLIENT_ID_TEST");
+    const clientSecret = sinaliteMode === "live"
+      ? Deno.env.get("SINALITE_CLIENT_SECRET_LIVE")
+      : Deno.env.get("SINALITE_CLIENT_SECRET_TEST");
+    const authUrl = sinaliteMode === "live"
+      ? Deno.env.get("SINALITE_AUTH_URL_LIVE")
+      : Deno.env.get("SINALITE_AUTH_URL_TEST");
+    const audience = sinaliteMode === "live"
+      ? Deno.env.get("SINALITE_AUDIENCE_LIVE")
+      : Deno.env.get("SINALITE_AUDIENCE_TEST");
 
     if (!clientId || !clientSecret || !authUrl || !audience) {
       throw new Error("Missing SinaLite credentials");
