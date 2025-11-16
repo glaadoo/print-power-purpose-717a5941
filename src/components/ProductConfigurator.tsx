@@ -52,6 +52,14 @@ export function ProductConfigurator({
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
 
+  console.log('[ProductConfigurator] Mounted with:', {
+    productId,
+    vendorProductId,
+    storeCode,
+    hasPricingData: !!pricingData,
+    pricingDataLength: Array.isArray(pricingData) ? pricingData.length : 'not-array'
+  });
+
   // Parse product options from SinaLite structure
   const optionGroups: OptionGroup[] = useMemo(() => {
     if (!pricingData || !Array.isArray(pricingData)) {
@@ -86,7 +94,10 @@ export function ProductConfigurator({
 
   // Initialize with first option from each group
   useEffect(() => {
-    if (optionGroups.length === 0) return;
+    if (optionGroups.length === 0) {
+      console.log('[ProductConfigurator] No option groups available');
+      return;
+    }
 
     const initial: Record<string, number> = {};
     optionGroups.forEach((group) => {
@@ -95,6 +106,7 @@ export function ProductConfigurator({
       }
     });
 
+    console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
   }, [optionGroups]);
 
@@ -102,9 +114,22 @@ export function ProductConfigurator({
   useEffect(() => {
     const optionIds = Object.values(selectedOptions);
     
+    console.log('[ProductConfigurator] Price fetch check:', {
+      optionIdsLength: optionIds.length,
+      optionGroupsLength: optionGroups.length,
+      optionIds,
+      selectedOptions
+    });
+    
     // Only fetch if we have selections for all groups
-    if (optionIds.length !== optionGroups.length) return;
-    if (optionIds.some(id => !id)) return;
+    if (optionIds.length !== optionGroups.length) {
+      console.log('[ProductConfigurator] Skipping price fetch: not all groups selected');
+      return;
+    }
+    if (optionIds.some(id => !id)) {
+      console.log('[ProductConfigurator] Skipping price fetch: some IDs are falsy');
+      return;
+    }
 
     const fetchPrice = async () => {
       setFetchingPrice(true);
