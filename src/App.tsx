@@ -98,6 +98,7 @@ const AdminNonprofits = lazyPage("AdminNonprofits", () => import("./pages/AdminN
 import AdminNonprofitAnalytics from "./pages/AdminNonprofitAnalytics";
 import AdminNonprofitApprovals from "./pages/AdminNonprofitApprovals";
 import AdminStripeAnalytics from "./pages/AdminStripeAnalytics";
+import AdminTransactions from "./pages/AdminTransactions";
 const AdminProducts = lazyPage("AdminProducts", () => import("./pages/AdminProducts"));
 const NonprofitProfile = lazyPage("NonprofitProfile", () => import("./pages/NonprofitProfile"));
 const SubmitNonprofit = lazyPage("SubmitNonprofit", () => import("./pages/SubmitNonprofit"));
@@ -597,6 +598,16 @@ export default function App() {
             element={
               <RouteBoundary name="AdminStripeAnalytics">
                 <AdminStripeAnalytics />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Transactions */}
+          <Route
+            path="/admin/transactions"
+            element={
+              <RouteBoundary name="AdminTransactions">
+                <AdminTransactions />
               </RouteBoundary>
             }
           />

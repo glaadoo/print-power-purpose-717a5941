@@ -121,6 +121,7 @@ serve(async (req) => {
           cause_id: causeId,
           cause_name: causeName,
           session_id: sessionId,
+          payment_mode: stripeMode,
         })
         .eq('id', orderId);
 
@@ -143,6 +144,7 @@ serve(async (req) => {
           product_name: productName,
           cause_id: causeId,
           cause_name: causeName,
+          payment_mode: stripeMode,
         })
         .select('id')
         .single();

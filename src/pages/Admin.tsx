@@ -898,6 +898,24 @@ export default function Admin() {
                   </GlassCard>
                 </div>
 
+                <div onClick={() => navigate("/admin/transactions")} className="cursor-pointer">
+                  <GlassCard className="bg-white/5 border-white/20 hover:bg-white/10 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-serif font-bold text-white">Transaction Dashboard</h3>
+                      <Activity className="h-6 w-6 text-white/60" />
+                    </div>
+                    <p className="text-white/70 mb-4">
+                      View and compare test vs live transactions separately with detailed statistics
+                    </p>
+                    <div className="flex items-center text-white/80 hover:text-white transition-colors">
+                      <span className="text-sm font-medium">View Transactions</span>
+                      <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </GlassCard>
+                </div>
+
                 <GlassCard className="bg-white/5 border-white/20">
                   <h3 className="text-xl font-serif font-bold text-white mb-4">Cause Progress</h3>
                   <div className="space-y-3">
