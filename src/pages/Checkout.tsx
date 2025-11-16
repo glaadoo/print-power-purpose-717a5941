@@ -122,9 +122,11 @@ export default function Checkout() {
           .from("causes")
           .select("name")
           .eq("id", causeId)
-          .single();
+          .maybeSingle();
         if (!error && data?.name) {
           setSelectedCauseName(data.name);
+        } else if (error) {
+          console.error("Error fetching cause:", error);
         }
       })();
     } else {
@@ -143,9 +145,14 @@ export default function Checkout() {
         .from("products")
         .select("*")
         .eq("id", productId)
-        .single()
+        .maybeSingle()
         .then(({ data, error }) => {
-          if (error || !data) {
+          if (error) {
+            console.error("Error fetching product:", error);
+            setError("Error loading product. Please try again.");
+            return;
+          }
+          if (!data) {
             setError("Product not found");
             return;
           }
