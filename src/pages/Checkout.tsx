@@ -71,7 +71,9 @@ export default function Checkout() {
     const q = getFromQuery();
     const ls = getFromLocalStorage();
     const causeIdFromCtx =
-      (causeCtx as any)?.cause?.id || (causeCtx as any)?.cause?.causeId;
+      (causeCtx as any)?.cause?.id || 
+      (causeCtx as any)?.cause?.causeId || 
+      (causeCtx as any)?.nonprofit?.id;
 
     return {
       productId: st.productId ?? q.productId ?? (ls as any).productId,
@@ -118,17 +120,30 @@ export default function Checkout() {
     // Only use cause if explicitly provided by user
     if (causeId) {
       setSelectedCauseId(String(causeId));
-      // Fetch the cause name for the selected causeId
+      // Check if it's a nonprofit or a cause and fetch the name accordingly
       (async () => {
-        const { data, error } = await supabase
+        // Try fetching from causes first
+        const { data: causeData, error: causeError } = await supabase
           .from("causes")
           .select("name")
           .eq("id", causeId)
           .maybeSingle();
-        if (!error && data?.name) {
-          setSelectedCauseName(data.name);
-        } else if (error) {
-          console.error("Error fetching cause:", error);
+        
+        if (!causeError && causeData?.name) {
+          setSelectedCauseName(causeData.name);
+        } else {
+          // If not found in causes, try nonprofits
+          const { data: nonprofitData, error: nonprofitError } = await supabase
+            .from("nonprofits")
+            .select("name")
+            .eq("id", causeId)
+            .maybeSingle();
+          
+          if (!nonprofitError && nonprofitData?.name) {
+            setSelectedCauseName(nonprofitData.name);
+          } else if (nonprofitError) {
+            console.error("Error fetching nonprofit:", nonprofitError);
+          }
         }
       })();
     } else {
