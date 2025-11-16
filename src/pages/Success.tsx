@@ -124,33 +124,36 @@ export default function Success() {
               <p className="mt-6 text-base opacity-90">What would you like to do next?</p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                <Link to="/">
-                  <Button 
-                    variant="default"
-                    size="lg"
-                    className="rounded-full bg-white text-black hover:bg-white/90 w-full"
-                  >
+                <Button 
+                  asChild
+                  variant="default"
+                  size="lg"
+                  className="rounded-full bg-white text-black hover:bg-white/90 w-full"
+                >
+                  <Link to="/">
                     Back to Home
-                  </Button>
-                </Link>
-                <Link to="/products">
-                  <Button 
-                    variant="outline"
-                    size="lg"
-                    className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full"
-                  >
+                  </Link>
+                </Button>
+                <Button 
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full"
+                >
+                  <Link to="/products">
                     Continue Shopping
-                  </Button>
-                </Link>
-                <Link to="/causes">
-                  <Button 
-                    variant="outline"
-                    size="lg"
-                    className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full"
-                  >
+                  </Link>
+                </Button>
+                <Button 
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full"
+                >
+                  <Link to="/causes">
                     Choose Another Cause
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>
