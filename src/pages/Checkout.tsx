@@ -96,6 +96,8 @@ export default function Checkout() {
 
   // Legal consent state
   const [legalConsent, setLegalConsent] = useState(false);
+  // Detect when the page is stuck in a loading state and surface an actionable error
+  const [stalled, setStalled] = useState(false);
 
 
   // Fetch product & persist merged selection (refresh-proof)
@@ -230,6 +232,24 @@ export default function Checkout() {
     }
   }
 
+  // Surface an error if prerequisites aren't met after a short delay
+  useEffect(() => {
+    const needsPrereqs = (cartItems.length === 0 && !product) || !(selectedCauseId || merged.causeId);
+    if (!needsPrereqs) {
+      setStalled(false);
+      return;
+    }
+    setStalled(true);
+    const t = setTimeout(() => {
+      if (!(selectedCauseId || merged.causeId)) {
+        setError("Please select a cause before checkout.");
+      } else if (cartItems.length === 0 && !product) {
+        setError("Missing product. Please add an item to your cart.");
+      }
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [cartItems.length, product, selectedCauseId, merged.causeId]);
+
   // ---- UI ----
   if (error) {
     return (
@@ -259,9 +279,9 @@ export default function Checkout() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button 
                     className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
-                    onClick={() => navigate("/causes")}
+                    onClick={() => navigate(error?.toLowerCase().includes("product") ? "/products" : "/causes")}
                   >
-                    Pick a Cause
+                    {error?.toLowerCase().includes("product") ? "Browse Products" : "Pick a Cause"}
                   </button>
                 </div>
               </div>
