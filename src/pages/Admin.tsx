@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import VideoUpload from "@/components/VideoUpload";
 import BulkImportDialog from "@/components/admin/BulkImportDialog";
 import WhoWeServeEditor from "@/components/admin/WhoWeServeEditor";
+import { StripeModeToggle } from "@/components/admin/StripeModeToggle";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -810,6 +811,12 @@ export default function Admin() {
                 >
                   Pages
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="settings" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Settings
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -1416,6 +1423,15 @@ export default function Admin() {
 
             <TabsContent value="pages">
               <WhoWeServeEditor />
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <div className="space-y-6">
+                <GlassCard className="bg-white/5 border-white/20">
+                  <h2 className="text-2xl font-serif font-semibold text-white mb-6">Payment Settings</h2>
+                  <StripeModeToggle />
+                </GlassCard>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
