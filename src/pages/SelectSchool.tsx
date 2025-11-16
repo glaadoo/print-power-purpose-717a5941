@@ -298,17 +298,9 @@ export default function SelectSchool() {
   }
 
   return (
-    <div className="relative min-h-screen text-white">
-      {/* Video Background */}
-      <VideoBackground
-        srcMp4="/media/hero.mp4"
-        srcWebm="/media/hero.webm"
-        poster="/media/hero-poster.jpg"
-        overlay={<div className="absolute inset-0 bg-black/40" />}
-      />
-
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
       {/* Top bar */}
-      <header className="relative z-50 px-4 md:px-6 py-3 flex items-center justify-between backdrop-blur bg-black/20 border-b border-white/10">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10 relative">
         <Button
           onClick={() => nav(-1)}
           variant="outline"
@@ -320,305 +312,320 @@ export default function SelectSchool() {
         </Button>
         
         <div className="absolute left-1/2 -translate-x-1/2 tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
-          SELECT SCHOOL
+          SELECT&nbsp;SCHOOL
         </div>
         
-        <div className="w-20" />
+        <div className="w-20" /> {/* Spacer for centering */}
       </header>
 
-      {/* Main Content */}
-      <main className="relative pt-20 pb-16 px-4 md:px-10 overflow-y-auto">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Single Large GlassCard */}
-          <GlassCard className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl p-6 md:p-10 max-h-[80vh] overflow-y-auto">
+      {/* Fullscreen content */}
+      <div className="h-full w-full pt-16 overflow-y-auto">
+        <VideoBackground
+          srcMp4="/media/hero.mp4"
+          srcWebm="/media/hero.webm"
+          poster="/media/hero-poster.jpg"
+          overlay={<div className="absolute inset-0 bg-black/50" />}
+        />
+
+        <div className="relative w-full min-h-full pt-4 pb-32 px-4">
+          <div className="w-full max-w-6xl mx-auto">
             {/* ADD SCHOOL FORM */}
-            <div className="mb-12">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2">Add your school</h2>
-                  <p className="text-white/70 text-sm md:text-base">
-                    Can't find your school? Add it here and it becomes an option for everyone.
-                  </p>
+            <div className="mb-8">
+              <GlassCard className="p-6">
+                <div className="flex items-start justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Add your school</h2>
+                    <p className="text-sm opacity-80">
+                      Can't find your school? Add it here and it becomes an option for everyone.
+                    </p>
+                  </div>
+                  
+                  {/* Kenzie Animation */}
+                  <button
+                    onClick={() => {
+                      const kenzieWidget = document.querySelector('[data-kenzie-chat]');
+                      if (kenzieWidget) {
+                        (kenzieWidget as HTMLElement).click();
+                      }
+                    }}
+                    className="group p-2 rounded-full bg-white/5 hover:bg-white/10 transition-all hover:scale-110"
+                    aria-label="Get help from Kenzie"
+                  >
+                    <PawPrint className="h-6 w-6 text-white/80 group-hover:text-white transition-colors animate-pulse" />
+                  </button>
                 </div>
-                
-                {/* Kenzie Animation */}
-                <button
-                  onClick={() => {
-                    const kenzieWidget = document.querySelector('[data-kenzie-chat]');
-                    if (kenzieWidget) {
-                      (kenzieWidget as HTMLElement).click();
-                    }
-                  }}
-                  className="group p-2 rounded-full bg-white/5 hover:bg-white/10 transition-all hover:scale-110"
-                  aria-label="Get help from Kenzie"
-                >
-                  <PawPrint className="h-6 w-6 text-white/80 group-hover:text-white transition-colors animate-pulse" />
-                </button>
-              </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  {/* School Name */}
-                  <div>
-                    <Label htmlFor="name" className="text-white">School Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleFieldChange("name", e.target.value)}
-                      onBlur={() => handleFieldBlur("name")}
-                      className={`bg-white/10 border-white/20 text-white placeholder:text-white/50 ${
-                        formErrors.name ? 'border-red-500' : ''
-                      }`}
-                      placeholder="Lincoln High School"
-                    />
-                    {formErrors.name && (
-                      <p className="text-red-400 text-sm mt-1">{formErrors.name}</p>
-                    )}
-                  </div>
-
-                  {/* District */}
-                  <div>
-                    <Label htmlFor="district" className="text-white">District</Label>
-                    <Input
-                      id="district"
-                      value={formData.district}
-                      onChange={(e) => handleFieldChange("district", e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                      placeholder="Optional"
-                    />
-                  </div>
-
-                  {/* Address Line 1 */}
-                  <div>
-                    <Label htmlFor="address_line1" className="text-white">Address *</Label>
-                    <Input
-                      id="address_line1"
-                      value={formData.address_line1}
-                      onChange={(e) => handleFieldChange("address_line1", e.target.value)}
-                      onBlur={() => handleFieldBlur("address_line1")}
-                      className={`bg-white/10 border-white/20 text-white placeholder:text-white/50 ${
-                        formErrors.address_line1 ? 'border-red-500' : ''
-                      }`}
-                      placeholder="123 Main Street"
-                    />
-                    {formErrors.address_line1 && (
-                      <p className="text-red-400 text-sm mt-1">{formErrors.address_line1}</p>
-                    )}
-                  </div>
-
-                  {/* Address Line 2 */}
-                  <div>
-                    <Label htmlFor="address_line2" className="text-white">Address Line 2</Label>
-                    <Input
-                      id="address_line2"
-                      value={formData.address_line2}
-                      onChange={(e) => handleFieldChange("address_line2", e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                      placeholder="Suite 100 (optional)"
-                    />
-                  </div>
-
-                  {/* City */}
-                  <div>
-                    <Label htmlFor="city" className="text-white">City *</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => handleFieldChange("city", e.target.value)}
-                      onBlur={() => handleFieldBlur("city")}
-                      className={`bg-white/10 border-white/20 text-white placeholder:text-white/50 ${
-                        formErrors.city ? 'border-red-500' : ''
-                      }`}
-                      placeholder="Springfield"
-                    />
-                    {formErrors.city && (
-                      <p className="text-red-400 text-sm mt-1">{formErrors.city}</p>
-                    )}
-                  </div>
-
-                  {/* State */}
-                  <div>
-                    <Label htmlFor="state" className="text-white">State *</Label>
-                    <Select
-                      value={formData.state}
-                      onValueChange={(value) => handleFieldChange("state", value)}
-                    >
-                      <SelectTrigger
-                        className={`bg-white/10 border-white/20 text-white ${
-                          formErrors.state ? 'border-red-500' : ''
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    {/* School Name */}
+                    <div>
+                      <Label htmlFor="name" className="text-white">School Name *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => handleFieldChange("name", e.target.value)}
+                        onBlur={() => handleFieldBlur("name")}
+                        className={`bg-white/10 border-white/20 text-white placeholder:text-white/50 ${
+                          formErrors.name ? 'border-red-500' : ''
                         }`}
+                        placeholder="Lincoln High School"
+                      />
+                      {formErrors.name && (
+                        <p className="text-red-400 text-sm mt-1">{formErrors.name}</p>
+                      )}
+                    </div>
+
+                    {/* District */}
+                    <div>
+                      <Label htmlFor="district" className="text-white">District</Label>
+                      <Input
+                        id="district"
+                        value={formData.district}
+                        onChange={(e) => handleFieldChange("district", e.target.value)}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        placeholder="Optional"
+                      />
+                    </div>
+
+                    {/* Address Line 1 */}
+                    <div>
+                      <Label htmlFor="address_line1" className="text-white">Address *</Label>
+                      <Input
+                        id="address_line1"
+                        value={formData.address_line1}
+                        onChange={(e) => handleFieldChange("address_line1", e.target.value)}
+                        onBlur={() => handleFieldBlur("address_line1")}
+                        className={`bg-white/10 border-white/20 text-white placeholder:text-white/50 ${
+                          formErrors.address_line1 ? 'border-red-500' : ''
+                        }`}
+                        placeholder="123 Main Street"
+                      />
+                      {formErrors.address_line1 && (
+                        <p className="text-red-400 text-sm mt-1">{formErrors.address_line1}</p>
+                      )}
+                    </div>
+
+                    {/* Address Line 2 */}
+                    <div>
+                      <Label htmlFor="address_line2" className="text-white">Address Line 2</Label>
+                      <Input
+                        id="address_line2"
+                        value={formData.address_line2}
+                        onChange={(e) => handleFieldChange("address_line2", e.target.value)}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        placeholder="Suite 100 (optional)"
+                      />
+                    </div>
+
+                    {/* City */}
+                    <div>
+                      <Label htmlFor="city" className="text-white">City *</Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => handleFieldChange("city", e.target.value)}
+                        onBlur={() => handleFieldBlur("city")}
+                        className={`bg-white/10 border-white/20 text-white placeholder:text-white/50 ${
+                          formErrors.city ? 'border-red-500' : ''
+                        }`}
+                        placeholder="Springfield"
+                      />
+                      {formErrors.city && (
+                        <p className="text-red-400 text-sm mt-1">{formErrors.city}</p>
+                      )}
+                    </div>
+
+                    {/* State */}
+                    <div>
+                      <Label htmlFor="state" className="text-white">State *</Label>
+                      <Select
+                        value={formData.state}
+                        onValueChange={(value) => handleFieldChange("state", value)}
                       >
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-white/20 text-white max-h-60 z-[100]">
-                        {US_STATES.map(state => (
-                          <SelectItem key={state} value={state} className="text-white hover:bg-white/10">
-                            {state}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {formErrors.state && (
-                      <p className="text-red-400 text-sm mt-1">{formErrors.state}</p>
-                    )}
+                        <SelectTrigger
+                          className={`bg-white/10 border-white/20 text-white ${
+                            formErrors.state ? 'border-red-500' : ''
+                          }`}
+                        >
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-900 border-white/20 text-white max-h-60 z-[100]">
+                          {US_STATES.map(state => (
+                            <SelectItem key={state} value={state} className="text-white hover:bg-white/10">
+                              {state}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {formErrors.state && (
+                        <p className="text-red-400 text-sm mt-1">{formErrors.state}</p>
+                      )}
+                    </div>
+
+                    {/* County */}
+                    <div>
+                      <Label htmlFor="county" className="text-white">County</Label>
+                      <Input
+                        id="county"
+                        value={formData.county}
+                        onChange={(e) => handleFieldChange("county", e.target.value)}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        placeholder="Optional"
+                      />
+                    </div>
+
+                    {/* ZIP Code */}
+                    <div>
+                      <Label htmlFor="zip" className="text-white">ZIP Code *</Label>
+                      <Input
+                        id="zip"
+                        value={formData.zip}
+                        onChange={(e) => handleFieldChange("zip", e.target.value)}
+                        onBlur={() => handleFieldBlur("zip")}
+                        className={`bg-white/10 border-white/20 text-white placeholder:text-white/50 ${
+                          formErrors.zip ? 'border-red-500' : ''
+                        }`}
+                        placeholder="12345"
+                      />
+                      {formErrors.zip && (
+                        <p className="text-red-400 text-sm mt-1">{formErrors.zip}</p>
+                      )}
+                    </div>
+
+                    {/* School Level */}
+                    <div>
+                      <Label htmlFor="school_level" className="text-white">School Level</Label>
+                      <Select
+                        value={formData.school_level}
+                        onValueChange={(value) => handleFieldChange("school_level", value)}
+                      >
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-900 border-white/20 text-white z-[100]">
+                          {SCHOOL_LEVELS.map(level => (
+                            <SelectItem key={level} value={level} className="text-white hover:bg-white/10">
+                              {level}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  {/* County */}
-                  <div>
-                    <Label htmlFor="county" className="text-white">County</Label>
-                    <Input
-                      id="county"
-                      value={formData.county}
-                      onChange={(e) => handleFieldChange("county", e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                      placeholder="Optional"
-                    />
-                  </div>
-
-                  {/* ZIP Code */}
-                  <div>
-                    <Label htmlFor="zip" className="text-white">ZIP Code *</Label>
-                    <Input
-                      id="zip"
-                      value={formData.zip}
-                      onChange={(e) => handleFieldChange("zip", e.target.value)}
-                      onBlur={() => handleFieldBlur("zip")}
-                      className={`bg-white/10 border-white/20 text-white placeholder:text-white/50 ${
-                        formErrors.zip ? 'border-red-500' : ''
-                      }`}
-                      placeholder="12345"
-                    />
-                    {formErrors.zip && (
-                      <p className="text-red-400 text-sm mt-1">{formErrors.zip}</p>
-                    )}
-                  </div>
-
-                  {/* School Level */}
-                  <div>
-                    <Label htmlFor="school_level" className="text-white">School Level</Label>
-                    <Select
-                      value={formData.school_level}
-                      onValueChange={(value) => handleFieldChange("school_level", value)}
+                  {/* Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={clearForm}
+                      className="text-white hover:bg-white/10"
                     >
-                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                        <SelectValue placeholder="Select level" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-white/20 text-white z-[100]">
-                        {SCHOOL_LEVELS.map(level => (
-                          <SelectItem key={level} value={level} className="text-white hover:bg-white/10">
-                            {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      Clear form
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={submitting}
+                      className="bg-white text-black hover:bg-white/90"
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save this school'
+                      )}
+                    </Button>
                   </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={clearForm}
-                    className="text-white hover:bg-white/10"
-                  >
-                    Clear form
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={submitting}
-                    className="bg-white text-black hover:bg-white/90"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save this school'
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </div>
-
-            {/* Divider */}
-            <div className="flex items-center gap-4 my-8">
-              <div className="flex-1 h-px bg-white/20" />
-              <span className="text-white/50 text-sm">Or select a school already added</span>
-              <div className="flex-1 h-px bg-white/20" />
+                </form>
+              </GlassCard>
             </div>
 
             {/* SCHOOL GRID */}
-            <div>
-              <div className="mb-6">
-                <h2 className="text-2xl md:text-3xl font-bold mb-2">Select School</h2>
-                <p className="text-white/70 text-sm md:text-base">
-                  These schools have been added by our community.
-                </p>
-              </div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold mb-4">Or Select a School</h2>
+              <p className="text-sm opacity-80 mb-4">
+                These schools have been added by our community.
+              </p>
+            </div>
 
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-white/50" />
-                </div>
-              ) : schools.length === 0 ? (
-                <div className="text-center py-12">
-                  <PawPrint className="h-12 w-12 text-white/30 mx-auto mb-4" />
-                  <p className="text-white/70">
-                    No schools have been added yet. Be the first to add yours above!
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {loading ? (
+              <div className="text-center text-white/80 py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                <p className="mt-4">Loading schools…</p>
+              </div>
+            ) : schools.length === 0 ? (
+              <div className="text-center py-12">
+                <PawPrint className="h-12 w-12 text-white/30 mx-auto mb-4" />
+                <p className="text-lg text-white/80">No schools have been added yet.</p>
+                <p className="text-sm text-white/60 mt-2">Be the first to add yours above!</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {schools.map(school => (
                     <button
                       key={school.id}
                       id={`school-${school.id}`}
                       onClick={() => handleSelectSchool(school)}
                       className={`
-                        rounded-2xl border px-4 py-6 text-left
-                        bg-white/5 backdrop-blur-md
-                        hover:scale-105 hover:border-white/40 cursor-pointer
-                        transition-all duration-300
-                        ${selectedSchoolId === school.id ? 'border-emerald-400 shadow-emerald-500/40 shadow-lg' : 'border-white/20'}
-                        ${highlightSchoolId === school.id ? 'border-yellow-400 shadow-yellow-500/40 shadow-lg animate-pulse' : ''}
+                        aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
+                        ${
+                          selectedSchoolId === school.id
+                            ? "border-white/70 bg-white/25 scale-105"
+                            : "border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/15 hover:scale-105"
+                        }
+                        ${highlightSchoolId === school.id ? 'animate-pulse border-yellow-400 bg-yellow-500/20' : ''}
                       `}
                       tabIndex={0}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSelectSchool(school);
                       }}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-lg leading-tight truncate pr-2">
-                          {school.name}
-                        </h3>
-                        {selectedSchoolId === school.id && (
-                          <Check className="h-5 w-5 text-emerald-400 flex-shrink-0" />
-                        )}
-                      </div>
+                      <h3 className="text-base md:text-lg font-bold mb-2 line-clamp-2">
+                        {school.name}
+                      </h3>
                       
-                      <p className="text-white/70 text-sm mb-3">
+                      <p className="text-xs md:text-sm opacity-80 mb-3">
                         {school.city}, {school.state}
                       </p>
 
                       {school.school_level && (
-                        <div className="inline-block px-2 py-1 bg-white/10 rounded text-xs text-white/80">
-                          {school.school_level}
+                        <div className="mt-auto">
+                          <div className="inline-block px-2 py-1 bg-white/10 rounded text-xs">
+                            {school.school_level}
+                          </div>
                         </div>
                       )}
 
-                      <p className="text-white/40 text-xs mt-3">
-                        Added by our community
-                      </p>
+                      {selectedSchoolId === school.id && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="h-5 w-5 text-white" />
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-          </GlassCard>
+
+                {selectedSchoolId && (
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={() => {
+                        const selected = schools.find(s => s.id === selectedSchoolId);
+                        if (selected) handleSelectSchool(selected);
+                      }}
+                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-base"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
