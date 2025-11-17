@@ -45,8 +45,24 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
     { label: "Insights", href: "/insights" },
     { label: "News", href: "/news" },
     { label: "Contact", href: "/contact" },
-    { label: "Donate", href: "/causes?flow=donation" },
+    { label: "Donate", href: "/donate" }, // Changed to direct /donate path
   ];
+
+  // Handler for Donate button to set guest access if not already onboarded
+  const handleDonateClick = (e: React.MouseEvent, href: string) => {
+    if (href === "/donate") {
+      e.preventDefault();
+      if (typeof window !== "undefined") {
+        const access = window.localStorage.getItem("ppp_access");
+        if (!access) {
+          // Not onboarded yet → treat as "Continue as Guest"
+          window.localStorage.setItem("ppp_access", "guest");
+        }
+      }
+      navigate("/donate");
+      onClose();
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -176,7 +192,12 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                         to={it.href}
                         onClick={(e) => {
                           console.log(`Navigating to: ${it.href}`);
-                          onClose();
+                          // Special handling for Donate link
+                          if (it.href === "/donate") {
+                            handleDonateClick(e, it.href);
+                          } else {
+                            onClose();
+                          }
                         }}
                         className="
                           inline-block ml-auto
