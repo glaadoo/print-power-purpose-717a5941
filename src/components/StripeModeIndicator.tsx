@@ -61,17 +61,17 @@ export const StripeModeIndicator = () => {
       <Badge 
         variant={stripeMode === "live" ? "destructive" : "default"}
         className={`
-          flex items-center gap-2 px-4 py-2 text-sm font-bold shadow-2xl border-2
+          flex items-center gap-2 px-6 py-3 font-bold shadow-2xl border-2
           ${stripeMode === "live" 
-            ? "bg-red-600 text-white border-red-400" 
-            : "bg-green-600 text-white border-green-400 animate-pulse"
+            ? "bg-red-600 text-white border-red-400 text-base animate-pulse" 
+            : "bg-green-600 text-white border-green-400 text-sm"
           }
         `}
       >
         {stripeMode === "live" ? (
           <>
-            <AlertCircle className="h-5 w-5" />
-            LIVE MODE
+            <AlertCircle className="h-6 w-6" />
+            <span className="tracking-wide">🔴 LIVE MODE - REAL PAYMENTS</span>
           </>
         ) : (
           <>
