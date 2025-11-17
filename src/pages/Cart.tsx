@@ -20,7 +20,7 @@ export default function Cart() {
 
   const hasItems = items.length > 0;
 
-  // Optional: compute per-line totals if you want to display them later
+  // Compute per-line totals
   const detailed = useMemo(
     () =>
       items.map((it) => ({
@@ -29,6 +29,8 @@ export default function Cart() {
       })),
     [items]
   );
+
+  const subtotal = totalCents;
 
   return (
     <div className="fixed inset-0 text-white">

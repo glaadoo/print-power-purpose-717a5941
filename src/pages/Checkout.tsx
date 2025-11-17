@@ -192,25 +192,26 @@ export default function Checkout() {
     const normalizedDonation = normalizeDonationCents(donation);
 
     const payload = {
-      items: cartItems.map(item => ({
-        productId: item.id,
-        quantity: item.quantity,
-        name: item.name,
-        priceCents: item.priceCents,
-        imageUrl: item.imageUrl || undefined,
-      })),
-      causeId: causeIdForCheckout,
+      cart: {
+        items: cartItems.map(item => ({
+          id: item.id,
+          quantity: item.quantity,
+          name: item.name,
+          priceCents: item.priceCents,
+        })),
+      },
+      nonprofitId: (causeCtx as any)?.nonprofit?.id || null,
       donationCents: normalizedDonation,
     };
 
-    const fnUrl = `${import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co"}/functions/v1/checkout-session`;
+    const fnUrl = `${import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co"}/functions/v1/checkout-session-v2`;
     const supaAnon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
       import.meta.env.VITE_SUPABASE_ANON_KEY ||
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw";
 
     try {
       // Use retry logic for API call
-      const { url } = await withRetry(async () => {
+      const response = await withRetry(async () => {
         const r = await fetch(fnUrl, {
           method: "POST",
           headers: {
@@ -223,7 +224,7 @@ export default function Checkout() {
 
         const txt = await r.text();
         if (!r.ok) {
-          console.error("[checkout-session FAILED]", r.status, txt);
+          console.error("[checkout-session-v2 FAILED]", r.status, txt);
           const error: any = new Error(txt || `HTTP ${r.status}`);
           error.status = r.status;
           throw error;
@@ -231,14 +232,15 @@ export default function Checkout() {
 
         const data = JSON.parse(txt || "{}");
         if (!data.url) {
-          console.error("[checkout-session MISSING URL]", txt);
+          console.error("[checkout-session-v2 MISSING URL]", txt);
           throw new Error("Stripe did not return a URL");
         }
 
         return data;
       });
 
-      window.location.href = url; // Redirect to Stripe Hosted Checkout
+      console.log("Checkout created:", response);
+      window.location.href = response.url; // Redirect to Stripe Hosted Checkout
     } catch (e: any) {
       console.error(e);
       alert(`Checkout error. ${e?.message || "Please try again."}`);
