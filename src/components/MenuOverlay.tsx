@@ -45,12 +45,12 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
     { label: "Insights", href: "/insights" },
     { label: "News", href: "/news" },
     { label: "Contact", href: "/contact" },
-    { label: "Donate", href: "/donate" }, // Changed to direct /donate path
+    { label: "Donate", href: "/select/nonprofit" },
   ];
 
   // Handler for Donate button to set guest access if not already onboarded
   const handleDonateClick = (e: React.MouseEvent, href: string) => {
-    if (href === "/donate") {
+    if (href === "/select/nonprofit") {
       e.preventDefault();
       if (typeof window !== "undefined") {
         const access = window.localStorage.getItem("ppp_access");
@@ -59,7 +59,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
           window.localStorage.setItem("ppp_access", "guest");
         }
       }
-      navigate("/donate");
+      navigate("/select/nonprofit");
       onClose();
     }
   };
@@ -193,7 +193,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                         onClick={(e) => {
                           console.log(`Navigating to: ${it.href}`);
                           // Special handling for Donate link
-                          if (it.href === "/donate") {
+                          if (it.href === "/select/nonprofit") {
                             handleDonateClick(e, it.href);
                           } else {
                             onClose();
