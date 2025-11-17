@@ -10,6 +10,15 @@ export const StripeModeIndicator = () => {
   useEffect(() => {
     fetchStripeMode();
     
+    // Refetch when page becomes visible (handles back button)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchStripeMode();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     // Subscribe to changes in app_settings
     const channel = supabase
       .channel('stripe-mode-changes')
@@ -30,6 +39,7 @@ export const StripeModeIndicator = () => {
       .subscribe();
 
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       supabase.removeChannel(channel);
     };
   }, []);
