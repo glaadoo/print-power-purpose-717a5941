@@ -152,44 +152,46 @@ serve(async (req) => {
       );
 
       // Extract order data from session metadata and session object
-      const existingOrderId = session.metadata?.order_id || null;
+      const orderId = session.metadata?.order_id || null;
       const orderNumber = session.metadata?.order_number || `ORD-${Date.now()}`;
       const causeName = session.metadata?.cause_name || null;
       const causeId = session.metadata?.cause_id || null;
       const productName = session.metadata?.product_name || null;
       const donationCents = parseInt(session.metadata?.donation_cents || '0');
       const quantity = parseInt(session.metadata?.quantity || '1');
+      const nonprofitId = session.metadata?.nonprofit_id || null;
 
       let orderData;
       let orderError;
 
-      // If order_id exists in metadata, update existing order (JotForm flow)
-      if (existingOrderId) {
-        console.log(`Updating existing order: ${existingOrderId}`);
+      // New flow: Order exists (created before Stripe session), just update with payment info
+      if (orderId) {
+        log('info', `Updating order with payment info: ${orderId}`);
         const updateResult = await supabase
           .from('orders')
           .update({
-            status: 'completed',
+            status: 'paid',
+            paid_at: new Date().toISOString(),
             customer_email: session.customer_details?.email || null,
-            amount_total_cents: session.amount_total || 0,
+            stripe_payment_intent_id: (session as any).payment_intent || null,
             receipt_url: (session as any).receipt_url || null,
-            payment_mode: stripeMode,
           })
-          .eq('id', existingOrderId)
+          .eq('id', orderId)
           .select()
           .single();
         
         orderData = updateResult.data;
         orderError = updateResult.error;
       } else {
-        // Create new order record (direct Stripe flow)
-        console.log(`Creating new order`);
+        // Legacy flow: Create new order record (for backwards compatibility)
+        log('info', `Creating new order (legacy flow)`);
         const insertResult = await supabase
           .from('orders')
           .insert({
             order_number: orderNumber,
             session_id: session.id,
-            status: 'completed',
+            status: 'paid',
+            paid_at: new Date().toISOString(),
             customer_email: session.customer_details?.email || null,
             currency: session.currency || 'usd',
             amount_total_cents: session.amount_total || 0,
@@ -198,8 +200,10 @@ serve(async (req) => {
             product_name: productName,
             cause_id: causeId,
             cause_name: causeName,
+            nonprofit_id: nonprofitId,
             receipt_url: (session as any).receipt_url || null,
             payment_mode: stripeMode,
+            stripe_payment_intent_id: (session as any).payment_intent || null,
           })
           .select()
           .single();

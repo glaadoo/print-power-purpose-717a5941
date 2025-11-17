@@ -1395,6 +1395,19 @@ export default function Admin() {
                     </p>
                   </div>
 
+                  <div className="mb-6">
+                    <Button 
+                      onClick={() => navigate("/admin/orders")} 
+                      className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+                    >
+                      <Activity className="mr-2 h-4 w-4" />
+                      View Orders
+                    </Button>
+                    <p className="text-white/60 text-sm mt-2">
+                      View order details with pricing breakdowns and vendor references
+                    </p>
+                  </div>
+
                   <div className="flex items-center justify-between gap-4">
                     <Button onClick={syncSinaLite} disabled={syncing.sinalite} className="flex items-center gap-2 bg-white text-black hover:bg-white/90">
                       <RefreshCw size={16} className={syncing.sinalite ? "animate-spin" : ""} /> Sync SinaLite

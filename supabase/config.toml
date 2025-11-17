@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.checkout-session]
 verify_jwt = false
 
+[functions.checkout-session-v2]
+verify_jwt = false
+
 [functions.verify-checkout]
 verify_jwt = false
 

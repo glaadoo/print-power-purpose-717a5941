@@ -8,15 +8,15 @@ import { Button } from "@/components/ui/button";
 
 export default function Success() {
   const [sp] = useSearchParams();
-  const sessionId = sp.get("session_id");
   const navigate = useNavigate();
   const { clear: clearCart } = useCart();
-  const { cause, clearAll: clearCauseAndNonprofit } = useCause();
-  const causeName = (cause as any)?.name;
+  const { clearAll: clearCauseAndNonprofit } = useCause();
   const [orderInfo, setOrderInfo] = useState<{ order_number?: string; order_id?: string } | null>(null);
 
+  const orderId = sp.get("orderId");
+
   useEffect(() => {
-    // Clear cart, cause, nonprofit & any pending checkout selection so badges/state reset immediately.
+    // Clear cart, cause, nonprofit & any pending checkout selection
     clearCart();
     clearCauseAndNonprofit();
     try {
@@ -25,60 +25,39 @@ export default function Success() {
     } catch {}
   }, [clearCart, clearCauseAndNonprofit]);
 
-  // Fallback finalize to ensure order is saved even if webhook didn't run
+  // Fetch order info by orderId
   useEffect(() => {
-    if (!sessionId) return;
+    if (!orderId) return;
     (async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('verify-checkout', { body: { session_id: sessionId } });
+        const { data, error } = await supabase
+          .from('orders')
+          .select('order_number, id, amount_total_cents, status')
+          .eq('id', orderId)
+          .single();
+        
         if (!error && data) {
-          setOrderInfo(data as any);
+          setOrderInfo({
+            order_number: data.order_number,
+            order_id: data.id
+          });
         }
       } catch (e) {
-        console.error('Finalize order failed', e);
+        console.error('Failed to fetch order', e);
       }
     })();
-  }, [sessionId]);
+  }, [orderId]);
 
   return (
     <div className="min-h-screen text-white relative">
-      {/* Top bar */}
-      <header className="sticky top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        {/* Left: Home */}
+      {/* Top bar - Brand only, no navigation buttons */}
+      <header className="sticky top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
         <Link
           to="/"
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-label="Home"
+          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+          aria-label="Print Power Purpose Home"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <polyline points="9 22 9 12 15 12 15 22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="hidden sm:inline">Home</span>
-        </Link>
-
-        {/* Center: Brand */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <Link
-            to="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </Link>
-        </div>
-
-        {/* Right: Find Causes */}
-        <Link
-          to="/causes"
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-label="Find causes"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2" />
-            <path d="M20 20l-3.2-3.2" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="hidden sm:inline">Find Causes</span>
+          PRINT&nbsp;POWER&nbsp;PURPOSE
         </Link>
       </header>
 
@@ -107,18 +86,18 @@ export default function Success() {
               </h1>
               
               <p className="text-lg opacity-90 mb-2">
-                {causeName ? `Thank you for supporting ${causeName}!` : "Thank you for your support."}
+                Thank you for your support.
               </p>
 
-              {orderInfo?.order_number && (
+              {orderInfo?.order_number ? (
                 <div className="mt-6 p-4 rounded-lg bg-white/10 border border-white/20">
                   <p className="text-sm opacity-70 mb-1">Your Order Number:</p>
                   <p className="text-2xl font-semibold tracking-wider">{orderInfo.order_number}</p>
                 </div>
-              )}
-
-              {!orderInfo?.order_number && sessionId && (
-                <p className="mt-4 text-sm opacity-70">Session ID: {sessionId}</p>
+              ) : orderId ? (
+                <p className="mt-4 text-sm opacity-70">Loading order details...</p>
+              ) : (
+                <p className="mt-4 text-sm opacity-70">We couldn't locate your order. Please contact support.</p>
               )}
 
               <p className="mt-6 text-base opacity-90">What would you like to do next?</p>
@@ -128,7 +107,7 @@ export default function Success() {
                   asChild
                   variant="default"
                   size="lg"
-                  className="rounded-full bg-white text-black hover:bg-white/90 w-full"
+                  className="rounded-full bg-white text-black hover:bg-white/90 w-full sm:w-auto"
                 >
                   <Link to="/">
                     Back to Home
@@ -138,7 +117,7 @@ export default function Success() {
                   asChild
                   variant="outline"
                   size="lg"
-                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full"
+                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full sm:w-auto"
                 >
                   <Link to="/products">
                     Continue Shopping
@@ -148,9 +127,9 @@ export default function Success() {
                   asChild
                   variant="outline"
                   size="lg"
-                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full"
+                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full sm:w-auto"
                 >
-                  <Link to="/causes">
+                  <Link to="/select/nonprofit">
                     Choose Another Cause
                   </Link>
                 </Button>
