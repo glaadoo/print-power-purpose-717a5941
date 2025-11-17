@@ -608,6 +608,27 @@ export type Database = {
         }
         Relationships: []
       }
+      order_sequences: {
+        Row: {
+          created_at: string | null
+          last_sequence: number
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          last_sequence?: number
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          last_sequence?: number
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount_total_cents: number
@@ -618,16 +639,22 @@ export type Database = {
           customer_email: string | null
           donation_cents: number
           id: string
+          items: Json | null
           nonprofit_ein: string | null
           nonprofit_id: string | null
           nonprofit_name: string | null
           order_number: string
+          paid_at: string | null
           payment_mode: string | null
           product_name: string | null
           quantity: number
           receipt_url: string | null
           session_id: string
+          sinalite_order_id: string | null
           status: string
+          stripe_payment_intent_id: string | null
+          subtotal_cents: number | null
+          tax_cents: number | null
         }
         Insert: {
           amount_total_cents?: number
@@ -638,16 +665,22 @@ export type Database = {
           customer_email?: string | null
           donation_cents?: number
           id?: string
+          items?: Json | null
           nonprofit_ein?: string | null
           nonprofit_id?: string | null
           nonprofit_name?: string | null
           order_number: string
+          paid_at?: string | null
           payment_mode?: string | null
           product_name?: string | null
           quantity?: number
           receipt_url?: string | null
           session_id: string
+          sinalite_order_id?: string | null
           status?: string
+          stripe_payment_intent_id?: string | null
+          subtotal_cents?: number | null
+          tax_cents?: number | null
         }
         Update: {
           amount_total_cents?: number
@@ -658,18 +691,74 @@ export type Database = {
           customer_email?: string | null
           donation_cents?: number
           id?: string
+          items?: Json | null
           nonprofit_ein?: string | null
           nonprofit_id?: string | null
           nonprofit_name?: string | null
           order_number?: string
+          paid_at?: string | null
           payment_mode?: string | null
           product_name?: string | null
           quantity?: number
           receipt_url?: string | null
           session_id?: string
+          sinalite_order_id?: string | null
           status?: string
+          stripe_payment_intent_id?: string | null
+          subtotal_cents?: number | null
+          tax_cents?: number | null
         }
         Relationships: []
+      }
+      product_variants: {
+        Row: {
+          base_price_cents: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          markup_fixed_cents: number | null
+          markup_percent: number | null
+          product_id: string
+          updated_at: string | null
+          vendor_variant_id: string
+        }
+        Insert: {
+          base_price_cents: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          markup_fixed_cents?: number | null
+          markup_percent?: number | null
+          product_id: string
+          updated_at?: string | null
+          vendor_variant_id: string
+        }
+        Update: {
+          base_price_cents?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          markup_fixed_cents?: number | null
+          markup_percent?: number | null
+          product_id?: string
+          updated_at?: string | null
+          vendor_variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -679,6 +768,9 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          is_active: boolean | null
+          markup_fixed_cents: number | null
+          markup_percent: number | null
           name: string
           price_override_cents: number | null
           pricing_data: Json | null
@@ -693,6 +785,9 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
+          markup_fixed_cents?: number | null
+          markup_percent?: number | null
           name: string
           price_override_cents?: number | null
           pricing_data?: Json | null
@@ -707,6 +802,9 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
+          markup_fixed_cents?: number | null
+          markup_percent?: number | null
           name?: string
           price_override_cents?: number | null
           pricing_data?: Json | null
@@ -993,6 +1091,7 @@ export type Database = {
       check_error_log_rate_limit: { Args: never; Returns: boolean }
       cleanup_expired_admin_sessions: { Args: never; Returns: undefined }
       cleanup_old_system_logs: { Args: never; Returns: undefined }
+      generate_order_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
