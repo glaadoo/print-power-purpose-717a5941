@@ -4,13 +4,21 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Check } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const StripeModeToggle = () => {
   const [stripeMode, setStripeMode] = useState<"test" | "live">("test");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     fetchStripeMode();
@@ -54,6 +62,7 @@ export const StripeModeToggle = () => {
       if (error) throw error;
 
       setStripeMode(newMode);
+      setShowConfirmation(true);
       toast.success(
         `API mode switched to ${newMode.toUpperCase()}`,
         {
@@ -75,6 +84,7 @@ export const StripeModeToggle = () => {
   }
 
   return (
+    <>
     <Card className="bg-card/50 backdrop-blur border-white/10">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -127,5 +137,66 @@ export const StripeModeToggle = () => {
         </div>
       </CardContent>
     </Card>
+
+    <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+      <DialogContent className="bg-background border-border">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-foreground">
+            <Check className="h-5 w-5 text-green-500" />
+            Mode Switch Confirmed
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            The system is now configured to use {stripeMode === "live" ? "LIVE" : "TEST"} credentials
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 pt-4">
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+              <CheckCircle2 className={`h-5 w-5 mt-0.5 ${stripeMode === "live" ? "text-red-500" : "text-green-500"}`} />
+              <div className="space-y-1 flex-1">
+                <p className="font-semibold text-foreground">Stripe API</p>
+                <p className="text-sm text-muted-foreground">
+                  Using: <code className="bg-background px-2 py-0.5 rounded text-xs">
+                    STRIPE_SECRET_KEY_{stripeMode.toUpperCase()}
+                  </code>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {stripeMode === "live" ? "⚠️ Real charges will be processed" : "Test charges only"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+              <CheckCircle2 className={`h-5 w-5 mt-0.5 ${stripeMode === "live" ? "text-red-500" : "text-green-500"}`} />
+              <div className="space-y-1 flex-1">
+                <p className="font-semibold text-foreground">SinaLite API</p>
+                <p className="text-sm text-muted-foreground">
+                  Using: <code className="bg-background px-2 py-0.5 rounded text-xs">
+                    SINALITE_*_{stripeMode.toUpperCase()}
+                  </code>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {stripeMode === "live" ? "⚠️ Real orders will be placed" : "Test orders only"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {stripeMode === "live" && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-red-500">Warning: Live Mode Active</p>
+                <p className="text-sm text-muted-foreground">
+                  All transactions will result in real charges and orders. Double-check before processing any payments.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
