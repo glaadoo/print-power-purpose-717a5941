@@ -56,29 +56,33 @@ export const StripeModeIndicator = () => {
 
   if (loading) return null;
 
+  // Only show indicator when in live mode OR explicitly in test mode
+  // Live mode: Red, prominent, pulsing
+  // Test mode: Green, clear visibility
+  
+  if (stripeMode === "live") {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <Badge 
+          variant="destructive"
+          className="flex items-center gap-2 px-6 py-3 font-bold shadow-2xl border-2 bg-red-600 text-white border-red-400 text-base animate-pulse"
+        >
+          <AlertCircle className="h-6 w-6" />
+          <span className="tracking-wide">🔴 LIVE MODE - REAL PAYMENTS</span>
+        </Badge>
+      </div>
+    );
+  }
+
+  // Test mode indicator
   return (
     <div className="fixed bottom-4 right-4 z-50">
       <Badge 
-        variant={stripeMode === "live" ? "destructive" : "default"}
-        className={`
-          flex items-center gap-2 px-6 py-3 font-bold shadow-2xl border-2
-          ${stripeMode === "live" 
-            ? "bg-red-600 text-white border-red-400 text-base animate-pulse" 
-            : "bg-green-600 text-white border-green-400 text-sm"
-          }
-        `}
+        variant="default"
+        className="flex items-center gap-2 px-6 py-3 font-bold shadow-lg border-2 bg-green-600 text-white border-green-400 text-sm"
       >
-        {stripeMode === "live" ? (
-          <>
-            <AlertCircle className="h-6 w-6" />
-            <span className="tracking-wide">🔴 LIVE MODE - REAL PAYMENTS</span>
-          </>
-        ) : (
-          <>
-            <CheckCircle2 className="h-5 w-5" />
-            TEST MODE
-          </>
-        )}
+        <CheckCircle2 className="h-5 w-5" />
+        <span className="tracking-wide">✓ TEST MODE</span>
       </Badge>
     </div>
   );
