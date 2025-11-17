@@ -9,6 +9,7 @@ import { CauseProvider } from "./context/CauseContext";
 import { CartProvider } from "./context/CartContext";
 import { ToastProvider } from "./ui/Toast";
 import { Toaster } from "sonner";
+import DebugPageIndicator from "./components/DebugPageIndicator";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -36,6 +37,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <BrowserRouter>
               <ErrorBoundary>
                 <App />
+                <DebugPageIndicator />
               </ErrorBoundary>
             </BrowserRouter>
           </CartProvider>
