@@ -1,4 +1,3 @@
-// src/pages/Products.tsx
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Plus, Minus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
@@ -216,13 +216,21 @@ export default function Products() {
                         
                         const isConfigured = !!configuredPrices[product.id];
                         const canAddToCart = isConfigured;
+                        const isInCart = items.some(item => item.id === product.id);
 
                         return (
                           <GlassCard key={product.id} padding="p-6">
                             <div className="flex flex-col items-start text-left space-y-4 w-full">
-                              <h3 className="text-lg font-bold text-white w-full">
-                                {product.name}
-                              </h3>
+                              <div className="flex items-center justify-between w-full">
+                                <h3 className="text-lg font-bold text-white">
+                                  {product.name}
+                                </h3>
+                                {isInCart && (
+                                  <Badge className="bg-green-600 text-white border-green-400 text-xs">
+                                    In Cart
+                                  </Badge>
+                                )}
+                              </div>
                               
                               <div className="w-full space-y-3">
                               <ProductConfiguratorLoader

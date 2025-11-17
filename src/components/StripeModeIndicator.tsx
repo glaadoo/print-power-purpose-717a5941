@@ -10,14 +10,26 @@ export const StripeModeIndicator = () => {
   useEffect(() => {
     fetchStripeMode();
     
-    // Refetch when page becomes visible (handles back button)
+    // Refetch when page becomes visible (handles back button from Stripe)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         fetchStripeMode();
       }
     };
     
+    // Refetch on popstate (browser back/forward)
+    const handlePopState = () => {
+      fetchStripeMode();
+    };
+    
+    // Refetch on focus (when returning to tab)
+    const handleFocus = () => {
+      fetchStripeMode();
+    };
+    
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('focus', handleFocus);
     
     // Subscribe to changes in app_settings
     const channel = supabase
@@ -40,6 +52,8 @@ export const StripeModeIndicator = () => {
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('focus', handleFocus);
       supabase.removeChannel(channel);
     };
   }, []);
