@@ -447,7 +447,7 @@ export default function Home() {
           { label: "Products", href: "/products" },
           { label: "Causes", href: "/causes" },
           { label: "Contact", href: "/contact" },
-          { label: "Donate", href: "/select/nonprofit" },
+          { label: "Donate", href: "/select/nonprofit?flow=donation" },
         ]}
       />
     </div>
