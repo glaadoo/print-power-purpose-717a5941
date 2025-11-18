@@ -404,14 +404,14 @@ export default function Donate() {
 
               <form onSubmit={handleDonate} className="space-y-6">
                 {/* Frequency Toggle */}
-                <div className="flex gap-3">
+                <div className="bg-white/10 backdrop-blur-sm rounded-full p-1 flex gap-1">
                   <button
                     type="button"
                     onClick={() => setFrequency("once")}
-                    className={`flex-1 px-6 py-3 rounded-full font-semibold transition-all ${
+                    className={`flex-1 px-8 py-3 rounded-full font-semibold transition-all ${
                       frequency === "once"
                         ? "bg-white text-black"
-                        : "bg-white/10 text-white hover:bg-white/20"
+                        : "bg-transparent text-white hover:bg-white/10"
                     }`}
                   >
                     Give once
@@ -419,10 +419,10 @@ export default function Donate() {
                   <button
                     type="button"
                     onClick={() => setFrequency("monthly")}
-                    className={`flex-1 px-6 py-3 rounded-full font-semibold transition-all ${
+                    className={`flex-1 px-8 py-3 rounded-full font-semibold transition-all ${
                       frequency === "monthly"
                         ? "bg-white text-black"
-                        : "bg-white/10 text-white hover:bg-white/20"
+                        : "bg-transparent text-white hover:bg-white/10"
                     }`}
                   >
                     ❤️ Monthly
