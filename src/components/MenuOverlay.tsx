@@ -59,6 +59,9 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
 
     // Set donation flow flag as backup
     window.localStorage.setItem("ppp_donation_flow", "true");
+    
+    console.log("🎯 DONATE BUTTON CLICKED - Setting flow=donate");
+    alert("🎯 Starting DONATION flow");
 
     navigate("/select/nonprofit?flow=donate");
     onClose();
