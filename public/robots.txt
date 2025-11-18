@@ -1,16 +1,9 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Admin pages - DO NOT INDEX
 Disallow: /admin
 Disallow: /dogdoor
+Disallow: /admin/*
+
+Sitemap: https://printpowerpurpose.com/sitemap.xml

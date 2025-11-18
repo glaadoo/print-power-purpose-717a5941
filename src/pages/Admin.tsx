@@ -678,6 +678,12 @@ export default function Admin() {
                   Legal Docs
                 </Button>
               </Link>
+              <Link to="/admin/settings">
+                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                  <KeyRound className="h-4 w-4" />
+                  Settings
+                </Button>
+              </Link>
               <Link to="/system-logs">
                 <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
                   <Activity className="h-4 w-4" />
