@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import VideoBackground from "@/components/VideoBackground";
 import { ArrowLeft } from "lucide-react";
@@ -9,18 +9,12 @@ import { useCause } from "@/context/CauseContext";
 
 export default function SelectNonprofit() {
   const nav = useNavigate();
-  const location = useLocation();
   const { setNonprofit, nonprofit } = useCause();
   const [selectedNonprofit, setSelectedNonprofit] = useState<any | null>(nonprofit);
-  
-  // Get flow from navigation state
-  const flow = location.state?.flow;
 
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
-    console.log("🎯 SelectNonprofit loaded with flow:", flow);
-    alert(`🎯 Flow detected: ${flow || "none"}`);
-  }, [flow]);
+  }, []);
 
   function handleNonprofitSelect(np: any) {
     setSelectedNonprofit(np);
@@ -30,17 +24,8 @@ export default function SelectNonprofit() {
   function handleContinue() {
     if (!selectedNonprofit) return;
     
-    console.log("🔍 Flow check:", flow);
-    alert(`🔍 Flow is: ${flow}`);
-    
-    // If flow is "donate", go to /donate. Otherwise go to /products
-    if (flow === "donate") {
-      alert("✅ Going to DONATE page");
-      nav("/donate");
-    } else {
-      alert("❌ Going to PRODUCTS page");
-      nav("/products");
-    }
+    // ALWAYS go to /donate - this page is ONLY for donation flow
+    nav("/donate");
   }
 
   return (
