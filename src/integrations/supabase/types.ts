@@ -556,6 +556,7 @@ export type Database = {
           created_at: string
           description: string | null
           ein: string | null
+          goal_cents: number | null
           id: string
           impact_metrics: Json | null
           indexed_name: string | null
@@ -575,6 +576,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           ein?: string | null
+          goal_cents?: number | null
           id?: string
           impact_metrics?: Json | null
           indexed_name?: string | null
@@ -594,6 +596,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           ein?: string | null
+          goal_cents?: number | null
           id?: string
           impact_metrics?: Json | null
           indexed_name?: string | null

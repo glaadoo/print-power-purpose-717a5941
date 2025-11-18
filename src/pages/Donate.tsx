@@ -11,6 +11,13 @@ import { useCause } from "@/context/CauseContext";
 
 const PRESET_AMOUNTS = [140, 70, 40, 25, 15, 8];
 
+interface RecentDonation {
+  id: string;
+  amount_cents: number;
+  customer_email: string;
+  created_at: string;
+}
+
 export default function Donate() {
   const nav = useNavigate();
   const { nonprofit } = useCause();
@@ -21,10 +28,62 @@ export default function Donate() {
   const [processing, setProcessing] = useState(false);
   const [frequency, setFrequency] = useState<"once" | "monthly">("once");
   const [showMonthlyUpsell, setShowMonthlyUpsell] = useState(false);
+  const [totalRaised, setTotalRaised] = useState(0);
+  const [goal, setGoal] = useState(150000); // Default $1,500
+  const [recentDonations, setRecentDonations] = useState<RecentDonation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
-  }, []);
+    if (nonprofit?.id) {
+      fetchDonationData();
+    }
+  }, [nonprofit?.id]);
+
+  const fetchDonationData = async () => {
+    if (!nonprofit?.id) return;
+    
+    setLoading(true);
+    try {
+      // Fetch total donations for this nonprofit
+      const { data: donations, error: donationsError } = await supabase
+        .from("donations")
+        .select("amount_cents")
+        .eq("nonprofit_id", nonprofit.id);
+
+      if (donationsError) throw donationsError;
+
+      const total = donations?.reduce((sum, d) => sum + d.amount_cents, 0) || 0;
+      setTotalRaised(total);
+
+      // Fetch recent donations (last 5)
+      const { data: recent, error: recentError } = await supabase
+        .from("donations")
+        .select("id, amount_cents, customer_email, created_at")
+        .eq("nonprofit_id", nonprofit.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (recentError) throw recentError;
+      setRecentDonations(recent || []);
+
+      // Fetch nonprofit goal
+      const { data: nonprofitData, error: nonprofitError } = await supabase
+        .from("nonprofits")
+        .select("goal_cents")
+        .eq("id", nonprofit.id)
+        .maybeSingle();
+
+      if (nonprofitError) throw nonprofitError;
+      if (nonprofitData?.goal_cents) {
+        setGoal(nonprofitData.goal_cents);
+      }
+    } catch (error) {
+      console.error("Error fetching donation data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePresetClick = (preset: number) => {
     setSelectedPreset(preset);
@@ -218,22 +277,34 @@ export default function Donate() {
 
               {/* Progress Section */}
               <div className="space-y-4">
-                <div>
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-4xl font-bold">$27</span>
-                    <span className="text-white/60 text-sm">raised of $1,500 goal</span>
+                {loading ? (
+                  <div className="animate-pulse space-y-2">
+                    <div className="h-10 bg-white/10 rounded w-1/2"></div>
+                    <div className="h-2 bg-white/10 rounded w-full"></div>
+                    <div className="h-4 bg-white/10 rounded w-1/4"></div>
                   </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="bg-green-500 h-full rounded-full transition-all"
-                      style={{ width: '2%' }}
-                    />
+                ) : (
+                  <div>
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-4xl font-bold">${(totalRaised / 100).toFixed(0)}</span>
+                      <span className="text-white/60 text-sm">
+                        raised of ${(goal / 100).toLocaleString()} goal
+                      </span>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className="bg-green-500 h-full rounded-full transition-all"
+                        style={{ width: `${Math.min((totalRaised / goal) * 100, 100)}%` }}
+                      />
+                    </div>
+                    
+                    <p className="text-white/60 text-sm mt-2">
+                      {Math.min(Math.round((totalRaised / goal) * 100), 100)}% funded
+                    </p>
                   </div>
-                  
-                  <p className="text-white/60 text-sm mt-2">2% funded</p>
-                </div>
+                )}
 
                 <div className="space-y-2 pt-4">
                   <p className="text-white/90">
@@ -249,15 +320,41 @@ export default function Donate() {
               <div className="space-y-4">
                 <h3 className="text-xl font-bold">Recent Donations</h3>
                 
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white font-semibold">
-                      S
-                    </div>
-                    <span className="text-white font-medium">Sd2342</span>
+                {loading ? (
+                  <div className="space-y-3">
+                    {[1, 2].map((i) => (
+                      <div key={i} className="animate-pulse bg-white/5 rounded-2xl p-4 h-16"></div>
+                    ))}
                   </div>
-                  <span className="text-white font-semibold">$9</span>
-                </div>
+                ) : recentDonations.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentDonations.map((donation) => {
+                      const initial = donation.customer_email?.charAt(0).toUpperCase() || "A";
+                      const displayName = donation.customer_email?.split("@")[0] || "Anonymous";
+                      
+                      return (
+                        <div 
+                          key={donation.id}
+                          className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-white/10"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white font-semibold">
+                              {initial}
+                            </div>
+                            <span className="text-white font-medium">{displayName}</span>
+                          </div>
+                          <span className="text-white font-semibold">
+                            ${(donation.amount_cents / 100).toFixed(0)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10">
+                    <p className="text-white/60">Be the first to donate!</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
