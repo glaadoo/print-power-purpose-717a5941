@@ -20,6 +20,7 @@ import GlassCard from "@/components/GlassCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import VideoUpload from "@/components/VideoUpload";
 import BulkImportDialog from "@/components/admin/BulkImportDialog";
+import SchoolBulkImportDialog from "@/components/admin/SchoolBulkImportDialog";
 import WhoWeServeEditor from "@/components/admin/WhoWeServeEditor";
 import { StripeModeToggle } from "@/components/admin/StripeModeToggle";
 
@@ -61,6 +62,7 @@ export default function Admin() {
   // Nonprofit form
   const [nonprofitName, setNonprofitName] = useState("");
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [schoolBulkImportOpen, setSchoolBulkImportOpen] = useState(false);
 
   // Orders filters
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
@@ -1058,7 +1060,17 @@ export default function Admin() {
 
             <TabsContent value="schools">
               <GlassCard className="bg-white/5 border-white/20">
-                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Add New School</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-serif font-semibold text-white">Add New School</h2>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSchoolBulkImportOpen(true)}
+                    className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Bulk Import
+                  </Button>
+                </div>
                 <form onSubmit={handleAddSchool} className="space-y-4 max-w-md">
                   <div>
                     <Label htmlFor="schoolName" className="text-white">Name</Label>
@@ -1093,6 +1105,12 @@ export default function Admin() {
                   </Table>
                 </ScrollArea>
               </GlassCard>
+
+              <SchoolBulkImportDialog 
+                open={schoolBulkImportOpen} 
+                onOpenChange={setSchoolBulkImportOpen}
+                onSuccess={loadAllData}
+              />
             </TabsContent>
 
             <TabsContent value="nonprofits">
