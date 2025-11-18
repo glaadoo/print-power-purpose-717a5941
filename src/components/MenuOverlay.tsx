@@ -57,6 +57,9 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
       window.localStorage.setItem("ppp_access", "guest");
     }
 
+    // Set donation flow flag as backup
+    window.localStorage.setItem("ppp_donation_flow", "true");
+
     navigate("/select/nonprofit?flow=donate");
     onClose();
   };
