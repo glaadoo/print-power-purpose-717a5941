@@ -59,7 +59,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
           window.localStorage.setItem("ppp_access", "guest");
         }
       }
-      navigate("/select/nonprofit");
+      navigate("/select/nonprofit?flow=donate");
       onClose();
     }
   };
