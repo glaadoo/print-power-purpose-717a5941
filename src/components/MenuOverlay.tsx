@@ -57,10 +57,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
       window.localStorage.setItem("ppp_access", "guest");
     }
 
-    alert("🎯 Starting DONATION flow");
-
-    // Use navigation state to pass flow info - this NEVER gets lost
-    navigate("/select/nonprofit", { state: { flow: "donate" } });
+    navigate("/select/nonprofit");
     onClose();
   };
 
