@@ -150,7 +150,7 @@ export default function Donate() {
         <header className="px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/30 border-b border-white/10 shrink-0">
           <button
             onClick={() => nav("/")}
-            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+            className="flex items-center gap-2 rounded-full px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M19 12H5M12 19l-7-7 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -181,7 +181,7 @@ export default function Donate() {
               </p>
               <Button
                 onClick={() => nav("/select/nonprofit")}
-                className="w-full bg-white text-black hover:bg-white/90 font-semibold py-6 text-lg rounded-2xl"
+                className="w-full bg-white text-black hover:bg-white/90 font-semibold py-6 text-lg rounded-full"
               >
                 Select Nonprofit
               </Button>
@@ -276,7 +276,7 @@ export default function Donate() {
                         setShowMonthlyUpsell(false);
                         processDonation();
                       }}
-                      className="flex-1 bg-white text-black hover:bg-white/90 rounded-xl"
+                      className="flex-1 bg-white text-black hover:bg-white/90 rounded-full"
                     >
                       Yes, Make it Monthly
                     </Button>
@@ -286,7 +286,7 @@ export default function Donate() {
                         processDonation();
                       }}
                       variant="outline"
-                      className="flex-1 border-white/30 text-white hover:bg-white/10 rounded-xl"
+                      className="flex-1 border-white/30 text-white hover:bg-white/10 rounded-full"
                     >
                       No, One-Time Only
                     </Button>
@@ -307,7 +307,7 @@ export default function Donate() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="50.00"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
                     required
                   />
                 </div>
@@ -321,7 +321,7 @@ export default function Donate() {
                     <button
                       type="button"
                       onClick={() => setFrequency("once")}
-                      className={`p-4 rounded-xl border-2 transition-all ${
+                      className={`p-4 rounded-full border-2 transition-all ${
                         frequency === "once"
                           ? "bg-white text-black border-white"
                           : "bg-white/5 text-white border-white/20 hover:bg-white/10"
@@ -332,7 +332,7 @@ export default function Donate() {
                     <button
                       type="button"
                       onClick={() => setFrequency("monthly")}
-                      className={`p-4 rounded-xl border-2 transition-all ${
+                      className={`p-4 rounded-full border-2 transition-all ${
                         frequency === "monthly"
                           ? "bg-white text-black border-white"
                           : "bg-white/5 text-white border-white/20 hover:bg-white/10"
@@ -372,7 +372,7 @@ export default function Donate() {
                     value={donorEmail}
                     onChange={(e) => setDonorEmail(e.target.value)}
                     placeholder="your@email.com"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
                     required
                   />
                 </div>
@@ -386,7 +386,7 @@ export default function Donate() {
                         type="text"
                         value={donorFirstName}
                         onChange={(e) => setDonorFirstName(e.target.value)}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
                       />
                     </div>
                     <div>
@@ -395,7 +395,7 @@ export default function Donate() {
                         type="text"
                         value={donorLastName}
                         onChange={(e) => setDonorLastName(e.target.value)}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
                       />
                     </div>
                   </div>
@@ -406,7 +406,7 @@ export default function Donate() {
                       type="tel"
                       value={donorPhone}
                       onChange={(e) => setDonorPhone(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
                     />
                   </div>
                 </div>
@@ -415,7 +415,7 @@ export default function Donate() {
                 <Button
                   type="submit"
                   disabled={processing}
-                  className="w-full bg-white text-black hover:bg-white/90 font-bold py-6 text-lg rounded-2xl"
+                  className="w-full bg-white text-black hover:bg-white/90 font-bold py-6 text-lg rounded-full"
                 >
                   {processing ? "Processing..." : `Donate $${amount || "0.00"}`}
                 </Button>
