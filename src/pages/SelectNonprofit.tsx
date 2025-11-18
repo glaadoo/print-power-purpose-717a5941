@@ -10,18 +10,11 @@ import { useCause } from "@/context/CauseContext";
 export default function SelectNonprofit() {
   const nav = useNavigate();
   const { setNonprofit, nonprofit } = useCause();
-  const [searchParams] = useSearchParams();
-  const flowParam = searchParams.get("flow");
   const [selectedNonprofit, setSelectedNonprofit] = useState<any | null>(nonprofit);
 
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
-    // Store donation intent in localStorage as backup
-    if (flowParam === "donate") {
-      localStorage.setItem("ppp_donation_flow", "true");
-      console.log("🎯 DONATION FLOW ACTIVE - flow param detected");
-    }
-  }, [flowParam]);
+  }, []);
 
   function handleNonprofitSelect(np: any) {
     setSelectedNonprofit(np);
@@ -31,18 +24,16 @@ export default function SelectNonprofit() {
   function handleContinue() {
     if (!selectedNonprofit) return;
     
-    const isDonationFlow = flowParam === "donate" || localStorage.getItem("ppp_donation_flow") === "true";
+    // Check ONLY localStorage for the flow
+    const flow = localStorage.getItem("ppp_flow");
     
-    console.log("=== DONATE FLOW DEBUG ===");
-    console.log("flowParam:", flowParam);
-    console.log("localStorage ppp_donation_flow:", localStorage.getItem("ppp_donation_flow"));
-    console.log("isDonationFlow:", isDonationFlow);
-    console.log("========================");
+    console.log("🔍 Flow check:", flow);
+    alert(`🔍 Flow is: ${flow}`);
     
-    // ALWAYS go to /donate if this is a donation flow
-    if (isDonationFlow) {
+    // If flow is "donate", go to /donate. Otherwise go to /products
+    if (flow === "donate") {
       alert("✅ Going to DONATE page");
-      localStorage.removeItem("ppp_donation_flow");
+      localStorage.removeItem("ppp_flow");
       nav("/donate");
     } else {
       alert("❌ Going to PRODUCTS page");
