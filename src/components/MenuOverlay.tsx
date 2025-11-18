@@ -48,20 +48,17 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
     { label: "Donate", href: "/select/nonprofit" },
   ];
 
-  // Handler for Donate button to set guest access if not already onboarded
-  const handleDonateClick = (e: React.MouseEvent, href: string) => {
-    if (href === "/select/nonprofit") {
-      e.preventDefault();
-      if (typeof window !== "undefined") {
-        const access = window.localStorage.getItem("ppp_access");
-        if (!access) {
-          // Not onboarded yet → treat as "Continue as Guest"
-          window.localStorage.setItem("ppp_access", "guest");
-        }
-      }
-      navigate("/select/nonprofit?flow=donate");
-      onClose();
+  // Handler for Donate button to set guest access and route through nonprofit selection
+  const handleDonateClick = () => {
+    if (typeof window === "undefined") return;
+
+    const access = window.localStorage.getItem("ppp_access");
+    if (!access) {
+      window.localStorage.setItem("ppp_access", "guest");
     }
+
+    navigate("/select/nonprofit?flow=donate");
+    onClose();
   };
 
   return (
@@ -187,18 +184,23 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                       >
                         {it.label}
                       </a>
+                    ) : it.href === "/select/nonprofit" ? (
+                      <button
+                        onClick={handleDonateClick}
+                        className="
+                          inline-block ml-auto
+                          text-white/90 hover:text-white
+                          text-lg md:text-xl font-semibold
+                          tracking-wide
+                          transition-all hover:translate-x-1
+                        "
+                      >
+                        {it.label}
+                      </button>
                     ) : (
                       <Link
                         to={it.href}
-                        onClick={(e) => {
-                          console.log(`Navigating to: ${it.href}`);
-                          // Special handling for Donate link
-                          if (it.href === "/select/nonprofit") {
-                            handleDonateClick(e, it.href);
-                          } else {
-                            onClose();
-                          }
-                        }}
+                        onClick={onClose}
                         className="
                           inline-block ml-auto
                           text-white/90 hover:text-white
