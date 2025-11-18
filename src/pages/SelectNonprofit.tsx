@@ -34,12 +34,20 @@ export default function SelectNonprofit() {
   function handleContinue() {
     if (!selectedNonprofit) return;
     
+    console.log("=== DONATE FLOW DEBUG ===");
+    console.log("flowParam:", flowParam);
+    console.log("localStorage ppp_donation_flow:", localStorage.getItem("ppp_donation_flow"));
+    console.log("isDonationFlow:", isDonationFlow);
+    console.log("========================");
+    
     // ALWAYS go to /donate if this is a donation flow
     if (isDonationFlow) {
+      alert("✅ Going to DONATE page");
       // Clear the donation flow flag
       localStorage.removeItem("ppp_donation_flow");
       nav("/donate");
     } else {
+      alert("❌ Going to PRODUCTS page");
       // Only go to products if NOT a donation flow
       nav("/products");
     }
