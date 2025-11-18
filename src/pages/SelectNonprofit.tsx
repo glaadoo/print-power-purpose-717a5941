@@ -24,9 +24,14 @@ export default function SelectNonprofit() {
   }
 
   function handleContinue() {
+    console.log("🔍 SelectNonprofit handleContinue - flow:", flow);
+    console.log("🔍 SelectNonprofit handleContinue - selectedNonprofit:", selectedNonprofit);
+    
     if (flow === "donate" && selectedNonprofit) {
+      console.log("✅ Navigating to /donate");
       nav("/donate");
     } else if (selectedNonprofit) {
+      console.log("⚠️ Navigating to /products");
       nav("/products");
     }
   }
