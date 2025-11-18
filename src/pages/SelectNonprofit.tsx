@@ -11,12 +11,20 @@ export default function SelectNonprofit() {
   const nav = useNavigate();
   const { setNonprofit, nonprofit } = useCause();
   const [searchParams] = useSearchParams();
-  const flow = searchParams.get("flow");
+  const flowParam = searchParams.get("flow");
+  
+  // Check localStorage for donation intent as fallback
+  const isDonationFlow = flowParam === "donate" || localStorage.getItem("ppp_donation_flow") === "true";
+  
   const [selectedNonprofit, setSelectedNonprofit] = useState<any | null>(nonprofit);
 
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
-  }, []);
+    // Store donation intent in localStorage as backup
+    if (flowParam === "donate") {
+      localStorage.setItem("ppp_donation_flow", "true");
+    }
+  }, [flowParam]);
 
   function handleNonprofitSelect(np: any) {
     setSelectedNonprofit(np);
@@ -24,14 +32,15 @@ export default function SelectNonprofit() {
   }
 
   function handleContinue() {
-    console.log("🔍 SelectNonprofit handleContinue - flow:", flow);
-    console.log("🔍 SelectNonprofit handleContinue - selectedNonprofit:", selectedNonprofit);
+    if (!selectedNonprofit) return;
     
-    if (flow === "donate" && selectedNonprofit) {
-      console.log("✅ Navigating to /donate");
+    // ALWAYS go to /donate if this is a donation flow
+    if (isDonationFlow) {
+      // Clear the donation flow flag
+      localStorage.removeItem("ppp_donation_flow");
       nav("/donate");
-    } else if (selectedNonprofit) {
-      console.log("⚠️ Navigating to /products");
+    } else {
+      // Only go to products if NOT a donation flow
       nav("/products");
     }
   }
