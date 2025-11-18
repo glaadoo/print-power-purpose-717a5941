@@ -77,9 +77,6 @@ export default function Layout({
               <Link to="/products" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">
                 Products
               </Link>
-              <Link to="/causes" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">
-                Causes
-              </Link>
             </div>
 
             {/* Right actions */}
