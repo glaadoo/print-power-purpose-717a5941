@@ -321,10 +321,10 @@ export default function Donate() {
                     <button
                       type="button"
                       onClick={() => setFrequency("once")}
-                      className={`p-4 rounded-full border-2 transition-all ${
+                      className={`p-4 rounded-full border-2 transition-all font-semibold ${
                         frequency === "once"
-                          ? "bg-white text-black border-white"
-                          : "bg-white/5 text-white border-white/20 hover:bg-white/10"
+                          ? "bg-white text-black border-white shadow-lg scale-105"
+                          : "bg-white/5 text-white border-white/20 hover:bg-white/10 hover:border-white/30"
                       }`}
                     >
                       One-Time
@@ -332,10 +332,10 @@ export default function Donate() {
                     <button
                       type="button"
                       onClick={() => setFrequency("monthly")}
-                      className={`p-4 rounded-full border-2 transition-all ${
+                      className={`p-4 rounded-full border-2 transition-all font-semibold ${
                         frequency === "monthly"
-                          ? "bg-white text-black border-white"
-                          : "bg-white/5 text-white border-white/20 hover:bg-white/10"
+                          ? "bg-white text-black border-white shadow-lg scale-105"
+                          : "bg-white/5 text-white border-white/20 hover:bg-white/10 hover:border-white/30"
                       }`}
                     >
                       Monthly
