@@ -57,13 +57,13 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
       window.localStorage.setItem("ppp_access", "guest");
     }
 
-    // Set donation flow flag as backup
-    window.localStorage.setItem("ppp_donation_flow", "true");
+    // Set donation flow flag - this is the ONLY source of truth
+    window.localStorage.setItem("ppp_flow", "donate");
     
-    console.log("🎯 DONATE BUTTON CLICKED - Setting flow=donate");
-    alert("🎯 Starting DONATION flow");
+    console.log("🎯 Setting ppp_flow=donate");
+    alert("🎯 Starting DONATION flow - flag set");
 
-    navigate("/select/nonprofit?flow=donate");
+    navigate("/select/nonprofit");
     onClose();
   };
 
