@@ -888,6 +888,7 @@ export type Database = {
           is_verified: boolean | null
           name: string
           school_level: string | null
+          search_vector: unknown
           slug: string
           state: string
           zip: string
@@ -905,6 +906,7 @@ export type Database = {
           is_verified?: boolean | null
           name: string
           school_level?: string | null
+          search_vector?: unknown
           slug: string
           state: string
           zip: string
@@ -922,6 +924,7 @@ export type Database = {
           is_verified?: boolean | null
           name?: string
           school_level?: string | null
+          search_vector?: unknown
           slug?: string
           state?: string
           zip?: string
