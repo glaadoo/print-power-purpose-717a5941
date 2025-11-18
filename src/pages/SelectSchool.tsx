@@ -15,6 +15,7 @@ import {
 import { ArrowLeft, Check, Loader2, PawPrint } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import SchoolSearch from "@/components/SchoolSearch";
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -329,6 +330,22 @@ export default function SelectSchool() {
 
         <div className="relative w-full min-h-full pt-4 pb-32 px-4">
           <div className="w-full max-w-6xl mx-auto">
+            {/* SEARCH SCHOOLS */}
+            <div className="mb-8">
+              <GlassCard className="p-6">
+                <h2 className="text-2xl font-bold mb-4">Find Your School</h2>
+                <p className="text-sm opacity-80 mb-6">
+                  Search by school name, city, state, or ZIP code
+                </p>
+                <SchoolSearch
+                  onSelect={(school) => {
+                    setSelectedSchoolId(school.id);
+                  }}
+                  selectedId={selectedSchoolId || undefined}
+                />
+              </GlassCard>
+            </div>
+
             {/* ADD SCHOOL FORM */}
             <div className="mb-8">
               <GlassCard className="p-6">
