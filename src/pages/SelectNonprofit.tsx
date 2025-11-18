@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import VideoBackground from "@/components/VideoBackground";
 import { ArrowLeft } from "lucide-react";
@@ -9,12 +9,18 @@ import { useCause } from "@/context/CauseContext";
 
 export default function SelectNonprofit() {
   const nav = useNavigate();
+  const location = useLocation();
   const { setNonprofit, nonprofit } = useCause();
   const [selectedNonprofit, setSelectedNonprofit] = useState<any | null>(nonprofit);
+  
+  // Get flow from navigation state
+  const flow = location.state?.flow;
 
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
-  }, []);
+    console.log("🎯 SelectNonprofit loaded with flow:", flow);
+    alert(`🎯 Flow detected: ${flow || "none"}`);
+  }, [flow]);
 
   function handleNonprofitSelect(np: any) {
     setSelectedNonprofit(np);
@@ -24,16 +30,12 @@ export default function SelectNonprofit() {
   function handleContinue() {
     if (!selectedNonprofit) return;
     
-    // Check ONLY localStorage for the flow
-    const flow = localStorage.getItem("ppp_flow");
-    
     console.log("🔍 Flow check:", flow);
     alert(`🔍 Flow is: ${flow}`);
     
     // If flow is "donate", go to /donate. Otherwise go to /products
     if (flow === "donate") {
       alert("✅ Going to DONATE page");
-      localStorage.removeItem("ppp_flow");
       nav("/donate");
     } else {
       alert("❌ Going to PRODUCTS page");
