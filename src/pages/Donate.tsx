@@ -5,34 +5,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import VideoBackground from "@/components/VideoBackground";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
-import { calculateWithTransactionFees } from "@/lib/donation-utils";
+import { ArrowLeft, Lock } from "lucide-react";
 import { invokeWithRetry } from "@/lib/api-retry";
 import { useCause } from "@/context/CauseContext";
+
+const PRESET_AMOUNTS = [140, 70, 40, 25, 15, 8];
 
 export default function Donate() {
   const nav = useNavigate();
   const { nonprofit } = useCause();
   
   const [amount, setAmount] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
   const [donorEmail, setDonorEmail] = useState("");
   const [processing, setProcessing] = useState(false);
   const [frequency, setFrequency] = useState<"once" | "monthly">("once");
   const [showMonthlyUpsell, setShowMonthlyUpsell] = useState(false);
-  const [donorFirstName, setDonorFirstName] = useState("");
-  const [donorLastName, setDonorLastName] = useState("");
-  const [donorPhone, setDonorPhone] = useState("");
-  const [donorStreetAddress, setDonorStreetAddress] = useState("");
-  const [donorApartment, setDonorApartment] = useState("");
-  const [donorCity, setDonorCity] = useState("");
-  const [donorState, setDonorState] = useState("");
-  const [donorZipCode, setDonorZipCode] = useState("");
-  const [donorCountry, setDonorCountry] = useState("United States");
-  const [coverTransactionCosts, setCoverTransactionCosts] = useState(true);
 
   useEffect(() => {
     document.title = "Donate - Print Power Purpose";
   }, []);
+
+  const handlePresetClick = (preset: number) => {
+    setSelectedPreset(preset);
+    setAmount(preset.toString());
+  };
+
+  const handleCustomAmountChange = (value: string) => {
+    setAmount(value);
+    setSelectedPreset(null);
+  };
 
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,12 +66,7 @@ export default function Donate() {
     if (!nonprofit) return;
     
     const donationAmount = parseFloat(amount);
-    let finalAmount = donationAmount;
-    
-    // Add transaction costs if checked
-    if (coverTransactionCosts) {
-      finalAmount = calculateWithTransactionFees(donationAmount);
-    }
+    const finalAmount = donationAmount;
     
     setProcessing(true);
 
@@ -86,17 +83,6 @@ export default function Donate() {
               nonprofitEin: nonprofit.ein,
               amountCents: Math.round(finalAmount * 100),
               customerEmail: donorEmail,
-              firstName: donorFirstName,
-              lastName: donorLastName,
-              phone: donorPhone,
-              address: {
-                street: donorStreetAddress,
-                apartment: donorApartment,
-                city: donorCity,
-                state: donorState,
-                zipCode: donorZipCode,
-                country: donorCountry,
-              },
             },
           }
         );
@@ -152,9 +138,7 @@ export default function Donate() {
             onClick={() => nav("/")}
             className="flex items-center gap-2 rounded-full px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
           </button>
           
@@ -194,22 +178,20 @@ export default function Donate() {
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col">
-      <header className="px-4 md:px-6 py-4 flex items-center justify-between text-white backdrop-blur-md bg-black/30 border-b border-white/10 shrink-0 relative">
+      <header className="px-4 md:px-6 py-4 flex items-center justify-center text-white backdrop-blur-md bg-black/30 border-b border-white/10 shrink-0 relative">
         <Button
           onClick={() => nav(-1)}
-          variant="outline"
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          variant="ghost"
+          className="absolute left-4 text-white hover:bg-white/10 rounded-full"
           size="sm"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         
-        <div className="absolute left-1/2 -translate-x-1/2 text-sm md:text-base font-semibold uppercase tracking-[0.2em]">
+        <div className="text-sm md:text-base font-semibold uppercase tracking-[0.2em]">
           DONATIONS
         </div>
-        
-        <div className="w-20" />
       </header>
 
       <div className="flex-1 overflow-hidden relative">
@@ -222,37 +204,60 @@ export default function Donate() {
 
         <div className="relative w-full h-full grid lg:grid-cols-2">
           {/* Left Column - Nonprofit Info (Scrollable) */}
-          <div className="bg-white/10 backdrop-blur-md border-r border-white/20 text-white flex flex-col overflow-hidden">
-            <div className="p-6 md:p-10 overflow-y-auto">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                Donate to {nonprofit.name}
-              </h1>
-              
-              {nonprofit.ein && (
-                <p className="text-white/70 text-sm mb-2">
-                  EIN: {nonprofit.ein}
-                </p>
-              )}
-              
-              {(nonprofit.city || nonprofit.state) && (
-                <p className="text-white/70 text-sm mb-6">
-                  {[nonprofit.city, nonprofit.state].filter(Boolean).join(", ")}
-                </p>
-              )}
-
-              <div className="prose prose-invert max-w-none">
-                <p className="text-white/90 mb-6">
-                  Your donation will directly support {nonprofit.name}'s mission and programs.
-                  Every contribution makes a difference.
+          <div className="bg-white/5 backdrop-blur-md border-r border-white/10 text-white flex flex-col overflow-hidden">
+            <div className="p-6 md:p-10 overflow-y-auto space-y-8">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                  {nonprofit.name}
+                </h1>
+                
+                <p className="text-white/80 text-base mb-6">
+                  Support local animal shelters and rescue operations
                 </p>
               </div>
 
-              <div className="mt-8 p-4 bg-white/5 rounded-lg border border-white/10">
-                <h3 className="text-lg font-semibold mb-2">About this donation</h3>
-                <p className="text-sm text-white/70">
-                  100% of your donation goes directly to {nonprofit.name}. 
-                  You can optionally cover transaction fees to ensure the full amount reaches the nonprofit.
-                </p>
+              {/* Progress Section */}
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-4xl font-bold">$27</span>
+                    <span className="text-white/60 text-sm">raised of $1,500 goal</span>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-green-500 h-full rounded-full transition-all"
+                      style={{ width: '2%' }}
+                    />
+                  </div>
+                  
+                  <p className="text-white/60 text-sm mt-2">2% funded</p>
+                </div>
+
+                <div className="space-y-2 pt-4">
+                  <p className="text-white/90">
+                    Your donation helps make a direct impact on this cause.
+                  </p>
+                  <p className="text-white/80 text-sm">
+                    100% of your contribution goes directly to supporting this initiative.
+                  </p>
+                </div>
+              </div>
+
+              {/* Recent Donations */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold">Recent Donations</h3>
+                
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white font-semibold">
+                      S
+                    </div>
+                    <span className="text-white font-medium">Sd2342</span>
+                  </div>
+                  <span className="text-white font-semibold">$9</span>
+                </div>
               </div>
             </div>
           </div>
@@ -260,6 +265,12 @@ export default function Donate() {
           {/* Right Column - Donation Form (Scrollable) */}
           <div className="bg-white/5 backdrop-blur-sm overflow-y-auto">
             <div className="p-6 md:p-10">
+              {/* Secure Donation Header */}
+              <div className="flex items-center gap-2 mb-6">
+                <Lock className="h-5 w-5 text-green-400" />
+                <h2 className="text-xl font-bold text-white">Secure Donation</h2>
+              </div>
+
               {/* Monthly Upsell Modal */}
               {showMonthlyUpsell && (
                 <div className="mb-6 p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl">
@@ -295,120 +306,87 @@ export default function Donate() {
               )}
 
               <form onSubmit={handleDonate} className="space-y-6">
-                {/* Donation Amount */}
-                <div>
-                  <label className="block text-white font-semibold mb-2">
-                    Donation Amount (USD)
-                  </label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="1"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="50.00"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
-                    required
-                  />
+                {/* Frequency Toggle */}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFrequency("once")}
+                    className={`flex-1 px-6 py-3 rounded-full font-semibold transition-all ${
+                      frequency === "once"
+                        ? "bg-white text-black"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    Give once
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFrequency("monthly")}
+                    className={`flex-1 px-6 py-3 rounded-full font-semibold transition-all ${
+                      frequency === "monthly"
+                        ? "bg-white text-black"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    ❤️ Monthly
+                  </button>
                 </div>
 
-                {/* Frequency Selection */}
+                {/* Preset Amount Buttons */}
+                <div className="grid grid-cols-3 gap-3">
+                  {PRESET_AMOUNTS.map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => handlePresetClick(preset)}
+                      className={`px-6 py-4 rounded-full font-semibold transition-all border-2 ${
+                        selectedPreset === preset
+                          ? "bg-white/20 text-white border-white/50"
+                          : "bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20"
+                      }`}
+                    >
+                      ${preset}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Amount */}
                 <div>
-                  <label className="block text-white font-semibold mb-2">
-                    Donation Frequency
+                  <label className="block text-white/80 text-sm mb-2">
+                    Or enter custom amount
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setFrequency("once")}
-                      className={`p-4 rounded-full border-2 transition-all font-semibold ${
-                        frequency === "once"
-                          ? "bg-white text-black border-white shadow-lg scale-105"
-                          : "bg-white/5 text-white border-white/20 hover:bg-white/10 hover:border-white/30"
-                      }`}
-                    >
-                      One-Time
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFrequency("monthly")}
-                      className={`p-4 rounded-full border-2 transition-all font-semibold ${
-                        frequency === "monthly"
-                          ? "bg-white text-black border-white shadow-lg scale-105"
-                          : "bg-white/5 text-white border-white/20 hover:bg-white/10 hover:border-white/30"
-                      }`}
-                    >
-                      Monthly
-                    </button>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60">
+                      $
+                    </span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      value={amount}
+                      onChange={(e) => handleCustomAmountChange(e.target.value)}
+                      placeholder="15"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-full pl-8 pr-20"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">
+                      USD
+                    </span>
                   </div>
-                </div>
-
-                {/* Cover Transaction Costs */}
-                <div className="flex items-start gap-3 p-4 bg-white/5 rounded-xl">
-                  <input
-                    type="checkbox"
-                    id="coverCosts"
-                    checked={coverTransactionCosts}
-                    onChange={(e) => setCoverTransactionCosts(e.target.checked)}
-                    className="mt-1"
-                  />
-                  <label htmlFor="coverCosts" className="text-sm text-white/90 cursor-pointer">
-                    Cover transaction costs so 100% of my donation goes to the nonprofit
-                    {amount && !isNaN(parseFloat(amount)) && coverTransactionCosts && (
-                      <span className="block mt-1 text-white/70">
-                        (Total: ${calculateWithTransactionFees(parseFloat(amount)).toFixed(2)})
-                      </span>
-                    )}
-                  </label>
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-white font-semibold mb-2">
-                    Email Address
+                  <label className="block text-white text-sm mb-2 font-medium">
+                    Your Email
                   </label>
                   <Input
                     type="email"
                     value={donorEmail}
                     onChange={(e) => setDonorEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
+                    placeholder="donor@example.com"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-full"
                     required
                   />
-                </div>
-
-                {/* Donor Details */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-white/80 text-sm mb-1">First Name</label>
-                      <Input
-                        type="text"
-                        value={donorFirstName}
-                        onChange={(e) => setDonorFirstName(e.target.value)}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-white/80 text-sm mb-1">Last Name</label>
-                      <Input
-                        type="text"
-                        value={donorLastName}
-                        onChange={(e) => setDonorLastName(e.target.value)}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-white/80 text-sm mb-1">Phone (Optional)</label>
-                    <Input
-                      type="tel"
-                      value={donorPhone}
-                      onChange={(e) => setDonorPhone(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full"
-                    />
-                  </div>
                 </div>
 
                 {/* Submit Button */}
@@ -417,8 +395,13 @@ export default function Donate() {
                   disabled={processing}
                   className="w-full bg-white text-black hover:bg-white/90 font-bold py-6 text-lg rounded-full"
                 >
-                  {processing ? "Processing..." : `Donate $${amount || "0.00"}`}
+                  {processing ? "Processing..." : "Donate"}
                 </Button>
+
+                {/* Footer Text */}
+                <p className="text-center text-white/50 text-xs">
+                  Secure payment · Tax-deductible · Cancel anytime
+                </p>
               </form>
             </div>
           </div>
