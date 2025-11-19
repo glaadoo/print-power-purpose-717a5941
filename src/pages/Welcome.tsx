@@ -100,9 +100,9 @@ export default function Welcome() {
     // Set access flag for user who has completed onboarding
     localStorage.setItem("ppp_access", session?.user ? "user" : "guest");
     
-    if (value === "school") navigate("/select/school");
-    else if (value === "nonprofit") navigate("/select/nonprofit");
-    else if (value === "personal") navigate("/select/personal");
+    if (value === "school") navigate("/select/school?flow=shopping");
+    else if (value === "nonprofit") navigate("/select/nonprofit?flow=shopping");
+    else if (value === "personal") navigate("/select/personal?flow=shopping");
   }
 
   if (loading) {

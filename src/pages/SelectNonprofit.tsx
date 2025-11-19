@@ -24,8 +24,16 @@ export default function SelectNonprofit() {
   function handleContinue() {
     if (!selectedNonprofit) return;
     
-    // ALWAYS go to /donate - this page is ONLY for donation flow
-    nav("/donate");
+    // Check flow parameter to determine destination
+    const params = new URLSearchParams(window.location.search);
+    const flow = params.get("flow");
+    
+    if (flow === "donation") {
+      nav("/donate");
+    } else {
+      // Shopping flow goes to products
+      nav("/products");
+    }
   }
 
   return (

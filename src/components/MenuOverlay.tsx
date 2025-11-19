@@ -45,7 +45,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
     { label: "Insights", href: "/insights" },
     { label: "News", href: "/news" },
     { label: "Contact", href: "/contact" },
-    { label: "Donate", href: "/select/nonprofit" },
+    { label: "Donate", href: "/select/nonprofit?flow=donation" },
   ];
 
   // Handler for Donate button to set guest access and route through nonprofit selection
@@ -57,7 +57,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
       window.localStorage.setItem("ppp_access", "guest");
     }
 
-    navigate("/select/nonprofit");
+    navigate("/select/nonprofit?flow=donation");
     onClose();
   };
 
@@ -184,7 +184,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                       >
                         {it.label}
                       </a>
-                    ) : it.href === "/select/nonprofit" ? (
+                    ) : it.href.includes("/select/nonprofit") ? (
                       <button
                         onClick={handleDonateClick}
                         className="
