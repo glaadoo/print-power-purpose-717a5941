@@ -412,15 +412,16 @@ export default function AdminProducts() {
                       {bulkMarkupType === "fixed" ? "USD" : "%"}
                     </span>
                   </div>
-
-                  <Button
-                    onClick={handleBulkMarkupApply}
-                    disabled={selectedProducts.size === 0 || !bulkMarkupValue}
-                    className="rounded-full bg-primary hover:bg-primary/90 px-6"
-                  >
-                    Apply to {selectedProducts.size} Selected
-                  </Button>
                 </div>
+                
+                <Button
+                  onClick={handleBulkMarkupApply}
+                  disabled={selectedProducts.size === 0 || !bulkMarkupValue}
+                  className="rounded-full bg-primary hover:bg-primary/90 px-8 py-2 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  size="lg"
+                >
+                  Apply to {selectedProducts.size} Selected
+                </Button>
               </CardContent>
             </Card>
           </div>
