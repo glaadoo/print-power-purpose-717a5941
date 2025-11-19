@@ -25,10 +25,14 @@ export default function Success() {
     } catch {}
   }, [clearCart, clearCauseAndNonprofit]);
 
-  // Fetch order info by orderId
+  // Fetch order info by orderId - with retry polling
   useEffect(() => {
     if (!orderId) return;
-    (async () => {
+    
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    const fetchOrder = async () => {
       try {
         const { data, error } = await supabase
           .from('orders')
@@ -41,11 +45,28 @@ export default function Success() {
             order_number: data.order_number,
             order_id: data.id
           });
+          return true;
         }
+        return false;
       } catch (e) {
         console.error('Failed to fetch order', e);
+        return false;
       }
-    })();
+    };
+    
+    // Initial fetch
+    fetchOrder().then(success => {
+      if (success) return;
+      
+      // Poll every second for up to 5 attempts if initial fetch fails
+      const interval = setInterval(async () => {
+        attempts++;
+        const success = await fetchOrder();
+        if (success || attempts >= maxAttempts) {
+          clearInterval(interval);
+        }
+      }, 1000);
+    });
   }, [orderId]);
 
   return (
@@ -104,34 +125,28 @@ export default function Success() {
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
                 <Button 
-                  asChild
+                  onClick={() => navigate("/")}
                   variant="default"
                   size="lg"
                   className="rounded-full bg-white text-black hover:bg-white/90 w-full sm:w-auto"
                 >
-                  <Link to="/">
-                    Back to Home
-                  </Link>
+                  Back to Home
                 </Button>
                 <Button 
-                  asChild
+                  onClick={() => navigate("/products")}
                   variant="outline"
                   size="lg"
                   className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full sm:w-auto"
                 >
-                  <Link to="/products">
-                    Continue Shopping
-                  </Link>
+                  Continue Shopping
                 </Button>
                 <Button 
-                  asChild
+                  onClick={() => navigate("/select/nonprofit?flow=shopping")}
                   variant="outline"
                   size="lg"
                   className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full sm:w-auto"
                 >
-                  <Link to="/select/nonprofit">
-                    Choose Another Cause
-                  </Link>
+                  Choose Another Cause
                 </Button>
               </div>
             </div>
