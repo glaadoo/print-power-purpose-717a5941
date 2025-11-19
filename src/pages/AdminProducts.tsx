@@ -341,6 +341,73 @@ export default function AdminProducts() {
           </Card>
         </div>
 
+        {/* Bulk Markup Section */}
+        {products.length > 0 && (
+          <div className="mb-8">
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckSquare className="h-5 w-5" />
+                  Bulk Markup Update
+                </CardTitle>
+                <CardDescription className="text-white/70">
+                  Select products and apply markup to multiple items at once
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <Button
+                    onClick={toggleSelectAll}
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/5 border-white/20 hover:bg-white/10"
+                  >
+                    {selectedProducts.size === products.length ? "Deselect All" : "Select All"}
+                    {selectedProducts.size > 0 && ` (${selectedProducts.size})`}
+                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    <Label className="text-white/90 whitespace-nowrap">Markup Type:</Label>
+                    <Select value={bulkMarkupType} onValueChange={(v) => setBulkMarkupType(v as "fixed" | "percent")}>
+                      <SelectTrigger className="w-32 bg-white/5 border-white/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Fixed ($)</SelectItem>
+                        <SelectItem value="percent">Percent (%)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Label className="text-white/90 whitespace-nowrap">Value:</Label>
+                    <Input
+                      type="number"
+                      value={bulkMarkupValue}
+                      onChange={(e) => setBulkMarkupValue(e.target.value)}
+                      placeholder={bulkMarkupType === "fixed" ? "15.00" : "20"}
+                      className="w-24 bg-white/5 border-white/20 text-white"
+                      step={bulkMarkupType === "fixed" ? "0.01" : "1"}
+                      min="0"
+                    />
+                    <span className="text-white/70 text-sm">
+                      {bulkMarkupType === "fixed" ? "USD" : "%"}
+                    </span>
+                  </div>
+
+                  <Button
+                    onClick={handleBulkMarkupApply}
+                    disabled={selectedProducts.size === 0 || !bulkMarkupValue}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    Apply to {selectedProducts.size} Selected
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Sync Products from Vendors</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -409,6 +476,7 @@ export default function AdminProducts() {
           ) : (
             <div className="grid gap-4">
               {products.map((product) => {
+                const isSelected = selectedProducts.has(product.id);
                 const finalPrice = computeFinalPrice(
                   product.base_cost_cents,
                   product.markup_fixed_cents,
@@ -418,7 +486,14 @@ export default function AdminProducts() {
                 return (
                   <Card key={product.id} className="bg-white/5 border-white/20 hover:bg-white/10 transition-colors">
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSelectProduct(product.id)}
+                          className="mt-1 border-white/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        
+                        <div className="flex items-start justify-between gap-4 flex-1">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-lg font-semibold text-white">{product.name}</h3>
@@ -460,6 +535,7 @@ export default function AdminProducts() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
