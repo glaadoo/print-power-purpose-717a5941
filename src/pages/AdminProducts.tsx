@@ -161,15 +161,17 @@ export default function AdminProducts() {
     }
 
     try {
-      const updates = Array.from(selectedProducts).map(productId => {
-        const updateData = bulkMarkupType === "fixed"
-          ? { markup_fixed_cents: Math.round(value * 100), markup_percent: 0 }
-          : { markup_percent: value, markup_fixed_cents: 0 };
+      const updateData = bulkMarkupType === "fixed"
+        ? { markup_fixed_cents: Math.round(value * 100), markup_percent: 0 }
+        : { markup_percent: value, markup_fixed_cents: 0 };
 
-        return supabase
+      const updates = Array.from(selectedProducts).map(async (productId) => {
+        const { error } = await supabase
           .from("products")
           .update(updateData)
           .eq("id", productId);
+        
+        if (error) throw error;
       });
 
       await Promise.all(updates);
