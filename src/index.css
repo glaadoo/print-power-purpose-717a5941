@@ -64,6 +64,12 @@ html, body, #root {
   padding: 0;
 }
 
+body {
+  background: linear-gradient(135deg, hsl(var(--mascot-bg)) 0%, hsl(35 40% 88%) 50%, hsl(25 45% 90%) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
 /* Optional: soft overlay utility you can add on pages that need contrast */
 .bg-overlay-soft {
   background: linear-gradient(180deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.06) 100%);
