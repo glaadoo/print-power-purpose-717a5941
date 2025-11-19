@@ -7,6 +7,7 @@ import VideoBackground from "@/components/VideoBackground";
 import MenuOverlay from "@/components/MenuOverlay";
 import ScrollDots from "@/components/ScrollDots";
 import MascotHeader from "@/components/MascotHeader";
+import ColorSelector from "@/components/ColorSelector";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -161,6 +162,7 @@ export default function Home() {
   return (
     <div className="min-h-screen text-white">
       <MascotHeader />
+      <ColorSelector />
       
       {/* Top bar (Menu | PPP | Find Causes) */}
       <header
