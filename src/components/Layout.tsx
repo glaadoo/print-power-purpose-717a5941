@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { LogOut } from "lucide-react";
+import MascotHeader from "./MascotHeader";
 
 export default function Layout({
   children,
@@ -56,6 +57,8 @@ export default function Layout({
 
   return (
     <div className="relative">
+      {showHeader && <MascotHeader />}
+      
       {showHoverHeader && (
         <div className="fixed inset-x-0 top-0 z-40 group">
           <div className="h-3 w-full" />
