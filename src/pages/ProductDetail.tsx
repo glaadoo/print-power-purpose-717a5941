@@ -16,10 +16,10 @@ type ProductRow = {
   base_cost_cents: number;
   pricing_data?: any;
   vendor_product_id?: string | null;
+  vendor?: string | null;
+  markup_fixed_cents?: number | null;
+  markup_percent?: number | null;
 };
-
-const priceFromBase = (base?: number | null) =>
-  Math.max(100, Math.round((Number(base) || 0) * 1.6)); // same preview calc used elsewhere
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -44,9 +44,14 @@ export default function ProductDetail() {
         .from("products")
         .select("*")
         .eq("id", id)
-        .single();
-      if (error) setErr(error.message);
-      else setProduct(data as ProductRow);
+        .maybeSingle();
+      if (error) {
+        setErr(error.message);
+      } else if (!data) {
+        setErr("Product not found");
+      } else {
+        setProduct(data as ProductRow);
+      }
       setLoading(false);
     })();
   }, [id]);
@@ -63,7 +68,20 @@ export default function ProductDetail() {
   const isConfigured = configuredPriceCents !== null;
   const canAddToCart = !requiresConfiguration || isConfigured;
 
-  const unitCents = configuredPriceCents ?? priceFromBase(product?.base_cost_cents);
+  // Calculate price: use configured price if available, otherwise base + markup
+  let unitCents: number;
+  if (configuredPriceCents !== null) {
+    unitCents = configuredPriceCents;
+  } else if (product) {
+    // Apply product-level markup if set
+    const markup_fixed = product.markup_fixed_cents ?? 0;
+    const markup_percent = product.markup_percent ?? 0;
+    const base = product.base_cost_cents;
+    const markup_amount = Math.round(base * (markup_percent / 100)) + markup_fixed;
+    unitCents = base + markup_amount;
+  } else {
+    unitCents = 0;
+  }
   const unitPrice = unitCents / 100;
 
   function handleAddToCart() {

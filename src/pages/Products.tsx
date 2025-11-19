@@ -52,14 +52,14 @@ export default function Products() {
             
             if (error) throw error;
             
-            // Return default settings if none exist
+            // Return NO markup if none configured - show base price only
             return data || {
               vendor: "sinalite",
               markup_mode: "fixed",
-              markup_fixed_cents: 1500,
+              markup_fixed_cents: 0,
               markup_percent: 0,
               nonprofit_share_mode: "fixed",
-              nonprofit_fixed_cents: 1000,
+              nonprofit_fixed_cents: 0,
               nonprofit_percent_of_markup: 0,
               currency: "USD"
             };
@@ -70,7 +70,8 @@ export default function Products() {
           async () => {
             const { data, error } = await supabase
               .from("products")
-              .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor")
+              .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, pricing_data, vendor_product_id")
+              .eq("is_active", true)
               .order("category", { ascending: true })
               .order("name", { ascending: true })
               .limit(200);
@@ -118,19 +119,40 @@ export default function Products() {
   };
 
   const handleAddToCart = (product: ProductRow) => {
+    const requiresConfiguration = product.pricing_data && 
+      Array.isArray(product.pricing_data) && 
+      product.pricing_data.length > 0;
+    
     const isConfigured = !!configuredPrices[product.id];
 
-    // Enforce configuration before adding to cart
-    if (!isConfigured) {
+    // Only enforce configuration if product actually requires it
+    if (requiresConfiguration && !isConfigured) {
       toast.error("Please configure product options first");
       return;
     }
 
     const qty = quantities[product.id] || 1;
-    const unitCents = configuredPrices[product.id];
+    
+    // Use configured price if available, otherwise calculate from base + markup
+    let unitCents: number;
+    if (configuredPrices[product.id]) {
+      unitCents = configuredPrices[product.id];
+    } else {
+      // Calculate price with markup for non-configured products
+      if (product.vendor === "sinalite" && pricingSettings) {
+        const pricing = computeGlobalPricing({
+          vendor: "sinalite",
+          base_cost_cents: product.base_cost_cents || 0,
+          settings: pricingSettings
+        });
+        unitCents = pricing.final_price_per_unit_cents;
+      } else {
+        unitCents = product.base_cost_cents || 100;
+      }
+    }
 
-    if (!unitCents) {
-      toast.error("Price unavailable. Please configure product options.");
+    if (!unitCents || unitCents <= 0) {
+      toast.error("Price unavailable. Please try again.");
       return;
     }
 
@@ -263,7 +285,10 @@ export default function Products() {
                         }
                         
                         const qty = quantities[product.id] || 0;
-                        const isConfigured = !!configuredPrices[product.id];
+                        const requiresConfiguration = product.pricing_data && 
+                          Array.isArray(product.pricing_data) && 
+                          product.pricing_data.length > 0;
+                        const isConfigured = requiresConfiguration ? !!configuredPrices[product.id] : true;
                         const canAddToCart = isConfigured;
                         const isInCart = items.some(item => item.id === product.id);
 
@@ -284,11 +309,15 @@ export default function Products() {
                               <div className="w-full space-y-3">
                               {/* Show base price with markup */}
                               <div className="w-full py-2 px-4 bg-white/5 rounded-lg border border-white/10">
-                                <p className="text-sm text-white/60 text-center mb-1">Starting at</p>
+                                <p className="text-sm text-white/60 text-center mb-1">
+                                  {product.pricing_data && Array.isArray(product.pricing_data) && product.pricing_data.length > 0 
+                                    ? "Starting at" 
+                                    : "Price"}
+                                </p>
                                 <p className="text-2xl font-bold text-white text-center">
                                   ${(displayPriceCents / 100).toFixed(2)}
                                 </p>
-                                {product.vendor === "sinalite" && pricingSettings && (
+                                {product.vendor === "sinalite" && pricingSettings && pricingSettings.markup_fixed_cents > 0 && (
                                   <p className="text-xs text-white/50 text-center mt-1">
                                     Includes ${(pricingSettings.markup_mode === "fixed" 
                                       ? pricingSettings.markup_fixed_cents / 100 
@@ -298,11 +327,14 @@ export default function Products() {
                                 )}
                               </div>
                               
-                              <ProductConfiguratorLoader
-                                productId={product.id}
-                                onPriceChange={(price) => handlePriceChange(product.id, price)}
-                                onConfigChange={(config) => handleConfigChange(product.id, config)}
-                              />
+                              {/* Only show configurator for products that need it */}
+                              {product.pricing_data && Array.isArray(product.pricing_data) && product.pricing_data.length > 0 && (
+                                <ProductConfiguratorLoader
+                                  productId={product.id}
+                                  onPriceChange={(price) => handlePriceChange(product.id, price)}
+                                  onConfigChange={(config) => handleConfigChange(product.id, config)}
+                                />
+                              )}
                               
                               {configuredPrices[product.id] && (
                                 <div className="w-full py-2 px-4 bg-green-900/20 border border-green-400/30 rounded-lg">
