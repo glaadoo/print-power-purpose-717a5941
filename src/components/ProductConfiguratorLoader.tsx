@@ -19,11 +19,6 @@ export default function ProductConfiguratorLoader({
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
 
-  // Auto-fetch pricing data when component mounts to prepare for immediate display
-  useEffect(() => {
-    fetchPricing();
-  }, [productId]);
-
   const fetchPricing = async () => {
     if (productData || loading) return;
     setLoading(true);
@@ -44,6 +39,9 @@ export default function ProductConfiguratorLoader({
   };
 
   const handleToggle = () => {
+    if (!visible && !productData) {
+      fetchPricing();
+    }
     setVisible(!visible);
   };
 
