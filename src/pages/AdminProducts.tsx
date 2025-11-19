@@ -40,10 +40,34 @@ export default function AdminProducts() {
     markup_fixed_cents: 0,
     markup_percent: 0,
   });
+  const [pricingSettings, setPricingSettings] = useState<any>(null);
 
   useEffect(() => {
     loadProducts();
+    loadPricingSettings();
   }, []);
+
+  async function loadPricingSettings() {
+    try {
+      const { data, error } = await supabase
+        .from("pricing_settings")
+        .select("*")
+        .eq("vendor", "sinalite")
+        .maybeSingle();
+      
+      if (error) throw error;
+      setPricingSettings(data || {
+        markup_mode: "fixed",
+        markup_fixed_cents: 1500,
+        markup_percent: 0,
+        nonprofit_share_mode: "fixed",
+        nonprofit_fixed_cents: 1000,
+        nonprofit_percent_of_markup: 0,
+      });
+    } catch (err) {
+      console.error("Error loading pricing settings:", err);
+    }
+  }
 
   async function loadProducts() {
     try {
@@ -124,6 +148,26 @@ export default function AdminProducts() {
     }
   }
 
+  // Calculate pricing analytics
+  const analytics = {
+    totalProducts: products.length,
+    activeProducts: products.filter(p => p.is_active).length,
+    avgBaseCost: products.length > 0 
+      ? products.reduce((sum, p) => sum + p.base_cost_cents, 0) / products.length / 100
+      : 0,
+    avgFinalPrice: products.length > 0
+      ? products.reduce((sum, p) => {
+          const finalPrice = computeFinalPrice(
+            p.base_cost_cents,
+            p.markup_fixed_cents || 0,
+            p.markup_percent || 0
+          );
+          return sum + finalPrice;
+        }, 0) / products.length / 100
+      : 0,
+    sinaliteCount: products.filter(p => p.vendor === 'sinalite').length,
+  };
+
   const vendors = [
     {
       name: "SinaLite",
@@ -162,6 +206,80 @@ export default function AdminProducts() {
             <h1 className="text-3xl font-bold">Product Management</h1>
             <p className="text-white/60 mt-1">Sync products and manage pricing markups</p>
           </div>
+        </div>
+
+        {/* Pricing Analytics Widget */}
+        <div className="mb-8">
+          <Card className="border-white/20 bg-white/5 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                Pricing Analytics
+              </CardTitle>
+              <CardDescription className="text-white/70">
+                Overview of product pricing across all vendors
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div className="text-white/60 text-xs uppercase tracking-wide mb-1">Total Products</div>
+                  <div className="text-2xl font-bold text-white">{analytics.totalProducts}</div>
+                  <div className="text-white/40 text-xs mt-1">
+                    {analytics.activeProducts} active
+                  </div>
+                </div>
+                
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div className="text-white/60 text-xs uppercase tracking-wide mb-1">Avg Base Cost</div>
+                  <div className="text-2xl font-bold text-white">
+                    ${analytics.avgBaseCost.toFixed(2)}
+                  </div>
+                  <div className="text-white/40 text-xs mt-1">Wholesale price</div>
+                </div>
+                
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div className="text-white/60 text-xs uppercase tracking-wide mb-1">Avg Final Price</div>
+                  <div className="text-2xl font-bold text-white">
+                    ${analytics.avgFinalPrice.toFixed(2)}
+                  </div>
+                  <div className="text-white/40 text-xs mt-1">With markup</div>
+                </div>
+                
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div className="text-white/60 text-xs uppercase tracking-wide mb-1">Avg Markup</div>
+                  <div className="text-2xl font-bold text-green-400">
+                    ${(analytics.avgFinalPrice - analytics.avgBaseCost).toFixed(2)}
+                  </div>
+                  <div className="text-white/40 text-xs mt-1">
+                    {analytics.avgBaseCost > 0 
+                      ? `${(((analytics.avgFinalPrice - analytics.avgBaseCost) / analytics.avgBaseCost) * 100).toFixed(0)}% margin`
+                      : 'N/A'
+                    }
+                  </div>
+                </div>
+              </div>
+              
+              {pricingSettings && analytics.sinaliteCount > 0 && (
+                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <div className="text-xs text-blue-200 font-medium mb-1">
+                    SinaLite Global Pricing ({analytics.sinaliteCount} products)
+                  </div>
+                  <div className="text-white/70 text-xs">
+                    {pricingSettings.markup_mode === 'fixed' 
+                      ? `Fixed markup: $${(pricingSettings.markup_fixed_cents / 100).toFixed(2)}`
+                      : `Percentage markup: ${pricingSettings.markup_percent}%`
+                    }
+                    {' • '}
+                    {pricingSettings.nonprofit_share_mode === 'fixed'
+                      ? `Nonprofit share: $${(pricingSettings.nonprofit_fixed_cents / 100).toFixed(2)}`
+                      : `Nonprofit share: ${pricingSettings.nonprofit_percent_of_markup}% of markup`
+                    }
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="mb-8">
