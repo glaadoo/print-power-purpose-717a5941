@@ -129,6 +129,7 @@ serve(async (req) => {
       orderNumber = `ORD-${year}-${timestamp}-${random}`;
     }
 
+<<<<<<< HEAD
     // Create order record FIRST - try new schema first, fallback to old schema
     let orderData: any;
     let orderError: any;
@@ -157,6 +158,29 @@ serve(async (req) => {
     const result = await supabase
       .from("orders")
       .insert(newSchemaOrder as any)
+=======
+    const orderNumber = orderNumberData as string;
+
+    // Generate temporary session ID (will be replaced with Stripe session ID)
+    const tempSessionId = crypto.randomUUID();
+
+    // Create order record FIRST
+    const { data: orderData, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        order_number: orderNumber,
+        session_id: tempSessionId,
+        status: "created",
+        items: orderItems,
+        subtotal_cents: subtotalCents,
+        tax_cents: taxCents,
+        donation_cents: donationAmount,
+        amount_total_cents: totalAmountCents,
+        currency: "usd",
+        nonprofit_id: nonprofitId,
+        payment_mode: stripeMode,
+      })
+>>>>>>> 3f6e690a97dc2a7fa30609dc72e9d2a676d94a61
       .select("id")
       .single();
     
