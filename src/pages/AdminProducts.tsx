@@ -149,7 +149,6 @@ export default function AdminProducts() {
   }
 
   async function handleBulkMarkupApply() {
-    alert("Button clicked!"); // Test if click registers
     console.log("handleBulkMarkupApply called");
     console.log("selectedProducts size:", selectedProducts.size);
     console.log("bulkMarkupValue:", bulkMarkupValue);
