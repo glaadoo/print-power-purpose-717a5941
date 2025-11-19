@@ -74,13 +74,17 @@ export default function AdminProductImages() {
       return;
     }
 
+    // Generate only 10 images at a time to avoid overwhelming the system
+    const BATCH_SIZE = 10;
+    const batchToProcess = productsWithoutImages.slice(0, BATCH_SIZE);
+
     setGenerating(true);
     setProgress(0);
     let generated = 0;
     let failed = 0;
 
-    for (let i = 0; i < productsWithoutImages.length; i++) {
-      const product = productsWithoutImages[i];
+    for (let i = 0; i < batchToProcess.length; i++) {
+      const product = batchToProcess[i];
       setCurrentProduct(product.name);
       
       try {
@@ -99,11 +103,11 @@ export default function AdminProductImages() {
         console.error(`Error generating image for ${product.name}:`, error);
       }
 
-      setProgress(((i + 1) / productsWithoutImages.length) * 100);
+      setProgress(((i + 1) / batchToProcess.length) * 100);
       setStats(prev => ({ ...prev, generated, failed }));
 
       // Rate limiting: wait 2 seconds between each generation
-      if (i < productsWithoutImages.length - 1) {
+      if (i < batchToProcess.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
@@ -111,7 +115,9 @@ export default function AdminProductImages() {
     setGenerating(false);
     setCurrentProduct("");
     
-    toast.success(`Generated ${generated} images. ${failed > 0 ? `${failed} failed.` : ""}`);
+    const remaining = productsWithoutImages.length - batchToProcess.length;
+    const message = `Generated ${generated} images. ${failed > 0 ? `${failed} failed. ` : ""}${remaining > 0 ? `${remaining} remaining.` : ""}`;
+    toast.success(message);
     
     // Reload products to show updated stats
     await loadProducts();
@@ -186,9 +192,9 @@ export default function AdminProductImages() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                This process will generate images for products without images. 
+                This process will generate images for up to 10 products at a time. 
                 It processes one product at a time with a 2-second delay between each 
-                to avoid overwhelming the system. This may take a while for many products.
+                to avoid overwhelming the system. Run it multiple times to generate more.
               </AlertDescription>
             </Alert>
 
@@ -201,7 +207,7 @@ export default function AdminProductImages() {
               {generating ? (
                 <>Processing...</>
               ) : (
-                <>Generate Missing Images ({stats.missingImages})</>
+                <>Generate Images (up to 10 of {stats.missingImages})</>
               )}
             </Button>
           </CardContent>
