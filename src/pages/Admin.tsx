@@ -1427,7 +1427,20 @@ export default function Admin() {
 
                   <div className="mb-6">
                     <Button 
-                      onClick={() => navigate("/admin/orders")} 
+                      onClick={() => navigate("/admin/product-images")} 
+                      className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+                    >
+                      <Activity className="mr-2 h-4 w-4" />
+                      Generate Product Images
+                    </Button>
+                    <p className="text-white/60 text-sm mt-2">
+                      Generate AI images for products missing images with rate limiting
+                    </p>
+                  </div>
+
+                  <div className="mb-6">
+                    <Button 
+                      onClick={() => navigate("/admin/orders")}
                       className="w-full bg-purple-500 hover:bg-purple-600 text-white"
                     >
                       <Activity className="mr-2 h-4 w-4" />

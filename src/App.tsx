@@ -84,6 +84,7 @@ const ResetPassword   = lazyPage("ResetPassword",   () => import("./pages/ResetP
 const Admin           = lazyPage("Admin",           () => import("./pages/Admin"));
 const AdminSettings   = lazyPage("AdminSettings",   () => import("./pages/AdminSettings"));
 const AdminPricing    = lazyPage("AdminPricing",    () => import("./pages/AdminPricing"));
+const AdminProductImages = lazyPage("AdminProductImages", () => import("./pages/AdminProductImages"));
 const Welcome         = lazyPage("Welcome",         () => import("./pages/Welcome"));
 const DogDoor         = lazyPage("DogDoor",         () => import("./pages/DogDoor"));
 const JotFormPayment = lazyPage("JotFormPayment", () => import("./pages/JotFormPayment"));
@@ -593,6 +594,16 @@ export default function App() {
             element={
               <RouteBoundary name="AdminProducts">
                 <AdminProducts />
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Product Images */}
+          <Route
+            path="/admin/product-images"
+            element={
+              <RouteBoundary name="AdminProductImages">
+                <AdminProductImages />
               </RouteBoundary>
             }
           />
