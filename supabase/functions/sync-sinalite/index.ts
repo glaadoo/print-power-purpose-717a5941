@@ -337,21 +337,24 @@ serve(async (req) => {
       // Extract image URL from various possible locations
       let imageUrl = null;
       if (p.image_url) imageUrl = p.image_url;
+      else if (p.imageUrl) imageUrl = p.imageUrl;
       else if (p.thumbnail) imageUrl = p.thumbnail;
-      else if (p.image) imageUrl = typeof p.image === 'string' ? p.image : p.image?.src;
+      else if (p.image) imageUrl = typeof p.image === 'string' ? p.image : p.image?.url || p.image?.src;
       else if (p.images && Array.isArray(p.images) && p.images.length > 0) {
-        imageUrl = typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.src;
+        imageUrl = typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url || p.images[0]?.src;
       }
       
-      // Log image URL extraction for debugging
-      if (productsToSync.length === 0) {
-        console.log(`[SYNC-SINALITE] First product image extraction:`, {
+      // Log image URL extraction for debugging (first 3 products)
+      if (productsToSync.length < 3) {
+        console.log(`[SYNC-SINALITE] Product ${p.id} image extraction:`, {
+          productName: p.name,
           hasImageUrl: !!p.image_url,
+          hasImageUrlCamel: !!p.imageUrl,
           hasThumbnail: !!p.thumbnail,
           hasImage: !!p.image,
           hasImages: !!(p.images && Array.isArray(p.images)),
           extractedUrl: imageUrl,
-          availableFields: Object.keys(p)
+          availableFields: Object.keys(p).slice(0, 20)
         });
       }
 
