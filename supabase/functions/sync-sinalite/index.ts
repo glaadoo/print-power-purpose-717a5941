@@ -299,66 +299,55 @@ serve(async (req) => {
       console.log(`[SYNC-SINALITE] Sample product structure:`, JSON.stringify(firstProduct, null, 2).slice(0, 500));
     }
 
-    // Transform and fetch pricing for each product
+    // Transform products - use product data directly without individual pricing calls
+    // The pricing will be handled by the global pricing engine based on base costs
     const rawProducts = products.data || products || [];
     const enabledProducts = rawProducts.filter((p: any) => p.enabled === 1);
     
     console.log(`[SYNC-SINALITE] Processing ${enabledProducts.length} enabled products`);
+    console.log(`[SYNC-SINALITE] Sample product for ${storeName}:`, JSON.stringify(enabledProducts[0], null, 2).slice(0, 800));
     
     const productsToSync = [];
     for (const p of enabledProducts) {
-      let baseCostCents = 1000; // Default $10.00
-      let pricingData = null;
+      // Use product's base price if available, otherwise use a reasonable default
+      // SinaLite API should include pricing in the product object
+      let baseCostCents = 2000; // Default $20.00 if no price found
       
-      // Fetch pricing for selected store
-      try {
-        const pricingUrl = `${productUrl}/${p.id}/${storeCode}`;
-        
-        const pricingResponse = await fetch(pricingUrl, { headers });
-        if (pricingResponse.ok) {
-          const pricing = await pricingResponse.json();
-          pricingData = pricing;
-          
-          // Extract pricing combinations (2nd array element)
-          const pricingCombos = pricing[1] || [];
-          
-          // Filter for realistic product prices and store pricing data
-          const prices = pricingCombos
-            .map((combo: any) => parseFloat(combo.value))
-            .filter((v: number) => !isNaN(v) && v >= 1 && v <= 10000);
-          
-          if (prices.length > 0) {
-            const minPrice = Math.min(...prices);
-            baseCostCents = Math.round(minPrice * 100);
-            console.log(`[SYNC-SINALITE] Product ${p.id} (${p.name}): $${minPrice.toFixed(2)} (${prices.length} valid prices)`);
-          } else {
-            console.warn(`[SYNC-SINALITE] Product ${p.id} (${p.name}): No valid prices found`);
-          }
-        } else {
-          console.warn(`[SYNC-SINALITE] Failed to fetch pricing for product ${p.id}: ${pricingResponse.status}`);
-        }
-      } catch (error) {
-        console.error(`[SYNC-SINALITE] Error fetching pricing for product ${p.id}:`, error);
+      // Try to extract price from product object
+      if (p.price && typeof p.price === 'number' && p.price > 0) {
+        baseCostCents = Math.round(p.price * 100);
+        console.log(`[SYNC-SINALITE] Product ${p.id} using product.price: $${p.price.toFixed(2)}`);
+      } else if (p.base_price && typeof p.base_price === 'number' && p.base_price > 0) {
+        baseCostCents = Math.round(p.base_price * 100);
+        console.log(`[SYNC-SINALITE] Product ${p.id} using product.base_price: $${p.base_price.toFixed(2)}`);
+      } else if (p.minPrice && typeof p.minPrice === 'number' && p.minPrice > 0) {
+        baseCostCents = Math.round(p.minPrice * 100);
+        console.log(`[SYNC-SINALITE] Product ${p.id} using product.minPrice: $${p.minPrice.toFixed(2)}`);
+      } else {
+        console.warn(`[SYNC-SINALITE] Product ${p.id} (${p.name}): No price field found, using default $${baseCostCents / 100}`);
+        console.warn(`[SYNC-SINALITE] Available fields:`, Object.keys(p));
       }
       
-      // Skip products with invalid pricing
-      if (baseCostCents <= 0) {
-        console.log(`[SYNC-SINALITE] Skipping product ${p.id}_${storeCode} (${p.name}) - invalid pricing: $${baseCostCents / 100}`);
+      // Skip products with unrealistic pricing
+      if (baseCostCents < 100 || baseCostCents > 100000) {
+        console.log(`[SYNC-SINALITE] Skipping product ${p.id}_${storeCode} (${p.name}) - unrealistic pricing: $${baseCostCents / 100}`);
         continue;
       }
 
       productsToSync.push({
         name: `${p.name || "Unnamed Product"} (${storeName})`,
-        description: p.sku || null,
+        description: p.description || p.sku || null,
         base_cost_cents: baseCostCents,
-        category: p.category || "print",
-        image_url: null,
+        category: p.category || "Uncategorized",
+        image_url: p.image_url || p.thumbnail || null,
         vendor: "sinalite",
         vendor_id: `${p.id}_${storeCode}`, // Unique ID per store
         vendor_product_id: p.id.toString(),
-        pricing_data: pricingData, // Store full pricing data for configuration UI
+        pricing_data: p, // Store full product data for reference
       });
     }
+    
+    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync`);
 
     let synced = 0;
     for (const product of productsToSync) {
