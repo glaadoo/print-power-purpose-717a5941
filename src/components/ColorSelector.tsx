@@ -21,8 +21,10 @@ export default function ColorSelector() {
   }, []);
 
   const applyColor = (color: string) => {
-    document.body.style.background = color;
+    document.documentElement.style.setProperty('background', color, 'important');
+    document.body.style.setProperty('background', color, 'important');
     document.body.style.transition = 'background 0.5s ease';
+    console.log('Color applied:', color);
   };
 
   const handleColorChange = (color: string) => {
@@ -33,12 +35,12 @@ export default function ColorSelector() {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed top-20 right-4 z-[100]">
       <div className="relative">
         {/* Toggle Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 hover:bg-white transition-all duration-200"
+          className="flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border-2 border-gray-300 hover:bg-white hover:border-gray-400 transition-all duration-200"
           aria-label="Change background color"
         >
           <Palette size={20} className="text-gray-700" />
