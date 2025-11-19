@@ -377,7 +377,7 @@ export default function AdminProducts() {
                     onClick={toggleSelectAll}
                     variant="outline"
                     size="sm"
-                    className="bg-white/5 border-white/20 hover:bg-white/10"
+                    className="rounded-full bg-white/5 border-white/20 hover:bg-white/10"
                   >
                     {selectedProducts.size === products.length ? "Deselect All" : "Select All"}
                     {selectedProducts.size > 0 && ` (${selectedProducts.size})`}
@@ -415,7 +415,7 @@ export default function AdminProducts() {
                   <Button
                     onClick={handleBulkMarkupApply}
                     disabled={selectedProducts.size === 0 || !bulkMarkupValue}
-                    className="bg-primary hover:bg-primary/90"
+                    className="rounded-full bg-primary hover:bg-primary/90 px-6"
                   >
                     Apply to {selectedProducts.size} Selected
                   </Button>
