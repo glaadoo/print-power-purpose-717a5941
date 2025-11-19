@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.check-live-credentials]
 verify_jwt = false
+
+[functions.generate-product-image]
+verify_jwt = false
