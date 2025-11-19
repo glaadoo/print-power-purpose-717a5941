@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Plus, Minus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
+import { withRetry } from "@/lib/api-retry";
 
 type ProductRow = {
   id: string;
@@ -39,6 +40,41 @@ export default function Products() {
   const [configuredPrices, setConfiguredPrices] = useState<Record<string, number>>({});
   const [productConfigs, setProductConfigs] = useState<Record<string, Record<string, string>>>({});
 
+  const fetchProducts = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const result = await withRetry(
+        async () => {
+          const { data, error } = await supabase
+            .from("products")
+            .select("id, name, base_cost_cents, price_override_cents, image_url, category")
+            .order("category", { ascending: true })
+            .order("name", { ascending: true })
+            .limit(200);
+          
+          if (error) throw error;
+          return data ?? [];
+        },
+        {
+          maxAttempts: 3,
+          initialDelayMs: 1000,
+          maxDelayMs: 5000,
+        }
+      );
+      
+      setRows(result);
+    } catch (e: any) {
+      console.error('[Products] Failed to load products:', e);
+      setErr(e?.message || "Failed to load products. Please try again.");
+      toast.error("Failed to load products", {
+        description: "Please check your connection and try again."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Sync quantities with cart items
   useEffect(() => {
     const cartQuantities: Record<string, number> = {};
@@ -50,34 +86,7 @@ export default function Products() {
 
   useEffect(() => {
     document.title = "Products - Print Power Purpose";
-    
-    (async () => {
-      setLoading(true);
-      setErr(null);
-      try {
-        const timeout = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Request timed out. Please try again.")), 15000)
-        );
-        const query = supabase
-          .from("products")
-          .select("id, name, base_cost_cents, price_override_cents, image_url, category")
-          .order("category", { ascending: true })
-          .order("name", { ascending: true })
-          .limit(200);
-        const result = (await Promise.race([query, timeout])) as { data: ProductRow[] | null; error: any };
-        if (result && "data" in result) {
-          const { data, error } = result as any;
-          if (error) setErr(error.message);
-          else setRows((data as ProductRow[]) ?? []);
-        } else {
-          setErr("Unexpected response while loading products.");
-        }
-      } catch (e: any) {
-        setErr(e?.message || "Failed to load products.");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchProducts();
   }, []);
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -196,8 +205,17 @@ export default function Products() {
           <div className="relative w-full max-w-7xl mx-auto px-6 pt-6">
             {loading && <p className="text-center text-xl">Loading products…</p>}
             {err && (
-              <div className="border border-red-400/50 bg-red-900/30 text-white p-4 rounded-xl max-w-2xl mx-auto">
-                {err}
+              <div className="border border-red-400/50 bg-red-900/30 text-white p-6 rounded-xl max-w-2xl mx-auto space-y-4">
+                <p className="text-center">{err}</p>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={fetchProducts}
+                    variant="outline"
+                    className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                  >
+                    Try Again
+                  </Button>
+                </div>
               </div>
             )}
 
