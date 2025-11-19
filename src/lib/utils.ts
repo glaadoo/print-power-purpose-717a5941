@@ -30,7 +30,8 @@ export async function getProductImageUrl(product: {
 
   // Generate new image
   try {
-    console.log(`Generating AI image for product: ${product.name}`);
+    console.log(`[Image Gen] Starting generation for: ${product.name} (ID: ${product.id})`);
+    
     const { data, error } = await supabase.functions.invoke('generate-product-image', {
       body: { 
         productId: product.id, 
@@ -38,14 +39,23 @@ export async function getProductImageUrl(product: {
       }
     });
 
+    console.log(`[Image Gen] Response for ${product.name}:`, { data, error });
+
     if (error) {
-      console.error('Failed to generate product image:', error);
-      return null;
+      console.error(`[Image Gen] Error for ${product.name}:`, error);
+      throw new Error(`Image generation failed: ${error.message || JSON.stringify(error)}`);
     }
 
-    return data?.imageUrl || null;
+    if (!data?.imageUrl) {
+      console.error(`[Image Gen] No imageUrl in response for ${product.name}`, data);
+      throw new Error('No image URL returned from generation function');
+    }
+
+    console.log(`[Image Gen] Success for ${product.name}: ${data.imageUrl}`);
+    return data.imageUrl;
   } catch (error) {
-    console.error('Error calling generate-product-image function:', error);
-    return null;
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error(`[Image Gen] Exception for ${product.name}:`, errorMsg);
+    throw error; // Re-throw to be caught by the admin page
   }
 }
