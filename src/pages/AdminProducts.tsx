@@ -415,9 +415,10 @@ export default function AdminProducts() {
                 </div>
                 
                 <Button
+                  type="button"
                   onClick={handleBulkMarkupApply}
                   disabled={selectedProducts.size === 0 || !bulkMarkupValue}
-                  className="rounded-full bg-primary hover:bg-primary/90 px-8 py-2 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-base font-bold shadow-lg hover:shadow-xl transition-all disabled:bg-primary/50 disabled:text-primary-foreground/70 cursor-pointer disabled:cursor-not-allowed"
                   size="lg"
                 >
                   Apply to {selectedProducts.size} Selected
