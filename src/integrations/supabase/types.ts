@@ -713,6 +713,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_settings: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          markup_fixed_cents: number
+          markup_mode: string
+          markup_percent: number
+          nonprofit_fixed_cents: number
+          nonprofit_percent_of_markup: number
+          nonprofit_share_mode: string
+          updated_at: string
+          vendor: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          markup_fixed_cents?: number
+          markup_mode: string
+          markup_percent?: number
+          nonprofit_fixed_cents?: number
+          nonprofit_percent_of_markup?: number
+          nonprofit_share_mode: string
+          updated_at?: string
+          vendor: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          markup_fixed_cents?: number
+          markup_mode?: string
+          markup_percent?: number
+          nonprofit_fixed_cents?: number
+          nonprofit_percent_of_markup?: number
+          nonprofit_share_mode?: string
+          updated_at?: string
+          vendor?: string
+        }
+        Relationships: []
+      }
       product_variants: {
         Row: {
           base_price_cents: number
