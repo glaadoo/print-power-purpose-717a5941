@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import VideoBackground from "@/components/VideoBackground";
-import GlassCard from "@/components/GlassCard";
+import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus, ArrowLeft } from "lucide-react";
+import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
 
@@ -291,131 +289,22 @@ export default function Products() {
                         const isConfigured = requiresConfiguration ? !!configuredPrices[product.id] : true;
                         const canAddToCart = isConfigured;
                         const isInCart = items.some(item => item.id === product.id);
-                        const [imageError, setImageError] = React.useState(false);
 
                         return (
-                          <GlassCard key={product.id} padding="p-6">
-                            <div className="flex flex-col items-start text-left space-y-4 w-full">
-                              {/* Product Image */}
-                              <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10">
-                                {product.image_url && !imageError ? (
-                                  <img 
-                                    src={product.image_url} 
-                                    alt={product.name}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      console.error(`Failed to load image for product "${product.name}":`, product.image_url);
-                                      setImageError(true);
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                    <div className="text-center p-4">
-                                      <svg className="w-16 h-16 mx-auto text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                      </svg>
-                                      <p className="text-white/40 text-xs mt-2">No image available</p>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center justify-between w-full">
-                                <h3 className="text-lg font-bold text-white">
-                                  {product.name}
-                                </h3>
-                                {isInCart && (
-                                  <Badge className="bg-green-600 text-white border-green-400 text-xs">
-                                    In Cart
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              <div className="w-full space-y-3">
-                              {/* Show base price with markup */}
-                              <div className="w-full py-2 px-4 bg-white/5 rounded-lg border border-white/10">
-                                <p className="text-sm text-white/60 text-center mb-1">
-                                  {product.pricing_data && Array.isArray(product.pricing_data) && product.pricing_data.length > 0 
-                                    ? "Starting at" 
-                                    : "Price"}
-                                </p>
-                                <p className="text-2xl font-bold text-white text-center">
-                                  ${(displayPriceCents / 100).toFixed(2)}
-                                </p>
-                                {product.vendor === "sinalite" && pricingSettings && pricingSettings.markup_fixed_cents > 0 && (
-                                  <p className="text-xs text-white/50 text-center mt-1">
-                                    Includes ${(pricingSettings.markup_mode === "fixed" 
-                                      ? pricingSettings.markup_fixed_cents / 100 
-                                      : (displayPriceCents - (product.base_cost_cents || 0)) / 100
-                                    ).toFixed(2)} to your chosen nonprofit
-                                  </p>
-                                )}
-                              </div>
-                              
-                              {/* Only show configurator for products that need it */}
-                              {product.pricing_data && Array.isArray(product.pricing_data) && product.pricing_data.length > 0 && (
-                                <ProductConfiguratorLoader
-                                  productId={product.id}
-                                  onPriceChange={(price) => handlePriceChange(product.id, price)}
-                                  onConfigChange={(config) => handleConfigChange(product.id, config)}
-                                />
-                              )}
-                              
-                              {configuredPrices[product.id] && (
-                                <div className="w-full py-2 px-4 bg-green-900/20 border border-green-400/30 rounded-lg">
-                                  <p className="text-xs text-green-200 text-center mb-1">Configured Price</p>
-                                  <p className="text-2xl font-bold text-green-100 text-center">
-                                    ${(configuredPrices[product.id] / 100).toFixed(2)}
-                                  </p>
-                                </div>
-                              )}
-                              </div>
-
-                              <div className="flex items-center gap-2 w-full justify-between py-2">
-                                <span className="text-sm text-white/80">Quantity:</span>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="h-8 w-8 rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
-                                    onClick={() => updateQuantity(product.id, -1)}
-                                    disabled={qty === 0}
-                                  >
-                                    <Minus className="w-3 h-3" />
-                                  </Button>
-                                  
-                                  <span className="text-lg font-semibold text-white min-w-[2.5rem] text-center">
-                                    {qty}
-                                  </span>
-                                  
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="h-8 w-8 rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
-                                    onClick={() => updateQuantity(product.id, 1)}
-                                  >
-                                    <Plus className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {!isConfigured && (
-                                <p className="text-xs text-yellow-300 w-full">
-                                  Configure options above before adding to cart
-                                </p>
-                              )}
-
-                              <Button
-                                onClick={() => handleAddToCart(product)}
-                                disabled={qty === 0 || !canAddToCart}
-                                variant="outline"
-                                className="w-full rounded-lg border-white/50 bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                              >
-                                <ShoppingCart className="w-4 h-4 mr-2" />
-                                Add to Cart
-                              </Button>
-                            </div>
-                          </GlassCard>
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            displayPriceCents={displayPriceCents}
+                            quantity={qty}
+                            isInCart={isInCart}
+                            requiresConfiguration={requiresConfiguration}
+                            isConfigured={isConfigured}
+                            canAddToCart={canAddToCart}
+                            onQuantityChange={updateQuantity}
+                            onAddToCart={handleAddToCart}
+                            onPriceChange={handlePriceChange}
+                            onConfigChange={handleConfigChange}
+                          />
                         );
                       })}
                     </div>
