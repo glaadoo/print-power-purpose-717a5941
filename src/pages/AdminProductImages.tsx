@@ -113,11 +113,15 @@ export default function AdminProductImages() {
           console.log(`✓ ${action === "regenerated" ? "Regenerated" : "Generated"} image for: ${product.name}`);
         } else {
           failed++;
-          console.error(`✗ Failed to ${action === "regenerated" ? "regenerate" : "generate"} image for: ${product.name}`);
+          const errorMsg = `Failed to ${action === "regenerated" ? "regenerate" : "generate"} image for: ${product.name} - No URL returned`;
+          console.error(`✗ ${errorMsg}`);
+          toast.error(errorMsg);
         }
       } catch (error) {
         failed++;
-        console.error(`Error ${action === "regenerated" ? "regenerating" : "generating"} image for ${product.name}:`, error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error(`Error ${action === "regenerated" ? "regenerating" : "generating"} image for ${product.name}:`, errorMsg);
+        toast.error(`${product.name}: ${errorMsg}`);
       }
 
       setProgress(((i + 1) / batchToProcess.length) * 100);
