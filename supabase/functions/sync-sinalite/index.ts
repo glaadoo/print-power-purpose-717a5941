@@ -334,12 +334,33 @@ serve(async (req) => {
         continue;
       }
 
+      // Extract image URL from various possible locations
+      let imageUrl = null;
+      if (p.image_url) imageUrl = p.image_url;
+      else if (p.thumbnail) imageUrl = p.thumbnail;
+      else if (p.image) imageUrl = typeof p.image === 'string' ? p.image : p.image?.src;
+      else if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+        imageUrl = typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.src;
+      }
+      
+      // Log image URL extraction for debugging
+      if (productsToSync.length === 0) {
+        console.log(`[SYNC-SINALITE] First product image extraction:`, {
+          hasImageUrl: !!p.image_url,
+          hasThumbnail: !!p.thumbnail,
+          hasImage: !!p.image,
+          hasImages: !!(p.images && Array.isArray(p.images)),
+          extractedUrl: imageUrl,
+          availableFields: Object.keys(p)
+        });
+      }
+
       productsToSync.push({
         name: `${p.name || "Unnamed Product"} (${storeName})`,
         description: p.description || p.sku || null,
         base_cost_cents: baseCostCents,
         category: p.category || "Uncategorized",
-        image_url: p.image_url || p.thumbnail || null,
+        image_url: imageUrl,
         vendor: "sinalite",
         vendor_id: `${p.id}_${storeCode}`, // Unique ID per store
         vendor_product_id: p.id.toString(),
