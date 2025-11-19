@@ -109,11 +109,15 @@ serve(async (req) => {
 
     const orderNumber = orderNumberData as string;
 
+    // Generate temporary session ID (will be replaced with Stripe session ID)
+    const tempSessionId = crypto.randomUUID();
+
     // Create order record FIRST
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .insert({
         order_number: orderNumber,
+        session_id: tempSessionId,
         status: "created",
         items: orderItems,
         subtotal_cents: subtotalCents,
