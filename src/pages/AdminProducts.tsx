@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Download, RefreshCw, Edit, Save, X } from "lucide-react";
+import { ArrowLeft, Download, RefreshCw, Edit, Save, X, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, computeFinalPrice } from "@/lib/pricing-utils";
 import {
@@ -16,6 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Product {
   id: string;
@@ -41,6 +43,9 @@ export default function AdminProducts() {
     markup_percent: 0,
   });
   const [pricingSettings, setPricingSettings] = useState<any>(null);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [bulkMarkupType, setBulkMarkupType] = useState<"fixed" | "percent">("fixed");
+  const [bulkMarkupValue, setBulkMarkupValue] = useState<string>("");
 
   useEffect(() => {
     loadProducts();
@@ -123,6 +128,60 @@ export default function AdminProducts() {
       markup_fixed_cents: product.markup_fixed_cents || 0,
       markup_percent: product.markup_percent || 0,
     });
+  }
+
+  function toggleSelectAll() {
+    if (selectedProducts.size === products.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(products.map(p => p.id)));
+    }
+  }
+
+  function toggleSelectProduct(productId: string) {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    setSelectedProducts(newSelected);
+  }
+
+  async function handleBulkMarkupApply() {
+    if (selectedProducts.size === 0) {
+      toast.error("Please select at least one product");
+      return;
+    }
+
+    const value = parseFloat(bulkMarkupValue);
+    if (isNaN(value) || value < 0) {
+      toast.error("Please enter a valid markup value");
+      return;
+    }
+
+    try {
+      const updates = Array.from(selectedProducts).map(productId => {
+        const updateData = bulkMarkupType === "fixed"
+          ? { markup_fixed_cents: Math.round(value * 100), markup_percent: 0 }
+          : { markup_percent: value, markup_fixed_cents: 0 };
+
+        return supabase
+          .from("products")
+          .update(updateData)
+          .eq("id", productId);
+      });
+
+      await Promise.all(updates);
+      
+      toast.success(`Updated ${selectedProducts.size} products successfully`);
+      setSelectedProducts(new Set());
+      setBulkMarkupValue("");
+      loadProducts();
+    } catch (err) {
+      console.error("Error applying bulk markup:", err);
+      toast.error("Failed to apply bulk markup");
+    }
   }
 
   async function handleSaveMarkup() {
