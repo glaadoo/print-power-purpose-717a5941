@@ -239,7 +239,7 @@ export default function Home() {
                 One platform for professional print orders and optional donations—connecting
                 communities and nonprofits in a single, seamless checkout.
               </p>
-              <div className="mt-10">
+              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
                   href="/auth"
                   className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
@@ -252,6 +252,16 @@ export default function Home() {
                   </svg>
                   Sign Up/Sign In
                 </a>
+                <button
+                  onClick={() => {
+                    // PPP SECURITY CORE: Set guest access flag
+                    localStorage.setItem("ppp_access", "guest");
+                    nav("/welcome");
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 bg-white/10 backdrop-blur-md border border-white/30 text-white font-semibold hover:bg-white/20"
+                >
+                  Continue as Guest
+                </button>
               </div>
             </div>
           </div>
