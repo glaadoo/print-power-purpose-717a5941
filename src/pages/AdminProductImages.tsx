@@ -74,9 +74,26 @@ export default function AdminProductImages() {
       return;
     }
 
+    await processImageGeneration(productsWithoutImages, "generated");
+  }
+
+  async function regenerateAllImages() {
+    const productsWithGeneratedImages = products.filter(
+      p => p.generated_image_url && !p.image_url
+    );
+
+    if (productsWithGeneratedImages.length === 0) {
+      toast.info("No generated images to regenerate!");
+      return;
+    }
+
+    await processImageGeneration(productsWithGeneratedImages, "regenerated");
+  }
+
+  async function processImageGeneration(productList: Product[], action: string) {
     // Generate only 10 images at a time to avoid overwhelming the system
     const BATCH_SIZE = 10;
-    const batchToProcess = productsWithoutImages.slice(0, BATCH_SIZE);
+    const batchToProcess = productList.slice(0, BATCH_SIZE);
 
     setGenerating(true);
     setProgress(0);
@@ -88,19 +105,19 @@ export default function AdminProductImages() {
       setCurrentProduct(product.name);
       
       try {
-        console.log(`Generating image for: ${product.name}`);
+        console.log(`${action === "regenerated" ? "Regenerating" : "Generating"} image for: ${product.name}`);
         const imageUrl = await getProductImageUrl(product);
         
         if (imageUrl) {
           generated++;
-          console.log(`✓ Generated image for: ${product.name}`);
+          console.log(`✓ ${action === "regenerated" ? "Regenerated" : "Generated"} image for: ${product.name}`);
         } else {
           failed++;
-          console.error(`✗ Failed to generate image for: ${product.name}`);
+          console.error(`✗ Failed to ${action === "regenerated" ? "regenerate" : "generate"} image for: ${product.name}`);
         }
       } catch (error) {
         failed++;
-        console.error(`Error generating image for ${product.name}:`, error);
+        console.error(`Error ${action === "regenerated" ? "regenerating" : "generating"} image for ${product.name}:`, error);
       }
 
       setProgress(((i + 1) / batchToProcess.length) * 100);
@@ -115,8 +132,9 @@ export default function AdminProductImages() {
     setGenerating(false);
     setCurrentProduct("");
     
-    const remaining = productsWithoutImages.length - batchToProcess.length;
-    const message = `Generated ${generated} images. ${failed > 0 ? `${failed} failed. ` : ""}${remaining > 0 ? `${remaining} remaining.` : ""}`;
+    const remaining = productList.length - batchToProcess.length;
+    const actionText = action === "regenerated" ? "Regenerated" : "Generated";
+    const message = `${actionText} ${generated} images. ${failed > 0 ? `${failed} failed. ` : ""}${remaining > 0 ? `${remaining} remaining.` : ""}`;
     toast.success(message);
     
     // Reload products to show updated stats
@@ -192,24 +210,40 @@ export default function AdminProductImages() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                This process will generate images for up to 10 products at a time. 
-                It processes one product at a time with a 2-second delay between each 
-                to avoid overwhelming the system. Run it multiple times to generate more.
+                Generate missing images or regenerate existing AI-generated images. 
+                Processes up to 10 products at a time with a 2-second delay between each. 
+                Run multiple times for more products.
               </AlertDescription>
             </Alert>
 
-            <Button
-              onClick={generateMissingImages}
-              disabled={generating || stats.missingImages === 0}
-              className="w-full"
-              size="lg"
-            >
-              {generating ? (
-                <>Processing...</>
-              ) : (
-                <>Generate Images (up to 10 of {stats.missingImages})</>
-              )}
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={generateMissingImages}
+                disabled={generating || stats.missingImages === 0}
+                className="w-full"
+                size="lg"
+              >
+                {generating ? (
+                  <>Processing...</>
+                ) : (
+                  <>Generate Missing (up to 10 of {stats.missingImages})</>
+                )}
+              </Button>
+
+              <Button
+                onClick={regenerateAllImages}
+                disabled={generating || stats.generated === 0}
+                className="w-full"
+                size="lg"
+                variant="outline"
+              >
+                {generating ? (
+                  <>Processing...</>
+                ) : (
+                  <>Regenerate All (up to 10 of {stats.generated})</>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
