@@ -149,12 +149,19 @@ export default function AdminProducts() {
   }
 
   async function handleBulkMarkupApply() {
+    console.log("handleBulkMarkupApply called");
+    console.log("selectedProducts size:", selectedProducts.size);
+    console.log("bulkMarkupValue:", bulkMarkupValue);
+    console.log("bulkMarkupType:", bulkMarkupType);
+    
     if (selectedProducts.size === 0) {
       toast.error("Please select at least one product");
       return;
     }
 
     const value = parseFloat(bulkMarkupValue);
+    console.log("Parsed value:", value);
+    
     if (isNaN(value) || value < 0) {
       toast.error("Please enter a valid markup value");
       return;
@@ -165,13 +172,21 @@ export default function AdminProducts() {
         ? { markup_fixed_cents: Math.round(value * 100), markup_percent: 0 }
         : { markup_percent: value, markup_fixed_cents: 0 };
 
+      console.log("Update data:", updateData);
+      console.log("Updating products:", Array.from(selectedProducts));
+
       const updates = Array.from(selectedProducts).map(async (productId) => {
+        console.log("Updating product:", productId);
         const { error } = await supabase
           .from("products")
           .update(updateData)
           .eq("id", productId);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating product:", productId, error);
+          throw error;
+        }
+        console.log("Successfully updated product:", productId);
       });
 
       await Promise.all(updates);
