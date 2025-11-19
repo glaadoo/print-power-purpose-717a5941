@@ -10,6 +10,7 @@ import { ShoppingCart, Plus, Minus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 import { withRetry } from "@/lib/api-retry";
+import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
 
 type ProductRow = {
   id: string;
@@ -20,15 +21,9 @@ type ProductRow = {
   image_url?: string | null;
   category?: string | null;
   pricing_data?: any;
+  vendor?: string | null;
 };
 
-const getProductPrice = (product: ProductRow) => {
-  // Use price override if available, otherwise calculate from base cost
-  if (product.price_override_cents && product.price_override_cents > 0) {
-    return product.price_override_cents;
-  }
-  return Math.max(100, Math.round((product.base_cost_cents || 0) * 1.6));
-};
 
 export default function Products() {
   const navigate = useNavigate();
@@ -39,31 +34,56 @@ export default function Products() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [configuredPrices, setConfiguredPrices] = useState<Record<string, number>>({});
   const [productConfigs, setProductConfigs] = useState<Record<string, Record<string, string>>>({});
+  const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
 
   const fetchProducts = async () => {
     setLoading(true);
     setErr(null);
     try {
-      const result = await withRetry(
-        async () => {
-          const { data, error } = await supabase
-            .from("products")
-            .select("id, name, base_cost_cents, price_override_cents, image_url, category")
-            .order("category", { ascending: true })
-            .order("name", { ascending: true })
-            .limit(200);
-          
-          if (error) throw error;
-          return data ?? [];
-        },
-        {
-          maxAttempts: 3,
-          initialDelayMs: 1000,
-          maxDelayMs: 5000,
-        }
-      );
+      // Fetch pricing settings and products in parallel
+      const [settingsResult, productsResult] = await Promise.all([
+        withRetry(
+          async () => {
+            const { data, error } = await supabase
+              .from("pricing_settings")
+              .select("*")
+              .eq("vendor", "sinalite")
+              .maybeSingle();
+            
+            if (error) throw error;
+            
+            // Return default settings if none exist
+            return data || {
+              vendor: "sinalite",
+              markup_mode: "fixed",
+              markup_fixed_cents: 1500,
+              markup_percent: 0,
+              nonprofit_share_mode: "fixed",
+              nonprofit_fixed_cents: 1000,
+              nonprofit_percent_of_markup: 0,
+              currency: "USD"
+            };
+          },
+          { maxAttempts: 3, initialDelayMs: 1000, maxDelayMs: 5000 }
+        ),
+        withRetry(
+          async () => {
+            const { data, error } = await supabase
+              .from("products")
+              .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor")
+              .order("category", { ascending: true })
+              .order("name", { ascending: true })
+              .limit(200);
+            
+            if (error) throw error;
+            return data ?? [];
+          },
+          { maxAttempts: 3, initialDelayMs: 1000, maxDelayMs: 5000 }
+        )
+      ]);
       
-      setRows(result);
+      setPricingSettings(settingsResult as PricingSettings);
+      setRows(productsResult);
     } catch (e: any) {
       console.error('[Products] Failed to load products:', e);
       setErr(e?.message || "Failed to load products. Please try again.");
@@ -228,10 +248,21 @@ export default function Products() {
                     </h2>
                     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
                       {products.map((product) => {
-                        const unitCents = getProductPrice(product);
-                        const unitPrice = unitCents / 100;
-                        const qty = quantities[product.id] || 0;
+                        // Calculate price with global markup for SinaLite products
+                        let displayPriceCents = product.base_cost_cents || 100;
                         
+                        if (product.vendor === "sinalite" && pricingSettings) {
+                          const pricing = computeGlobalPricing({
+                            vendor: "sinalite",
+                            base_cost_cents: product.base_cost_cents || 0,
+                            settings: pricingSettings
+                          });
+                          displayPriceCents = pricing.final_price_per_unit_cents;
+                        } else if (product.price_override_cents && product.price_override_cents > 0) {
+                          displayPriceCents = product.price_override_cents;
+                        }
+                        
+                        const qty = quantities[product.id] || 0;
                         const isConfigured = !!configuredPrices[product.id];
                         const canAddToCart = isConfigured;
                         const isInCart = items.some(item => item.id === product.id);
@@ -251,6 +282,22 @@ export default function Products() {
                               </div>
                               
                               <div className="w-full space-y-3">
+                              {/* Show base price with markup */}
+                              <div className="w-full py-2 px-4 bg-white/5 rounded-lg border border-white/10">
+                                <p className="text-sm text-white/60 text-center mb-1">Starting at</p>
+                                <p className="text-2xl font-bold text-white text-center">
+                                  ${(displayPriceCents / 100).toFixed(2)}
+                                </p>
+                                {product.vendor === "sinalite" && pricingSettings && (
+                                  <p className="text-xs text-white/50 text-center mt-1">
+                                    Includes ${(pricingSettings.markup_mode === "fixed" 
+                                      ? pricingSettings.markup_fixed_cents / 100 
+                                      : (displayPriceCents - (product.base_cost_cents || 0)) / 100
+                                    ).toFixed(2)} to your chosen nonprofit
+                                  </p>
+                                )}
+                              </div>
+                              
                               <ProductConfiguratorLoader
                                 productId={product.id}
                                 onPriceChange={(price) => handlePriceChange(product.id, price)}
@@ -258,8 +305,9 @@ export default function Products() {
                               />
                               
                               {configuredPrices[product.id] && (
-                                <div className="w-full py-2 px-4 bg-white/10 rounded-lg">
-                                  <p className="text-2xl font-bold text-white text-center">
+                                <div className="w-full py-2 px-4 bg-green-900/20 border border-green-400/30 rounded-lg">
+                                  <p className="text-xs text-green-200 text-center mb-1">Configured Price</p>
+                                  <p className="text-2xl font-bold text-green-100 text-center">
                                     ${(configuredPrices[product.id] / 100).toFixed(2)}
                                   </p>
                                 </div>
