@@ -88,6 +88,12 @@ export default function Admin() {
   // useEffect to check session/passcode on mount
   useEffect(() => {
     const checkAuth = async () => {
+      // Initialize adminPasscode from sessionStorage first
+      const storedPasscode = sessionStorage.getItem("admin_passcode");
+      if (storedPasscode) {
+        setAdminPasscode(storedPasscode);
+      }
+
       // Get passcode from URL
       const params = new URLSearchParams(window.location.search);
       const passcode = params.get('key');
@@ -114,7 +120,6 @@ export default function Admin() {
       }
 
       // Then check if there's a stored passcode
-      const storedPasscode = sessionStorage.getItem("admin_passcode");
       if (storedPasscode) {
         try {
           const { data, error } = await supabase.functions.invoke('verify-admin-passcode', {
@@ -123,16 +128,17 @@ export default function Admin() {
 
           if (!error && data?.valid) {
             setIsAuthenticated(true);
-            setAdminPasscode(storedPasscode);
             loadAllData();
             setCheckingAuth(false);
             return;
           } else {
             sessionStorage.removeItem("admin_passcode");
+            setAdminPasscode("");
           }
         } catch (err) {
           console.error('Stored passcode verification failed:', err);
           sessionStorage.removeItem("admin_passcode");
+          setAdminPasscode("");
         }
       }
 
