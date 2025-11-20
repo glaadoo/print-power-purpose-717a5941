@@ -14,13 +14,21 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, storeCode, productOptions } = await req.json();
+    const { productId, storeCode, productOptions, method = 'POST' } = await req.json();
 
-    console.log("[SINALITE-PRICE] Request:", { productId, storeCode, productOptions });
+    console.log("[SINALITE-PRICE] Request:", { method, productId, storeCode, productOptions });
 
-    if (!productId || !storeCode || !productOptions || !Array.isArray(productOptions)) {
+    if (!productId || !storeCode) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: productId, storeCode, productOptions" }),
+        JSON.stringify({ error: "Missing required fields: productId, storeCode" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // For pricing calculation, productOptions array is required
+    if (method === 'POST' && (!productOptions || !Array.isArray(productOptions))) {
+      return new Response(
+        JSON.stringify({ error: "productOptions array required for pricing calculation" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -123,35 +131,52 @@ serve(async (req) => {
       console.log("[SINALITE-PRICE] Using cached token");
     }
 
-    // Call pricing API - remove /product prefix if present
+    // Call SinaLite API - remove /product prefix if present
     const baseUrl = apiUrl.replace(/\/product\/?$/, '');
-    const pricingUrl = `${baseUrl}/price/${productId}/${storeCode}`;
-    console.log("[SINALITE-PRICE] Calling:", pricingUrl);
-    console.log("[SINALITE-PRICE] Options:", productOptions);
+    
+    let apiResponse;
+    
+    if (method === 'GET') {
+      // GET /product/{id}/{storeCode} - Returns [options[], combinations[], metadata[]]
+      const optionsUrl = `${baseUrl}/product/${productId}/${storeCode}`;
+      console.log("[SINALITE-PRICE] Calling GET:", optionsUrl);
+      
+      apiResponse = await fetch(optionsUrl, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+        },
+      });
+    } else {
+      // POST /price/{id}/{storeCode} - Returns pricing calculation
+      const pricingUrl = `${baseUrl}/price/${productId}/${storeCode}`;
+      console.log("[SINALITE-PRICE] Calling POST:", pricingUrl);
+      console.log("[SINALITE-PRICE] Option IDs:", productOptions);
+      
+      apiResponse = await fetch(pricingUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ productOptions }),
+      });
+    }
 
-    const pricingResponse = await fetch(pricingUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ productOptions }),
-    });
-
-    if (!pricingResponse.ok) {
-      const errorText = await pricingResponse.text();
-      console.error("[SINALITE-PRICE] Pricing API error:", pricingResponse.status, errorText);
+    if (!apiResponse.ok) {
+      const errorText = await apiResponse.text();
+      console.error("[SINALITE-PRICE] API error:", apiResponse.status, errorText);
       return new Response(
-        JSON.stringify({ error: "Pricing API error", details: errorText }),
+        JSON.stringify({ error: "SinaLite API error", details: errorText, status: apiResponse.status }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const pricingData = await pricingResponse.json();
-    console.log("[SINALITE-PRICE] Response:", pricingData);
+    const responseData = await apiResponse.json();
+    console.log("[SINALITE-PRICE] Response:", responseData);
 
     return new Response(
-      JSON.stringify(pricingData),
+      JSON.stringify(responseData),
       { headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error) {

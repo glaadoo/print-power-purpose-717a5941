@@ -58,10 +58,8 @@ export default function ProductConfiguratorLoader({
         }
       }
       
-      // If no options in pricing_data, call sinalite-price with minimal options to get configuration
-      // We'll pass at least one default option to avoid the "Invalid product options" error
-      const defaultOptions = [{ id: 1, value: "default" }]; // Minimal option to trigger response
-      
+      // If no options in pricing_data, fetch from SinaLite API
+      // Use GET method to retrieve product options
       console.log('[ProductConfiguratorLoader] Fetching options from API for product:', product.vendor_product_id);
       
       const response = await withRetry(
@@ -70,7 +68,7 @@ export default function ProductConfiguratorLoader({
             body: {
               productId: product.vendor_product_id,
               storeCode: 9,
-              productOptions: defaultOptions
+              method: 'GET' // GET returns [options[], combinations[], metadata[]]
             }
           });
           
