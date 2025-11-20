@@ -36,52 +36,60 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify admin access
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      console.error('[schools-import-bulk] Auth error:', authError);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('[schools-import-bulk] User authenticated:', user.id);
-
-    // Check if user has admin role
-    const { data: roles, error: roleError } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (roleError) {
-      console.error('[schools-import-bulk] Role check error:', roleError);
-    }
-
-    console.log('[schools-import-bulk] Roles found:', roles);
-
-    if (!roles) {
-      console.error('[schools-import-bulk] User does not have admin role:', user.id);
-      return new Response(
-        JSON.stringify({ error: 'Admin access required. Please contact an administrator to grant you admin privileges.' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const body = await req.json();
     const schools: SchoolImportData[] = body.schools;
+    const adminPasscode = body.adminPasscode;
+    const adminPasscodeEnv = Deno.env.get('ADMIN_PASSCODE');
+
+    // Check admin passcode first (for admin panel authentication)
+    if (adminPasscode && adminPasscodeEnv && adminPasscode === adminPasscodeEnv) {
+      console.log('[schools-import-bulk] Admin authenticated via passcode');
+      // Passcode is valid, proceed with import
+    } else {
+      // Fall back to Supabase auth + user_roles check
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: 'Missing authorization. Please log in to the admin panel.' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+      if (authError || !user) {
+        console.error('[schools-import-bulk] Auth error:', authError);
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized. Please log in to the admin panel.' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log('[schools-import-bulk] User authenticated:', user.id);
+
+      // Check if user has admin role
+      const { data: roles, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (roleError) {
+        console.error('[schools-import-bulk] Role check error:', roleError);
+      }
+
+      console.log('[schools-import-bulk] Roles found:', roles);
+
+      if (!roles) {
+        console.error('[schools-import-bulk] User does not have admin role:', user.id);
+        return new Response(
+          JSON.stringify({ error: 'Admin access required. Please log in to the admin panel with the admin passcode.' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     if (!Array.isArray(schools) || schools.length === 0) {
       return new Response(
