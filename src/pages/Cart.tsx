@@ -5,6 +5,7 @@ import VideoBackground from "@/components/VideoBackground";
 import { X, ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Cart() {
   const { items, count, totalCents, setQty, remove, clear } = useCart();
@@ -13,10 +14,32 @@ export default function Cart() {
   useEffect(() => {
     document.title = "Cart - Print Power Purpose";
     
-    // Debug: Log cart contents on mount
-    console.log("Cart items:", items);
-    console.log("Cart localStorage:", localStorage.getItem("ppp:cart"));
-  }, [items]);
+    // Validate cart items - remove products that no longer exist
+    async function validateCartItems() {
+      if (items.length === 0) return;
+      
+      const invalidIds: string[] = [];
+      
+      for (const item of items) {
+        const { data, error } = await supabase
+          .from("products")
+          .select("id")
+          .eq("id", item.id)
+          .maybeSingle();
+        
+        if (error || !data) {
+          invalidIds.push(item.id);
+        }
+      }
+      
+      if (invalidIds.length > 0) {
+        invalidIds.forEach(id => remove(id));
+        toast.error(`${invalidIds.length} invalid product(s) removed from cart.`);
+      }
+    }
+    
+    validateCartItems();
+  }, []);
 
   const hasItems = items.length > 0;
 
