@@ -41,6 +41,12 @@ serve(async (req) => {
     const adminPasscode = body.adminPasscode;
     const adminPasscodeEnv = Deno.env.get('ADMIN_PASSCODE');
 
+    console.log('[schools-import-bulk] Passcode check:', {
+      hasPasscodeInRequest: !!adminPasscode,
+      hasPasscodeInEnv: !!adminPasscodeEnv,
+      passcodesMatch: adminPasscode === adminPasscodeEnv
+    });
+
     // Check admin passcode first (for admin panel authentication)
     if (adminPasscode && adminPasscodeEnv && adminPasscode === adminPasscodeEnv) {
       console.log('[schools-import-bulk] Admin authenticated via passcode');
