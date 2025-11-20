@@ -123,6 +123,7 @@ export default function Admin() {
 
           if (!error && data?.valid) {
             setIsAuthenticated(true);
+            setAdminPasscode(storedPasscode);
             loadAllData();
             setCheckingAuth(false);
             return;
