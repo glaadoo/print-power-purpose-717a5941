@@ -28,6 +28,10 @@
     /* Mascot header colors - warm tones */
     --mascot-bg: 35 40% 92%;
     --mascot-text: 25 25% 25%;
+    
+    /* App background and text colors (for ColorSelector) */
+    --app-bg: #FDF4E3;
+    --app-text: #222222;
   }
 
   .dark {
@@ -62,6 +66,7 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  color: var(--app-text);
 }
 
 body {

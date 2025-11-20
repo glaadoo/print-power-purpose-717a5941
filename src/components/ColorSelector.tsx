@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Palette } from 'lucide-react';
 
 const COLOR_OPTIONS = [
-  { id: 'cream', value: '#FDF4E3', name: 'Light Cream' },
-  { id: 'beige', value: '#FCE7C8', name: 'Warm Beige' },
-  { id: 'tan', value: '#E1D5C0', name: 'Soft Tan' },
+  { id: 'cream', value: '#FDF4E3', name: 'Light Cream', textColor: '#222222' },
+  { id: 'dark', value: '#1A1A1A', name: 'Dark', textColor: '#FDF4E3' },
+  { id: 'brown', value: '#5C3B1E', name: 'Brown', textColor: '#FDF4E3' },
 ];
 
 export default function ColorSelector() {
@@ -21,10 +21,16 @@ export default function ColorSelector() {
   }, []);
 
   const applyColor = (color: string) => {
+    const option = COLOR_OPTIONS.find(opt => opt.value === color);
+    const textColor = option?.textColor || '#222222';
+    
+    document.documentElement.style.setProperty('--app-bg', color);
+    document.documentElement.style.setProperty('--app-text', textColor);
     document.documentElement.style.setProperty('background', color, 'important');
     document.body.style.setProperty('background', color, 'important');
-    document.body.style.transition = 'background 0.5s ease';
-    console.log('Color applied:', color);
+    document.body.style.setProperty('color', textColor, 'important');
+    document.body.style.transition = 'background 0.5s ease, color 0.5s ease';
+    console.log('Color applied:', color, 'Text color:', textColor);
   };
 
   const handleColorChange = (color: string) => {
