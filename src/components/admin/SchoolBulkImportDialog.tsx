@@ -256,10 +256,10 @@ export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess }
       );
 
       if (error) {
-        if (error.message?.includes('403') || error.message?.includes('Forbidden')) {
-          throw new Error('Admin access required. Please ensure you are logged in with admin privileges.');
-        }
-        throw error;
+        console.error('[SchoolBulkImport] Edge function error:', error);
+        // Extract the actual error message from the edge function response
+        const errorMessage = error.message || 'Unknown error occurred';
+        throw new Error(errorMessage);
       }
 
       const result = data as { imported: number; skipped: number; total: number; errors?: string[] };

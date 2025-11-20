@@ -49,23 +49,33 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
+      console.error('[schools-import-bulk] Auth error:', authError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log('[schools-import-bulk] User authenticated:', user.id);
+
     // Check if user has admin role
-    const { data: roles } = await supabase
+    const { data: roles, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'admin')
       .maybeSingle();
 
+    if (roleError) {
+      console.error('[schools-import-bulk] Role check error:', roleError);
+    }
+
+    console.log('[schools-import-bulk] Roles found:', roles);
+
     if (!roles) {
+      console.error('[schools-import-bulk] User does not have admin role:', user.id);
       return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
+        JSON.stringify({ error: 'Admin access required. Please contact an administrator to grant you admin privileges.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
