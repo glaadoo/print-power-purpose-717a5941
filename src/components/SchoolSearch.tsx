@@ -120,8 +120,9 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
       {!loading && results.length > 0 && (
         <div className="rounded-lg border border-border shadow-md bg-background">
           <div className="p-2">
-            <div className="text-xs font-semibold text-muted-foreground px-2 py-1.5">
-              Search Results
+            <div className="text-xs font-semibold text-muted-foreground px-2 py-1.5 flex items-center justify-between">
+              <span>Search Results</span>
+              <span className="text-foreground/60">{results.length} {results.length === 1 ? 'school' : 'schools'} found</span>
             </div>
             <div className="space-y-1">
               {results.map((school) => (
