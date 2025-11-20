@@ -22,7 +22,6 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<School[]>([]);
   const [loading, setLoading] = useState(false);
-  const [recentSchools, setRecentSchools] = useState<School[]>([]);
 
   const highlightMatch = (text: string, query: string) => {
     if (!query) return text;
@@ -38,17 +37,6 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
       )
     );
   };
-
-  useEffect(() => {
-    const recent = localStorage.getItem("recent_schools");
-    if (recent) {
-      try {
-        setRecentSchools(JSON.parse(recent));
-      } catch (e) {
-        console.error("Failed to parse recent schools", e);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     if (!query || query.length < 2) {
@@ -86,14 +74,7 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const saveToRecentSchools = (school: School) => {
-    const recent = [school, ...recentSchools.filter(s => s.id !== school.id)].slice(0, 5);
-    localStorage.setItem("recent_schools", JSON.stringify(recent));
-    setRecentSchools(recent);
-  };
-
   const handleSelect = (school: School) => {
-    saveToRecentSchools(school);
     onSelect(school);
     setQuery("");
     setResults([]);
@@ -161,36 +142,6 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                   <div className="flex flex-col">
                     <span className="font-medium text-foreground">
                       {highlightMatch(school.name, query)}, {highlightMatch(school.city, query)}, {highlightMatch(school.state, query)} {highlightMatch(school.zip, query)}
-                    </span>
-                    {school.school_level && (
-                      <span className="text-xs text-muted-foreground mt-0.5">
-                        {school.school_level}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!loading && query.length < 2 && recentSchools.length > 0 && (
-        <div className="rounded-lg border border-border shadow-md bg-background">
-          <div className="p-2">
-            <div className="text-xs font-semibold text-muted-foreground px-2 py-1.5">
-              Recent Selections
-            </div>
-            <div className="space-y-1">
-              {recentSchools.map((school) => (
-                <button
-                  key={school.id}
-                  onClick={() => handleSelect(school)}
-                  className="w-full text-left px-3 py-2.5 rounded-md hover:bg-accent/50 cursor-pointer transition-colors border border-transparent hover:border-accent"
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium text-foreground">
-                      {school.name}, {school.city}, {school.state} {school.zip}
                     </span>
                     {school.school_level && (
                       <span className="text-xs text-muted-foreground mt-0.5">
