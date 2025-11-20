@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
+import { withRetry } from "@/lib/api-retry";
 
 interface LoaderProps {
   productId: string;
@@ -15,36 +16,65 @@ export default function ProductConfiguratorLoader({
   onConfigChange,
 }: LoaderProps) {
   const [productData, setProductData] = useState<any | null>(null);
+  const [pricingOptions, setPricingOptions] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
 
-  const fetchPricing = async () => {
-    if (productData || loading) return;
+  const fetchPricingOptions = async () => {
+    if (pricingOptions || loading) return;
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase
-      .from("products")
-      .select("pricing_data, vendor_product_id, vendor")
-      .eq("id", productId)
-      .maybeSingle();
-    if (error) {
-      console.error('[ProductConfiguratorLoader] Error fetching pricing:', error);
-      setError(error.message);
-    } else {
-      console.log('[ProductConfiguratorLoader] Fetched product data:', data);
-      console.log('[ProductConfiguratorLoader] pricing_data type:', typeof data?.pricing_data);
-      console.log('[ProductConfiguratorLoader] pricing_data is array:', Array.isArray(data?.pricing_data));
-      console.log('[ProductConfiguratorLoader] pricing_data length:', data?.pricing_data?.length);
-      console.log('[ProductConfiguratorLoader] pricing_data content:', JSON.stringify(data?.pricing_data, null, 2));
-      setProductData(data);
+    
+    try {
+      // First, get product metadata
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .select("vendor_product_id, vendor")
+        .eq("id", productId)
+        .maybeSingle();
+      
+      if (productError) throw productError;
+      if (!product) throw new Error("Product not found");
+      
+      console.log('[ProductConfiguratorLoader] Fetching options for product:', product.vendor_product_id);
+      
+      // Call sinalite-price edge function to get actual pricing options
+      const response = await withRetry(
+        async () => {
+          const { data, error } = await supabase.functions.invoke('sinalite-price', {
+            body: {
+              productId: product.vendor_product_id,
+              storeCode: 9,
+              productOptions: {} // Empty to get all available options
+            }
+          });
+          
+          if (error) throw error;
+          return data;
+        },
+        { maxAttempts: 2, initialDelayMs: 1000 }
+      );
+      
+      console.log('[ProductConfiguratorLoader] Received pricing response:', response);
+      
+      if (response?.options && Array.isArray(response.options)) {
+        setPricingOptions(response.options);
+        setProductData(product);
+      } else {
+        throw new Error("Invalid pricing data structure from API");
+      }
+    } catch (e: any) {
+      console.error('[ProductConfiguratorLoader] Error fetching pricing options:', e);
+      setError(e.message || "Failed to load configuration options");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleToggle = () => {
-    if (!visible && !productData) {
-      fetchPricing();
+    if (!visible && !pricingOptions) {
+      fetchPricingOptions();
     }
     setVisible(!visible);
   };
@@ -66,12 +96,12 @@ export default function ProductConfiguratorLoader({
           {error && (
             <p className="text-sm text-red-300">Failed to load options: {error}</p>
           )}
-          {!loading && !error && productData?.pricing_data && Array.isArray(productData.pricing_data) && productData.pricing_data.length > 0 ? (
+          {!loading && !error && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 ? (
             <ProductConfigurator
               productId={productId}
               vendorProductId={productData.vendor_product_id || productId}
               storeCode={9}
-              pricingData={productData.pricing_data}
+              pricingData={pricingOptions}
               onPriceChange={onPriceChange}
               onConfigChange={onConfigChange}
             />
