@@ -19,6 +19,7 @@ type SchoolBulkImportDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  adminPasscode: string;
 };
 
 type ValidationError = {
@@ -38,7 +39,7 @@ type ParsedSchool = {
   school_level?: string;
 };
 
-export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess }: SchoolBulkImportDialogProps) {
+export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess, adminPasscode }: SchoolBulkImportDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
@@ -248,8 +249,10 @@ export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess }
 
       console.log(`[SchoolBulkImport] Importing ${validSchools.length} schools`);
 
-      // Get admin passcode from sessionStorage
-      const adminPasscode = sessionStorage.getItem("admin_passcode");
+      console.log('[SchoolBulkImport] Admin passcode:', {
+        hasPasscode: !!adminPasscode,
+        passcodeLength: adminPasscode?.length || 0
+      });
 
       const { data, error } = await invokeWithRetry(
         supabase,

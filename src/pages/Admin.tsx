@@ -63,6 +63,7 @@ export default function Admin() {
   const [nonprofitName, setNonprofitName] = useState("");
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [schoolBulkImportOpen, setSchoolBulkImportOpen] = useState(false);
+  const [adminPasscode, setAdminPasscode] = useState("");
 
   // Orders filters
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
@@ -102,6 +103,7 @@ export default function Admin() {
             setIsAuthenticated(true);
             // Store passcode in sessionStorage for subsequent checks
             sessionStorage.setItem("admin_passcode", passcode);
+            setAdminPasscode(passcode);
             loadAllData();
             setCheckingAuth(false);
             return;
@@ -1122,6 +1124,7 @@ export default function Admin() {
                 open={schoolBulkImportOpen} 
                 onOpenChange={setSchoolBulkImportOpen}
                 onSuccess={loadAllData}
+                adminPasscode={adminPasscode}
               />
             </TabsContent>
 
