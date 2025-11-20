@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, storeCode, productOptions, method = 'POST' } = await req.json();
+    const { productId, storeCode, productOptions, variantKey, method = 'POST' } = await req.json();
 
-    console.log("[SINALITE-PRICE] Request:", { method, productId, storeCode, productOptions });
+    console.log("[SINALITE-PRICE] Request:", { method, productId, storeCode, productOptions, variantKey });
 
     if (!productId || !storeCode) {
       return new Response(
@@ -29,6 +29,14 @@ serve(async (req) => {
     if (method === 'POST' && (!productOptions || !Array.isArray(productOptions))) {
       return new Response(
         JSON.stringify({ error: "productOptions array required for pricing calculation" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // For price-by-key lookup, variantKey is required
+    if (method === 'PRICEBYKEY' && !variantKey) {
+      return new Response(
+        JSON.stringify({ error: "variantKey required for PRICEBYKEY method" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -142,6 +150,17 @@ serve(async (req) => {
       console.log("[SINALITE-PRICE] Calling GET:", optionsUrl);
       
       apiResponse = await fetch(optionsUrl, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+        },
+      });
+    } else if (method === 'PRICEBYKEY') {
+      // GET /pricebykey/{id}/{key} - Returns price for specific variant key
+      const priceByKeyUrl = `${baseUrl}/pricebykey/${productId}/${variantKey}`;
+      console.log("[SINALITE-PRICE] Calling PRICEBYKEY:", priceByKeyUrl);
+      
+      apiResponse = await fetch(priceByKeyUrl, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,

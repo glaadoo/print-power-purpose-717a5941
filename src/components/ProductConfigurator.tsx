@@ -134,7 +134,9 @@ export function ProductConfigurator({
     const fetchPrice = async () => {
       setFetchingPrice(true);
       try {
-        console.log('[ProductConfigurator] Fetching price for options:', optionIds);
+        // Generate variant key from option IDs (sorted for consistency)
+        const variantKey = optionIds.sort((a, b) => a - b).join('-');
+        console.log('[ProductConfigurator] Fetching price by key:', variantKey);
         
         const { data, error } = await invokeWithRetry(
           supabase,
@@ -143,8 +145,8 @@ export function ProductConfigurator({
             body: {
               productId: vendorProductId,
               storeCode: storeCode,
-              productOptions: optionIds,
-              method: 'POST' // Explicitly POST for price calculation
+              variantKey: variantKey,
+              method: 'PRICEBYKEY' // Use faster price-by-key lookup
             },
           },
           {
@@ -158,15 +160,16 @@ export function ProductConfigurator({
           return;
         }
 
-        if (data && data.price) {
-          const priceFloat = parseFloat(data.price);
+        if (data && Array.isArray(data) && data.length > 0 && data[0].price) {
+          const priceFloat = parseFloat(data[0].price);
           const priceCents = Math.round(priceFloat * 100);
-          console.log('[ProductConfigurator] Price received:', { price: data.price, priceCents });
+          console.log('[ProductConfigurator] Price received:', { price: data[0].price, priceCents });
           onPriceChange(priceCents);
           
-          // Pass package info to parent if available
-          if (onPackageInfoChange && data.packageInfo) {
-            onPackageInfoChange(data.packageInfo);
+          // Note: pricebykey endpoint doesn't return packageInfo
+          // Clear it if it was previously set
+          if (onPackageInfoChange) {
+            onPackageInfoChange(null);
           }
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
@@ -179,7 +182,7 @@ export function ProductConfigurator({
     };
 
     fetchPrice();
-  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode]);
+  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, onPackageInfoChange]);
 
   const handleOptionChange = (group: string, optionId: string) => {
     const id = parseInt(optionId, 10);
