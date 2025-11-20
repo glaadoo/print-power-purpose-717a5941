@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Check, Loader2, PawPrint } from "lucide-react";
+import { ArrowLeft, Check, Loader2, PawPrint, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SchoolSearch from "@/components/SchoolSearch";
@@ -68,6 +68,7 @@ export default function SelectSchool() {
   const { toast } = useToast();
   const [schools, setSchools] = useState<School[]>([]);
   const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
+  const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -342,9 +343,43 @@ export default function SelectSchool() {
                 <SchoolSearch
                   onSelect={(school) => {
                     setSelectedSchoolId(school.id);
+                    setSelectedSchool(school);
                   }}
                   selectedId={selectedSchoolId || undefined}
                 />
+                
+                {/* Selected School Display */}
+                {selectedSchool && (
+                  <div className="mt-4 p-4 rounded-lg bg-white/10 border border-white/20 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-white">
+                        {selectedSchool.name}, {selectedSchool.city}, {selectedSchool.state} {selectedSchool.zip}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedSchool(null);
+                        setSelectedSchoolId(null);
+                      }}
+                      className="ml-4 p-1 rounded-full hover:bg-white/10 transition-colors"
+                      aria-label="Remove selected school"
+                    >
+                      <X className="h-5 w-5 text-white/80 hover:text-white" />
+                    </button>
+                  </div>
+                )}
+                
+                {/* Continue Button */}
+                {selectedSchool && (
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      onClick={() => handleSelectSchool(selectedSchool)}
+                      className="px-8 py-3 bg-white text-black hover:bg-white/90 font-semibold"
+                    >
+                      Continue with {selectedSchool.name}
+                    </Button>
+                  </div>
+                )}
               </GlassCard>
             </div>
 
@@ -587,7 +622,12 @@ export default function SelectSchool() {
                     <button
                       key={school.id}
                       id={`school-${school.id}`}
-                      onClick={() => handleSelectSchool(school)}
+                      onClick={() => {
+                        setSelectedSchoolId(school.id);
+                        setSelectedSchool(school);
+                        // Scroll to top to show selected school display
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
                       className={`
                         aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center text-center transition-all
                         ${
@@ -599,7 +639,11 @@ export default function SelectSchool() {
                       `}
                       tabIndex={0}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSelectSchool(school);
+                        if (e.key === 'Enter') {
+                          setSelectedSchoolId(school.id);
+                          setSelectedSchool(school);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
                       }}
                     >
                       <h3 className="text-base md:text-lg font-bold mb-2 line-clamp-2">
@@ -627,19 +671,6 @@ export default function SelectSchool() {
                   ))}
                 </div>
 
-                {selectedSchoolId && (
-                  <div className="flex justify-center mt-8">
-                    <button
-                      onClick={() => {
-                        const selected = schools.find(s => s.id === selectedSchoolId);
-                        if (selected) handleSelectSchool(selected);
-                      }}
-                      className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-base"
-                    >
-                      Continue
-                    </button>
-                  </div>
-                )}
               </>
             )}
           </div>

@@ -159,15 +159,9 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                   className="w-full text-left px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">{highlightMatch(school.name, query)}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {highlightMatch(school.city, query)}, {highlightMatch(school.state, query)} {highlightMatch(school.zip, query)}
+                    <span className="font-medium">
+                      {highlightMatch(school.name, query)}, {highlightMatch(school.city, query)}, {highlightMatch(school.state, query)} {highlightMatch(school.zip, query)}
                     </span>
-                    {school.district && (
-                      <span className="text-xs text-muted-foreground">
-                        {highlightMatch(school.district, query)}
-                      </span>
-                    )}
                   </div>
                 </button>
               ))}
@@ -190,9 +184,8 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                   className="w-full text-left px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">{school.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {school.city}, {school.state} {school.zip}
+                    <span className="font-medium">
+                      {school.name}, {school.city}, {school.state} {school.zip}
                     </span>
                   </div>
                 </button>
