@@ -96,8 +96,11 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
           type="text"
           placeholder="Search by school name, city, state, or ZIP..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pl-10"
+          onChange={(e) => {
+            console.log('[SchoolSearch] Input changed:', e.target.value);
+            setQuery(e.target.value);
+          }}
+          className="pl-10 text-foreground bg-background caret-foreground"
           autoFocus
         />
       </div>
