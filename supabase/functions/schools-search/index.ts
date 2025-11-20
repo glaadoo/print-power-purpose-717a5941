@@ -40,40 +40,16 @@ serve(async (req) => {
 
     console.log(`[schools-search] Searching for: "${query}"`);
 
-    // Try full-text search first
-    const searchQuery = query.trim().split(/\s+/).join(' & ');
-    
+    // Use ILIKE for better progressive typing support
     const { data, error, count } = await supabase
       .from('schools_user_added')
       .select('id, name, city, state, zip, district, school_level', { count: 'exact' })
-      .textSearch('search_vector', searchQuery, {
-        type: 'websearch',
-        config: 'english'
-      })
+      .or(`name.ilike.%${query}%,city.ilike.%${query}%,state.ilike.%${query}%,zip.ilike.%${query}%,district.ilike.%${query}%`)
       .limit(limit);
 
     if (error) {
-      console.error('[schools-search] Full-text search error:', error);
-      
-      // Fallback to ILIKE search if full-text fails
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('schools_user_added')
-        .select('id, name, city, state, zip, district, school_level')
-        .or(`name.ilike.%${query}%,city.ilike.%${query}%,state.ilike.%${query}%,zip.ilike.%${query}%`)
-        .limit(limit);
-
-      if (fallbackError) {
-        throw fallbackError;
-      }
-
-      return new Response(
-        JSON.stringify({ 
-          schools: fallbackData || [], 
-          count: fallbackData?.length || 0,
-          searchType: 'fallback'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error('[schools-search] Search error:', error);
+      throw error;
     }
 
     console.log(`[schools-search] Found ${data?.length || 0} schools`);
@@ -81,8 +57,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         schools: data || [], 
-        count: count || 0,
-        searchType: 'fulltext'
+        count: count || 0
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
