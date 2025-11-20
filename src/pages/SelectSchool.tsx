@@ -92,12 +92,14 @@ export default function SelectSchool() {
   async function loadSchools() {
     try {
       setLoading(true);
+      console.log('[SelectSchool] Loading schools...');
       const { data, error } = await supabase.functions.invoke('schools-list', {
         body: { page: 1, pageSize: 50 }
       });
 
       if (error) throw error;
 
+      console.log('[SelectSchool] Loaded schools:', data?.items?.length || 0, data);
       setSchools(data.items || []);
     } catch (error) {
       console.error('[SelectSchool] Error loading schools:', error);
