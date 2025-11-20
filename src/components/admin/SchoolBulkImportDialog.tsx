@@ -248,10 +248,13 @@ export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess }
 
       console.log(`[SchoolBulkImport] Importing ${validSchools.length} schools`);
 
+      // Get admin passcode from sessionStorage
+      const adminPasscode = sessionStorage.getItem("admin_passcode");
+
       const { data, error } = await invokeWithRetry(
         supabase,
         'schools-import-bulk',
-        { body: { schools: validSchools } },
+        { body: { schools: validSchools, adminPasscode } },
         { maxAttempts: 2 }
       );
 
