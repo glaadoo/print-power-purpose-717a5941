@@ -79,9 +79,18 @@ export default function Layout({
               <Link to="/" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">
                 Home
               </Link>
-              <Link to="/products" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg">
+              <button
+                onClick={() => {
+                  const access = localStorage.getItem("ppp_access");
+                  if (!access) {
+                    localStorage.setItem("ppp_access", "guest");
+                  }
+                  nav("/products");
+                }}
+                className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg"
+              >
                 Products
-              </Link>
+              </button>
             </div>
 
             {/* Right actions */}
