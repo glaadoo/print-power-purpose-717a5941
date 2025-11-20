@@ -201,8 +201,8 @@ export default function Home() {
         </div>
 
         {/* Right: Find Causes */}
-        <a
-          href="/causes"
+        <Link
+          to="/causes"
           className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
           aria-label="Find causes"
         >
@@ -211,7 +211,7 @@ export default function Home() {
             <path d="M20 20l-3.2-3.2" stroke="white" strokeWidth="2" strokeLinecap="round" />
           </svg>
           <span className="hidden sm:inline">Find Causes</span>
-        </a>
+        </Link>
       </header>
 
       {/* Left-side section dots */}
@@ -245,8 +245,8 @@ export default function Home() {
                 communities and nonprofits in a single, seamless checkout.
               </p>
               <div className="mt-10">
-                <a
-                  href="/auth"
+                <Link
+                  to="/auth"
                   className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -256,7 +256,7 @@ export default function Home() {
                     <line x1="22" x2="16" y1="11" y2="11"/>
                   </svg>
                   Sign Up/Sign In
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -284,12 +284,15 @@ export default function Home() {
                   360-degree perspective.
                 </p>
                 <div className="mt-8">
-                  <a
-                    href="/welcome"
+                  <button
+                    onClick={() => {
+                      localStorage.setItem("ppp_access", "guest");
+                      nav("/welcome");
+                    }}
                     className="inline-flex items-center justify-center rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
                   >
                     Continue as Guest
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -407,8 +410,8 @@ export default function Home() {
                     <input type="checkbox" name="optin" className="size-4" />
                     <span>
                       Yes, send me PPP updates. I agree to the{" "}
-                      <a href="/privacy" className="underline">Privacy Policy</a> and{" "}
-                      <a href="/terms" className="underline">Terms of Use</a>.
+                      <Link to="/policies/privacy" className="underline">Privacy Policy</Link> and{" "}
+                      <Link to="/policies/terms" className="underline">Terms of Use</Link>.
                     </span>
                   </label>
 
@@ -428,11 +431,11 @@ export default function Home() {
             <div className="w-full px-6">
               <div className="mx-auto max-w-3xl text-center text-white py-6">
                 <div className="text-sm uppercase tracking-wide opacity-80">Continue Your Journey</div>
-                <h3 className="mt-1 text-3xl font-serif">Speak to a Partner</h3>
+                <div className="mt-1 text-3xl font-serif">Speak to a Partner</div>
                 <div className="mt-4">
-                  <a href="/contact" className="inline-flex items-center justify-center rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90">
+                  <Link to="/contact" className="inline-flex items-center justify-center rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90">
                     CONTACT US
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
