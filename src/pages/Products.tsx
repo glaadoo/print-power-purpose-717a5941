@@ -268,33 +268,15 @@ export default function Products() {
                     </h2>
                     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
                       {products.map((product) => {
-                        // For products requiring configuration, don't show a price until configured
-                        const requiresConfiguration = product.pricing_data && 
-                          Array.isArray(product.pricing_data) && 
-                          product.pricing_data.length > 0;
+                        // All SinaLite products require configuration - they support dynamic options
+                        const requiresConfiguration = product.vendor === "sinalite";
                         
-                        let displayPriceCents = product.base_cost_cents || 100;
-                        
-                        // Only calculate markup-based price for products that DON'T require configuration
-                        if (!requiresConfiguration) {
-                          if (product.vendor === "sinalite" && pricingSettings) {
-                            const pricing = computeGlobalPricing({
-                              vendor: "sinalite",
-                              base_cost_cents: product.base_cost_cents || 0,
-                              settings: pricingSettings
-                            });
-                            displayPriceCents = pricing.final_price_per_unit_cents;
-                          } else if (product.price_override_cents && product.price_override_cents > 0) {
-                            displayPriceCents = product.price_override_cents;
-                          }
-                        } else {
-                          // For configurable products, show 0 until price is fetched
-                          displayPriceCents = configuredPrices[product.id] || 0;
-                        }
+                        // Only show configured price, never fallback to base cost
+                        const displayPriceCents = configuredPrices[product.id] || 0;
                         
                         const qty = quantities[product.id] || 0;
-                        const isConfigured = requiresConfiguration ? !!configuredPrices[product.id] : true;
-                        const canAddToCart = isConfigured;
+                        const isConfigured = !!configuredPrices[product.id];
+                        const canAddToCart = isConfigured && qty > 0;
                         const isInCart = items.some(item => item.id === product.id);
 
                         return (
