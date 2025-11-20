@@ -57,12 +57,31 @@ export default function ProductConfiguratorLoader({
       );
       
       console.log('[ProductConfiguratorLoader] Received pricing response:', response);
+      console.log('[ProductConfiguratorLoader] Response type:', typeof response);
+      console.log('[ProductConfiguratorLoader] Response keys:', response ? Object.keys(response) : 'null');
       
-      if (response?.options && Array.isArray(response.options)) {
-        setPricingOptions(response.options);
+      // SinaLite API returns pricing data in various possible formats
+      // Could be: { options: [...], combinations: [...] } or just an array
+      let optionsArray = null;
+      
+      if (Array.isArray(response)) {
+        // Direct array response
+        optionsArray = response;
+      } else if (response?.options && Array.isArray(response.options)) {
+        // Has options property
+        optionsArray = response.options;
+      } else if (response && Array.isArray(response[0])) {
+        // First element is the options array (SinaLite structure)
+        optionsArray = response;
+      }
+      
+      console.log('[ProductConfiguratorLoader] Extracted options:', optionsArray);
+      
+      if (optionsArray && optionsArray.length > 0) {
+        setPricingOptions(optionsArray);
         setProductData(product);
       } else {
-        throw new Error("Invalid pricing data structure from API");
+        throw new Error("No configuration options found in API response");
       }
     } catch (e: any) {
       console.error('[ProductConfiguratorLoader] Error fetching pricing options:', e);
