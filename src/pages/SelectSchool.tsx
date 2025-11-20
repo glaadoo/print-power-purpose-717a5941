@@ -16,6 +16,7 @@ import { ArrowLeft, Check, Loader2, PawPrint, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SchoolSearch from "@/components/SchoolSearch";
+import { Badge } from "@/components/ui/badge";
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -351,10 +352,17 @@ export default function SelectSchool() {
                 {/* Selected School Display */}
                 {selectedSchool && (
                   <div className="mt-4 p-4 rounded-lg bg-white/10 border border-white/20 flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-white">
-                        {selectedSchool.name}, {selectedSchool.city}, {selectedSchool.state} {selectedSchool.zip}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="font-medium text-white">
+                          {selectedSchool.name}, {selectedSchool.city}, {selectedSchool.state} {selectedSchool.zip}
+                        </p>
+                      </div>
+                      {selectedSchool.school_level && (
+                        <Badge variant="secondary" className="text-xs">
+                          {selectedSchool.school_level}
+                        </Badge>
+                      )}
                     </div>
                     <button
                       onClick={() => {
