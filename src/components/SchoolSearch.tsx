@@ -32,7 +32,7 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
     
     return parts.map((part, index) => 
       regex.test(part) ? (
-        <span key={index} className="font-semibold text-foreground">{part}</span>
+        <span key={index} className="font-bold underline decoration-2 underline-offset-2">{part}</span>
       ) : (
         <span key={index}>{part}</span>
       )
@@ -156,12 +156,17 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                 <button
                   key={school.id}
                   onClick={() => handleSelect(school)}
-                  className="w-full text-left px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
+                  className="w-full text-left px-3 py-2.5 rounded-md hover:bg-accent/50 cursor-pointer transition-colors border border-transparent hover:border-accent"
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">
+                    <span className="font-medium text-foreground">
                       {highlightMatch(school.name, query)}, {highlightMatch(school.city, query)}, {highlightMatch(school.state, query)} {highlightMatch(school.zip, query)}
                     </span>
+                    {school.school_level && (
+                      <span className="text-xs text-muted-foreground mt-0.5">
+                        {school.school_level}
+                      </span>
+                    )}
                   </div>
                 </button>
               ))}
@@ -181,12 +186,17 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                 <button
                   key={school.id}
                   onClick={() => handleSelect(school)}
-                  className="w-full text-left px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
+                  className="w-full text-left px-3 py-2.5 rounded-md hover:bg-accent/50 cursor-pointer transition-colors border border-transparent hover:border-accent"
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">
+                    <span className="font-medium text-foreground">
                       {school.name}, {school.city}, {school.state} {school.zip}
                     </span>
+                    {school.school_level && (
+                      <span className="text-xs text-muted-foreground mt-0.5">
+                        {school.school_level}
+                      </span>
+                    )}
                   </div>
                 </button>
               ))}
