@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeWithRetry } from "@/lib/api-retry";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -247,11 +248,19 @@ export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess }
 
       console.log(`[SchoolBulkImport] Importing ${validSchools.length} schools`);
 
-      const { data, error } = await supabase.functions.invoke('schools-import-bulk', {
-        body: { schools: validSchools }
-      });
+      const { data, error } = await invokeWithRetry(
+        supabase,
+        'schools-import-bulk',
+        { body: { schools: validSchools } },
+        { maxAttempts: 2 }
+      );
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('403') || error.message?.includes('Forbidden')) {
+          throw new Error('Admin access required. Please ensure you are logged in with admin privileges.');
+        }
+        throw error;
+      }
 
       const result = data as { imported: number; skipped: number; total: number; errors?: string[] };
 
