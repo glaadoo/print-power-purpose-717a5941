@@ -33,6 +33,10 @@ export default function ProductConfiguratorLoader({
       setError(error.message);
     } else {
       console.log('[ProductConfiguratorLoader] Fetched product data:', data);
+      console.log('[ProductConfiguratorLoader] pricing_data type:', typeof data?.pricing_data);
+      console.log('[ProductConfiguratorLoader] pricing_data is array:', Array.isArray(data?.pricing_data));
+      console.log('[ProductConfiguratorLoader] pricing_data length:', data?.pricing_data?.length);
+      console.log('[ProductConfiguratorLoader] pricing_data content:', JSON.stringify(data?.pricing_data, null, 2));
       setProductData(data);
     }
     setLoading(false);
