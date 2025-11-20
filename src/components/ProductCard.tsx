@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import GlassCard from "./GlassCard";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -84,7 +84,13 @@ export default function ProductCard({
         
         <div className="flex items-center justify-between w-full">
           <p className="text-2xl font-bold text-white">
-            ${(displayPriceCents / 100).toFixed(2)}
+            {displayPriceCents > 0 ? (
+              `$${(displayPriceCents / 100).toFixed(2)}`
+            ) : requiresConfiguration ? (
+              <span className="text-base text-white/60">Configure for price</span>
+            ) : (
+              `$${(displayPriceCents / 100).toFixed(2)}`
+            )}
           </p>
         </div>
 
