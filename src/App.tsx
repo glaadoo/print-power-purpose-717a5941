@@ -92,7 +92,7 @@ const Contact         = lazyPage("Contact",         () => import("./pages/Contac
 const SystemLogs      = lazyPage("SystemLogs",      () => import("./pages/SystemLogs"));
 const HelpCenter      = lazyPage("HelpCenter",      () => import("./pages/HelpCenter"));
 const HelpSearchResults = lazyPage("HelpSearchResults", () => import("./pages/HelpSearchResults"));
-const ProtectedRoute  = lazy(() => import("./components/ProtectedRoute"));
+import ProtectedRoute from "./components/ProtectedRoute";
 const PrivacyPolicy   = lazyPage("PrivacyPolicy",   () => import("./pages/PrivacyPolicy"));
 const TermsOfUse      = lazyPage("TermsOfUse",      () => import("./pages/TermsOfUse"));
 const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalNotice"));
