@@ -66,7 +66,30 @@ export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess }
   const matchHeader = (header: string): string | null => {
     const normalized = normalizeHeader(header);
     const original = header.trim().toLowerCase();
+    const upper = header.trim().toUpperCase();
     
+    // NCES format: SCH_NAME
+    if (upper === 'SCH_NAME') return 'name';
+    
+    // NCES format: MCITY (mailing) or LCITY (location)
+    if (upper === 'MCITY' || upper === 'LCITY') return 'city';
+    
+    // NCES format: MSTATE or LSTATE
+    if (upper === 'MSTATE' || upper === 'LSTATE') return 'state';
+    
+    // NCES format: MZIP or LZIP
+    if (upper === 'MZIP' || upper === 'LZIP') return 'zip';
+    
+    // NCES format: MSTREET1 or LSTREET1
+    if (upper === 'MSTREET1' || upper === 'LSTREET1') return 'address_line1';
+    
+    // NCES format: LEA_NAME (Local Education Agency)
+    if (upper === 'LEA_NAME') return 'district';
+    
+    // NCES format: LEVEL
+    if (upper === 'LEVEL') return 'school_level';
+    
+    // Standard variations below
     // School name variations
     if (original === 'name' || normalized === 'name' || 
         original === 'school name' || normalized.includes('school') ||
