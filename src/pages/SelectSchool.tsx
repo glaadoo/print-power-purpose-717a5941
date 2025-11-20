@@ -288,6 +288,14 @@ export default function SelectSchool() {
     }
   }
 
+  function formatSchoolLevel(level: string) {
+    if (!level) return '';
+    // If it already contains "School", return as is
+    if (level.toLowerCase().includes('school')) return level;
+    // Otherwise append "School"
+    return `${level} School`;
+  }
+
   function clearForm() {
     setFormData({
       name: "",
@@ -382,12 +390,12 @@ export default function SelectSchool() {
                     <div className="flex items-center gap-3">
                       <div>
                         <p className="font-medium text-white">
-                          {selectedSchool.name}, {selectedSchool.city}, {selectedSchool.state} {selectedSchool.zip}
+                          {selectedSchool.name}, {selectedSchool.city}, {selectedSchool.state}, {selectedSchool.zip}
                         </p>
                       </div>
                       {selectedSchool.school_level && (
                         <Badge variant="secondary" className="text-xs">
-                          {selectedSchool.school_level}
+                          {formatSchoolLevel(selectedSchool.school_level)}
                         </Badge>
                       )}
                     </div>
