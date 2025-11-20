@@ -144,6 +144,7 @@ export function ProductConfigurator({
               productId: vendorProductId,
               storeCode: storeCode,
               productOptions: optionIds,
+              method: 'POST' // Explicitly POST for price calculation
             },
           },
           {
