@@ -201,8 +201,14 @@ export default function Home() {
         </div>
 
         {/* Right: Find Causes */}
-        <Link
-          to="/causes"
+        <button
+          onClick={() => {
+            const access = localStorage.getItem("ppp_access");
+            if (!access) {
+              localStorage.setItem("ppp_access", "guest");
+            }
+            nav("/select/nonprofit?flow=shopping");
+          }}
           className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
           aria-label="Find causes"
         >
@@ -211,7 +217,7 @@ export default function Home() {
             <path d="M20 20l-3.2-3.2" stroke="white" strokeWidth="2" strokeLinecap="round" />
           </svg>
           <span className="hidden sm:inline">Find Causes</span>
-        </Link>
+        </button>
       </header>
 
       {/* Left-side section dots */}
