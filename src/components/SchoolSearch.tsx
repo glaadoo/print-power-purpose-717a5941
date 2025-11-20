@@ -141,7 +141,7 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                 >
                   <div className="flex flex-col">
                     <span className="font-medium text-foreground">
-                      {highlightMatch(school.name, query)}, {highlightMatch(school.city, query)}, {highlightMatch(school.state, query)} {highlightMatch(school.zip, query)}
+                      {highlightMatch(school.name, query)}, {highlightMatch(school.city, query)}, {highlightMatch(school.state, query)}, {highlightMatch(school.zip, query)}
                     </span>
                     {school.school_level && (
                       <span className="text-xs text-muted-foreground mt-0.5">
