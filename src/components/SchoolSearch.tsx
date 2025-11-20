@@ -38,6 +38,14 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
     );
   };
 
+  const formatSchoolLevel = (level: string) => {
+    if (!level) return '';
+    // If it already contains "School", return as is
+    if (level.toLowerCase().includes('school')) return level;
+    // Otherwise append "School"
+    return `${level} School`;
+  };
+
   useEffect(() => {
     if (!query || query.length < 2) {
       setResults([]);
@@ -145,7 +153,7 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                     </span>
                     {school.school_level && (
                       <span className="text-xs text-muted-foreground mt-0.5">
-                        {school.school_level}
+                        {formatSchoolLevel(school.school_level)}
                       </span>
                     )}
                   </div>
