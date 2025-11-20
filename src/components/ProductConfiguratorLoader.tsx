@@ -27,26 +27,50 @@ export default function ProductConfiguratorLoader({
     setError(null);
     
     try {
-      // First, get product metadata
+      // First, get product metadata including pricing_data from sync
       const { data: product, error: productError } = await supabase
         .from("products")
-        .select("vendor_product_id, vendor")
+        .select("vendor_product_id, vendor, pricing_data")
         .eq("id", productId)
         .maybeSingle();
       
       if (productError) throw productError;
       if (!product) throw new Error("Product not found");
       
-      console.log('[ProductConfiguratorLoader] Fetching options for product:', product.vendor_product_id);
+      console.log('[ProductConfiguratorLoader] Product data:', product);
+      console.log('[ProductConfiguratorLoader] Pricing data available:', !!product.pricing_data);
       
-      // Call sinalite-price edge function to get actual pricing options
+      // Check if product has pricing_data from sync that includes options
+      if (product.pricing_data && typeof product.pricing_data === 'object') {
+        const pricingData = product.pricing_data as any;
+        
+        // Check if pricing_data includes options/configurations
+        if (pricingData.options || pricingData.configurations || pricingData.attributes) {
+          console.log('[ProductConfiguratorLoader] Using options from pricing_data');
+          const optionsData = pricingData.options || pricingData.configurations || pricingData.attributes;
+          
+          if (Array.isArray(optionsData) && optionsData.length > 0) {
+            // Format as expected by ProductConfigurator: [options, {}, {}]
+            setPricingOptions([optionsData, {}, {}]);
+            setProductData(product);
+            return;
+          }
+        }
+      }
+      
+      // If no options in pricing_data, call sinalite-price with minimal options to get configuration
+      // We'll pass at least one default option to avoid the "Invalid product options" error
+      const defaultOptions = [{ id: 1, value: "default" }]; // Minimal option to trigger response
+      
+      console.log('[ProductConfiguratorLoader] Fetching options from API for product:', product.vendor_product_id);
+      
       const response = await withRetry(
         async () => {
           const { data, error } = await supabase.functions.invoke('sinalite-price', {
             body: {
               productId: product.vendor_product_id,
               storeCode: 9,
-              productOptions: [] // Empty array to get all available options
+              productOptions: defaultOptions
             }
           });
           
