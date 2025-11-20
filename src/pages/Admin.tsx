@@ -1089,7 +1089,7 @@ export default function Admin() {
                     className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20"
                   >
                     <Upload className="h-4 w-4" />
-                    Bulk Import
+                    Import School Data
                   </Button>
                 </div>
                 <form onSubmit={handleAddSchool} className="space-y-4 max-w-md">
