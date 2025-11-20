@@ -47,16 +47,14 @@ export default function ProductConfiguratorLoader({
 
   return (
     <div className="w-full space-y-3">
-      {!visible && (
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full bg-white/10 text-white border-white/20 hover:bg-white/20"
-          onClick={handleToggle}
-        >
-          Configure Options
-        </Button>
-      )}
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full bg-white/10 text-white border-white/20 hover:bg-white/20"
+        onClick={handleToggle}
+      >
+        {visible ? "Hide Options" : "Configure Options"}
+      </Button>
 
       {visible && (
         <div className="w-full space-y-2">
@@ -76,15 +74,6 @@ export default function ProductConfiguratorLoader({
           ) : !loading && !error ? (
             <p className="text-sm text-white/70">No configuration options available for this product.</p>
           ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="w-full text-white/70 hover:text-white hover:bg-white/10"
-            onClick={handleToggle}
-          >
-            Hide Options
-          </Button>
         </div>
       )}
     </div>
