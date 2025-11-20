@@ -57,6 +57,12 @@ export default function ProductConfiguratorLoader({
       );
       
       console.log('[ProductConfiguratorLoader] Received pricing response:', response);
+      
+      // Check for error response from edge function
+      if (response && typeof response === 'object' && 'error' in response) {
+        throw new Error(response.error || 'Unknown error from pricing API');
+      }
+      
       console.log('[ProductConfiguratorLoader] Response structure:', {
         isArray: Array.isArray(response),
         firstElementIsArray: Array.isArray(response?.[0]),
@@ -67,7 +73,7 @@ export default function ProductConfiguratorLoader({
       // SinaLite API returns: [options[], combinations, metadata]
       // where options[0] = array of {id, group, name} objects
       if (!Array.isArray(response)) {
-        throw new Error("Invalid response format: expected array");
+        throw new Error("Invalid response format: expected array, got " + typeof response);
       }
       
       const optionsArray = response[0];
