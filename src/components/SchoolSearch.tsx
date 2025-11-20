@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -111,9 +111,21 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
             console.log('[SchoolSearch] Input changed:', e.target.value);
             setQuery(e.target.value);
           }}
-          className="pl-10 text-foreground bg-background caret-foreground"
+          className="pl-10 pr-10 text-foreground bg-background caret-foreground"
           autoFocus
         />
+        {query && (
+          <button
+            onClick={() => {
+              setQuery("");
+              setResults([]);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {loading && query.length >= 2 && (
