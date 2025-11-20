@@ -86,10 +86,8 @@ export default function ProductCard({
           <p className="text-2xl font-bold text-white">
             {displayPriceCents > 0 ? (
               `$${(displayPriceCents / 100).toFixed(2)}`
-            ) : requiresConfiguration ? (
-              <span className="text-base text-white/60">Configure for price</span>
             ) : (
-              `$${(displayPriceCents / 100).toFixed(2)}`
+              <span className="text-base text-white/60">—</span>
             )}
           </p>
         </div>
