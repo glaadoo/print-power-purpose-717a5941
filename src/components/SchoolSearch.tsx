@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 
 interface School {
   id: string;
@@ -98,31 +97,36 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
           placeholder="Search by school name, city, state, or ZIP..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-10 relative z-10"
+          className="pl-10"
           autoFocus
         />
       </div>
 
       {(results.length > 0 || (recentSchools.length > 0 && query.length < 2)) && (
-        <Command className="rounded-lg border shadow-md relative z-0">
-          <CommandList>
-            {loading && (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                Searching...
+        <div className="rounded-lg border border-border shadow-md bg-background">
+          {loading && (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              Searching...
+            </div>
+          )}
+
+          {!loading && results.length === 0 && query.length >= 2 && (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              No schools found.
+            </div>
+          )}
+
+          {!loading && results.length > 0 && (
+            <div className="p-2">
+              <div className="text-xs font-semibold text-muted-foreground px-2 py-1.5">
+                Search Results
               </div>
-            )}
-
-            {!loading && results.length === 0 && query.length >= 2 && (
-              <CommandEmpty>No schools found.</CommandEmpty>
-            )}
-
-            {!loading && results.length > 0 && (
-              <CommandGroup heading="Search Results">
+              <div className="space-y-1">
                 {results.map((school) => (
-                  <CommandItem
+                  <button
                     key={school.id}
-                    onSelect={() => handleSelect(school)}
-                    className="cursor-pointer"
+                    onClick={() => handleSelect(school)}
+                    className="w-full text-left px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
                   >
                     <div className="flex flex-col">
                       <span className="font-medium">{school.name}</span>
@@ -135,18 +139,23 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                         </span>
                       )}
                     </div>
-                  </CommandItem>
+                  </button>
                 ))}
-              </CommandGroup>
-            )}
+              </div>
+            </div>
+          )}
 
-            {!loading && query.length < 2 && recentSchools.length > 0 && (
-              <CommandGroup heading="Recent Selections">
+          {!loading && query.length < 2 && recentSchools.length > 0 && (
+            <div className="p-2">
+              <div className="text-xs font-semibold text-muted-foreground px-2 py-1.5">
+                Recent Selections
+              </div>
+              <div className="space-y-1">
                 {recentSchools.map((school) => (
-                  <CommandItem
+                  <button
                     key={school.id}
-                    onSelect={() => handleSelect(school)}
-                    className="cursor-pointer"
+                    onClick={() => handleSelect(school)}
+                    className="w-full text-left px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
                   >
                     <div className="flex flex-col">
                       <span className="font-medium">{school.name}</span>
@@ -154,12 +163,12 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                         {school.city}, {school.state} {school.zip}
                       </span>
                     </div>
-                  </CommandItem>
+                  </button>
                 ))}
-              </CommandGroup>
-            )}
-          </CommandList>
-        </Command>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
