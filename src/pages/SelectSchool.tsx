@@ -72,6 +72,7 @@ export default function SelectSchool() {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [levelFilter, setLevelFilter] = useState<string>("all");
   const [formData, setFormData] = useState<FormData>({
     name: "",
     district: "",
@@ -338,9 +339,35 @@ export default function SelectSchool() {
             <div className="mb-8">
               <GlassCard className="p-6">
                 <h2 className="text-2xl font-bold mb-4">Find Your School</h2>
-                <p className="text-sm opacity-80 mb-6">
+                <p className="text-sm opacity-80 mb-4">
                   Search by school name, city, state, or ZIP code
                 </p>
+                
+                {/* Level Filter */}
+                <div className="mb-6">
+                  <Label htmlFor="level-filter" className="text-white mb-2 block">
+                    Filter by School Level
+                  </Label>
+                  <Select value={levelFilter} onValueChange={setLevelFilter}>
+                    <SelectTrigger 
+                      id="level-filter"
+                      className="bg-white/10 border-white/20 text-white w-full md:w-64"
+                    >
+                      <SelectValue placeholder="All Levels" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20 text-white z-[100]">
+                      <SelectItem value="all" className="text-white hover:bg-white/10">
+                        All Levels
+                      </SelectItem>
+                      {SCHOOL_LEVELS.map(level => (
+                        <SelectItem key={level} value={level} className="text-white hover:bg-white/10">
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <SchoolSearch
                   onSelect={(school) => {
                     setSelectedSchoolId(school.id);
@@ -626,7 +653,9 @@ export default function SelectSchool() {
             ) : (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {schools.map(school => (
+                  {schools
+                    .filter(school => levelFilter === "all" || school.school_level === levelFilter)
+                    .map(school => (
                     <button
                       key={school.id}
                       id={`school-${school.id}`}
