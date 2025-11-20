@@ -24,6 +24,21 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
   const [loading, setLoading] = useState(false);
   const [recentSchools, setRecentSchools] = useState<School[]>([]);
 
+  const highlightMatch = (text: string, query: string) => {
+    if (!query) return text;
+    
+    const regex = new RegExp(`(${query})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="font-semibold text-foreground">{part}</span>
+      ) : (
+        <span key={index}>{part}</span>
+      )
+    );
+  };
+
   useEffect(() => {
     const recent = localStorage.getItem("recent_schools");
     if (recent) {
@@ -132,13 +147,13 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
                   className="w-full text-left px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">{school.name}</span>
+                    <span className="font-medium">{highlightMatch(school.name, query)}</span>
                     <span className="text-sm text-muted-foreground">
-                      {school.city}, {school.state} {school.zip}
+                      {highlightMatch(school.city, query)}, {highlightMatch(school.state, query)} {highlightMatch(school.zip, query)}
                     </span>
                     {school.district && (
                       <span className="text-xs text-muted-foreground">
-                        {school.district}
+                        {highlightMatch(school.district, query)}
                       </span>
                     )}
                   </div>
