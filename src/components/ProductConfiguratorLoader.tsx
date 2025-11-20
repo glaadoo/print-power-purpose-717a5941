@@ -57,32 +57,31 @@ export default function ProductConfiguratorLoader({
       );
       
       console.log('[ProductConfiguratorLoader] Received pricing response:', response);
-      console.log('[ProductConfiguratorLoader] Response type:', typeof response);
-      console.log('[ProductConfiguratorLoader] Response keys:', response ? Object.keys(response) : 'null');
+      console.log('[ProductConfiguratorLoader] Response structure:', {
+        isArray: Array.isArray(response),
+        firstElementIsArray: Array.isArray(response?.[0]),
+        firstElementLength: Array.isArray(response?.[0]) ? response[0].length : 0,
+        sampleFirstOption: response?.[0]?.[0]
+      });
       
-      // SinaLite API returns pricing data in various possible formats
-      // Could be: { options: [...], combinations: [...] } or just an array
-      let optionsArray = null;
-      
-      if (Array.isArray(response)) {
-        // Direct array response
-        optionsArray = response;
-      } else if (response?.options && Array.isArray(response.options)) {
-        // Has options property
-        optionsArray = response.options;
-      } else if (response && Array.isArray(response[0])) {
-        // First element is the options array (SinaLite structure)
-        optionsArray = response;
+      // SinaLite API returns: [options[], combinations, metadata]
+      // where options[0] = array of {id, group, name} objects
+      if (!Array.isArray(response)) {
+        throw new Error("Invalid response format: expected array");
       }
       
-      console.log('[ProductConfiguratorLoader] Extracted options:', optionsArray);
+      const optionsArray = response[0];
       
-      if (optionsArray && optionsArray.length > 0) {
-        setPricingOptions(optionsArray);
-        setProductData(product);
-      } else {
+      if (!Array.isArray(optionsArray) || optionsArray.length === 0) {
         throw new Error("No configuration options found in API response");
       }
+      
+      console.log('[ProductConfiguratorLoader] Found', optionsArray.length, 'options');
+      console.log('[ProductConfiguratorLoader] Sample options:', optionsArray.slice(0, 3));
+      
+      // Pass the full response (not just options) to ProductConfigurator
+      setPricingOptions(response);
+      setProductData(product);
     } catch (e: any) {
       console.error('[ProductConfiguratorLoader] Error fetching pricing options:', e);
       setError(e.message || "Failed to load configuration options");
