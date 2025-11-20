@@ -12,9 +12,19 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const query = url.searchParams.get('q') || '';
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+    let query = '';
+    let limit = 20;
+
+    // Handle both GET and POST requests
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      query = url.searchParams.get('q') || '';
+      limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+    } else if (req.method === 'POST') {
+      const body = await req.json();
+      query = body.q || '';
+      limit = Math.min(parseInt(body.limit || '20'), 100);
+    }
 
     if (!query || query.trim().length < 2) {
       return new Response(
