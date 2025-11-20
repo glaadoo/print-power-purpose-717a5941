@@ -46,7 +46,7 @@ export default function ProductConfiguratorLoader({
             body: {
               productId: product.vendor_product_id,
               storeCode: 9,
-              productOptions: {} // Empty to get all available options
+              productOptions: [] // Empty array to get all available options
             }
           });
           
