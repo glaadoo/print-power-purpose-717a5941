@@ -239,14 +239,14 @@ export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess }
 
       onSuccess();
       onOpenChange(false);
-      setFile(null);
-      setPreview([]);
-      setValidationErrors([]);
     } catch (error) {
       console.error("Import error:", error);
       toast.error("Failed to import schools: " + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setImporting(false);
+      setFile(null);
+      setPreview([]);
+      setValidationErrors([]);
     }
   };
 
