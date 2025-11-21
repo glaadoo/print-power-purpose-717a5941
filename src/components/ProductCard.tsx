@@ -88,8 +88,8 @@ export default function ProductCard({
           )}
         </div>
         
-        <div className="flex items-center justify-between w-full">
-          <h3 className="text-lg font-bold text-white">
+        <div className="flex flex-col items-center justify-center w-full space-y-2">
+          <h3 className="text-lg font-bold text-white text-center">
             {product.name}
           </h3>
           {isInCart && (
@@ -124,7 +124,7 @@ export default function ProductCard({
         )}
 
         {/* Quantity Controls */}
-        <div className="flex items-center gap-3 w-full">
+        <div className="flex items-center justify-center gap-3 w-full">
           <Button
             variant="outline"
             size="icon"
