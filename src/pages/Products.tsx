@@ -177,18 +177,40 @@ export default function Products() {
     setProductConfigs(prev => ({ ...prev, [productId]: config }));
   };
 
-  // Group products by category
+  // Group products by category (exclude Canada products)
   const groupedProducts = useMemo(() => {
     const groups: Record<string, ProductRow[]> = {};
-    rows.forEach(product => {
-      const category = product.category || "Uncategorized";
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(product);
-    });
+    rows
+      .filter(product => !product.name.toLowerCase().includes('canada'))
+      .forEach(product => {
+        const category = product.category || "Uncategorized";
+        if (!groups[category]) {
+          groups[category] = [];
+        }
+        groups[category].push(product);
+      });
     return groups;
   }, [rows]);
+
+  // Calculate default prices for all products instantly
+  const defaultPrices = useMemo(() => {
+    const prices: Record<string, number> = {};
+    rows.forEach(product => {
+      if (product.price_override_cents) {
+        prices[product.id] = product.price_override_cents;
+      } else if (product.vendor === "sinalite" && pricingSettings) {
+        const pricing = computeGlobalPricing({
+          vendor: "sinalite",
+          base_cost_cents: product.base_cost_cents || 0,
+          settings: pricingSettings
+        });
+        prices[product.id] = pricing.final_price_per_unit_cents;
+      } else {
+        prices[product.id] = product.base_cost_cents || 0;
+      }
+    });
+    return prices;
+  }, [rows, pricingSettings]);
 
   return (
     <div className="fixed inset-0 text-white">
@@ -271,8 +293,8 @@ export default function Products() {
                         // All SinaLite products require configuration - they support dynamic options
                         const requiresConfiguration = product.vendor === "sinalite";
                         
-                        // Only show configured price, never fallback to base cost
-                        const displayPriceCents = configuredPrices[product.id] || 0;
+                        // Show configured price if available, otherwise show default price instantly
+                        const displayPriceCents = configuredPrices[product.id] || defaultPrices[product.id] || 0;
                         
                         const qty = quantities[product.id] || 0;
                         const isConfigured = !!configuredPrices[product.id];
