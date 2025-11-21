@@ -129,6 +129,20 @@ export default function ProductConfiguratorLoader({
 
   return (
     <div className="w-full space-y-3">
+      {/* Always render configurator to get default price, but hide UI until clicked */}
+      {!loading && !error && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 && (
+        <div style={{ display: visible ? 'block' : 'none' }}>
+          <ProductConfigurator
+            productId={productId}
+            vendorProductId={productData.vendor_product_id || productId}
+            storeCode={9}
+            pricingData={pricingOptions}
+            onPriceChange={onPriceChange}
+            onConfigChange={onConfigChange}
+          />
+        </div>
+      )}
+      
       <Button
         type="button"
         variant="outline"
@@ -144,18 +158,9 @@ export default function ProductConfiguratorLoader({
           {error && (
             <p className="text-sm text-red-300">Failed to load options: {error}</p>
           )}
-          {!loading && !error && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 ? (
-            <ProductConfigurator
-              productId={productId}
-              vendorProductId={productData.vendor_product_id || productId}
-              storeCode={9}
-              pricingData={pricingOptions}
-              onPriceChange={onPriceChange}
-              onConfigChange={onConfigChange}
-            />
-          ) : !loading && !error ? (
+          {!loading && !error && !pricingOptions && (
             <p className="text-sm text-white/70">No configuration options available for this product.</p>
-          ) : null}
+          )}
         </div>
       )}
     </div>
