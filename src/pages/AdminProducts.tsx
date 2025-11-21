@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Download, RefreshCw, Edit, Save, X, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, computeFinalPrice } from "@/lib/pricing-utils";
+import { withRetry } from "@/lib/api-retry";
 import {
   Dialog,
   DialogContent,
@@ -78,22 +79,63 @@ export default function AdminProducts() {
 
   async function loadProducts() {
     try {
-      // Select only the fields needed (avoid large pricing_data JSONB)
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, vendor, base_cost_cents, markup_fixed_cents, markup_percent, is_active, image_url, generated_image_url")
-        .order("name");
-
-      if (error) {
-        console.error("Supabase error loading products:", error);
-        throw error;
-      }
+      console.log("Starting product load with retry logic...");
       
-      setProducts(data || []);
-      console.log(`Successfully loaded ${data?.length || 0} products`);
+      // Use retry logic with exponential backoff
+      const result = await withRetry(
+        async () => {
+          // Load products in smaller batches to avoid timeouts
+          const batchSize = 50;
+          const allProducts: Product[] = [];
+          let offset = 0;
+          let hasMore = true;
+
+          while (hasMore) {
+            const { data, error } = await supabase
+              .from("products")
+              .select("id, name, vendor, base_cost_cents, markup_fixed_cents, markup_percent, is_active, image_url, generated_image_url")
+              .order("name")
+              .range(offset, offset + batchSize - 1);
+
+            if (error) {
+              console.error(`Batch load error at offset ${offset}:`, error);
+              throw error;
+            }
+
+            if (data && data.length > 0) {
+              allProducts.push(...data);
+              console.log(`Loaded batch: ${data.length} products (total: ${allProducts.length})`);
+              offset += batchSize;
+              hasMore = data.length === batchSize;
+            } else {
+              hasMore = false;
+            }
+          }
+
+          return allProducts;
+        },
+        {
+          maxAttempts: 3,
+          initialDelayMs: 1000,
+          maxDelayMs: 5000,
+          shouldRetry: (error: any, attempt: number) => {
+            // Retry on timeout errors
+            if (error?.message?.includes("timeout") || error?.code === "PGRST116") {
+              console.log(`Retry attempt ${attempt} due to timeout`);
+              return true;
+            }
+            return attempt < 3;
+          }
+        }
+      );
+      
+      setProducts(result);
+      console.log(`Successfully loaded ${result.length} products`);
+      toast.success(`Loaded ${result.length} products`);
     } catch (err: any) {
-      console.error("Error loading products:", err);
-      toast.error(`Failed to load products: ${err?.message || 'Unknown error'}`);
+      console.error("Error loading products after retries:", err);
+      toast.error(`Failed to load products: ${err?.message || 'Database timeout - try refreshing'}`);
+      setProducts([]); // Set empty array on failure
     } finally {
       setLoading(false);
     }
