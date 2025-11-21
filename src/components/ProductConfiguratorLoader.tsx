@@ -19,7 +19,7 @@ export default function ProductConfiguratorLoader({
   const [pricingOptions, setPricingOptions] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   const fetchPricingOptions = async () => {
     if (pricingOptions || loading) return;
@@ -118,10 +118,12 @@ export default function ProductConfiguratorLoader({
     }
   };
 
+  // Fetch pricing options on mount
+  useEffect(() => {
+    fetchPricingOptions();
+  }, [productId]);
+
   const handleToggle = () => {
-    if (!visible && !pricingOptions) {
-      fetchPricingOptions();
-    }
     setVisible(!visible);
   };
 
