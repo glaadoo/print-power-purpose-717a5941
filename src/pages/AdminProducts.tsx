@@ -46,6 +46,8 @@ export default function AdminProducts() {
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [bulkMarkupType, setBulkMarkupType] = useState<"fixed" | "percent">("fixed");
   const [bulkMarkupValue, setBulkMarkupValue] = useState<string>("");
+  const [generatingImages, setGeneratingImages] = useState(false);
+  const [imageProgress, setImageProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     loadProducts();
@@ -221,6 +223,64 @@ export default function AdminProducts() {
     } catch (err) {
       console.error("Error updating markup:", err);
       toast.error("Failed to update markup");
+    }
+  }
+
+  async function handleGenerateImages() {
+    try {
+      setGeneratingImages(true);
+      
+      // Get products without images
+      const productsWithoutImages = products.filter(
+        p => !p.image_url && !(p as any).generated_image_url && p.is_active
+      );
+      
+      if (productsWithoutImages.length === 0) {
+        toast.info("All active products already have images");
+        return;
+      }
+
+      setImageProgress({ current: 0, total: productsWithoutImages.length });
+      
+      let successCount = 0;
+      let failCount = 0;
+
+      // Generate images one at a time to avoid rate limits
+      for (let i = 0; i < productsWithoutImages.length; i++) {
+        const product = productsWithoutImages[i];
+        setImageProgress({ current: i + 1, total: productsWithoutImages.length });
+
+        try {
+          const { data, error } = await supabase.functions.invoke('generate-product-image', {
+            body: { 
+              productId: product.id, 
+              productName: product.name 
+            }
+          });
+
+          if (error) throw error;
+          
+          if (data?.imageUrl) {
+            successCount++;
+            console.log(`Generated image for ${product.name}`);
+          }
+        } catch (err) {
+          console.error(`Failed to generate image for ${product.name}:`, err);
+          failCount++;
+        }
+
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      toast.success(`Generated ${successCount} images successfully${failCount > 0 ? `, ${failCount} failed` : ''}`);
+      loadProducts();
+    } catch (err) {
+      console.error("Error generating images:", err);
+      toast.error("Failed to generate images");
+    } finally {
+      setGeneratingImages(false);
+      setImageProgress({ current: 0, total: 0 });
     }
   }
 
@@ -428,6 +488,42 @@ export default function AdminProducts() {
             </Card>
           </div>
         )}
+
+        {/* Image Generation Section */}
+        <div className="mb-8">
+          <Card className="bg-white/10 backdrop-blur-md border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white">Product Images</CardTitle>
+              <CardDescription className="text-white/70">
+                Generate AI images for products that don't have images
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={handleGenerateImages}
+                  disabled={generatingImages}
+                  className="rounded-full"
+                >
+                  {generatingImages ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Generating {imageProgress.current}/{imageProgress.total}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Generate Missing Images
+                    </>
+                  )}
+                </Button>
+                <div className="text-white/70 text-sm">
+                  {products.filter(p => !p.image_url && !(p as any).generated_image_url && p.is_active).length} products need images
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Sync Products from Vendors</h2>
