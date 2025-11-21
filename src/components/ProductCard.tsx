@@ -39,17 +39,7 @@ export default function ProductCard({
   onConfigChange,
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | null>(
-    product.image_url || null
-  );
-
-  // DEBUG: Log image source on mount
-  console.log(`[ProductCard] 🖼️  Image setup for "${product.name}":`, {
-    productId: product.id,
-    hasImageUrl: !!product.image_url,
-    selectedSrc: imageSrc,
-    rawImageUrl: product.image_url
-  });
+  const imageSrc = product.image_url || null;
 
   return (
     <GlassCard padding="p-6">
@@ -61,15 +51,9 @@ export default function ProductCard({
               src={imageSrc} 
               alt={product.name}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                console.error(`[ProductCard] ❌ Failed to load image for product "${product.name}":`, imageSrc);
-                console.error(`[ProductCard] 🔍 Error details:`, {
-                  productId: product.id,
-                  attemptedSrc: imageSrc,
-                  errorEvent: e
-                });
+              loading="eager"
+              onError={() => {
                 setImageError(true);
-                setImageSrc(null);
               }}
             />
           ) : (
