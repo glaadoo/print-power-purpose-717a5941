@@ -85,10 +85,21 @@ export function ProductConfigurator({
       groupMap[option.group].push(option);
     });
 
-    // Convert to array of groups
+    // Convert to array of groups and sort options within each group
     return Object.entries(groupMap).map(([group, opts]) => ({
       group,
-      options: opts,
+      options: opts.sort((a, b) => {
+        // Try to parse as numbers first for QTY fields
+        const aNum = parseInt(a.name);
+        const bNum = parseInt(b.name);
+        
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return aNum - bNum;
+        }
+        
+        // Otherwise sort alphabetically
+        return a.name.localeCompare(b.name);
+      }),
     }));
   }, [pricingData]);
 
