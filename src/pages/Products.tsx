@@ -83,38 +83,6 @@ export default function Products() {
       
       setPricingSettings(settingsResult as PricingSettings);
       setRows(productsResult);
-      
-      // DEBUG: Log image loading status
-      const imageStats = productsResult.reduce((acc, p) => {
-        if (p.image_url) acc.withImages++;
-        else acc.withoutImages++;
-        return acc;
-      }, { withImages: 0, withoutImages: 0 });
-      
-      console.log(`[Products] 📊 IMAGE LOADING STATS:`, {
-        totalProducts: productsResult.length,
-        ...imageStats,
-        percentageWithImages: Math.round((imageStats.withImages / productsResult.length) * 100) + '%'
-      });
-      
-      // DEBUG: Log first few products with/without images
-      const withImages = productsResult.filter(p => p.image_url).slice(0, 3);
-      const withoutImages = productsResult.filter(p => !p.image_url).slice(0, 3);
-      
-      console.log(`[Products] ✅ Sample products WITH images:`, withImages.map(p => ({
-        name: p.name,
-        vendor: p.vendor,
-        vendor_product_id: p.vendor_product_id,
-        image_url: p.image_url
-      })));
-      
-      console.log(`[Products] ❌ Sample products WITHOUT images:`, withoutImages.map(p => ({
-        name: p.name,
-        vendor: p.vendor,
-        vendor_product_id: p.vendor_product_id,
-        image_url: p.image_url,
-        has_pricing_data: !!p.pricing_data
-      })));
     } catch (e: any) {
       console.error('[Products] Failed to load products:', e);
       setErr(e?.message || "Failed to load products. Please try again.");
