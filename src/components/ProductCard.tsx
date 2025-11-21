@@ -40,17 +40,15 @@ export default function ProductCard({
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(
-    product.image_url || product.generated_image_url || null
+    product.image_url || null
   );
 
   // DEBUG: Log image source on mount
   console.log(`[ProductCard] 🖼️  Image setup for "${product.name}":`, {
     productId: product.id,
     hasImageUrl: !!product.image_url,
-    hasGeneratedUrl: !!product.generated_image_url,
     selectedSrc: imageSrc,
-    rawImageUrl: product.image_url,
-    rawGeneratedUrl: product.generated_image_url
+    rawImageUrl: product.image_url
   });
 
   return (
@@ -68,9 +66,7 @@ export default function ProductCard({
                 console.error(`[ProductCard] 🔍 Error details:`, {
                   productId: product.id,
                   attemptedSrc: imageSrc,
-                  errorEvent: e,
-                  wasImageUrl: imageSrc === product.image_url,
-                  wasGeneratedUrl: imageSrc === product.generated_image_url
+                  errorEvent: e
                 });
                 setImageError(true);
                 setImageSrc(null);
