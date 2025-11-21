@@ -177,18 +177,16 @@ export default function Products() {
     setProductConfigs(prev => ({ ...prev, [productId]: config }));
   };
 
-  // Group products by category (excluding Canada products)
+  // Group products by category
   const groupedProducts = useMemo(() => {
     const groups: Record<string, ProductRow[]> = {};
-    rows
-      .filter(product => !product.name.toLowerCase().includes('canada'))
-      .forEach(product => {
-        const category = product.category || "Uncategorized";
-        if (!groups[category]) {
-          groups[category] = [];
-        }
-        groups[category].push(product);
-      });
+    rows.forEach(product => {
+      const category = product.category || "Uncategorized";
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(product);
+    });
     return groups;
   }, [rows]);
 
