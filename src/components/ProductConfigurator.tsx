@@ -89,7 +89,25 @@ export function ProductConfigurator({
     return Object.entries(groupMap).map(([group, opts]) => ({
       group,
       options: opts.sort((a, b) => {
-        // Try to parse as numbers first for QTY fields
+        // Check if this is a dimension format (e.g., "24×18" or "24x18")
+        const dimensionRegex = /^(\d+(?:\.\d+)?)\s*[×x]\s*(\d+(?:\.\d+)?)$/;
+        const aMatch = a.name.match(dimensionRegex);
+        const bMatch = b.name.match(dimensionRegex);
+        
+        if (aMatch && bMatch) {
+          // Parse dimensions and sort by first number, then second number
+          const aWidth = parseFloat(aMatch[1]);
+          const aHeight = parseFloat(aMatch[2]);
+          const bWidth = parseFloat(bMatch[1]);
+          const bHeight = parseFloat(bMatch[2]);
+          
+          if (aWidth !== bWidth) {
+            return aWidth - bWidth;
+          }
+          return aHeight - bHeight;
+        }
+        
+        // Try to parse as numbers for QTY fields
         const aNum = parseInt(a.name);
         const bNum = parseInt(b.name);
         

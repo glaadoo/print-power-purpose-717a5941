@@ -99,15 +99,17 @@ export default function ProductCard({
           )}
         </div>
         
-        <div className="flex flex-col gap-1 w-full border-none">
-          <p className="text-sm text-white/70">Regular Price:</p>
-          <p className="text-2xl font-bold text-white">
-            {displayPriceCents > 0 ? (
-              `$${(displayPriceCents / 100).toFixed(2)}`
-            ) : (
-              <span className="text-base text-white/60">—</span>
-            )}
-          </p>
+        <div className="flex flex-col gap-1 w-full">
+          {displayPriceCents > 0 ? (
+            <>
+              <p className="text-sm text-white/70">Regular Price:</p>
+              <p className="text-2xl font-bold text-white">
+                ${(displayPriceCents / 100).toFixed(2)}
+              </p>
+            </>
+          ) : (
+            <p className="text-2xl font-bold text-white/60">—</p>
+          )}
         </div>
 
         {/* Product Configuration */}
