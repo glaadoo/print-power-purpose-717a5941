@@ -133,7 +133,7 @@ export default function ProductConfiguratorLoader({
         className="w-full bg-white/10 text-white border-white/20 hover:bg-white/20"
         onClick={handleToggle}
       >
-        {visible ? "Hide Options" : "Configure Options"}
+        {visible ? "Hide Options" : "Customize Product"}
       </Button>
 
       {visible && (

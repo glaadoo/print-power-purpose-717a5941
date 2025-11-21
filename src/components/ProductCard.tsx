@@ -151,9 +151,7 @@ export default function ProductCard({
           className="w-full rounded-full"
           size="lg"
         >
-          {requiresConfiguration && !isConfigured
-            ? "Configure Product"
-            : "Add to Cart"}
+          Add to Cart
         </Button>
       </div>
     </GlassCard>
