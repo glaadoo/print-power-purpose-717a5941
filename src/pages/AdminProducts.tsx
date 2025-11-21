@@ -78,16 +78,22 @@ export default function AdminProducts() {
 
   async function loadProducts() {
     try {
+      // Select only the fields needed (avoid large pricing_data JSONB)
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select("id, name, vendor, base_cost_cents, markup_fixed_cents, markup_percent, is_active, image_url, generated_image_url")
         .order("name");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error loading products:", error);
+        throw error;
+      }
+      
       setProducts(data || []);
-    } catch (err) {
+      console.log(`Successfully loaded ${data?.length || 0} products`);
+    } catch (err: any) {
       console.error("Error loading products:", err);
-      toast.error("Failed to load products");
+      toast.error(`Failed to load products: ${err?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
