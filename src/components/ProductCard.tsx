@@ -99,7 +99,7 @@ export default function ProductCard({
           )}
         </div>
         
-        <div className="flex flex-col gap-1 w-full">
+        <div className="flex flex-col gap-1 w-full items-center text-center">
           {displayPriceCents > 0 ? (
             <>
               <p className="text-sm text-white/70">Regular Price:</p>
