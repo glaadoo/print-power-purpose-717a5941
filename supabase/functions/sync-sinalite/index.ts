@@ -296,7 +296,18 @@ serve(async (req) => {
     // Log first product structure for debugging
     const firstProduct = (products.data || products || [])[0];
     if (firstProduct) {
-      console.log(`[SYNC-SINALITE] Sample product structure:`, JSON.stringify(firstProduct, null, 2).slice(0, 500));
+      console.log(`[SYNC-SINALITE] 🔍 FULL SAMPLE PRODUCT STRUCTURE:`, JSON.stringify(firstProduct, null, 2));
+      console.log(`[SYNC-SINALITE] 📋 All available fields:`, Object.keys(firstProduct));
+      console.log(`[SYNC-SINALITE] 🖼️  Image-related fields:`, {
+        image: firstProduct.image,
+        image_url: firstProduct.image_url,
+        imageUrl: firstProduct.imageUrl,
+        thumbnail: firstProduct.thumbnail,
+        images: firstProduct.images,
+        productImage: firstProduct.productImage,
+        photo: firstProduct.photo,
+        picture: firstProduct.picture
+      });
     }
 
     // Transform products - use product data directly without individual pricing calls
@@ -336,26 +347,45 @@ serve(async (req) => {
 
       // Extract image URL from various possible locations
       let imageUrl = null;
-      if (p.image_url) imageUrl = p.image_url;
-      else if (p.imageUrl) imageUrl = p.imageUrl;
-      else if (p.thumbnail) imageUrl = p.thumbnail;
-      else if (p.image) imageUrl = typeof p.image === 'string' ? p.image : p.image?.url || p.image?.src;
-      else if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+      const imageExtractionLog: any = {
+        productId: p.id,
+        productName: p.name,
+        rawImageFields: {}
+      };
+      
+      if (p.image_url) {
+        imageUrl = p.image_url;
+        imageExtractionLog.source = 'image_url';
+        imageExtractionLog.rawImageFields.image_url = p.image_url;
+      } else if (p.imageUrl) {
+        imageUrl = p.imageUrl;
+        imageExtractionLog.source = 'imageUrl';
+        imageExtractionLog.rawImageFields.imageUrl = p.imageUrl;
+      } else if (p.thumbnail) {
+        imageUrl = p.thumbnail;
+        imageExtractionLog.source = 'thumbnail';
+        imageExtractionLog.rawImageFields.thumbnail = p.thumbnail;
+      } else if (p.image) {
+        imageUrl = typeof p.image === 'string' ? p.image : p.image?.url || p.image?.src;
+        imageExtractionLog.source = 'image';
+        imageExtractionLog.rawImageFields.image = p.image;
+      } else if (p.images && Array.isArray(p.images) && p.images.length > 0) {
         imageUrl = typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url || p.images[0]?.src;
+        imageExtractionLog.source = 'images[0]';
+        imageExtractionLog.rawImageFields.images = p.images;
       }
       
-      // Log image URL extraction for debugging (first 3 products)
-      if (productsToSync.length < 3) {
-        console.log(`[SYNC-SINALITE] Product ${p.id} image extraction:`, {
-          productName: p.name,
-          hasImageUrl: !!p.image_url,
-          hasImageUrlCamel: !!p.imageUrl,
-          hasThumbnail: !!p.thumbnail,
-          hasImage: !!p.image,
-          hasImages: !!(p.images && Array.isArray(p.images)),
-          extractedUrl: imageUrl,
-          availableFields: Object.keys(p).slice(0, 20)
-        });
+      imageExtractionLog.extractedUrl = imageUrl;
+      imageExtractionLog.success = !!imageUrl;
+      
+      // Log EVERY product's image extraction attempt
+      console.log(`[SYNC-SINALITE] 🖼️  IMAGE EXTRACTION:`, JSON.stringify(imageExtractionLog, null, 2));
+      
+      // If no image found, log all available fields to help debug
+      if (!imageUrl) {
+        console.warn(`[SYNC-SINALITE] ⚠️  NO IMAGE FOUND for product ${p.id} (${p.name})`);
+        console.warn(`[SYNC-SINALITE] 📋 All fields in product:`, Object.keys(p));
+        console.warn(`[SYNC-SINALITE] 🔍 Full product data:`, JSON.stringify(p, null, 2).slice(0, 1000));
       }
 
       productsToSync.push({
@@ -374,7 +404,20 @@ serve(async (req) => {
     console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync`);
 
     let synced = 0;
+    let imagesFound = 0;
+    let imagesMissing = 0;
+    
     for (const product of productsToSync) {
+      if (product.image_url) imagesFound++;
+      else imagesMissing++;
+      
+      console.log(`[SYNC-SINALITE] 💾 Upserting product:`, {
+        vendor_id: product.vendor_id,
+        name: product.name,
+        has_image: !!product.image_url,
+        image_url: product.image_url
+      });
+      
       const { error } = await supabase
         .from("products")
         .upsert(
@@ -383,11 +426,18 @@ serve(async (req) => {
         );
 
       if (error) {
-        console.error("[SYNC-SINALITE] Error upserting product:", product.vendor_id, error);
+        console.error("[SYNC-SINALITE] ❌ Error upserting product:", product.vendor_id, error);
       } else {
         synced++;
       }
     }
+    
+    console.log(`[SYNC-SINALITE] 📊 IMAGE STATISTICS:`, {
+      totalProducts: productsToSync.length,
+      imagesFound,
+      imagesMissing,
+      percentageWithImages: Math.round((imagesFound / productsToSync.length) * 100) + '%'
+    });
 
     console.log(`[SYNC-SINALITE] Successfully synced ${synced}/${productsToSync.length} products`);
 

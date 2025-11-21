@@ -43,6 +43,16 @@ export default function ProductCard({
     product.image_url || product.generated_image_url || null
   );
 
+  // DEBUG: Log image source on mount
+  console.log(`[ProductCard] 🖼️  Image setup for "${product.name}":`, {
+    productId: product.id,
+    hasImageUrl: !!product.image_url,
+    hasGeneratedUrl: !!product.generated_image_url,
+    selectedSrc: imageSrc,
+    rawImageUrl: product.image_url,
+    rawGeneratedUrl: product.generated_image_url
+  });
+
   return (
     <GlassCard padding="p-6">
       <div className="flex flex-col items-start text-left space-y-4 w-full">
@@ -54,7 +64,14 @@ export default function ProductCard({
               alt={product.name}
               className="w-full h-full object-cover"
               onError={(e) => {
-                console.error(`Failed to load image for product "${product.name}":`, imageSrc);
+                console.error(`[ProductCard] ❌ Failed to load image for product "${product.name}":`, imageSrc);
+                console.error(`[ProductCard] 🔍 Error details:`, {
+                  productId: product.id,
+                  attemptedSrc: imageSrc,
+                  errorEvent: e,
+                  wasImageUrl: imageSrc === product.image_url,
+                  wasGeneratedUrl: imageSrc === product.generated_image_url
+                });
                 setImageError(true);
                 setImageSrc(null);
               }}
