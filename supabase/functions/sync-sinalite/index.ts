@@ -406,16 +406,33 @@ serve(async (req) => {
     let synced = 0;
     let imagesFound = 0;
     let imagesMissing = 0;
+    let imagesPreserved = 0;
     
     for (const product of productsToSync) {
       if (product.image_url) imagesFound++;
       else imagesMissing++;
       
+      // Check if product already exists with an image_url
+      const { data: existingProduct } = await supabase
+        .from("products")
+        .select("image_url")
+        .eq("vendor", product.vendor)
+        .eq("vendor_id", product.vendor_id)
+        .maybeSingle();
+      
+      // Preserve existing image_url if present, don't overwrite with null/empty
+      if (existingProduct?.image_url && !product.image_url) {
+        product.image_url = existingProduct.image_url;
+        imagesPreserved++;
+        console.log(`[SYNC-SINALITE] 🔒 Preserving existing image for:`, product.vendor_id);
+      }
+      
       console.log(`[SYNC-SINALITE] 💾 Upserting product:`, {
         vendor_id: product.vendor_id,
         name: product.name,
         has_image: !!product.image_url,
-        image_url: product.image_url
+        image_url: product.image_url,
+        preserved: existingProduct?.image_url && !product.image_url
       });
       
       const { error } = await supabase
@@ -434,6 +451,7 @@ serve(async (req) => {
     
     console.log(`[SYNC-SINALITE] 📊 IMAGE STATISTICS:`, {
       totalProducts: productsToSync.length,
+      imagesPreserved,
       imagesFound,
       imagesMissing,
       percentageWithImages: Math.round((imagesFound / productsToSync.length) * 100) + '%'
@@ -448,7 +466,8 @@ serve(async (req) => {
         total: productsToSync.length,
         vendor: "sinalite",
         store: storeName,
-        storeCode
+        storeCode,
+        imagesPreserved
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
