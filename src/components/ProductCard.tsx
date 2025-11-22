@@ -15,6 +15,7 @@ type ProductCardProps = {
   };
   displayPriceCents: number;
   quantity: number;
+  quantityOptions: string[];
   isInCart: boolean;
   requiresConfiguration: boolean;
   isConfigured: boolean;
@@ -23,12 +24,14 @@ type ProductCardProps = {
   onAddToCart: (product: any) => void;
   onPriceChange: (productId: string, price: number) => void;
   onConfigChange: (productId: string, config: Record<string, string>) => void;
+  onQuantityOptionsChange?: (productId: string, options: string[]) => void;
 };
 
 export default function ProductCard({
   product,
   displayPriceCents,
   quantity,
+  quantityOptions,
   isInCart,
   requiresConfiguration,
   isConfigured,
@@ -37,6 +40,7 @@ export default function ProductCard({
   onAddToCart,
   onPriceChange,
   onConfigChange,
+  onQuantityOptionsChange,
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const imageSrc = product.image_url || null;
@@ -99,33 +103,36 @@ export default function ProductCard({
               productId={product.id}
               onPriceChange={(price) => onPriceChange(product.id, price)}
               onConfigChange={(config) => onConfigChange(product.id, config)}
+              onQuantityOptionsChange={onQuantityOptionsChange ? (options) => onQuantityOptionsChange(product.id, options) : undefined}
             />
           </div>
         )}
 
-        {/* Quantity Controls */}
-        <div className="flex items-center justify-center gap-3 w-full">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onQuantityChange(product.id, -1)}
-            disabled={quantity === 0}
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-          >
-            <Minus className="w-4 h-4" />
-          </Button>
-          <span className="text-white font-medium w-12 text-center">
-            {quantity}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onQuantityChange(product.id, 1)}
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
+        {/* Quantity Controls - Only show after options are loaded */}
+        {quantityOptions.length > 0 && (
+          <div className="flex items-center justify-center gap-3 w-full">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onQuantityChange(product.id, -1)}
+              disabled={quantity === 0}
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+            <span className="text-white font-medium w-12 text-center">
+              {quantity}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onQuantityChange(product.id, 1)}
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Add to Cart Button */}
         <Button
