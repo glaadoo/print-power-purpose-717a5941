@@ -142,52 +142,120 @@ serve(async (req) => {
     // Call SinaLite API - remove /product prefix if present
     const baseUrl = apiUrl.replace(/\/product\/?$/, '');
     
+    // Retry logic with exponential backoff for transient failures
+    const maxRetries = 3;
     let apiResponse;
+    let lastError = null;
     
-    if (method === 'GET') {
-      // GET /product/{id}/{storeCode} - Returns [options[], combinations[], metadata[]]
-      const optionsUrl = `${baseUrl}/product/${productId}/${storeCode}`;
-      console.log("[SINALITE-PRICE] Calling GET:", optionsUrl);
-      
-      apiResponse = await fetch(optionsUrl, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      });
-    } else if (method === 'PRICEBYKEY') {
-      // GET /pricebykey/{id}/{key} - Returns price for specific variant key
-      const priceByKeyUrl = `${baseUrl}/pricebykey/${productId}/${variantKey}`;
-      console.log("[SINALITE-PRICE] Calling PRICEBYKEY:", priceByKeyUrl);
-      
-      apiResponse = await fetch(priceByKeyUrl, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      });
-    } else {
-      // POST /price/{id}/{storeCode} - Returns pricing calculation
-      const pricingUrl = `${baseUrl}/price/${productId}/${storeCode}`;
-      console.log("[SINALITE-PRICE] Calling POST:", pricingUrl);
-      console.log("[SINALITE-PRICE] Option IDs:", productOptions);
-      
-      apiResponse = await fetch(pricingUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ productOptions }),
-      });
-    }
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // 1s, 2s, 5s
+          console.log(`[SINALITE-PRICE] Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        
+        if (method === 'GET') {
+          // GET /product/{id}/{storeCode} - Returns [options[], combinations[], metadata[]]
+          const optionsUrl = `${baseUrl}/product/${productId}/${storeCode}`;
+          console.log("[SINALITE-PRICE] Calling GET:", optionsUrl);
+          
+          apiResponse = await fetch(optionsUrl, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+            },
+            signal: AbortSignal.timeout(10000), // 10 second timeout
+          });
+        } else if (method === 'PRICEBYKEY') {
+          // GET /pricebykey/{id}/{key} - Returns price for specific variant key
+          const priceByKeyUrl = `${baseUrl}/pricebykey/${productId}/${variantKey}`;
+          console.log("[SINALITE-PRICE] Calling PRICEBYKEY:", priceByKeyUrl);
+          
+          apiResponse = await fetch(priceByKeyUrl, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+            },
+            signal: AbortSignal.timeout(10000), // 10 second timeout
+          });
+        } else {
+          // POST /price/{id}/{storeCode} - Returns pricing calculation
+          const pricingUrl = `${baseUrl}/price/${productId}/${storeCode}`;
+          console.log("[SINALITE-PRICE] Calling POST:", pricingUrl);
+          console.log("[SINALITE-PRICE] Option IDs:", productOptions);
+          
+          apiResponse = await fetch(pricingUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ productOptions }),
+            signal: AbortSignal.timeout(10000), // 10 second timeout
+          });
+        }
 
-    if (!apiResponse.ok) {
-      const errorText = await apiResponse.text();
-      console.error("[SINALITE-PRICE] API error:", apiResponse.status, errorText);
+        // Success - break out of retry loop
+        if (apiResponse.ok) {
+          break;
+        }
+        
+        // Check if it's a retryable error (5xx errors)
+        if (apiResponse.status >= 500 && apiResponse.status < 600) {
+          lastError = await apiResponse.text();
+          console.error(`[SINALITE-PRICE] Server error (${apiResponse.status}), attempt ${attempt + 1}/${maxRetries}`);
+          
+          // Don't retry on last attempt
+          if (attempt === maxRetries - 1) {
+            return new Response(
+              JSON.stringify({ 
+                error: "SinaLite API temporarily unavailable", 
+                details: "The SinaLite API is experiencing issues. Please try again in a few moments.",
+                status: apiResponse.status,
+                retries: maxRetries
+              }),
+              { status: 503, headers: { "Content-Type": "application/json", ...corsHeaders } }
+            );
+          }
+          continue; // Retry
+        }
+        
+        // Non-retryable error (4xx)
+        const errorText = await apiResponse.text();
+        console.error("[SINALITE-PRICE] API error:", apiResponse.status, errorText);
+        return new Response(
+          JSON.stringify({ error: "SinaLite API error", details: errorText, status: apiResponse.status }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+        
+      } catch (fetchError) {
+        lastError = fetchError;
+        console.error(`[SINALITE-PRICE] Fetch error on attempt ${attempt + 1}:`, fetchError);
+        
+        // Don't retry on last attempt
+        if (attempt === maxRetries - 1) {
+          return new Response(
+            JSON.stringify({ 
+              error: "SinaLite API connection failed", 
+              details: "Unable to connect to SinaLite API after multiple attempts. Please try again later.",
+              retries: maxRetries
+            }),
+            { status: 503, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+      }
+    }
+    
+    // Final check - should not reach here if successful
+    if (!apiResponse || !apiResponse.ok) {
       return new Response(
-        JSON.stringify({ error: "SinaLite API error", details: errorText, status: apiResponse.status }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ 
+          error: "SinaLite API failed after retries", 
+          details: lastError instanceof Error ? lastError.message : String(lastError),
+          retries: maxRetries
+        }),
+        { status: 503, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
