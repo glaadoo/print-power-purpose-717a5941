@@ -1,157 +1,212 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useCart } from "@/context/CartContext";
-import { useCause } from "../context/CauseContext";
-import VideoBackground from "@/components/VideoBackground";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home } from "lucide-react";
+
+interface OrderDetails {
+  order_number: string;
+  amount_total_cents: number;
+  donation_cents: number;
+  subtotal_cents: number;
+  customer_email: string;
+  items: any[];
+  cause_name?: string;
+  nonprofit_name?: string;
+  created_at: string;
+}
 
 export default function Success() {
-  const [sp] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { clear: clearCart } = useCart();
-  const { clearAll: clearCauseAndNonprofit } = useCause();
-  const [orderInfo, setOrderInfo] = useState<{ order_number?: string; order_id?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const orderId = sp.get("orderId");
+  const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    // Clear cart, cause, nonprofit & any pending checkout selection
-    clearCart();
-    clearCauseAndNonprofit();
-    try {
-      localStorage.removeItem("ppp:cart");
-      localStorage.removeItem("ppp:checkout");
-    } catch {}
-  }, [clearCart, clearCauseAndNonprofit]);
+    const fetchOrderDetails = async () => {
+      if (!sessionId) {
+        setError("No payment session found");
+        setLoading(false);
+        return;
+      }
 
-  // Fetch order info by orderId - with retry polling
-  useEffect(() => {
-    if (!orderId) return;
-    
-    let attempts = 0;
-    const maxAttempts = 5;
-    
-    const fetchOrder = async () => {
       try {
-        const { data, error } = await supabase
-          .from('orders')
-          .select('order_number, id, amount_total_cents, status')
-          .eq('id', orderId)
+        // Fetch order by session_id
+        const { data, error: fetchError } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("session_id", sessionId)
           .single();
-        
-        if (!error && data) {
-          setOrderInfo({
-            order_number: data.order_number,
-            order_id: data.id
-          });
-          return true;
+
+        if (fetchError) throw fetchError;
+
+        if (data) {
+          setOrderDetails(data as OrderDetails);
+        } else {
+          setError("Order not found");
         }
-        return false;
-      } catch (e) {
-        console.error('Failed to fetch order', e);
-        return false;
+      } catch (err) {
+        console.error("Error fetching order:", err);
+        setError("Unable to load order details");
+      } finally {
+        setLoading(false);
       }
     };
-    
-    // Initial fetch
-    fetchOrder().then(success => {
-      if (success) return;
-      
-      // Poll every second for up to 5 attempts if initial fetch fails
-      const interval = setInterval(async () => {
-        attempts++;
-        const success = await fetchOrder();
-        if (success || attempts >= maxAttempts) {
-          clearInterval(interval);
-        }
-      }, 1000);
-    });
-  }, [orderId]);
+
+    fetchOrderDetails();
+  }, [sessionId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !orderDetails) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center">
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-destructive text-2xl">⚠️</span>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">
+            Unable to Load Order
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            {error || "We couldn't find your order details."}
+          </p>
+          <Button onClick={() => navigate("/")} className="w-full">
+            <Home className="w-4 h-4 mr-2" />
+            Return Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { order_number, amount_total_cents, donation_cents, subtotal_cents, items, cause_name, nonprofit_name } = orderDetails;
 
   return (
-    <div className="min-h-screen text-white relative">
-      {/* Top bar - Brand only, no navigation buttons */}
-      <header className="sticky top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <Link
-          to="/"
-          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-          aria-label="Print Power Purpose Home"
-        >
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </Link>
-      </header>
-
-      {/* Main content */}
-      <div className="relative">
-        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-          <div className="absolute inset-0 pointer-events-none">
-            <VideoBackground
-              srcMp4="/media/hero.mp4"
-              srcWebm="/media/hero.webm"
-              poster="/media/hero-poster.jpg"
-              overlay={<div className="absolute inset-0 bg-black/50 pointer-events-none" />}
-            />
+    <div className="min-h-screen bg-background py-12 px-4">
+      <div className="max-w-3xl mx-auto">
+        {/* Success Header */}
+        <div className="bg-card border border-border rounded-2xl p-8 mb-6 text-center">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-12 h-12 text-primary" />
           </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Payment Successful!
+          </h1>
+          <p className="text-muted-foreground text-lg mb-4">
+            Thank you for your order and support.
+          </p>
+          <div className="inline-flex items-center gap-2 bg-muted px-4 py-2 rounded-lg">
+            <span className="text-sm text-muted-foreground">Order Number:</span>
+            <span className="text-lg font-semibold text-foreground">{order_number}</span>
+          </div>
+        </div>
 
-          <div className="relative w-full max-w-2xl mx-auto z-10 pointer-events-auto">
-            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 text-center pointer-events-auto">
-              <div className="mb-6">
-                <svg className="w-20 h-20 mx-auto text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+        {/* Order Summary */}
+        <div className="bg-card border border-border rounded-2xl p-8 mb-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            Order Summary
+          </h2>
 
-              <h1 className="text-3xl md:text-4xl font-serif font-semibold mb-4">
-                Payment Successful!
-              </h1>
-              
-              <p className="text-lg opacity-90 mb-2">
-                Thank you for your support.
-              </p>
-
-              {orderInfo?.order_number ? (
-                <div className="mt-6 p-4 rounded-lg bg-white/10 border border-white/20">
-                  <p className="text-sm opacity-70 mb-1">Your Order Number:</p>
-                  <p className="text-2xl font-semibold tracking-wider">{orderInfo.order_number}</p>
+          {/* Items */}
+          {items && items.length > 0 && (
+            <div className="space-y-3 mb-6">
+              {items.map((item: any, idx: number) => (
+                <div key={idx} className="flex justify-between items-start py-3 border-b border-border last:border-0">
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">{item.name || "Product"}</p>
+                    <p className="text-sm text-muted-foreground">Quantity: {item.quantity || 1}</p>
+                  </div>
+                  <p className="font-semibold text-foreground">
+                    ${((item.priceCents || 0) / 100).toFixed(2)}
+                  </p>
                 </div>
-              ) : orderId ? (
-                <p className="mt-4 text-sm opacity-70">Loading order details...</p>
-              ) : (
-                <p className="mt-4 text-sm opacity-70">We couldn't locate your order. Please contact support.</p>
-              )}
+              ))}
+            </div>
+          )}
 
-              <p className="mt-6 text-base opacity-90">What would you like to do next?</p>
+          {/* Totals */}
+          <div className="space-y-2 pt-4 border-t border-border">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Subtotal</span>
+              <span>${((subtotal_cents || 0) / 100).toFixed(2)}</span>
+            </div>
+            
+            {donation_cents > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Heart className="w-4 h-4" />
+                  Donation
+                </span>
+                <span>${(donation_cents / 100).toFixed(2)}</span>
+              </div>
+            )}
 
-              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                <Button 
-                  onClick={() => navigate("/")}
-                  variant="default"
-                  size="lg"
-                  className="rounded-full bg-white text-black hover:bg-white/90 w-full sm:w-auto"
-                >
-                  Back to Home
-                </Button>
-                <Button 
-                  onClick={() => navigate("/products")}
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full sm:w-auto"
-                >
-                  Continue Shopping
-                </Button>
-                <Button 
-                  onClick={() => navigate("/select/nonprofit?flow=shopping")}
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full bg-white/20 border-white/30 text-white hover:bg-white/30 w-full sm:w-auto"
-                >
-                  Choose Another Cause
-                </Button>
+            <div className="flex justify-between text-lg font-bold text-foreground pt-2 border-t border-border">
+              <span>Total</span>
+              <span>${(amount_total_cents / 100).toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Cause/Nonprofit Info */}
+        {(cause_name || nonprofit_name) && (
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <Heart className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground mb-1">
+                  Supporting: {nonprofit_name || cause_name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Your purchase helps make a difference. Thank you for your support!
+                </p>
               </div>
             </div>
           </div>
-        </section>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            onClick={() => navigate("/")}
+            variant="default"
+            className="flex-1"
+            size="lg"
+          >
+            <Home className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+          <Button
+            onClick={() => navigate("/products")}
+            variant="outline"
+            className="flex-1"
+            size="lg"
+          >
+            Continue Shopping
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+
+        {/* Email Confirmation Note */}
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          A confirmation email has been sent to {orderDetails.customer_email}
+        </p>
       </div>
     </div>
   );
