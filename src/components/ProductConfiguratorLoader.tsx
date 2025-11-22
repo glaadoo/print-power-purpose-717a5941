@@ -19,14 +19,26 @@ export default function ProductConfiguratorLoader({
 }: LoaderProps) {
   const [productData, setProductData] = useState<any | null>(null);
   const [pricingOptions, setPricingOptions] = useState<any[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as loading
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [fetchingRef, setFetchingRef] = useState(false);
 
   const fetchPricingOptions = async () => {
-    // Only prevent re-fetch if options already loaded, not if just loading
-    if (pricingOptions) return;
+    console.log('[ProductConfiguratorLoader] fetchPricingOptions called', { 
+      pricingOptions: !!pricingOptions, 
+      fetching: fetchingRef,
+      productId 
+    });
+    
+    // Prevent duplicate fetches
+    if (pricingOptions || fetchingRef) {
+      console.log('[ProductConfiguratorLoader] Skipping fetch - already loaded or in progress');
+      return;
+    }
+    
+    setFetchingRef(true);
     
     // Check sessionStorage cache first
     const cacheKey = `product-options-${productId}`;
@@ -39,6 +51,8 @@ export default function ProductConfiguratorLoader({
           console.log('[ProductConfiguratorLoader] Using cached options');
           setPricingOptions(data.pricingOptions);
           setProductData(data.product);
+          setLoading(false);
+          setFetchingRef(false);
           return;
         }
       } catch (e) {
@@ -46,8 +60,8 @@ export default function ProductConfiguratorLoader({
       }
     }
     
-    setLoading(true);
     setError(null);
+    console.log('[ProductConfiguratorLoader] Starting fetch...');
     
     try {
       // First, get product metadata including pricing_data from sync
@@ -257,19 +271,50 @@ export default function ProductConfiguratorLoader({
       console.error('[ProductConfiguratorLoader] Error fetching pricing options:', e);
       setError(e.message || "Failed to load configuration options");
     } finally {
+      console.log('[ProductConfiguratorLoader] Fetch complete', { 
+        hasPricingOptions: !!pricingOptions, 
+        hasProductData: !!productData,
+        hasError: !!error
+      });
       setLoading(false);
+      setFetchingRef(false);
     }
   };
 
   // Fetch pricing options on mount and always mount configurator
   useEffect(() => {
+    console.log('[ProductConfiguratorLoader] Component mounted for product:', productId);
     setIsMounted(true);
     fetchPricingOptions();
+    
+    // Safety timeout - if still loading after 30 seconds, force stop
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.error('[ProductConfiguratorLoader] Loading timeout - forcing stop');
+        setLoading(false);
+        setFetchingRef(false);
+        setError('Loading timeout - please refresh the page');
+      }
+    }, 30000);
+    
+    return () => clearTimeout(timeout);
   }, [productId]);
 
   const handleToggle = () => {
     setVisible(!visible);
   };
+
+  // Debug render
+  console.log('[ProductConfiguratorLoader] Render state:', {
+    isMounted,
+    hasPricingOptions: !!pricingOptions,
+    pricingOptionsIsArray: Array.isArray(pricingOptions),
+    pricingOptionsLength: Array.isArray(pricingOptions) ? pricingOptions.length : 0,
+    hasProductData: !!productData,
+    loading,
+    error,
+    visible
+  });
 
   return (
     <div className="w-full space-y-3">
@@ -302,7 +347,7 @@ export default function ProductConfiguratorLoader({
         <div className="w-full space-y-2">
           {loading && <p className="text-sm text-white/80">Loading options…</p>}
           {error && (
-            <p className="text-sm text-red-300">Failed to load options: {error}</p>
+            <p className="text-sm text-red-300 font-semibold">Error: {error}</p>
           )}
           {!loading && !error && !pricingOptions && (
             <p className="text-sm text-white/70">No configuration options available for this product.</p>
