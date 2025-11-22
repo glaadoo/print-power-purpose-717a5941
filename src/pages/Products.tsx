@@ -280,15 +280,26 @@ export default function Products() {
     const sorted = [...filtered].sort((a, b) => {
       if (sortBy === "name-asc") {
         return a.name.localeCompare(b.name);
-      } else if (sortBy === "price-low") {
-        const priceA = defaultPrices[a.id] || 0;
-        const priceB = defaultPrices[b.id] || 0;
-        return priceA - priceB;
-      } else if (sortBy === "price-high") {
-        const priceA = defaultPrices[a.id] || 0;
-        const priceB = defaultPrices[b.id] || 0;
-        return priceB - priceA;
       }
+      
+      if (sortBy === "price-low" || sortBy === "price-high") {
+        // Use defaultPrices first, fallback to base_cost_cents
+        const priceA = defaultPrices[a.id] ?? a.base_cost_cents ?? 0;
+        const priceB = defaultPrices[b.id] ?? b.base_cost_cents ?? 0;
+        
+        // Log for debugging
+        if (sortBy === "price-low" && filtered.length > 0) {
+          console.log('[Products] Price sort:', { 
+            productA: a.name, 
+            priceA: `$${(priceA / 100).toFixed(2)}`,
+            productB: b.name, 
+            priceB: `$${(priceB / 100).toFixed(2)}`
+          });
+        }
+        
+        return sortBy === "price-low" ? priceA - priceB : priceB - priceA;
+      }
+      
       return 0;
     });
     
