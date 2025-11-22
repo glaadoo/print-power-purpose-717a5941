@@ -26,7 +26,7 @@ export default function Success() {
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    const fetchOrderDetails = async () => {
+    const fetchOrderDetails = async (retryCount = 0) => {
       if (!sessionId) {
         setError("No payment session found");
         setLoading(false);
@@ -39,20 +39,28 @@ export default function Success() {
           .from("orders")
           .select("*")
           .eq("session_id", sessionId)
-          .single();
+          .maybeSingle();
 
         if (fetchError) throw fetchError;
 
         if (data) {
           setOrderDetails(data as OrderDetails);
+        } else if (retryCount < 3) {
+          // Order might not be created yet, retry with exponential backoff
+          const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+          console.log(`Order not found, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+          setTimeout(() => fetchOrderDetails(retryCount + 1), delay);
         } else {
-          setError("Order not found");
+          setError("Order not found. Please check your email for order confirmation.");
         }
       } catch (err) {
         console.error("Error fetching order:", err);
         setError("Unable to load order details");
-      } finally {
         setLoading(false);
+      } finally {
+        if (retryCount >= 3 || orderDetails) {
+          setLoading(false);
+        }
       }
     };
 
