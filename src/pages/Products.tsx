@@ -7,7 +7,7 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, ArrowLeft, Search, X } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Search, X, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
@@ -308,7 +308,7 @@ export default function Products() {
               <div className="flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto">
                 {/* Search */}
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none z-10" />
                   <Input
                     type="text"
                     placeholder="Search products by name or category..."
@@ -318,17 +318,20 @@ export default function Products() {
                   />
                 </div>
                 
-                {/* Sort */}
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-full sm:w-[200px] bg-background/10 backdrop-blur border-white/20 text-white focus:ring-white/30">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Sort with Filter Icon */}
+                <div className="relative w-full sm:w-[200px]">
+                  <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none z-10" />
+                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                    <SelectTrigger className="pl-10 bg-background/10 backdrop-blur border-white/20 text-white focus:ring-white/30">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                      <SelectItem value="price-low">Price: Low to High</SelectItem>
+                      <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 {/* Clear Filters Button */}
                 {(searchTerm || sortBy !== "name-asc") && (
