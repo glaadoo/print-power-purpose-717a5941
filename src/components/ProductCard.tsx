@@ -109,7 +109,7 @@ export default function ProductCard({
             variant="outline"
             size="icon"
             onClick={() => onQuantityChange(product.id, -1)}
-            disabled={quantity <= 1}
+            disabled={quantity === 0}
             className="bg-white/10 border-white/30 text-white hover:bg-white/20"
           >
             <Minus className="w-4 h-4" />

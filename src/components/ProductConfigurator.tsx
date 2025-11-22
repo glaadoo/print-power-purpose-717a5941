@@ -51,7 +51,6 @@ export function ProductConfigurator({
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
-  const [priceError, setPriceError] = useState<string | null>(null);
 
   console.log('[ProductConfigurator] Mounted with:', {
     productId,
@@ -163,7 +162,6 @@ export function ProductConfigurator({
 
     const fetchPrice = async () => {
       setFetchingPrice(true);
-      setPriceError(null);
       try {
         // Generate variant key from option IDs (sorted for consistency)
         const variantKey = optionIds.sort((a, b) => a - b).join('-');
@@ -188,12 +186,6 @@ export function ProductConfigurator({
 
         if (error) {
           console.error('[ProductConfigurator] Price fetch error:', error);
-          const errorMessage = error.message || String(error);
-          if (errorMessage.includes('temporarily unavailable') || errorMessage.includes('503')) {
-            setPriceError('Pricing service is temporarily unavailable. Please try again in a few moments.');
-          } else {
-            setPriceError('Unable to load pricing. Please try again.');
-          }
           return;
         }
 
@@ -202,7 +194,6 @@ export function ProductConfigurator({
           const priceCents = Math.round(priceFloat * 100);
           console.log('[ProductConfigurator] Price received:', { price: data[0].price, priceCents });
           onPriceChange(priceCents);
-          setPriceError(null);
           
           // Note: pricebykey endpoint doesn't return packageInfo
           // Clear it if it was previously set
@@ -211,11 +202,9 @@ export function ProductConfigurator({
           }
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
-          setPriceError('Price information not available for this configuration.');
         }
       } catch (err) {
         console.error('[ProductConfigurator] Price fetch exception:', err);
-        setPriceError('Unable to load pricing. Please try again.');
       } finally {
         setFetchingPrice(false);
       }
@@ -303,13 +292,6 @@ export function ProductConfigurator({
           </Select>
         </div>
       ))}
-      
-      {priceError && (
-        <div className="text-sm text-amber-100 space-y-2 p-3 bg-amber-900/30 border border-amber-600/40 rounded">
-          <p className="font-semibold">⚠️ {priceError}</p>
-          <p className="text-xs">Please select different options or try again in a moment.</p>
-        </div>
-      )}
     </div>
   );
 }
