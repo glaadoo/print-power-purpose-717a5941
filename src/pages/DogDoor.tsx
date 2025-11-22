@@ -6,7 +6,7 @@ const DogDoor = () => {
 
   useEffect(() => {
     // Immediately redirect to admin with passcode
-    const passcode = import.meta.env.VITE_ADMIN_PASSCODE || 'woofkenzie2025';
+    const passcode = import.meta.env.VITE_ADMIN_PASSCODE || 'Kenziewoof2025';
     navigate(`/admin?key=${passcode}`, { replace: true });
   }, [navigate]);
 
