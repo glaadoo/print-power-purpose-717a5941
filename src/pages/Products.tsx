@@ -5,7 +5,8 @@ import { useCart } from "@/context/CartContext";
 import VideoBackground from "@/components/VideoBackground";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ShoppingCart, ArrowLeft, Search } from "lucide-react";
 import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
@@ -33,6 +34,7 @@ export default function Products() {
   const [configuredPrices, setConfiguredPrices] = useState<Record<string, number>>({});
   const [productConfigs, setProductConfigs] = useState<Record<string, Record<string, string>>>({});
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -177,10 +179,21 @@ export default function Products() {
     setProductConfigs(prev => ({ ...prev, [productId]: config }));
   };
 
+  // Filter products based on search term
+  const filteredProducts = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase().trim();
+    if (!searchLower) return rows;
+    
+    return rows.filter(product => 
+      product.name.toLowerCase().includes(searchLower) ||
+      product.category?.toLowerCase().includes(searchLower)
+    );
+  }, [rows, searchTerm]);
+
   // Group products by category (exclude Canada products)
   const groupedProducts = useMemo(() => {
     const groups: Record<string, ProductRow[]> = {};
-    rows
+    filteredProducts
       .filter(product => !product.name.toLowerCase().includes('canada'))
       .forEach(product => {
         const category = product.category || "Uncategorized";
@@ -190,7 +203,7 @@ export default function Products() {
         groups[category].push(product);
       });
     return groups;
-  }, [rows]);
+  }, [filteredProducts]);
 
   // Calculate default prices for all products instantly
   const defaultPrices = useMemo(() => {
@@ -265,6 +278,19 @@ export default function Products() {
           />
 
           <div className="relative w-full max-w-7xl mx-auto px-6 pt-6">
+            {/* Search Bar */}
+            <div className="mb-8">
+              <div className="relative max-w-md mx-auto">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search products by name or category..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-background/10 backdrop-blur border-white/20 text-white placeholder:text-white/50 focus-visible:ring-white/30"
+                />
+              </div>
+            </div>
             {loading && <p className="text-center text-xl">Loading products…</p>}
             {err && (
               <div className="border border-red-400/50 bg-red-900/30 text-white p-6 rounded-xl max-w-2xl mx-auto space-y-4">
