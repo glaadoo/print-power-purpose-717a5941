@@ -9,7 +9,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { invokeWithRetry } from "@/lib/api-retry";
+// Removed invokeWithRetry import - using direct API calls for speed
 
 type ProductOption = {
   id: number;
@@ -177,10 +177,9 @@ export function ProductConfigurator({
     }
 
     const fetchPrice = async () => {
-      // Generate variant key from option IDs (sorted for consistency)
       const variantKey = optionIds.sort((a, b) => a - b).join('-');
       
-      // Check cache first for instant updates
+      // Check cache first
       if (priceCache[variantKey]) {
         console.log('[ProductConfigurator] Using cached price for:', variantKey);
         onPriceChange(priceCache[variantKey]);
@@ -188,29 +187,31 @@ export function ProductConfigurator({
       }
       
       setFetchingPrice(true);
+      
+      // Set timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn('[ProductConfigurator] Price fetch timeout');
+        setFetchingPrice(false);
+      }, 5000);
+      
       try {
         console.log('[ProductConfigurator] Fetching price by key:', variantKey);
         
-        const { data, error } = await invokeWithRetry(
-          supabase,
-          'sinalite-price',
-          {
-            body: {
-              productId: vendorProductId,
-              storeCode: storeCode,
-              variantKey: variantKey,
-              method: 'PRICEBYKEY' // Use faster price-by-key lookup
-            },
+        // Direct API call without retry wrapper for speed
+        const { data, error } = await supabase.functions.invoke('sinalite-price', {
+          body: {
+            productId: vendorProductId,
+            storeCode: storeCode,
+            variantKey: variantKey,
+            method: 'PRICEBYKEY'
           },
-          {
-            maxAttempts: 2,
-            initialDelayMs: 300,
-            maxDelayMs: 1000,
-          }
-        );
+        });
+
+        clearTimeout(timeoutId);
 
         if (error) {
           console.error('[ProductConfigurator] Price fetch error:', error);
+          setFetchingPrice(false);
           return;
         }
 
@@ -219,12 +220,9 @@ export function ProductConfigurator({
           const priceCents = Math.round(priceFloat * 100);
           console.log('[ProductConfigurator] Price received:', { price: data[0].price, priceCents });
           
-          // Cache the price for instant future lookups
           setPriceCache(prev => ({ ...prev, [variantKey]: priceCents }));
           onPriceChange(priceCents);
           
-          // Note: pricebykey endpoint doesn't return packageInfo
-          // Clear it if it was previously set
           if (onPackageInfoChange) {
             onPackageInfoChange(null);
           }
@@ -232,6 +230,7 @@ export function ProductConfigurator({
           console.warn('[ProductConfigurator] No price in response:', data);
         }
       } catch (err) {
+        clearTimeout(timeoutId);
         console.error('[ProductConfigurator] Price fetch exception:', err);
       } finally {
         setFetchingPrice(false);

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
-import { withRetry } from "@/lib/api-retry";
+// Removed withRetry import - using direct API calls for speed
 
 interface LoaderProps {
   productId: string;
@@ -94,21 +94,16 @@ export default function ProductConfiguratorLoader({
       // Use GET method to retrieve product options
       console.log('[ProductConfiguratorLoader] Fetching options from API for product:', product.vendor_product_id);
       
-      const response = await withRetry(
-        async () => {
-          const { data, error } = await supabase.functions.invoke('sinalite-price', {
-            body: {
-              productId: product.vendor_product_id,
-              storeCode: 9,
-              method: 'GET' // GET returns [options[], combinations[], metadata[]]
-            }
-          });
-          
-          if (error) throw error;
-          return data;
-        },
-        { maxAttempts: 2, initialDelayMs: 500, maxDelayMs: 2000 }
-      );
+      // Direct API call without retry wrapper for speed
+      const { data: response, error: apiError } = await supabase.functions.invoke('sinalite-price', {
+        body: {
+          productId: product.vendor_product_id,
+          storeCode: 9,
+          method: 'GET'
+        }
+      });
+      
+      if (apiError) throw apiError;
       
       console.log('[ProductConfiguratorLoader] Received pricing response:', response);
       
@@ -171,9 +166,9 @@ export default function ProductConfiguratorLoader({
 
   return (
     <div className="w-full space-y-3">
-      {/* Always render configurator to get default price, but hide UI until clicked */}
+      {/* Always render configurator to ensure price loads immediately */}
       {!loading && !error && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 && (
-        <div style={{ display: visible ? 'block' : 'none' }}>
+        <div className={visible ? 'block' : 'hidden'}>
           <ProductConfigurator
             productId={productId}
             vendorProductId={productData.vendor_product_id || productId}
