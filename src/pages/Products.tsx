@@ -7,7 +7,7 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, ArrowLeft, Search } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
@@ -329,6 +329,22 @@ export default function Products() {
                     <SelectItem value="price-high">Price: High to Low</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                {/* Clear Filters Button */}
+                {(searchTerm || sortBy !== "name-asc") && (
+                  <Button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSortBy("name-asc");
+                    }}
+                    variant="outline"
+                    size="default"
+                    className="bg-background/10 border-white/20 text-white hover:bg-white/20 gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    Clear
+                  </Button>
+                )}
               </div>
             </div>
             {loading && <p className="text-center text-xl">Loading products…</p>}
