@@ -196,6 +196,7 @@ export default function Products() {
       )
       .slice(0, 8); // Limit to 8 suggestions
     
+    console.log('[Products] Search suggestions:', { searchTerm, matchCount: matches.length, matches: matches.map(m => m.name) });
     return matches;
   }, [searchTerm, rows]);
 
