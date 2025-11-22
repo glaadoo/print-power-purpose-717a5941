@@ -6,12 +6,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface OrderItem {
+  name: string;
+  quantity: number;
+  priceCents: number;
+}
+
 interface OrderConfirmationRequest {
   orderNumber: string;
   customerEmail: string;
   orderDetails: {
-    productName: string;
-    quantity: number;
+    items: OrderItem[];
+    subtotalCents: number;
     totalAmount: number;
     donationAmount: number;
     causeName?: string;
@@ -42,7 +48,15 @@ serve(async (req) => {
 
     const totalFormatted = (orderDetails.totalAmount / 100).toFixed(2);
     const donationFormatted = (orderDetails.donationAmount / 100).toFixed(2);
-    const productCost = ((orderDetails.totalAmount - orderDetails.donationAmount) / 100).toFixed(2);
+    const subtotalFormatted = (orderDetails.subtotalCents / 100).toFixed(2);
+    
+    // Generate items HTML
+    const itemsHtml = orderDetails.items.map(item => `
+      <div class="detail-row">
+        <span class="detail-label">${item.name} × ${item.quantity}</span>
+        <span class="detail-value">$${(item.priceCents / 100).toFixed(2)}</span>
+      </div>
+    `).join('');
 
     // Create email HTML
     const emailHtml = `
@@ -204,17 +218,10 @@ serve(async (req) => {
 
             <div class="order-details">
               <h3 style="margin-top: 0;">Order Details</h3>
-              <div class="detail-row">
-                <span class="detail-label">Product</span>
-                <span class="detail-value">${orderDetails.productName}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Quantity</span>
-                <span class="detail-value">${orderDetails.quantity}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Product Cost</span>
-                <span class="detail-value">$${productCost}</span>
+              ${itemsHtml}
+              <div class="detail-row" style="margin-top: 10px;">
+                <span class="detail-label">Subtotal</span>
+                <span class="detail-value">$${subtotalFormatted}</span>
               </div>
               ${orderDetails.donationAmount > 0 ? `
               <div class="detail-row">
