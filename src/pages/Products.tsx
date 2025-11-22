@@ -283,25 +283,23 @@ export default function Products() {
       }
       
       if (sortBy === "price-low" || sortBy === "price-high") {
-        // Use defaultPrices first, fallback to base_cost_cents
-        const priceA = defaultPrices[a.id] ?? a.base_cost_cents ?? 0;
-        const priceB = defaultPrices[b.id] ?? b.base_cost_cents ?? 0;
-        
-        // Log for debugging
-        if (sortBy === "price-low" && filtered.length > 0) {
-          console.log('[Products] Price sort:', { 
-            productA: a.name, 
-            priceA: `$${(priceA / 100).toFixed(2)}`,
-            productB: b.name, 
-            priceB: `$${(priceB / 100).toFixed(2)}`
-          });
-        }
+        // Use defaultPrices for sorting
+        const priceA = defaultPrices[a.id] || 0;
+        const priceB = defaultPrices[b.id] || 0;
         
         return sortBy === "price-low" ? priceA - priceB : priceB - priceA;
       }
       
       return 0;
     });
+    
+    // Log sorted results for debugging price sort
+    if (sortBy === "price-low" || sortBy === "price-high") {
+      console.log('[Products] Sorted by price:', sorted.slice(0, 10).map(p => ({
+        name: p.name,
+        price: `$${((defaultPrices[p.id] || 0) / 100).toFixed(2)}`
+      })));
+    }
     
     return sorted;
   }, [rows, searchTerm, sortBy, defaultPrices]);
