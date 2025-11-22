@@ -38,6 +38,7 @@ type ProductConfiguratorProps = {
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
   onPackageInfoChange?: (info: PackageInfo | null) => void;
+  initialConfig?: Record<string, string>;
 };
 
 export function ProductConfigurator({
@@ -48,6 +49,7 @@ export function ProductConfigurator({
   onPriceChange,
   onConfigChange,
   onPackageInfoChange,
+  initialConfig,
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
@@ -121,7 +123,7 @@ export function ProductConfigurator({
     }));
   }, [pricingData]);
 
-  // Initialize with first option from each group
+  // Initialize with first option from each group or from initialConfig
   useEffect(() => {
     if (optionGroups.length === 0) {
       console.log('[ProductConfigurator] No option groups available');
@@ -131,13 +133,25 @@ export function ProductConfigurator({
     const initial: Record<string, number> = {};
     optionGroups.forEach((group) => {
       if (group.options.length > 0) {
-        initial[group.group] = group.options[0].id;
+        // Try to find matching option from initialConfig
+        if (initialConfig && initialConfig[group.group]) {
+          const matchingOption = group.options.find(
+            opt => opt.name === initialConfig[group.group]
+          );
+          if (matchingOption) {
+            initial[group.group] = matchingOption.id;
+          } else {
+            initial[group.group] = group.options[0].id;
+          }
+        } else {
+          initial[group.group] = group.options[0].id;
+        }
       }
     });
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
-  }, [optionGroups]);
+  }, [optionGroups, initialConfig]);
 
   // Fetch price whenever selections change
   useEffect(() => {
