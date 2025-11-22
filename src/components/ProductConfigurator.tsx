@@ -53,6 +53,7 @@ export function ProductConfigurator({
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
+  const [priceCache, setPriceCache] = useState<Record<string, number>>({});
 
   console.log('[ProductConfigurator] Mounted with:', {
     productId,
@@ -176,10 +177,18 @@ export function ProductConfigurator({
     }
 
     const fetchPrice = async () => {
+      // Generate variant key from option IDs (sorted for consistency)
+      const variantKey = optionIds.sort((a, b) => a - b).join('-');
+      
+      // Check cache first for instant updates
+      if (priceCache[variantKey]) {
+        console.log('[ProductConfigurator] Using cached price for:', variantKey);
+        onPriceChange(priceCache[variantKey]);
+        return;
+      }
+      
       setFetchingPrice(true);
       try {
-        // Generate variant key from option IDs (sorted for consistency)
-        const variantKey = optionIds.sort((a, b) => a - b).join('-');
         console.log('[ProductConfigurator] Fetching price by key:', variantKey);
         
         const { data, error } = await invokeWithRetry(
@@ -195,7 +204,8 @@ export function ProductConfigurator({
           },
           {
             maxAttempts: 2,
-            initialDelayMs: 500,
+            initialDelayMs: 300,
+            maxDelayMs: 1000,
           }
         );
 
@@ -208,6 +218,9 @@ export function ProductConfigurator({
           const priceFloat = parseFloat(data[0].price);
           const priceCents = Math.round(priceFloat * 100);
           console.log('[ProductConfigurator] Price received:', { price: data[0].price, priceCents });
+          
+          // Cache the price for instant future lookups
+          setPriceCache(prev => ({ ...prev, [variantKey]: priceCents }));
           onPriceChange(priceCents);
           
           // Note: pricebykey endpoint doesn't return packageInfo
@@ -273,9 +286,14 @@ export function ProductConfigurator({
 
   return (
     <div className="space-y-3 w-full">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">Configure Options:</h3>
-        {fetchingPrice && <Loader2 className="h-4 w-4 animate-spin text-white/60" />}
+        {fetchingPrice && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span>Updating price...</span>
+          </div>
+        )}
       </div>
       
       {optionGroups.map((group) => (
