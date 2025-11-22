@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Download, RefreshCw, Edit, Save, X, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, computeFinalPrice } from "@/lib/pricing-utils";
-import { withRetry } from "@/lib/api-retry";
+import { withRetry, invokeWithRetry } from "@/lib/api-retry";
 import {
   Dialog,
   DialogContent,
@@ -148,9 +148,25 @@ export default function AdminProducts() {
     
     try {
       const body = storeCode ? { storeCode } : undefined;
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body
-      });
+      
+      // Show a toast that this might take a while
+      toast.info(`Syncing ${vendor} products... This may take up to 2 minutes.`);
+      
+      // Use retry logic with longer timeouts for sync operations
+      const { data, error } = await invokeWithRetry(
+        supabase,
+        functionName,
+        { body },
+        {
+          maxAttempts: 2,
+          initialDelayMs: 2000,
+          shouldRetry: (error: any) => {
+            // Retry on timeout or network errors
+            const msg = error?.message?.toLowerCase() || '';
+            return msg.includes('timeout') || msg.includes('fetch') || msg.includes('network');
+          }
+        }
+      );
       
       if (error) throw error;
       
@@ -165,7 +181,10 @@ export default function AdminProducts() {
       }
     } catch (error: any) {
       console.error(`Error syncing ${vendor}:`, error);
-      toast.error(`Failed to sync ${vendor}: ${error.message}`);
+      const errorMsg = error?.message?.includes('timeout') || error?.message?.includes('fetch')
+        ? 'Sync is taking longer than expected. The sync may still be running in the background. Please wait a minute and refresh the product list.'
+        : error.message;
+      toast.error(`Failed to sync ${vendor}: ${errorMsg}`);
       setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
     } finally {
       setSyncing(null);
