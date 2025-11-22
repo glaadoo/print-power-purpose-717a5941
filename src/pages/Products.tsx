@@ -298,15 +298,23 @@ export default function Products() {
   // Group products by category
   const groupedProducts = useMemo(() => {
     const groups: Record<string, ProductRow[]> = {};
-    filteredAndSortedProducts.forEach(product => {
-      const category = product.category || "Uncategorized";
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(product);
-    });
+    
+    // If sorting by price, don't group by category - show all products in one list
+    if (sortBy === "price-low" || sortBy === "price-high") {
+      groups["All Products"] = filteredAndSortedProducts;
+    } else {
+      // Group by category for name sorting
+      filteredAndSortedProducts.forEach(product => {
+        const category = product.category || "Uncategorized";
+        if (!groups[category]) {
+          groups[category] = [];
+        }
+        groups[category].push(product);
+      });
+    }
+    
     return groups;
-  }, [filteredAndSortedProducts]);
+  }, [filteredAndSortedProducts, sortBy]);
 
 
   return (
