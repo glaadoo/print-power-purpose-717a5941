@@ -497,13 +497,7 @@ export default function Products() {
                         return (
                           <ProductCard
                             key={product.id}
-                            product={{
-                              ...product,
-                              pricing_data: {
-                                ...product.pricing_data,
-                                userConfig: productConfigs[product.id]
-                              }
-                            }}
+                            product={product}
                             displayPriceCents={displayPriceCents}
                             quantity={qty}
                             isInCart={isInCart}

@@ -99,7 +99,6 @@ export default function ProductCard({
               productId={product.id}
               onPriceChange={(price) => onPriceChange(product.id, price)}
               onConfigChange={(config) => onConfigChange(product.id, config)}
-              initialConfig={product.pricing_data?.userConfig}
             />
           </div>
         )}
