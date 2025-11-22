@@ -117,8 +117,8 @@ export default function Products() {
 
   const updateQuantity = (productId: string, delta: number) => {
     setQuantities(prev => {
-      const current = prev[productId] || 0;
-      const newQty = Math.max(0, current + delta);
+      const current = prev[productId] ?? 1;
+      const newQty = Math.max(1, current + delta);
       return { ...prev, [productId]: newQty };
     });
   };
@@ -489,7 +489,7 @@ export default function Products() {
                         // Show configured price if available, otherwise show default price instantly
                         const displayPriceCents = configuredPrices[product.id] || defaultPrices[product.id] || 0;
                         
-                        const qty = quantities[product.id] || 0;
+                        const qty = quantities[product.id] ?? 1;
                         const isConfigured = !!configuredPrices[product.id];
                         const canAddToCart = isConfigured && qty > 0;
                         const isInCart = items.some(item => item.id === product.id);
