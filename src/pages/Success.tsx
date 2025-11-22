@@ -182,23 +182,28 @@ export default function Success() {
         )}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Button
             onClick={() => navigate("/")}
-            variant="default"
-            className="flex-1"
+            variant="outline"
             size="lg"
           >
             <Home className="w-4 h-4 mr-2" />
-            Back to Home
+            Home
+          </Button>
+          <Button
+            onClick={() => navigate("/orders")}
+            variant="default"
+            size="lg"
+          >
+            View Orders
           </Button>
           <Button
             onClick={() => navigate("/products")}
             variant="outline"
-            className="flex-1"
             size="lg"
           >
-            Continue Shopping
+            Shop More
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>

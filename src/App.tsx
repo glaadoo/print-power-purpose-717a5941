@@ -110,6 +110,7 @@ const NonprofitProfile = lazyPage("NonprofitProfile", () => import("./pages/Nonp
 const SubmitNonprofit = lazyPage("SubmitNonprofit", () => import("./pages/SubmitNonprofit"));
 const WhoWeServeNonprofits = lazyPage("WhoWeServeNonprofits", () => import("./pages/WhoWeServeNonprofits"));
 const WhoWeServeSchools = lazyPage("WhoWeServeSchools", () => import("./pages/WhoWeServeSchools"));
+const OrderHistory = lazyPage("OrderHistory", () => import("./pages/OrderHistory"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -398,6 +399,16 @@ export default function App() {
               <RouteBoundary name="Cancel">
                 <ProtectedRoute>
                   <Cancel />
+                </ProtectedRoute>
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/orders"
+            element={
+              <RouteBoundary name="OrderHistory">
+                <ProtectedRoute>
+                  <OrderHistory />
                 </ProtectedRoute>
               </RouteBoundary>
             }
