@@ -190,9 +190,9 @@ export function ProductConfigurator({
       
       // Set timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
-        console.warn('[ProductConfigurator] Price fetch timeout');
+        console.warn('[ProductConfigurator] Price fetch timeout for variant:', variantKey);
         setFetchingPrice(false);
-      }, 5000);
+      }, 10000); // Increased to 10s
       
       try {
         console.log('[ProductConfigurator] Fetching price by key:', variantKey);
