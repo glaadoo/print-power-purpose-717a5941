@@ -139,26 +139,11 @@ export default function Products() {
 
     const qty = quantities[product.id] || 1;
     
-    // Use configured price if available, otherwise calculate from base + markup
-    let unitCents: number;
-    if (configuredPrices[product.id]) {
-      unitCents = configuredPrices[product.id];
-    } else {
-      // Calculate price with markup for non-configured products
-      if (product.vendor === "sinalite" && pricingSettings) {
-        const pricing = computeGlobalPricing({
-          vendor: "sinalite",
-          base_cost_cents: product.base_cost_cents || 0,
-          settings: pricingSettings
-        });
-        unitCents = pricing.final_price_per_unit_cents;
-      } else {
-        unitCents = product.base_cost_cents || 100;
-      }
-    }
+    // MUST use configured price from API for Sinalite products
+    const unitCents = configuredPrices[product.id];
 
     if (!unitCents || unitCents <= 0) {
-      toast.error("Price unavailable. Please try again.");
+      toast.error("Please configure product to see pricing");
       return;
     }
 
@@ -247,13 +232,20 @@ export default function Products() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Calculate default prices for all products instantly
+  // Calculate display prices: use configured price if available, otherwise 0 for Sinalite products requiring configuration
   const defaultPrices = useMemo(() => {
     const prices: Record<string, number> = {};
     rows.forEach(product => {
-      if (product.price_override_cents) {
+      // Check if product has configured price
+      if (configuredPrices[product.id]) {
+        prices[product.id] = configuredPrices[product.id];
+      } else if (product.price_override_cents) {
         prices[product.id] = product.price_override_cents;
+      } else if (product.vendor === "sinalite" && product.pricing_data) {
+        // Sinalite products with pricing_data require configuration - don't show price until configured
+        prices[product.id] = 0;
       } else if (product.vendor === "sinalite" && pricingSettings) {
+        // Sinalite products without pricing_data can use base cost
         const pricing = computeGlobalPricing({
           vendor: "sinalite",
           base_cost_cents: product.base_cost_cents || 0,
@@ -265,7 +257,7 @@ export default function Products() {
       }
     });
     return prices;
-  }, [rows, pricingSettings]);
+  }, [rows, pricingSettings, configuredPrices]);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
