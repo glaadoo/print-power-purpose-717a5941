@@ -25,7 +25,8 @@ export default function ProductConfiguratorLoader({
   const [isMounted, setIsMounted] = useState(false);
 
   const fetchPricingOptions = async () => {
-    if (pricingOptions || loading) return;
+    // Only prevent re-fetch if options already loaded, not if just loading
+    if (pricingOptions) return;
     
     // Check sessionStorage cache first
     const cacheKey = `product-options-${productId}`;
