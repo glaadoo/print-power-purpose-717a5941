@@ -22,6 +22,7 @@ export default function ProductConfiguratorLoader({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const fetchPricingOptions = async () => {
     if (pricingOptions || loading) return;
@@ -259,8 +260,9 @@ export default function ProductConfiguratorLoader({
     }
   };
 
-  // Fetch pricing options on mount
+  // Fetch pricing options on mount and always mount configurator
   useEffect(() => {
+    setIsMounted(true);
     fetchPricingOptions();
   }, [productId]);
 
@@ -270,8 +272,8 @@ export default function ProductConfiguratorLoader({
 
   return (
     <div className="w-full space-y-3">
-      {/* Always render configurator to ensure price loads immediately */}
-      {!loading && !error && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 && (
+      {/* Always mount configurator immediately for instant price loading */}
+      {isMounted && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 && productData && (
         <div className={visible ? 'block' : 'hidden'}>
           <ProductConfigurator
             productId={productId}
@@ -290,8 +292,9 @@ export default function ProductConfiguratorLoader({
         variant="outline"
         className="w-full bg-white/10 text-white border-white/20 hover:bg-white/20"
         onClick={handleToggle}
+        disabled={loading}
       >
-        {visible ? "Hide Options" : "Customize Product"}
+        {loading ? "Loading..." : visible ? "Hide Options" : "Customize Product"}
       </Button>
 
       {visible && (
