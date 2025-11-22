@@ -69,10 +69,13 @@ export default function ProductDetail() {
   const isConfigured = configuredPriceCents !== null;
   const canAddToCart = !requiresConfiguration || isConfigured;
 
-  // Calculate price: use configured price if available, otherwise base + markup
+  // For Sinalite products with pricing_data, price ONLY comes from API after configuration
   let unitCents: number;
   if (configuredPriceCents !== null) {
     unitCents = configuredPriceCents;
+  } else if (product && product.vendor === "sinalite" && product.pricing_data) {
+    // Sinalite products require configuration - no default price
+    unitCents = 0;
   } else if (product) {
     // Apply product-level markup if set
     const markup_fixed = product.markup_fixed_cents ?? 0;
@@ -188,12 +191,18 @@ export default function ProductDetail() {
                     )}
                   </div>
 
-                  <h1 className="text-3xl font-serif font-semibold text-center mb-4">
+                   <h1 className="text-3xl font-serif font-semibold text-center mb-4">
                     {product.name}
                   </h1>
-                  <p className="text-center text-xl font-bold mb-2">
-                    Price: ${unitPrice.toFixed(2)}
-                  </p>
+                  {unitPrice > 0 ? (
+                    <p className="text-center text-xl font-bold mb-2">
+                      Price: ${unitPrice.toFixed(2)}
+                    </p>
+                  ) : (
+                    <p className="text-center text-sm text-yellow-300 mb-2">
+                      Configure product to see pricing
+                    </p>
+                  )}
                   {product.description && (
                     <p className="text-center opacity-90 mb-6">{product.description}</p>
                   )}
