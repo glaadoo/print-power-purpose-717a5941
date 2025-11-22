@@ -388,20 +388,20 @@ export default function Products() {
                   
                   {/* Suggestions Dropdown */}
                   {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-card backdrop-blur-lg border border-border rounded-lg shadow-xl overflow-hidden z-50">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 backdrop-blur-lg border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-50 max-h-96 overflow-y-auto">
                       {suggestions.map((product, index) => (
                         <button
                           key={product.id}
                           onClick={() => handleSuggestionClick(product.name)}
                           className={`w-full px-4 py-3 text-left transition-colors ${
                             index === suggestionIndex
-                              ? 'bg-accent text-accent-foreground'
-                              : 'text-foreground hover:bg-accent/50'
+                              ? 'bg-blue-50 dark:bg-blue-900/30 text-gray-900 dark:text-white'
+                              : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
                           }`}
                         >
                           <div className="font-medium text-sm">{product.name}</div>
                           {product.category && (
-                            <div className="text-xs text-muted-foreground mt-1">{product.category}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{product.category}</div>
                           )}
                         </button>
                       ))}
