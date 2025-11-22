@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { ProductConfigurator } from "@/components/ProductConfigurator";
+import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 
 type ProductRow = {
   id: string;
@@ -209,15 +209,14 @@ export default function ProductDetail() {
 
                   <div className="flex flex-col gap-6 items-center">
                     {/* Product Configuration */}
-                    {product.pricing_data && (
-                      <ProductConfigurator
+                    {(product.pricing_data || product.vendor === 'sinalite') && (
+                      <ProductConfiguratorLoader
                         productId={product.id}
-                        vendorProductId={product.vendor_product_id || product.id}
-                        storeCode={9}
-                        pricingData={product.pricing_data}
                         onPriceChange={setConfiguredPriceCents}
                         onConfigChange={setProductConfig}
-                        onPackageInfoChange={setPackageInfo}
+                        onQuantityOptionsChange={(opts) => {
+                          // Optional: handle quantity options
+                        }}
                       />
                     )}
 
