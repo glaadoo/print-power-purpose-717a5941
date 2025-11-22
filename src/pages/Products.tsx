@@ -6,6 +6,7 @@ import VideoBackground from "@/components/VideoBackground";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, ArrowLeft, Search } from "lucide-react";
 import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
@@ -35,6 +36,7 @@ export default function Products() {
   const [productConfigs, setProductConfigs] = useState<Record<string, Record<string, string>>>({});
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"name-asc" | "price-low" | "price-high">("name-asc");
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -179,31 +181,6 @@ export default function Products() {
     setProductConfigs(prev => ({ ...prev, [productId]: config }));
   };
 
-  // Filter products based on search term
-  const filteredProducts = useMemo(() => {
-    const searchLower = searchTerm.toLowerCase().trim();
-    if (!searchLower) return rows;
-    
-    return rows.filter(product => 
-      product.name.toLowerCase().includes(searchLower) ||
-      product.category?.toLowerCase().includes(searchLower)
-    );
-  }, [rows, searchTerm]);
-
-  // Group products by category (exclude Canada products)
-  const groupedProducts = useMemo(() => {
-    const groups: Record<string, ProductRow[]> = {};
-    filteredProducts
-      .filter(product => !product.name.toLowerCase().includes('canada'))
-      .forEach(product => {
-        const category = product.category || "Uncategorized";
-        if (!groups[category]) {
-          groups[category] = [];
-        }
-        groups[category].push(product);
-      });
-    return groups;
-  }, [filteredProducts]);
 
   // Calculate default prices for all products instantly
   const defaultPrices = useMemo(() => {
@@ -224,6 +201,54 @@ export default function Products() {
     });
     return prices;
   }, [rows, pricingSettings]);
+
+  // Filter and sort products
+  const filteredAndSortedProducts = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase().trim();
+    
+    // Filter by search term
+    let filtered = searchLower 
+      ? rows.filter(product => 
+          product.name.toLowerCase().includes(searchLower) ||
+          product.category?.toLowerCase().includes(searchLower)
+        )
+      : rows;
+    
+    // Exclude Canada products
+    filtered = filtered.filter(product => !product.name.toLowerCase().includes('canada'));
+    
+    // Sort products
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortBy === "name-asc") {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === "price-low") {
+        const priceA = defaultPrices[a.id] || 0;
+        const priceB = defaultPrices[b.id] || 0;
+        return priceA - priceB;
+      } else if (sortBy === "price-high") {
+        const priceA = defaultPrices[a.id] || 0;
+        const priceB = defaultPrices[b.id] || 0;
+        return priceB - priceA;
+      }
+      return 0;
+    });
+    
+    return sorted;
+  }, [rows, searchTerm, sortBy, defaultPrices]);
+
+  // Group products by category
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, ProductRow[]> = {};
+    filteredAndSortedProducts.forEach(product => {
+      const category = product.category || "Uncategorized";
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(product);
+    });
+    return groups;
+  }, [filteredAndSortedProducts]);
+
 
   return (
     <div className="fixed inset-0 text-white">
@@ -278,17 +303,32 @@ export default function Products() {
           />
 
           <div className="relative w-full max-w-7xl mx-auto px-6 pt-6">
-            {/* Search Bar */}
+            {/* Search and Sort Controls */}
             <div className="mb-8">
-              <div className="relative max-w-md mx-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search products by name or category..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-background/10 backdrop-blur border-white/20 text-white placeholder:text-white/50 focus-visible:ring-white/30"
-                />
+              <div className="flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto">
+                {/* Search */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search products by name or category..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-background/10 backdrop-blur border-white/20 text-white placeholder:text-white/50 focus-visible:ring-white/30"
+                  />
+                </div>
+                
+                {/* Sort */}
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <SelectTrigger className="w-full sm:w-[200px] bg-background/10 backdrop-blur border-white/20 text-white focus:ring-white/30">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             {loading && <p className="text-center text-xl">Loading products…</p>}
