@@ -38,6 +38,7 @@ type ProductConfiguratorProps = {
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
   onPackageInfoChange?: (info: PackageInfo | null) => void;
+  onQuantityOptionsChange?: (options: string[]) => void;
 };
 
 export function ProductConfigurator({
@@ -48,6 +49,7 @@ export function ProductConfigurator({
   onPriceChange,
   onConfigChange,
   onPackageInfoChange,
+  onQuantityOptionsChange,
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
@@ -137,7 +139,20 @@ export function ProductConfigurator({
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
-  }, [optionGroups]);
+
+    // Extract and pass quantity options to parent
+    if (onQuantityOptionsChange) {
+      const qtyGroup = optionGroups.find(g => 
+        g.group.toLowerCase().includes('qty') || 
+        g.group.toLowerCase().includes('quantity')
+      );
+      if (qtyGroup) {
+        const qtyOptions = qtyGroup.options.map(opt => opt.name);
+        console.log('[ProductConfigurator] Quantity options:', qtyOptions);
+        onQuantityOptionsChange(qtyOptions);
+      }
+    }
+  }, [optionGroups, onQuantityOptionsChange]);
 
   // Fetch price whenever selections change
   useEffect(() => {

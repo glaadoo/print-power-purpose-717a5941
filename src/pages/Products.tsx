@@ -34,6 +34,7 @@ export default function Products() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [configuredPrices, setConfiguredPrices] = useState<Record<string, number>>({});
   const [productConfigs, setProductConfigs] = useState<Record<string, Record<string, string>>>({});
+  const [quantityOptions, setQuantityOptions] = useState<Record<string, string[]>>({});
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name-asc" | "price-low" | "price-high">("name-asc");
@@ -182,6 +183,11 @@ export default function Products() {
 
   const handleConfigChange = (productId: string, config: Record<string, string>) => {
     setProductConfigs(prev => ({ ...prev, [productId]: config }));
+  };
+
+  const handleQuantityOptionsChange = (productId: string, options: string[]) => {
+    console.log('[Products] Quantity options received for product:', productId, options);
+    setQuantityOptions(prev => ({ ...prev, [productId]: options }));
   };
 
   // Generate suggestions based on search term
@@ -500,6 +506,7 @@ export default function Products() {
                             product={product}
                             displayPriceCents={displayPriceCents}
                             quantity={qty}
+                            quantityOptions={quantityOptions[product.id] || []}
                             isInCart={isInCart}
                             requiresConfiguration={requiresConfiguration}
                             isConfigured={isConfigured}
@@ -508,6 +515,7 @@ export default function Products() {
                             onAddToCart={handleAddToCart}
                             onPriceChange={handlePriceChange}
                             onConfigChange={handleConfigChange}
+                            onQuantityOptionsChange={handleQuantityOptionsChange}
                           />
                         );
                       })}
