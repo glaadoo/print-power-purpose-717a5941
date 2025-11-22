@@ -25,6 +25,25 @@ export default function ProductConfiguratorLoader({
 
   const fetchPricingOptions = async () => {
     if (pricingOptions || loading) return;
+    
+    // Check sessionStorage cache first
+    const cacheKey = `product-options-${productId}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const { data, timestamp } = JSON.parse(cached);
+        // Cache valid for 1 hour
+        if (Date.now() - timestamp < 60 * 60 * 1000) {
+          console.log('[ProductConfiguratorLoader] Using cached options');
+          setPricingOptions(data.pricingOptions);
+          setProductData(data.product);
+          return;
+        }
+      } catch (e) {
+        sessionStorage.removeItem(cacheKey);
+      }
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -53,8 +72,19 @@ export default function ProductConfiguratorLoader({
           
           if (Array.isArray(optionsData) && optionsData.length > 0) {
             // Format as expected by ProductConfigurator: [options, {}, {}]
-            setPricingOptions([optionsData, {}, {}]);
+            const options = [optionsData, {}, {}];
+            setPricingOptions(options);
             setProductData(product);
+            
+            // Cache the result
+            try {
+              sessionStorage.setItem(cacheKey, JSON.stringify({
+                data: { pricingOptions: options, product },
+                timestamp: Date.now()
+              }));
+            } catch (e) {
+              console.warn('[ProductConfiguratorLoader] Failed to cache options:', e);
+            }
             return;
           }
         }
@@ -77,7 +107,7 @@ export default function ProductConfiguratorLoader({
           if (error) throw error;
           return data;
         },
-        { maxAttempts: 2, initialDelayMs: 1000 }
+        { maxAttempts: 2, initialDelayMs: 500, maxDelayMs: 2000 }
       );
       
       console.log('[ProductConfiguratorLoader] Received pricing response:', response);
@@ -112,6 +142,16 @@ export default function ProductConfiguratorLoader({
       // Pass the full response (not just options) to ProductConfigurator
       setPricingOptions(response);
       setProductData(product);
+      
+      // Cache the result
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          data: { pricingOptions: response, product },
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.warn('[ProductConfiguratorLoader] Failed to cache options:', e);
+      }
     } catch (e: any) {
       console.error('[ProductConfiguratorLoader] Error fetching pricing options:', e);
       setError(e.message || "Failed to load configuration options");
