@@ -22,6 +22,7 @@ type ProductRow = {
   category?: string | null;
   pricing_data?: any;
   vendor?: string | null;
+  vendor_product_id?: string | null;
 };
 
 
@@ -115,6 +116,146 @@ export default function Products() {
     document.title = "Products - Print Power Purpose";
     fetchProducts();
   }, []);
+
+  // Preload default prices for all Sinalite products with pricing_data
+  useEffect(() => {
+    if (!rows || rows.length === 0) return;
+
+    const preloadPrices = async () => {
+      console.log('[Products] Preloading prices for Sinalite products...');
+      
+      const sinaliteProducts = rows.filter(
+        p => p.vendor === 'sinalite' && p.pricing_data && Array.isArray(p.pricing_data) && p.pricing_data.length > 0
+      );
+
+      if (sinaliteProducts.length === 0) {
+        console.log('[Products] No Sinalite products to preload');
+        return;
+      }
+
+      console.log('[Products] Found', sinaliteProducts.length, 'Sinalite products to preload');
+
+      // Fetch prices in parallel
+      const pricePromises = sinaliteProducts.map(async (product) => {
+        try {
+          const pricingData = product.pricing_data as any;
+          const optionsArray = pricingData[0] || [];
+          
+          if (!Array.isArray(optionsArray) || optionsArray.length === 0) {
+            return null;
+          }
+
+          // Group options by group field
+          const groupMap: Record<string, any[]> = {};
+          optionsArray.forEach((option: any) => {
+            if (!option.group) return;
+            if (!groupMap[option.group]) {
+              groupMap[option.group] = [];
+            }
+            groupMap[option.group].push(option);
+          });
+
+          // Get first option ID from each group (using same sorting as configurator)
+          const defaultOptionIds = Object.values(groupMap)
+            .map(opts => {
+              const sorted = opts.sort((a, b) => {
+                const dimensionRegex = /^(\d+(?:\.\d+)?)\s*[×x]\s*(\d+(?:\.\d+)?)$/;
+                const aMatch = a.name.match(dimensionRegex);
+                const bMatch = b.name.match(dimensionRegex);
+                
+                if (aMatch && bMatch) {
+                  const aWidth = parseFloat(aMatch[1]);
+                  const aHeight = parseFloat(aMatch[2]);
+                  const bWidth = parseFloat(bMatch[1]);
+                  const bHeight = parseFloat(bMatch[2]);
+                  
+                  if (aWidth !== bWidth) return aWidth - bWidth;
+                  return aHeight - bHeight;
+                }
+                
+                const aNum = parseInt(a.name);
+                const bNum = parseInt(b.name);
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                  return aNum - bNum;
+                }
+                
+                return a.name.localeCompare(b.name);
+              });
+              return sorted[0]?.id;
+            })
+            .filter(Boolean);
+
+          if (defaultOptionIds.length === 0) return null;
+
+          const variantKey = defaultOptionIds.sort((a, b) => a - b).join('-');
+          
+          // Check cache first
+          const cacheKey = `price-${product.vendor_product_id}-${variantKey}`;
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            try {
+              const { price, timestamp } = JSON.parse(cached);
+              if (Date.now() - timestamp < 60 * 60 * 1000) { // 1 hour cache
+                console.log('[Products] Using cached price for', product.name);
+                return { productId: product.id, price };
+              }
+            } catch (e) {
+              sessionStorage.removeItem(cacheKey);
+            }
+          }
+
+          // Fetch price from API
+          console.log('[Products] Fetching price for', product.name, 'variant:', variantKey);
+          const { data: priceData, error: priceError } = await supabase.functions.invoke('sinalite-price', {
+            body: {
+              productId: product.vendor_product_id,
+              storeCode: 9,
+              variantKey: variantKey,
+              method: 'PRICEBYKEY'
+            },
+          });
+
+          if (priceError || !priceData || !Array.isArray(priceData) || priceData.length === 0 || !priceData[0].price) {
+            console.warn('[Products] No price returned for', product.name);
+            return null;
+          }
+
+          const priceFloat = parseFloat(priceData[0].price);
+          const priceCents = Math.round(priceFloat * 100);
+
+          // Cache the result
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            price: priceCents,
+            timestamp: Date.now()
+          }));
+
+          console.log('[Products] Preloaded price for', product.name, ':', priceCents);
+          return { productId: product.id, price: priceCents };
+        } catch (err) {
+          console.error('[Products] Failed to preload price for', product.name, err);
+          return null;
+        }
+      });
+
+      const results = await Promise.all(pricePromises);
+      
+      // Update configured prices with preloaded values
+      const newPrices: Record<string, number> = {};
+      results.forEach(result => {
+        if (result && result.price) {
+          newPrices[result.productId] = result.price;
+        }
+      });
+
+      if (Object.keys(newPrices).length > 0) {
+        console.log('[Products] Successfully preloaded', Object.keys(newPrices).length, 'prices');
+        setConfiguredPrices(prev => ({ ...prev, ...newPrices }));
+      }
+    };
+
+    preloadPrices();
+  }, [rows]);
 
   const updateQuantity = (productId: string, delta: number) => {
     setQuantities(prev => {
