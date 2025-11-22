@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
@@ -37,6 +37,9 @@ export default function Products() {
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name-asc" | "price-low" | "price-high">("name-asc");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -181,6 +184,61 @@ export default function Products() {
     setProductConfigs(prev => ({ ...prev, [productId]: config }));
   };
 
+  // Generate suggestions based on search term
+  const suggestions = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    
+    const searchLower = searchTerm.toLowerCase();
+    const matches = rows
+      .filter(product => 
+        product.name.toLowerCase().includes(searchLower) &&
+        !product.name.toLowerCase().includes('canada')
+      )
+      .slice(0, 8); // Limit to 8 suggestions
+    
+    return matches;
+  }, [searchTerm, rows]);
+
+  // Handle suggestion selection
+  const handleSuggestionClick = (productName: string) => {
+    setSearchTerm(productName);
+    setShowSuggestions(false);
+    setSuggestionIndex(-1);
+  };
+
+  // Handle keyboard navigation in suggestions
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSuggestionIndex(prev => 
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Enter' && suggestionIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[suggestionIndex].name);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setSuggestionIndex(-1);
+    }
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+        setSuggestionIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Calculate default prices for all products instantly
   const defaultPrices = useMemo(() => {
@@ -306,16 +364,48 @@ export default function Products() {
             {/* Search and Sort Controls */}
             <div className="mb-8">
               <div className="flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto">
-                {/* Search */}
-                <div className="relative flex-1">
+                {/* Search with Suggestions */}
+                <div className="relative flex-1" ref={searchRef}>
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none z-10" />
                   <Input
                     type="text"
                     placeholder="Search products by name or category..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowSuggestions(true);
+                      setSuggestionIndex(-1);
+                    }}
+                    onFocus={() => {
+                      if (searchTerm && suggestions.length > 0) {
+                        setShowSuggestions(true);
+                      }
+                    }}
+                    onKeyDown={handleSearchKeyDown}
                     className="pl-10 bg-background/10 backdrop-blur border-white/20 text-white placeholder:text-white/50 focus-visible:ring-white/30"
                   />
+                  
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-background/95 backdrop-blur-lg border border-white/20 rounded-lg shadow-lg overflow-hidden z-50">
+                      {suggestions.map((product, index) => (
+                        <button
+                          key={product.id}
+                          onClick={() => handleSuggestionClick(product.name)}
+                          className={`w-full px-4 py-3 text-left transition-colors ${
+                            index === suggestionIndex
+                              ? 'bg-white/20 text-white'
+                              : 'text-white/90 hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="font-medium">{product.name}</div>
+                          {product.category && (
+                            <div className="text-xs text-white/60 mt-1">{product.category}</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Sort with Filter Icon */}
