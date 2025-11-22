@@ -8,14 +8,12 @@ interface LoaderProps {
   productId: string;
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
-  initialConfig?: Record<string, string>;
 }
 
 export default function ProductConfiguratorLoader({
   productId,
   onPriceChange,
   onConfigChange,
-  initialConfig,
 }: LoaderProps) {
   const [productData, setProductData] = useState<any | null>(null);
   const [pricingOptions, setPricingOptions] = useState<any[] | null>(null);
@@ -141,7 +139,6 @@ export default function ProductConfiguratorLoader({
             pricingData={pricingOptions}
             onPriceChange={onPriceChange}
             onConfigChange={onConfigChange}
-            initialConfig={initialConfig}
           />
         </div>
       )}
