@@ -8,6 +8,18 @@ interface PrefetchResult {
 
 const PREFETCH_BATCH_SIZE = 5;
 const PREFETCH_BATCH_DELAY = 1000; // 1 second between batches
+const MAX_CONSECUTIVE_FAILURES = 3;
+const CIRCUIT_BREAKER_RESET_MS = 60000; // 1 minute
+
+// Circuit breaker state
+let consecutiveFailures = 0;
+let circuitBreakerOpen = false;
+
+function resetCircuitBreaker() {
+  console.log('[PricePrefetch] Circuit breaker reset');
+  consecutiveFailures = 0;
+  circuitBreakerOpen = false;
+}
 
 /**
  * Background price prefetching service
@@ -37,24 +49,28 @@ export async function prefetchAllProductPrices(): Promise<PrefetchResult> {
 
     // Process products in batches
     for (let i = 0; i < products.length; i += PREFETCH_BATCH_SIZE) {
+      // Check circuit breaker before each batch
+      if (circuitBreakerOpen) {
+        console.warn('[PricePrefetch] Circuit breaker open - stopping prefetch (API may be down)');
+        break;
+      }
+
       const batch = products.slice(i, i + PREFETCH_BATCH_SIZE);
       
-      await Promise.all(
+      const batchResults = await Promise.allSettled(
         batch.map(async (product) => {
           try {
             // Extract first configuration from pricing_data
             const pricingData = product.pricing_data as any;
             if (!Array.isArray(pricingData) || pricingData.length < 2) {
-              result.failed++;
-              return;
+              throw new Error('Invalid pricing data structure');
             }
 
             const options = pricingData[0] || [];
             const combinations = pricingData[1] || [];
 
             if (options.length === 0 || combinations.length === 0) {
-              result.failed++;
-              return;
+              throw new Error('Missing options or combinations');
             }
 
             // Build variant key from first combination
@@ -79,8 +95,7 @@ export async function prefetchAllProductPrices(): Promise<PrefetchResult> {
             });
 
             if (priceError || !data || !Array.isArray(data) || data.length === 0 || !data[0]?.price) {
-              result.failed++;
-              return;
+              throw new Error(priceError?.message || 'Invalid price response');
             }
 
             // Cache the price
@@ -91,10 +106,38 @@ export async function prefetchAllProductPrices(): Promise<PrefetchResult> {
 
           } catch (err) {
             console.warn('[PricePrefetch] Error prefetching price for product:', product.id, err);
-            result.failed++;
+            throw err; // Re-throw to count as failure
           }
         })
       );
+
+      // Count failures in this batch
+      const batchFailures = batchResults.filter(r => r.status === 'rejected').length;
+      const batchSuccesses = batchResults.filter(r => r.status === 'fulfilled').length;
+      
+      result.failed += batchFailures;
+      
+      // Track consecutive failures for circuit breaker
+      if (batchFailures > 0) {
+        consecutiveFailures += batchFailures;
+        console.log(`[PricePrefetch] Batch ${Math.floor(i / PREFETCH_BATCH_SIZE) + 1}: ${batchSuccesses} success, ${batchFailures} failed (consecutive failures: ${consecutiveFailures})`);
+        
+        // Open circuit breaker if too many consecutive failures
+        if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+          circuitBreakerOpen = true;
+          console.error('[PricePrefetch] Circuit breaker OPEN - SinaLite API appears to be down');
+          
+          // Schedule circuit breaker reset
+          setTimeout(resetCircuitBreaker, CIRCUIT_BREAKER_RESET_MS);
+          break;
+        }
+      } else {
+        // Reset consecutive failures on successful batch
+        if (consecutiveFailures > 0) {
+          console.log('[PricePrefetch] Batch successful - resetting failure counter');
+          consecutiveFailures = 0;
+        }
+      }
 
       // Update cache after each batch
       setCache(cache);
