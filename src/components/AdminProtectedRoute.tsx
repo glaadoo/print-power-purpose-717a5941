@@ -26,6 +26,13 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
       
       const passcodeToVerify = passcode || storedPasscode;
 
+      console.log("[AdminProtectedRoute] Checking access:", {
+        urlPasscode: passcode ? "present" : "missing",
+        storedPasscode: storedPasscode ? "present" : "missing",
+        passcodeToVerify: passcodeToVerify ? "present" : "missing",
+        path: location.pathname
+      });
+
       if (!passcodeToVerify) {
         console.log("[AdminProtectedRoute] No passcode found - redirecting to home");
         
@@ -47,6 +54,7 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
 
       try {
         // Verify passcode and log access attempt
+        console.log("[AdminProtectedRoute] Calling verify-admin-passcode edge function");
         const { data, error } = await supabase.functions.invoke('verify-admin-passcode', {
           body: { 
             passcode: passcodeToVerify, 
@@ -54,13 +62,15 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
           }
         });
 
+        console.log("[AdminProtectedRoute] Edge function response:", { data, error });
+
         if (!error && data?.valid) {
           console.log("[AdminProtectedRoute] Access granted - logged to admin_access_logs");
           // Store passcode for subsequent admin page visits
           sessionStorage.setItem("admin_passcode", passcodeToVerify);
           setIsAuthorized(true);
         } else {
-          console.log("[AdminProtectedRoute] Access denied - logged to admin_access_logs");
+          console.log("[AdminProtectedRoute] Access denied:", { error, data });
           sessionStorage.removeItem("admin_passcode");
         }
       } catch (err) {
