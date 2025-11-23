@@ -50,7 +50,7 @@ export default function ProductCard({
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [firstConfigPrice, setFirstConfigPrice] = useState<number | null>(null);
-  const [showConfigurator, setShowConfigurator] = useState(false);
+  const [showConfigurator, setShowConfigurator] = useState(true); // Auto-expand configurator
   const imageSrc = product.image_url || null;
   const { isFavorite, toggleFavorite: toggleFavoriteContext } = useFavorites();
   const isProductFavorite = isFavorite(product.id);
@@ -257,10 +257,10 @@ export default function ProductCard({
             </div>
           )}
 
-          {/* Price Display - show configurator price when active, otherwise first config price */}
-          {(showConfigurator ? displayPriceCents > 0 : firstConfigPrice !== null) && (
+          {/* Price Display - show configured price or first config price */}
+          {(displayPriceCents > 0 || firstConfigPrice !== null) && (
             <p className="text-2xl font-bold text-white">
-              ${((showConfigurator ? displayPriceCents : firstConfigPrice!) / 100).toFixed(2)}
+              ${((displayPriceCents > 0 ? displayPriceCents : firstConfigPrice!) / 100).toFixed(2)}
             </p>
           )}
           
@@ -272,19 +272,8 @@ export default function ProductCard({
         </div>
         
 
-        {/* Check Price Button for Configuration */}
-        {requiresConfiguration && !showConfigurator && (
-          <Button
-            variant="outline"
-            className="w-full border-white/30 bg-white text-black hover:bg-white/90 hover:text-black"
-            onClick={() => setShowConfigurator(true)}
-          >
-            Check Price
-          </Button>
-        )}
-        
-        {/* Product Configuration - Shows when button is clicked */}
-        {requiresConfiguration && showConfigurator && (
+        {/* Product Configuration - Auto-expanded */}
+        {requiresConfiguration && (
           <div className="w-full">
             <ProductConfiguratorLoader
               productId={product.id}
