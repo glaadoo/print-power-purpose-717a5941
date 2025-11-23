@@ -252,13 +252,8 @@ export default function Home() {
       >
         {/* ===== HERO SECTION ===== */}
         <section id="hero" className="relative min-h-screen flex items-center justify-center py-20">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            parallaxVh={14}
-            overlay={<div className="absolute inset-0 bg-black/35" />}
-          />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20" />
+          <div className="absolute inset-0 bg-black/35" />
 
           <div className="px-6 text-center w-full">
             {/* Hero quote + CTA */}
@@ -290,13 +285,8 @@ export default function Home() {
 
         {/* ===== FEATURED PRODUCTS ===== */}
         <section id="featured" className="relative flex items-center justify-center py-20">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            parallaxVh={12}
-            overlay={<div className="absolute inset-0 bg-black/40" />}
-          />
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-background to-primary/20" />
+          <div className="absolute inset-0 bg-black/40" />
           <div className="relative w-full">
             <FeaturedProducts />
           </div>
@@ -304,13 +294,8 @@ export default function Home() {
 
         {/* ===== SOLUTIONS SECTION ===== */}
         <section id="solutions" className="relative min-h-screen flex items-center justify-center py-20">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            parallaxVh={10}
-            overlay={<div className="absolute inset-0 bg-black/35" />}
-          />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20" />
+          <div className="absolute inset-0 bg-black/35" />
 
           <div className="relative w-full h-full flex flex-col">
             {/* centered quote */}
@@ -397,13 +382,8 @@ export default function Home() {
 
         {/* ===== LEARN SECTION ===== */}
         <section id="learn" className="relative min-h-screen flex items-center justify-center py-20">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            parallaxVh={8}
-            overlay={<div className="absolute inset-0 bg-black/40" />}
-          />
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-background to-primary/20" />
+          <div className="absolute inset-0 bg-black/40" />
 
           <div className="relative w-full h-full flex flex-col">
             {/* Recently Viewed Section */}
