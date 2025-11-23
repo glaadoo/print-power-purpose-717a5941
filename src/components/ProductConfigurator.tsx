@@ -295,14 +295,22 @@ export function ProductConfigurator({
             {formatGroupName(group.group)}
           </Label>
           <Select
-            value={String(selectedOptions[group.group] || "")}
-            onValueChange={(value) => handleOptionChange(group.group, value)}
+            value={selectedOptions[group.group] ? String(selectedOptions[group.group]) : undefined}
+            onValueChange={(value) => {
+              console.log('[ProductConfigurator] Select changed:', { group: group.group, value });
+              handleOptionChange(group.group, value);
+            }}
           >
             <SelectTrigger
               id={group.group}
               className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40 z-50"
             >
-              <SelectValue placeholder={`Select ${formatGroupName(group.group)}`} />
+              <SelectValue placeholder={`Select ${formatGroupName(group.group)}`}>
+                {selectedOptions[group.group] 
+                  ? group.options.find(o => o.id === selectedOptions[group.group])?.name || `Select ${formatGroupName(group.group)}`
+                  : `Select ${formatGroupName(group.group)}`
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
               {group.options.map((option) => (

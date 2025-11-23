@@ -242,22 +242,21 @@ export default function Products() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Calculate display prices: use configured price if available, otherwise base_cost_cents (first config price)
+  // Calculate display prices: use configured price from API (not base_cost_cents)
   const defaultPrices = useMemo(() => {
     const prices: Record<string, number> = {};
     rows.forEach(product => {
-      // Priority order:
-      // 1. Configured price (from user selections in ProductConfigurator) 
-      // 2. Base cost (first configuration price from Sinalite sync)
+      // ONLY use configured prices from Sinalite API
+      // Do NOT show price until configurator loads and fetches it
       if (configuredPrices[product.id]) {
         prices[product.id] = configuredPrices[product.id];
       } else {
-        // Show base_cost_cents as the regular/first configuration price
-        prices[product.id] = product.base_cost_cents || 0;
+        // Show 0 until first configuration price is loaded
+        prices[product.id] = 0;
       }
     });
     return prices;
-  }, [rows, pricingSettings, configuredPrices]);
+  }, [rows, configuredPrices]);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
