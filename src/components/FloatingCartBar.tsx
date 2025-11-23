@@ -23,8 +23,12 @@ export default function FloatingCartBar() {
       >
         <div className="rounded-2xl bg-gradient-to-r from-primary/95 to-primary-glow/95 backdrop-blur-lg border border-white/20 shadow-elegant p-4">
           <div className="flex items-center justify-between gap-4 md:gap-6">
-            {/* Cart Icon + Count */}
-            <div className="flex items-center gap-3">
+            {/* Cart Icon + Count - Clickable */}
+            <button
+              onClick={() => navigate("/cart")}
+              className="flex items-center gap-3 hover:bg-white/10 rounded-lg p-2 -m-2 transition-colors"
+              aria-label="View cart"
+            >
               <div className="relative">
                 <ShoppingCart className="w-6 h-6 text-white" />
                 <span className="absolute -top-2 -right-2 bg-white text-primary text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -37,7 +41,7 @@ export default function FloatingCartBar() {
                   {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Total */}
             <div className="text-right">
