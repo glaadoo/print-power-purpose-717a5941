@@ -81,12 +81,24 @@ export default function ProductConfiguratorLoader({
       if (product.pricing_data && typeof product.pricing_data === 'object') {
         const pricingData = product.pricing_data as any;
         
-        // Handle different possible data structures
+        // Handle different possible data structures - be more flexible
         let optionsData = null;
         
-        if (Array.isArray(pricingData)) {
-          optionsData = pricingData;
-        } else if (pricingData.options && Array.isArray(pricingData.options)) {
+        // Case 1: Direct array of options
+        if (Array.isArray(pricingData) && pricingData.length > 0) {
+          // Check if it's [options, combinations, metadata] format
+          if (Array.isArray(pricingData[0]) && pricingData[0].length > 0 && pricingData[0][0]?.id && pricingData[0][0]?.group) {
+            optionsData = pricingData[0];
+            console.log('[ProductConfiguratorLoader] Using nested array format');
+          } 
+          // Or just a flat array of options
+          else if (pricingData[0]?.id && pricingData[0]?.group) {
+            optionsData = pricingData;
+            console.log('[ProductConfiguratorLoader] Using flat array format');
+          }
+        } 
+        // Case 2: Object with various keys
+        else if (pricingData.options && Array.isArray(pricingData.options)) {
           optionsData = pricingData.options;
         } else if (pricingData.configurations && Array.isArray(pricingData.configurations)) {
           optionsData = pricingData.configurations;
@@ -94,8 +106,8 @@ export default function ProductConfiguratorLoader({
           optionsData = pricingData.attributes;
         }
         
-        if (optionsData && optionsData.length > 0) {
-          console.log('[ProductConfiguratorLoader] Using options from pricing_data');
+        if (optionsData && Array.isArray(optionsData) && optionsData.length > 0) {
+          console.log('[ProductConfiguratorLoader] Using options from pricing_data, count:', optionsData.length);
           
           // Format as expected by ProductConfigurator: [options, {}, {}]
           const options = [optionsData, {}, {}];

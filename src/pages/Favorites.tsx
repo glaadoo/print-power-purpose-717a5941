@@ -279,21 +279,34 @@ export default function Favorites() {
                         <Heart className="w-5 h-5 fill-current" />
                       </button>
 
-                      <ProductCard
-                        product={product}
-                        displayPriceCents={displayPrice}
-                        quantity={quantities[product.id] || 0}
-                        quantityOptions={quantityOptions[product.id] || []}
-                        isInCart={isInCart}
-                        requiresConfiguration={requiresConfiguration}
-                        isConfigured={isConfigured}
-                        canAddToCart={canAddToCart}
-                        onQuantityChange={updateQuantity}
-                        onAddToCart={handleAddToCart}
-                        onPriceChange={handlePriceChange}
-                        onConfigChange={handleConfigChange}
-                        onQuantityOptionsChange={handleQuantityOptionsChange}
-                      />
+                      <div className="space-y-3">
+                        <ProductCard
+                          product={product}
+                          displayPriceCents={displayPrice}
+                          quantity={quantities[product.id] || 0}
+                          quantityOptions={quantityOptions[product.id] || []}
+                          isInCart={isInCart}
+                          requiresConfiguration={requiresConfiguration}
+                          isConfigured={isConfigured}
+                          canAddToCart={canAddToCart}
+                          onQuantityChange={updateQuantity}
+                          onAddToCart={handleAddToCart}
+                          onPriceChange={handlePriceChange}
+                          onConfigChange={handleConfigChange}
+                          onQuantityOptionsChange={handleQuantityOptionsChange}
+                        />
+                        
+                        {/* Move to Cart Button - only show when configured and quantity > 0 */}
+                        {canAddToCart && quantities[product.id] > 0 && (
+                          <Button
+                            onClick={() => handleAddToCart(product)}
+                            className="w-full rounded-full bg-primary hover:bg-primary/90"
+                            size="lg"
+                          >
+                            Move to Cart ({quantities[product.id]})
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
