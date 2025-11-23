@@ -241,27 +241,36 @@ export function ProductConfigurator({
   }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, onPackageInfoChange]);
 
   const handleOptionChange = (group: string, optionId: string) => {
-    const id = parseInt(optionId, 10);
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [group]: id,
-    }));
-
-    // Update config for parent
-    const optionName = optionGroups
-      .find(g => g.group === group)
-      ?.options.find(o => o.id === id)?.name || optionId;
+    console.log('[ProductConfigurator] handleOptionChange called:', { group, optionId });
     
-    onConfigChange({
-      ...Object.fromEntries(
-        Object.entries(selectedOptions).map(([g, oId]) => {
+    const id = parseInt(optionId, 10);
+    if (isNaN(id)) {
+      console.error('[ProductConfigurator] Invalid option ID:', optionId);
+      return;
+    }
+    
+    // Update selected options immediately
+    setSelectedOptions((prev) => {
+      const updated = {
+        ...prev,
+        [group]: id,
+      };
+      console.log('[ProductConfigurator] Updated selections:', updated);
+      
+      // Update config for parent with the new selection
+      const configUpdate = Object.fromEntries(
+        Object.entries(updated).map(([g, oId]) => {
           const name = optionGroups
             .find(og => og.group === g)
             ?.options.find(o => o.id === oId)?.name || String(oId);
           return [g, name];
         })
-      ),
-      [group]: optionName,
+      );
+      
+      console.log('[ProductConfigurator] Config update:', configUpdate);
+      onConfigChange(configUpdate);
+      
+      return updated;
     });
   };
 
@@ -287,45 +296,57 @@ export function ProductConfigurator({
     <div className="space-y-3 w-full">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">Configure Options:</h3>
+        {fetchingPrice && (
+          <div className="flex items-center gap-1 text-xs text-white/60">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            <span>Updating price...</span>
+          </div>
+        )}
       </div>
       
-      {optionGroups.map((group) => (
-        <div key={group.group} className="space-y-2">
-          <Label htmlFor={group.group} className="text-foreground font-medium">
-            {formatGroupName(group.group)}
-          </Label>
-          <Select
-            value={selectedOptions[group.group] ? String(selectedOptions[group.group]) : undefined}
-            onValueChange={(value) => {
-              console.log('[ProductConfigurator] Select changed:', { group: group.group, value });
-              handleOptionChange(group.group, value);
-            }}
-          >
-            <SelectTrigger
-              id={group.group}
-              className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40 z-50"
+      {optionGroups.map((group) => {
+        const currentValue = selectedOptions[group.group];
+        const selectedOption = group.options.find(o => o.id === currentValue);
+        
+        return (
+          <div key={group.group} className="space-y-2">
+            <Label htmlFor={group.group} className="text-foreground font-medium">
+              {formatGroupName(group.group)}
+            </Label>
+            <Select
+              value={currentValue ? String(currentValue) : undefined}
+              onValueChange={(value) => {
+                console.log('[ProductConfigurator] Select onValueChange:', { 
+                  group: group.group, 
+                  value,
+                  previousValue: currentValue 
+                });
+                handleOptionChange(group.group, value);
+              }}
             >
-              <SelectValue placeholder={`Select ${formatGroupName(group.group)}`}>
-                {selectedOptions[group.group] 
-                  ? group.options.find(o => o.id === selectedOptions[group.group])?.name || `Select ${formatGroupName(group.group)}`
-                  : `Select ${formatGroupName(group.group)}`
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
-              {group.options.map((option) => (
-                <SelectItem
-                  key={option.id}
-                  value={String(option.id)}
-                  className="cursor-pointer hover:bg-gray-100"
-                >
-                  {option.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      ))}
+              <SelectTrigger
+                id={group.group}
+                className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40 z-50"
+              >
+                <SelectValue placeholder={`Select ${formatGroupName(group.group)}`}>
+                  {selectedOption?.name || `Select ${formatGroupName(group.group)}`}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
+                {group.options.map((option) => (
+                  <SelectItem
+                    key={option.id}
+                    value={String(option.id)}
+                    className="cursor-pointer hover:bg-gray-100"
+                  >
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        );
+      })}
     </div>
   );
 }
