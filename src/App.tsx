@@ -93,6 +93,7 @@ const SystemLogs      = lazyPage("SystemLogs",      () => import("./pages/System
 const HelpCenter      = lazyPage("HelpCenter",      () => import("./pages/HelpCenter"));
 const HelpSearchResults = lazyPage("HelpSearchResults", () => import("./pages/HelpSearchResults"));
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 const PrivacyPolicy   = lazyPage("PrivacyPolicy",   () => import("./pages/PrivacyPolicy"));
 const TermsOfUse      = lazyPage("TermsOfUse",      () => import("./pages/TermsOfUse"));
 const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalNotice"));
@@ -454,12 +455,14 @@ export default function App() {
             }
           />
 
-          {/* Admin */}
+          {/* Admin - Protected by passcode */}
           <Route
             path="/admin"
             element={
               <RouteBoundary name="Admin">
-                <Admin />
+                <AdminProtectedRoute>
+                  <Admin />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -554,7 +557,9 @@ export default function App() {
             path="/admin/legal"
             element={
               <RouteBoundary name="AdminLegal">
-                <AdminLegal />
+                <AdminProtectedRoute>
+                  <AdminLegal />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -564,7 +569,9 @@ export default function App() {
             path="/admin/nonprofits"
             element={
               <RouteBoundary name="AdminNonprofits">
-                <AdminNonprofits />
+                <AdminProtectedRoute>
+                  <AdminNonprofits />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -574,7 +581,9 @@ export default function App() {
             path="/admin/nonprofit-analytics"
             element={
               <RouteBoundary name="AdminNonprofitAnalytics">
-                <AdminNonprofitAnalytics />
+                <AdminProtectedRoute>
+                  <AdminNonprofitAnalytics />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -594,7 +603,9 @@ export default function App() {
             path="/admin/nonprofits/approvals"
             element={
               <RouteBoundary name="AdminNonprofitApprovals">
-                <AdminNonprofitApprovals />
+                <AdminProtectedRoute>
+                  <AdminNonprofitApprovals />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -604,7 +615,9 @@ export default function App() {
             path="/admin/products"
             element={
               <RouteBoundary name="AdminProducts">
-                <AdminProducts />
+                <AdminProtectedRoute>
+                  <AdminProducts />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -614,7 +627,9 @@ export default function App() {
             path="/admin/product-images"
             element={
               <RouteBoundary name="AdminProductImages">
-                <AdminProductImages />
+                <AdminProtectedRoute>
+                  <AdminProductImages />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -624,7 +639,9 @@ export default function App() {
             path="/admin/orders"
             element={
               <RouteBoundary name="AdminOrders">
-                <AdminOrders />
+                <AdminProtectedRoute>
+                  <AdminOrders />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -634,7 +651,9 @@ export default function App() {
             path="/admin/live-setup"
             element={
               <RouteBoundary name="AdminLiveModeSetup">
-                <AdminLiveModeSetup />
+                <AdminProtectedRoute>
+                  <AdminLiveModeSetup />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -644,7 +663,9 @@ export default function App() {
             path="/admin/stripe-analytics"
             element={
               <RouteBoundary name="AdminStripeAnalytics">
-                <AdminStripeAnalytics />
+                <AdminProtectedRoute>
+                  <AdminStripeAnalytics />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -654,7 +675,9 @@ export default function App() {
             path="/admin/transactions"
             element={
               <RouteBoundary name="AdminTransactions">
-                <AdminTransactions />
+                <AdminProtectedRoute>
+                  <AdminTransactions />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -664,7 +687,9 @@ export default function App() {
             path="/admin/settings"
             element={
               <RouteBoundary name="AdminSettings">
-                <AdminSettings />
+                <AdminProtectedRoute>
+                  <AdminSettings />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -674,7 +699,9 @@ export default function App() {
             path="/admin/pricing"
             element={
               <RouteBoundary name="AdminPricing">
-                <AdminPricing />
+                <AdminProtectedRoute>
+                  <AdminPricing />
+                </AdminProtectedRoute>
               </RouteBoundary>
             }
           />
