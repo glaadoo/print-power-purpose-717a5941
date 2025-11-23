@@ -240,7 +240,7 @@ export default function ProductCard({
         {/* Favorite Heart Button */}
         <button
           onClick={toggleFavorite}
-          className={`absolute top-0 right-0 z-10 p-2 rounded-full transition-all ${
+          className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all ${
             isFavorite 
               ? 'bg-red-500 hover:bg-red-600 text-white' 
               : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
@@ -251,12 +251,12 @@ export default function ProductCard({
         </button>
 
         {/* Product Image */}
-        <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10 mt-8">
+        <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10">
           {imageSrc && !imageError ? (
             <img 
               src={imageSrc} 
               alt={product.name}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
               loading="eager"
               onError={() => {
                 setImageError(true);
