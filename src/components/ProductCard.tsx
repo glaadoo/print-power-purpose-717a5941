@@ -50,6 +50,7 @@ export default function ProductCard({
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [firstConfigPrice, setFirstConfigPrice] = useState<number | null>(null);
+  const [showConfigurator, setShowConfigurator] = useState(false);
   const imageSrc = product.image_url || null;
 
   // Check authentication and favorite status
@@ -309,31 +310,27 @@ export default function ProductCard({
         
 
         {/* Check Price Button for Configuration */}
-        {requiresConfiguration && (
+        {requiresConfiguration && !showConfigurator && (
           <Button
             variant="outline"
-            className="w-full border-white/30 text-white hover:bg-white/20"
-            onClick={() => {
-              // This will trigger the configurator to load
-              const event = new CustomEvent('open-configurator', { detail: { productId: product.id } });
-              window.dispatchEvent(event);
-            }}
+            className="w-full border-white/30 text-white hover:bg-white/20 hover:text-white"
+            onClick={() => setShowConfigurator(true)}
           >
-            Check Price
+            <span className="text-white">Check Price</span>
           </Button>
         )}
         
-        {/* Product Configuration - Hidden by default, opens on button click */}
-        <div className="hidden w-full" data-configurator={product.id}>
-          {requiresConfiguration && (
+        {/* Product Configuration - Shows when button is clicked */}
+        {requiresConfiguration && showConfigurator && (
+          <div className="w-full">
             <ProductConfiguratorLoader
               productId={product.id}
               onPriceChange={(price) => onPriceChange(product.id, price)}
               onConfigChange={(config) => onConfigChange(product.id, config)}
               onQuantityOptionsChange={onQuantityOptionsChange ? (options) => onQuantityOptionsChange(product.id, options) : undefined}
             />
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Quantity Controls - Only show after options are loaded */}
         {quantityOptions.length > 0 && (
