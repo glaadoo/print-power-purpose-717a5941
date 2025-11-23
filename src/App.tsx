@@ -724,7 +724,9 @@ export default function App() {
             path="/nonprofit/:id"
             element={
               <RouteBoundary name="NonprofitProfile">
-                <NonprofitProfile />
+                <ProtectedRoute>
+                  <NonprofitProfile />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
