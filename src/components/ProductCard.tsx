@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GlassCard from "./GlassCard";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Heart } from "lucide-react";
 import ProductConfiguratorLoader from "./ProductConfiguratorLoader";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type ProductCardProps = {
   product: {
@@ -43,11 +45,100 @@ export default function ProductCard({
   onQuantityOptionsChange,
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const imageSrc = product.image_url || null;
+
+  // Check authentication and favorite status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+      if (session?.user) {
+        checkFavoriteStatus(session.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+      if (session?.user) {
+        checkFavoriteStatus(session.user.id);
+      } else {
+        setIsFavorite(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [product.id]);
+
+  const checkFavoriteStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("product_id", product.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setIsFavorite(!!data);
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    if (!user) {
+      toast.error("Please log in to save favorites");
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        const { error } = await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("product_id", product.id);
+
+        if (error) throw error;
+        setIsFavorite(false);
+        toast.success("Removed from favorites");
+      } else {
+        // Add to favorites
+        const { error } = await supabase
+          .from("favorites")
+          .insert({
+            user_id: user.id,
+            product_id: product.id
+          });
+
+        if (error) throw error;
+        setIsFavorite(true);
+        toast.success("Added to favorites");
+      }
+    } catch (error: any) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Failed to update favorites");
+    }
+  };
 
   return (
     <GlassCard padding="p-6">
-      <div className="flex flex-col items-start text-left space-y-4 w-full">
+      <div className="flex flex-col items-start text-left space-y-4 w-full relative">
+        {/* Favorite Heart Button */}
+        <button
+          onClick={toggleFavorite}
+          className={`absolute top-0 right-0 z-10 p-2 rounded-full transition-all ${
+            isFavorite 
+              ? 'bg-red-500 hover:bg-red-600 text-white' 
+              : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+          }`}
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
+        </button>
+
         {/* Product Image */}
         <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10">
           {imageSrc && !imageError ? (
