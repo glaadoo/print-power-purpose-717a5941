@@ -296,7 +296,14 @@ export function ProductConfigurator({
       
       {optionGroups.map((group) => {
         const currentValue = selectedOptions[group.group];
-        const selectedOption = group.options.find(o => o.id === currentValue);
+        const stringValue = currentValue ? String(currentValue) : "";
+        
+        console.log('[ProductConfigurator] Rendering group:', {
+          group: group.group,
+          currentValue,
+          stringValue,
+          optionsCount: group.options.length
+        });
         
         return (
           <div key={group.group} className="space-y-2">
@@ -304,23 +311,24 @@ export function ProductConfigurator({
               {formatGroupName(group.group)}
             </Label>
             <Select
-              value={currentValue ? String(currentValue) : undefined}
+              key={`${group.group}-${stringValue}`}
+              value={stringValue}
               onValueChange={(value) => {
-                console.log('[ProductConfigurator] Select onValueChange:', { 
+                console.log('[ProductConfigurator] onValueChange triggered:', { 
                   group: group.group, 
-                  value,
-                  previousValue: currentValue 
+                  newValue: value,
+                  oldValue: stringValue
                 });
-                handleOptionChange(group.group, value);
+                if (value && value !== stringValue) {
+                  handleOptionChange(group.group, value);
+                }
               }}
             >
               <SelectTrigger
                 id={group.group}
-                className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40 z-50"
+                className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40"
               >
-                <SelectValue placeholder={`Select ${formatGroupName(group.group)}`}>
-                  {selectedOption?.name || `Select ${formatGroupName(group.group)}`}
-                </SelectValue>
+                <SelectValue placeholder={`Select ${formatGroupName(group.group)}`} />
               </SelectTrigger>
               <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
                 {group.options.map((option) => (
