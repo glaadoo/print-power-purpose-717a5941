@@ -65,7 +65,7 @@ export default function Cart() {
   const subtotal = totalCents;
 
   return (
-    <div className="fixed inset-0 text-white z-50">
+    <div className="fixed inset-0 text-white">{/* Removed z-50 to work with App animation wrapper */}
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
         <Button
