@@ -9,6 +9,7 @@ import ScrollDots from "@/components/ScrollDots";
 import MascotHeader from "@/components/MascotHeader";
 import ColorSelector from "@/components/ColorSelector";
 import RecentlyViewed from "@/components/RecentlyViewed";
+import FeaturedProducts from "@/components/FeaturedProducts";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart } from "lucide-react";
@@ -241,7 +242,7 @@ export default function Home() {
       </header>
 
       {/* Left-side section dots */}
-      <ScrollDots sections={["hero", "solutions", "learn"]} />
+      <ScrollDots sections={["hero", "featured", "solutions", "learn"]} />
 
       {/* Scroll container with 3 slides */}
       <div 
@@ -285,6 +286,20 @@ export default function Home() {
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ===== FEATURED PRODUCTS ===== */}
+        <section className="relative min-h-screen flex items-center justify-center py-12">
+          <VideoBackground
+            srcMp4="/media/hero.mp4"
+            srcWebm="/media/hero.webm"
+            poster="/media/hero-poster.jpg"
+            parallaxVh={12}
+            overlay={<div className="absolute inset-0 bg-black/40" />}
+          />
+          <div className="relative w-full">
+            <FeaturedProducts />
           </div>
         </section>
 
