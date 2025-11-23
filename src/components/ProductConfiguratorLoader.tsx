@@ -19,7 +19,7 @@ export default function ProductConfiguratorLoader({
 }: LoaderProps) {
   const [productData, setProductData] = useState<any | null>(null);
   const [pricingOptions, setPricingOptions] = useState<any[] | null>(null);
-  const [loading, setLoading] = useState(true); // Start as loading
+  const [loading, setLoading] = useState(false); // Only load when user requests
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -61,6 +61,7 @@ export default function ProductConfiguratorLoader({
     }
     
     setError(null);
+    setLoading(true); // Start loading when fetch begins
     console.log('[ProductConfiguratorLoader] Starting fetch...');
     
     try {
@@ -281,24 +282,20 @@ export default function ProductConfiguratorLoader({
     }
   };
 
-  // Fetch pricing options on mount and always mount configurator
+  // Mount configurator immediately but don't fetch until visible
   useEffect(() => {
     console.log('[ProductConfiguratorLoader] Component mounted for product:', productId);
     setIsMounted(true);
-    fetchPricingOptions();
-    
-    // Safety timeout - if still loading after 30 seconds, force stop
-    const timeout = setTimeout(() => {
-      if (loading) {
-        console.error('[ProductConfiguratorLoader] Loading timeout - forcing stop');
-        setLoading(false);
-        setFetchingRef(false);
-        setError('Loading timeout - please refresh the page');
-      }
-    }, 30000);
-    
-    return () => clearTimeout(timeout);
+    setLoading(false); // Not loading until user requests
   }, [productId]);
+
+  // Only fetch when user clicks to expand
+  useEffect(() => {
+    if (visible && !pricingOptions && !fetchingRef) {
+      console.log('[ProductConfiguratorLoader] Visible - starting fetch');
+      fetchPricingOptions();
+    }
+  }, [visible]);
 
   const handleToggle = () => {
     setVisible(!visible);
