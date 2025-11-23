@@ -71,6 +71,7 @@ const Causes          = lazyPage("Causes",          () => import("./pages/Causes
 const Donate          = lazyPage("Donate",          () => import("./pages/Donate"));
 const Products        = lazyPage("Products",        () => import("./pages/Products"));
 const ProductDetail   = lazyPage("ProductDetail",   () => import("./pages/ProductDetail"));
+const Favorites       = lazyPage("Favorites",       () => import("./pages/Favorites"));
 const Success         = lazyPage("Success",         () => import("./pages/Success"));
 const Cancel          = lazyPage("Cancel",          () => import("./pages/Cancel"));
 const SelectSchool    = lazyPage("SelectSchool",    () => import("./pages/SelectSchool"));
@@ -272,6 +273,18 @@ export default function App() {
               <RouteBoundary name="PersonalMission">
                 <ProtectedRoute>
                   <PersonalMission />
+                </ProtectedRoute>
+              </RouteBoundary>
+            }
+          />
+
+          {/* Favorites */}
+          <Route
+            path="/favorites"
+            element={
+              <RouteBoundary name="Favorites">
+                <ProtectedRoute>
+                  <Favorites />
                 </ProtectedRoute>
               </RouteBoundary>
             }

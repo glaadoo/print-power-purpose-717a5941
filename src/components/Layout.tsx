@@ -5,7 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { LogOut } from "lucide-react";
+import { LogOut, Heart } from "lucide-react";
 import MascotHeader from "./MascotHeader";
 import ColorSelector from "./ColorSelector";
 
@@ -91,6 +91,12 @@ export default function Layout({
               >
                 Products
               </button>
+              {session && (
+                <Link to="/favorites" className="btn-rect px-3 h-9 font-bold text-white drop-shadow-lg flex items-center gap-2">
+                  <Heart className="w-4 h-4" />
+                  Favorites
+                </Link>
+              )}
             </div>
 
             {/* Right actions */}
