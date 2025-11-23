@@ -699,6 +699,12 @@ export default function Admin() {
                   Settings
                 </Button>
               </Link>
+              <Link to="/admin/access-logs">
+                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                  <Activity className="h-4 w-4" />
+                  Access Logs
+                </Button>
+              </Link>
               <Link to="/system-logs">
                 <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
                   <Activity className="h-4 w-4" />
