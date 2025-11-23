@@ -22,6 +22,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Check if user has completed onboarding (either as guest or authenticated user)
   const hasAccess = localStorage.getItem("ppp_access");
   
+  console.log("[ProtectedRoute] Checking access for:", location.pathname, "hasAccess:", hasAccess);
+  
   // Allowed values: "user" or "guest"
   // Any other value or missing → redirect to Home
   if (!hasAccess || (hasAccess !== "user" && hasAccess !== "guest")) {
@@ -29,6 +31,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
+  console.log("[ProtectedRoute] Access granted for:", location.pathname);
   // Access granted
   return children;
 }
