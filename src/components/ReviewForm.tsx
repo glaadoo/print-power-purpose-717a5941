@@ -73,6 +73,19 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
 
     setLoading(true);
     try {
+      // Check if this is a verified purchase
+      const { data: verifiedData, error: verifiedError } = await supabase
+        .rpc('check_verified_purchase', {
+          p_user_id: user.id,
+          p_product_id: productId
+        });
+
+      if (verifiedError) {
+        console.error('Error checking verified purchase:', verifiedError);
+      }
+
+      const isVerified = verifiedData || false;
+
       if (existingReview) {
         // Update existing review
         const { error } = await supabase
@@ -80,6 +93,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
           .update({
             rating,
             review_text: reviewText || null,
+            verified_purchase: isVerified,
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingReview.id);
@@ -96,12 +110,15 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
           user_id: user.id,
           rating,
           review_text: reviewText || null,
+          verified_purchase: isVerified,
         });
 
         if (error) throw error;
         toast({
           title: "Success",
-          description: "Your review has been submitted",
+          description: isVerified 
+            ? "Your verified review has been submitted" 
+            : "Your review has been submitted",
         });
       }
 
