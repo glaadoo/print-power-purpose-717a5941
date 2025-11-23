@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-// Removed invokeWithRetry import - using direct API calls for speed
+import { Loader2, AlertCircle } from "lucide-react";
+import { invokeWithRetry } from "@/lib/api-retry";
 
 type ProductOption = {
   id: number;
@@ -222,20 +222,45 @@ export function ProductConfigurator({
       setPriceError(null);
       console.log('[ProductConfigurator] Fetching price by key:', variantKey);
       
-      // Fetch from Sinalite API directly (skip custom price check for speed)
+      // Fetch from Sinalite API with retry logic for resilience
       try {
-        const { data, error } = await supabase.functions.invoke('sinalite-price', {
-          body: {
-            productId: vendorProductId,
-            storeCode: storeCode,
-            variantKey: variantKey,
-            method: 'PRICEBYKEY'
+        const { data, error } = await invokeWithRetry(
+          supabase,
+          'sinalite-price',
+          {
+            body: {
+              productId: vendorProductId,
+              storeCode: storeCode,
+              variantKey: variantKey,
+              method: 'PRICEBYKEY'
+            },
           },
-        });
+          {
+            maxAttempts: 2,
+            initialDelayMs: 500,
+            shouldRetry: (err: any) => {
+              // Don't retry on 4xx errors (except 429 rate limit)
+              if (err?.status >= 400 && err?.status < 500 && err?.status !== 429) {
+                return false;
+              }
+              // Retry on 503 Service Unavailable
+              return err?.status === 503 || err?.status >= 500;
+            }
+          }
+        );
 
         if (error) {
           console.error('[ProductConfigurator] Price fetch error:', error);
-          setPriceError('Failed to fetch price');
+          
+          // User-friendly error messages
+          if (error.message?.includes('503') || error.message?.includes('Service Unavailable')) {
+            setPriceError('Pricing service temporarily unavailable. Please try again in a moment.');
+          } else if (error.message?.includes('Network connection lost') || error.message?.includes('Failed to fetch')) {
+            setPriceError('Connection issue. Please check your internet and try again.');
+          } else {
+            setPriceError('Unable to load price. Please try again.');
+          }
+          
           setFetchingPrice(false);
           return;
         }
@@ -254,11 +279,19 @@ export function ProductConfigurator({
           }
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
-          setPriceError('Price unavailable');
+          setPriceError('Price not available for this configuration');
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('[ProductConfigurator] Price fetch exception:', err);
-        setPriceError('Failed to fetch price');
+        
+        // Handle caught exceptions with user-friendly messages
+        if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable')) {
+          setPriceError('Pricing service temporarily down. Please try again shortly.');
+        } else if (err?.message?.includes('Network') || err?.message?.includes('fetch')) {
+          setPriceError('Connection problem. Please check your internet.');
+        } else {
+          setPriceError('Unable to load price at this time');
+        }
       } finally {
         setFetchingPrice(false);
       }
@@ -330,8 +363,9 @@ export function ProductConfigurator({
           </div>
         )}
         {!fetchingPrice && priceError && (
-          <div className="text-xs text-red-400">
-            {priceError}
+          <div className="flex items-center gap-1 text-xs text-amber-400">
+            <AlertCircle className="w-3 h-3" />
+            <span>{priceError}</span>
           </div>
         )}
       </div>
