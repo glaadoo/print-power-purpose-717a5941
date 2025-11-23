@@ -43,6 +43,13 @@ export default function Products() {
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    console.log('[Products] Component mounted');
+    return () => {
+      console.log('[Products] Component unmounting');
+    };
+  }, []);
+
   const fetchProducts = async () => {
     setLoading(true);
     setErr(null);
@@ -466,7 +473,7 @@ export default function Products() {
 
 
   return (
-    <div className="fixed inset-0 text-white">
+    <div className="fixed inset-0 text-white z-40">
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10 relative">
         {/* Left: Back button */}
