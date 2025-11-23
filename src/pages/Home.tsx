@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import GlassCard from "../components/GlassCard";
 import VideoBackground from "@/components/VideoBackground";
 import MenuOverlay from "@/components/MenuOverlay";
-import ScrollDots from "@/components/ScrollDots";
+// ScrollDots removed for normal scrolling behavior
 import MascotHeader from "@/components/MascotHeader";
 import ColorSelector from "@/components/ColorSelector";
 import RecentlyViewed from "@/components/RecentlyViewed";
@@ -241,8 +241,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Left-side section dots */}
-      <ScrollDots sections={["hero", "featured", "solutions", "learn"]} />
+      {/* ScrollDots removed for normal scrolling behavior */}
 
       {/* Scroll container with 3 slides */}
       <div 
@@ -251,8 +250,8 @@ export default function Home() {
         role="main"
         aria-label="Main content"
       >
-        {/* ===== SLIDE 1: HERO + your Kenzie onboarding card ===== */}
-        <section id="hero" className="relative h-full min-h-screen flex items-center justify-center">
+        {/* ===== HERO SECTION ===== */}
+        <section id="hero" className="relative min-h-screen flex items-center justify-center py-20">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -290,7 +289,7 @@ export default function Home() {
         </section>
 
         {/* ===== FEATURED PRODUCTS ===== */}
-        <section className="relative min-h-screen flex items-center justify-center py-12">
+        <section id="featured" className="relative flex items-center justify-center py-20">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -303,8 +302,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ===== SLIDE 2: SOLUTIONS (quote + band) ===== */}
-        <section id="solutions" className="relative h-full min-h-screen flex items-center justify-center">
+        {/* ===== SOLUTIONS SECTION ===== */}
+        <section id="solutions" className="relative min-h-screen flex items-center justify-center py-20">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
@@ -396,8 +395,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ===== SLIDE 3: LEARN (form + journey + links) ===== */}
-        <section id="learn" className="relative h-full min-h-screen flex items-center justify-center">
+        {/* ===== LEARN SECTION ===== */}
+        <section id="learn" className="relative min-h-screen flex items-center justify-center py-20">
           <VideoBackground
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
