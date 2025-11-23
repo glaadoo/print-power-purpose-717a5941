@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
+import ProductReviews from "@/components/ProductReviews";
+import ReviewForm from "@/components/ReviewForm";
 
 type ProductRow = {
   id: string;
@@ -35,6 +37,7 @@ export default function ProductDetail() {
   const [productConfig, setProductConfig] = useState<Record<string, string>>({});
   const [packageInfo, setPackageInfo] = useState<any>(null);
   const [imageError, setImageError] = useState(false);
+  const [reviewsKey, setReviewsKey] = useState(0);
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -305,6 +308,23 @@ export default function ProductDetail() {
                 </>
               )}
             </div>
+
+            {/* Reviews Section */}
+            {!loading && !err && product && (
+              <div className="relative w-full max-w-2xl mx-auto mt-8">
+                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
+                  <h2 className="text-2xl font-serif font-semibold mb-6">Customer Reviews</h2>
+                  
+                  <div className="space-y-8">
+                    <ReviewForm
+                      productId={product.id}
+                      onReviewSubmitted={() => setReviewsKey((k) => k + 1)}
+                    />
+                    <ProductReviews key={reviewsKey} productId={product.id} />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </div>
