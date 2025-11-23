@@ -298,30 +298,20 @@ export function ProductConfigurator({
         const currentValue = selectedOptions[group.group];
         const stringValue = currentValue ? String(currentValue) : "";
         
-        console.log('[ProductConfigurator] Rendering group:', {
-          group: group.group,
-          currentValue,
-          stringValue,
-          optionsCount: group.options.length
-        });
-        
         return (
           <div key={group.group} className="space-y-2">
             <Label htmlFor={group.group} className="text-foreground font-medium">
               {formatGroupName(group.group)}
             </Label>
             <Select
-              key={`${group.group}-${stringValue}`}
               value={stringValue}
               onValueChange={(value) => {
-                console.log('[ProductConfigurator] onValueChange triggered:', { 
+                console.log('[ProductConfigurator] Option selected:', { 
                   group: group.group, 
                   newValue: value,
                   oldValue: stringValue
                 });
-                if (value && value !== stringValue) {
-                  handleOptionChange(group.group, value);
-                }
+                handleOptionChange(group.group, value);
               }}
             >
               <SelectTrigger
