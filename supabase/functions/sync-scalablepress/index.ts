@@ -33,7 +33,7 @@ serve(async (req) => {
       );
     }
 
-    // Step 1: Fetch categories first
+    // Step 1: Fetch categories
     console.log("[SYNC-SCALABLEPRESS] Fetching categories");
     const categoriesResponse = await fetch(`${apiUrl}/categories`, {
       headers: {
@@ -59,17 +59,16 @@ serve(async (req) => {
     }
 
     const categories = await categoriesResponse.json();
-    console.log(`[SYNC-SCALABLEPRESS] Found ${Object.keys(categories).length} categories`);
+    console.log(`[SYNC-SCALABLEPRESS] Found ${categories.length} categories`);
 
     // Step 2: Fetch products for each category
     let allProducts: any[] = [];
     
-    for (const [categoryKey, categoryData] of Object.entries(categories)) {
-      console.log(`[SYNC-SCALABLEPRESS] Fetching products for category: ${categoryKey}`);
+    for (const category of categories) {
+      console.log(`[SYNC-SCALABLEPRESS] Fetching products for category: ${category.categoryId}`);
       
       try {
-        const productsResponse = await fetch(`${apiUrl}/products`, {
-          method: "GET",
+        const productsResponse = await fetch(`${apiUrl}/categories/${category.categoryId}`, {
           headers: {
             "Authorization": `Basic ${btoa(":" + apiKey)}`,
             "Accept": "application/json",
@@ -77,34 +76,20 @@ serve(async (req) => {
         });
 
         if (productsResponse.ok) {
-          const productsData = await productsResponse.json();
+          const categoryData = await productsResponse.json();
           
-          // Filter products by category and add to allProducts
-          if (Array.isArray(productsData)) {
-            const categoryProducts = productsData.filter((p: any) => 
-              p.categoryId === categoryKey || p.category === categoryKey
-            );
+          if (categoryData.products && Array.isArray(categoryData.products)) {
             allProducts = allProducts.concat(
-              categoryProducts.map((p: any) => ({
+              categoryData.products.map((p: any) => ({
                 ...p,
-                categoryName: (categoryData as any).name || categoryKey
-              }))
-            );
-          } else if (productsData[categoryKey]) {
-            // If API returns products grouped by category
-            const categoryProducts = Array.isArray(productsData[categoryKey]) 
-              ? productsData[categoryKey] 
-              : Object.values(productsData[categoryKey]);
-            allProducts = allProducts.concat(
-              categoryProducts.map((p: any) => ({
-                ...p,
-                categoryName: (categoryData as any).name || categoryKey
+                categoryName: category.name,
+                categoryId: category.categoryId
               }))
             );
           }
         }
       } catch (err) {
-        console.error(`[SYNC-SCALABLEPRESS] Error fetching products for ${categoryKey}:`, err);
+        console.error(`[SYNC-SCALABLEPRESS] Error fetching products for ${category.categoryId}:`, err);
       }
     }
 
@@ -129,35 +114,20 @@ serve(async (req) => {
 
     for (const product of allProducts) {
       try {
-        // Extract base price (use lowest variant price if available)
-        let basePriceCents = 0;
-        if (product.price) {
-          basePriceCents = Math.round(product.price * 100);
-        } else if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
-          const prices = product.variants
-            .map((v: any) => v.price)
-            .filter((p: any) => p && !isNaN(p));
-          if (prices.length > 0) {
-            basePriceCents = Math.round(Math.min(...prices) * 100);
-          }
-        }
-
         // Build product data object
         const productData = {
-          name: product.name || product.title || "Unnamed Product",
-          base_cost_cents: basePriceCents,
-          category: product.categoryName || product.category || "apparel",
-          image_url: product.image || product.defaultImage || product.thumbnail || null,
-          description: product.description || null,
+          name: product.name || "Unnamed Product",
+          base_cost_cents: 0, // Will be populated when we fetch pricing details
+          category: product.categoryName || "apparel",
+          image_url: product.image?.url || null,
+          description: `${product.name} - Style ${product.style}`,
           vendor: "scalablepress",
-          vendor_id: String(product.productId || product.id || product.sku),
-          vendor_product_id: String(product.productId || product.id || product.sku),
+          vendor_id: product.id,
+          vendor_product_id: product.id,
           is_active: true,
           pricing_data: {
-            variants: product.variants || [],
-            colors: product.colors || [],
-            sizes: product.sizes || [],
-            styles: product.styles || []
+            style: product.style,
+            productUrl: product.url
           }
         };
 
