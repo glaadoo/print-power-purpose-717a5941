@@ -776,6 +776,47 @@ export type Database = {
         }
         Relationships: []
       }
+      product_configuration_prices: {
+        Row: {
+          configuration_label: string | null
+          created_at: string | null
+          created_by: string | null
+          custom_price_cents: number
+          id: string
+          product_id: string
+          updated_at: string | null
+          variant_key: string
+        }
+        Insert: {
+          configuration_label?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_price_cents: number
+          id?: string
+          product_id: string
+          updated_at?: string | null
+          variant_key: string
+        }
+        Update: {
+          configuration_label?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_price_cents?: number
+          id?: string
+          product_id?: string
+          updated_at?: string | null
+          variant_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_configuration_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           base_price_cents: number
