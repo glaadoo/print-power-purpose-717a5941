@@ -91,41 +91,71 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: signInEmail,
-      password: signInPassword,
-    });
+    try {
+      // Add timeout protection
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 15000)
+      );
 
-    if (error) {
-      setLoading(false);
-      // Check if the error is related to invalid credentials
-      if (error.message.toLowerCase().includes('invalid') || 
-          error.message.toLowerCase().includes('credentials')) {
+      const signInPromise = supabase.auth.signInWithPassword({
+        email: signInEmail,
+        password: signInPassword,
+      });
+
+      const { error } = await Promise.race([signInPromise, timeoutPromise]) as any;
+
+      if (error) {
+        setLoading(false);
         
-        // Check if user exists by calling our edge function
-        try {
-          const { data: checkResult, error: checkError } = await supabase.functions.invoke('check-user-exists', {
-            body: { email: signInEmail }
-          });
+        // Check for network/connection errors
+        if (error.message.includes('fetch') || 
+            error.message.includes('network') ||
+            error.message.includes('timeout') ||
+            error.message.includes('Failed to fetch')) {
+          toast.error("Cannot connect to authentication service. Please check your internet connection and try again.");
+          return;
+        }
+        
+        // Check if the error is related to invalid credentials
+        if (error.message.toLowerCase().includes('invalid') || 
+            error.message.toLowerCase().includes('credentials')) {
+          
+          // Check if user exists by calling our edge function
+          try {
+            const { data: checkResult, error: checkError } = await supabase.functions.invoke('check-user-exists', {
+              body: { email: signInEmail }
+            });
 
-          if (checkError) {
+            if (checkError) {
+              toast.error("An error occurred. Please try again.");
+            } else if (checkResult?.exists) {
+              toast.error("Incorrect password. Please try again.");
+            } else {
+              toast.error("Account does not exist. Please sign up first.");
+            }
+          } catch (err) {
             toast.error("An error occurred. Please try again.");
-          } else if (checkResult?.exists) {
-            toast.error("Incorrect password. Please try again.");
-          } else {
-            toast.error("Account does not exist. Please sign up first.");
           }
-        } catch (err) {
-          toast.error("An error occurred. Please try again.");
+        } else {
+          toast.error(error.message);
         }
       } else {
-        toast.error(error.message);
+        // Set access flag for authenticated user
+        localStorage.setItem("ppp_access", "user");
+        toast.success("Signed in successfully!");
       }
-    } else {
-      // Set access flag for authenticated user
-      localStorage.setItem("ppp_access", "user");
-      toast.success("Signed in successfully!");
+    } catch (err: any) {
+      setLoading(false);
+      
+      if (err.message === 'Connection timeout') {
+        toast.error("Connection timeout. The authentication service is not responding. Please try again later.");
+      } else if (err.message?.includes('fetch') || err.message?.includes('network')) {
+        toast.error("Network error. Please check your internet connection.");
+      } else {
+        toast.error("Unable to sign in. Please try again.");
+      }
     }
+    
     setLoading(false);
   };
 
@@ -152,7 +182,12 @@ export default function Auth() {
         return;
       }
 
-      const { error } = await supabase.auth.signUp({
+      // Add timeout protection
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 15000)
+      );
+
+      const signUpPromise = supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
         options: {
@@ -170,8 +205,18 @@ export default function Auth() {
         }
       });
 
+      const { error } = await Promise.race([signUpPromise, timeoutPromise]) as any;
+
       if (error) {
-        toast.error(error.message);
+        // Check for network/connection errors
+        if (error.message.includes('fetch') || 
+            error.message.includes('network') ||
+            error.message.includes('timeout') ||
+            error.message.includes('Failed to fetch')) {
+          toast.error("Cannot connect to authentication service. Please check your internet connection and try again.");
+        } else {
+          toast.error(error.message);
+        }
       } else {
         // Set access flag for authenticated user
         localStorage.setItem("ppp_access", "user");
@@ -179,8 +224,14 @@ export default function Auth() {
         setMode("signin");
         setSignInEmail(signUpData.email);
       }
-    } catch (error) {
-      toast.error("An error occurred during signup. Please try again.");
+    } catch (error: any) {
+      if (error.message === 'Connection timeout') {
+        toast.error("Connection timeout. The authentication service is not responding. Please try again later.");
+      } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        toast.error("Network error. Please check your internet connection.");
+      } else {
+        toast.error("An error occurred during signup. Please try again.");
+      }
     }
     
     setLoading(false);
