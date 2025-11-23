@@ -934,6 +934,7 @@ export type Database = {
           review_text: string | null
           updated_at: string
           user_id: string
+          verified_purchase: boolean | null
         }
         Insert: {
           created_at?: string
@@ -943,6 +944,7 @@ export type Database = {
           review_text?: string | null
           updated_at?: string
           user_id: string
+          verified_purchase?: boolean | null
         }
         Update: {
           created_at?: string
@@ -952,6 +954,7 @@ export type Database = {
           review_text?: string | null
           updated_at?: string
           user_id?: string
+          verified_purchase?: boolean | null
         }
         Relationships: [
           {
@@ -1199,6 +1202,10 @@ export type Database = {
     }
     Functions: {
       check_error_log_rate_limit: { Args: never; Returns: boolean }
+      check_verified_purchase: {
+        Args: { p_product_id: string; p_user_id: string }
+        Returns: boolean
+      }
       cleanup_expired_admin_sessions: { Args: never; Returns: undefined }
       cleanup_old_system_logs: { Args: never; Returns: undefined }
       generate_order_number: { Args: never; Returns: string }

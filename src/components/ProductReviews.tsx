@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Star } from "lucide-react";
+import { Star, BadgeCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Review {
@@ -9,6 +9,7 @@ interface Review {
   review_text: string | null;
   created_at: string;
   user_id: string;
+  verified_purchase: boolean;
 }
 
 interface ProductReviewsProps {
@@ -100,7 +101,15 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
               className="p-4 rounded-xl bg-background/60 backdrop-blur-sm border border-border/40"
             >
               <div className="flex items-start justify-between mb-2">
-                {renderStars(review.rating)}
+                <div className="flex items-center gap-2">
+                  {renderStars(review.rating)}
+                  {review.verified_purchase && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/20 border border-green-500/30">
+                      <BadgeCheck className="w-3 h-3 text-green-500" />
+                      <span className="text-xs font-medium text-green-500">Verified Purchase</span>
+                    </div>
+                  )}
+                </div>
                 <span className="text-xs text-muted-foreground">
                   {new Date(review.created_at).toLocaleDateString()}
                 </span>
