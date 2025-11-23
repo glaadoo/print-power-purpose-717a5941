@@ -10,6 +10,7 @@ import { CartProvider } from "./context/CartContext";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import { Toaster } from "sonner";
 import DebugPageIndicator from "./components/DebugPageIndicator";
+import { initPricePrefetch } from "./lib/price-prefetch";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -28,3 +29,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <Toaster position="bottom-right" richColors />
   </React.StrictMode>
 );
+
+// Initialize background price prefetching after 2 seconds
+initPricePrefetch(2000);
