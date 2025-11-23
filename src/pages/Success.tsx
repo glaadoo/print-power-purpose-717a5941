@@ -26,12 +26,19 @@ export default function Success() {
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
+    console.log("[SUCCESS PAGE] Session ID from URL:", sessionId);
+    console.log("[SUCCESS PAGE] Full URL:", window.location.href);
+    console.log("[SUCCESS PAGE] Search params:", Object.fromEntries(searchParams.entries()));
+    
     const fetchOrderDetails = async (retryCount = 0) => {
       if (!sessionId) {
+        console.error("[SUCCESS PAGE] No session_id found in URL");
         setError("No payment session found");
         setLoading(false);
         return;
       }
+
+      console.log(`[SUCCESS PAGE] Fetching order for session: ${sessionId} (attempt ${retryCount + 1})`);
 
       try {
         // Fetch order by session_id
@@ -41,29 +48,33 @@ export default function Success() {
           .eq("session_id", sessionId)
           .maybeSingle();
 
+        console.log("[SUCCESS PAGE] Query result:", { data, error: fetchError });
+
         if (fetchError) throw fetchError;
 
         if (data) {
+          console.log("[SUCCESS PAGE] Order found:", data.order_number);
           setOrderDetails(data as OrderDetails);
           setLoading(false);
         } else if (retryCount < 3) {
           // Order might not be created yet, retry with exponential backoff
           const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
-          console.log(`Order not found, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+          console.log(`[SUCCESS PAGE] Order not found, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
           setTimeout(() => fetchOrderDetails(retryCount + 1), delay);
         } else {
+          console.error("[SUCCESS PAGE] Order not found after 3 retries");
           setError("Order not found. Please check your email for order confirmation.");
           setLoading(false);
         }
       } catch (err) {
-        console.error("Error fetching order:", err);
+        console.error("[SUCCESS PAGE] Error fetching order:", err);
         setError("Unable to load order details");
         setLoading(false);
       }
     };
 
     fetchOrderDetails();
-  }, [sessionId]);
+  }, [sessionId, searchParams]);
 
   if (loading) {
     return (
