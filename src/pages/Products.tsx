@@ -8,7 +8,7 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, ArrowLeft, Search, X, SlidersHorizontal } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Search, X, SlidersHorizontal, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
@@ -406,29 +406,40 @@ export default function Products() {
           SELECT PRODUCTS
         </h1>
 
-        {/* Right: Cart button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            console.log('[Products] Header cart button clicked - navigating to /cart');
-            navigate("/cart");
-          }}
-          className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative flex items-center gap-2 pr-4"
-        >
-          <div className="relative">
-            <ShoppingCart className="w-4 h-4" />
-            {count > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {count}
-              </span>
-            )}
-          </div>
-          <div className="hidden sm:flex flex-col items-start">
-            <span className="text-xs font-semibold">{count} items</span>
-            <span className="text-[10px] opacity-90">${(totalCents / 100).toFixed(2)}</span>
-          </div>
-        </Button>
+        {/* Right: Wishlist and Cart buttons */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/favorites")}
+            className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
+          >
+            <Heart className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              console.log('[Products] Header cart button clicked - navigating to /cart');
+              navigate("/cart");
+            }}
+            className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative flex items-center gap-2 pr-4"
+          >
+            <div className="relative">
+              <ShoppingCart className="w-4 h-4" />
+              {count > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {count}
+                </span>
+              )}
+            </div>
+            <div className="hidden sm:flex flex-col items-start">
+              <span className="text-xs font-semibold">{count} items</span>
+              <span className="text-[10px] opacity-90">${(totalCents / 100).toFixed(2)}</span>
+            </div>
+          </Button>
+        </div>
       </header>
 
       {/* Scrollable content */}
