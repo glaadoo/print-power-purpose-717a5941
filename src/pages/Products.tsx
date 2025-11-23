@@ -40,7 +40,8 @@ export default function Products() {
   const [quantityOptions, setQuantityOptions] = useState<Record<string, string[]>>({});
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"name-asc" | "price-low" | "price-high">("name-asc");
+  const [sortBy, setSortBy] = useState<"name-asc" | "price-low" | "price-high" | "rating-high" | "most-reviewed">("name-asc");
+  const [reviewStats, setReviewStats] = useState<Record<string, { avgRating: number; count: number }>>({});
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -56,8 +57,8 @@ export default function Products() {
     setLoading(true);
     setErr(null);
     try {
-      // Fetch pricing settings and products in parallel
-      const [settingsResult, productsResult] = await Promise.all([
+      // Fetch pricing settings, products, and review stats in parallel
+      const [settingsResult, productsResult, reviewsResult] = await Promise.all([
         withRetry(
           async () => {
             const { data, error } = await supabase
@@ -96,9 +97,37 @@ export default function Products() {
             return data ?? [];
           },
           { maxAttempts: 3, initialDelayMs: 1000, maxDelayMs: 5000 }
+        ),
+        withRetry(
+          async () => {
+            const { data, error } = await supabase
+              .from("reviews")
+              .select("product_id, rating");
+            
+            if (error) throw error;
+            return data ?? [];
+          },
+          { maxAttempts: 3, initialDelayMs: 1000, maxDelayMs: 5000 }
         )
       ]);
       
+      // Calculate review statistics for each product
+      const stats: Record<string, { avgRating: number; count: number }> = {};
+      reviewsResult.forEach((review: any) => {
+        if (!stats[review.product_id]) {
+          stats[review.product_id] = { avgRating: 0, count: 0 };
+        }
+        stats[review.product_id].count++;
+      });
+      
+      // Calculate averages
+      Object.keys(stats).forEach(productId => {
+        const productReviews = reviewsResult.filter((r: any) => r.product_id === productId);
+        const sum = productReviews.reduce((acc: number, r: any) => acc + r.rating, 0);
+        stats[productId].avgRating = sum / stats[productId].count;
+      });
+      
+      setReviewStats(stats);
       setPricingSettings(settingsResult as PricingSettings);
       setRows(productsResult);
     } catch (e: any) {
@@ -297,19 +326,29 @@ export default function Products() {
         return sortBy === "price-low" ? priceA - priceB : priceB - priceA;
       }
       
+      if (sortBy === "rating-high") {
+        const ratingA = reviewStats[a.id]?.avgRating || 0;
+        const ratingB = reviewStats[b.id]?.avgRating || 0;
+        
+        // Sort by rating descending, then by review count as tiebreaker
+        if (ratingA !== ratingB) {
+          return ratingB - ratingA;
+        }
+        return (reviewStats[b.id]?.count || 0) - (reviewStats[a.id]?.count || 0);
+      }
+      
+      if (sortBy === "most-reviewed") {
+        const countA = reviewStats[a.id]?.count || 0;
+        const countB = reviewStats[b.id]?.count || 0;
+        
+        return countB - countA;
+      }
+      
       return 0;
     });
     
-    // Log sorted results for debugging price sort
-    if (sortBy === "price-low" || sortBy === "price-high") {
-      console.log('[Products] Sorted by price:', sorted.slice(0, 10).map(p => ({
-        name: p.name,
-        price: `$${((defaultPrices[p.id] || 0) / 100).toFixed(2)}`
-      })));
-    }
-    
     return sorted;
-  }, [rows, searchTerm, sortBy, defaultPrices]);
+  }, [rows, searchTerm, sortBy, defaultPrices, reviewStats]);
 
   // Group products by category
   const groupedProducts = useMemo(() => {
@@ -450,6 +489,8 @@ export default function Products() {
                       <SelectItem value="name-asc">Name (A-Z)</SelectItem>
                       <SelectItem value="price-low">Price: Low to High</SelectItem>
                       <SelectItem value="price-high">Price: High to Low</SelectItem>
+                      <SelectItem value="rating-high">Highest Rated</SelectItem>
+                      <SelectItem value="most-reviewed">Most Reviewed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
