@@ -49,6 +49,7 @@ export default function ProductCard({
   const [user, setUser] = useState<any>(null);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
+  const [firstConfigPrice, setFirstConfigPrice] = useState<number | null>(null);
   const imageSrc = product.image_url || null;
 
   // Check authentication and favorite status
@@ -76,6 +77,90 @@ export default function ProductCard({
   useEffect(() => {
     fetchReviewStats();
   }, [product.id]);
+
+  // Fetch first configuration price
+  useEffect(() => {
+    if (requiresConfiguration && product.pricing_data) {
+      fetchFirstConfigPrice();
+    }
+  }, [product.id, requiresConfiguration]);
+
+  const fetchFirstConfigPrice = async () => {
+    try {
+      // Get product data
+      const { data: productData, error: productError } = await supabase
+        .from("products")
+        .select("vendor_product_id, pricing_data")
+        .eq("id", product.id)
+        .maybeSingle();
+
+      if (productError || !productData) return;
+
+      // Extract options from pricing_data
+      const pricingData = productData.pricing_data as any;
+      const optionsData = pricingData?.options || pricingData?.configurations || pricingData?.attributes;
+
+      if (!Array.isArray(optionsData) || optionsData.length === 0) return;
+
+      // Group options
+      const groupMap: Record<string, any[]> = {};
+      optionsData.forEach((option: any) => {
+        if (!option.group) return;
+        if (!groupMap[option.group]) {
+          groupMap[option.group] = [];
+        }
+        groupMap[option.group].push(option);
+      });
+
+      // Get first option ID from each group
+      const defaultOptionIds = Object.values(groupMap)
+        .map(opts => {
+          const sorted = opts.sort((a, b) => {
+            // Dimension sorting
+            const dimensionRegex = /^(\d+(?:\.\d+)?)\s*[×x]\s*(\d+(?:\.\d+)?)$/;
+            const aMatch = a.name.match(dimensionRegex);
+            const bMatch = b.name.match(dimensionRegex);
+            
+            if (aMatch && bMatch) {
+              const aWidth = parseFloat(aMatch[1]);
+              const bWidth = parseFloat(bMatch[1]);
+              if (aWidth !== bWidth) return aWidth - bWidth;
+              return parseFloat(aMatch[2]) - parseFloat(bMatch[2]);
+            }
+            
+            // Numeric sorting
+            const aNum = parseInt(a.name);
+            const bNum = parseInt(b.name);
+            if (!isNaN(aNum) && !isNaN(bNum)) return aNum - bNum;
+            
+            return a.name.localeCompare(b.name);
+          });
+          return sorted[0]?.id;
+        })
+        .filter(Boolean);
+
+      if (defaultOptionIds.length === 0) return;
+
+      // Fetch price using variant key
+      const variantKey = defaultOptionIds.sort((a, b) => a - b).join('-');
+      const { data: priceData, error: priceError } = await supabase.functions.invoke('sinalite-price', {
+        body: {
+          productId: productData.vendor_product_id,
+          storeCode: 9,
+          variantKey: variantKey,
+          method: 'PRICEBYKEY'
+        },
+      });
+
+      if (!priceError && priceData && Array.isArray(priceData) && priceData.length > 0 && priceData[0].price) {
+        const priceFloat = parseFloat(priceData[0].price);
+        const priceCents = Math.round(priceFloat * 100);
+        setFirstConfigPrice(priceCents);
+      }
+    } catch (error) {
+      console.error("Error fetching first config price:", error);
+    }
+  };
 
   const fetchReviewStats = async () => {
     try {
@@ -166,12 +251,12 @@ export default function ProductCard({
         </button>
 
         {/* Product Image */}
-        <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10">
+        <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10 mt-8">
           {imageSrc && !imageError ? (
             <img 
               src={imageSrc} 
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               loading="eager"
               onError={() => {
                 setImageError(true);
@@ -223,7 +308,14 @@ export default function ProductCard({
         </div>
         
         <div className="flex flex-col gap-1 w-full items-center text-center">
-          {displayPriceCents > 0 ? (
+          {(requiresConfiguration && firstConfigPrice !== null) ? (
+            <>
+              <p className="text-sm text-white/70">Regular Price:</p>
+              <p className="text-2xl font-bold text-white">
+                ${(firstConfigPrice / 100).toFixed(2)}
+              </p>
+            </>
+          ) : displayPriceCents > 0 ? (
             <>
               <p className="text-sm text-white/70">Regular Price:</p>
               <p className="text-2xl font-bold text-white">
@@ -231,7 +323,10 @@ export default function ProductCard({
               </p>
             </>
           ) : (
-            <p className="text-2xl font-bold text-white/60">—</p>
+            <>
+              <p className="text-sm text-white/70">Regular Price:</p>
+              <p className="text-sm text-white/40 animate-pulse">Loading...</p>
+            </>
           )}
         </div>
 
