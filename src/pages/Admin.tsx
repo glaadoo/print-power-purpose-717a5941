@@ -23,6 +23,7 @@ import BulkImportDialog from "@/components/admin/BulkImportDialog";
 import SchoolBulkImportDialog from "@/components/admin/SchoolBulkImportDialog";
 import WhoWeServeEditor from "@/components/admin/WhoWeServeEditor";
 import { StripeModeToggle } from "@/components/admin/StripeModeToggle";
+import ProductPriceManager from "@/components/admin/ProductPriceManager";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -780,6 +781,12 @@ export default function Admin() {
                   Products
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="prices" 
+                  className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
+                >
+                  Product Prices
+                </TabsTrigger>
+                <TabsTrigger 
                   value="causes" 
                   className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
                 >
@@ -1028,6 +1035,10 @@ export default function Admin() {
                   </Table>
                 </ScrollArea>
               </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="prices">
+              <ProductPriceManager />
             </TabsContent>
 
             <TabsContent value="causes">

@@ -39,6 +39,7 @@ type ProductConfiguratorProps = {
   onConfigChange: (config: Record<string, string>) => void;
   onPackageInfoChange?: (info: PackageInfo | null) => void;
   onQuantityOptionsChange?: (options: string[]) => void;
+  onVariantKeyChange?: (variantKey: string) => void;
 };
 
 export function ProductConfigurator({
@@ -50,6 +51,7 @@ export function ProductConfigurator({
   onConfigChange,
   onPackageInfoChange,
   onQuantityOptionsChange,
+  onVariantKeyChange,
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
@@ -182,6 +184,11 @@ export function ProductConfigurator({
     const fetchPrice = async () => {
       const variantKey = optionIds.sort((a, b) => a - b).join('-');
       
+      // Notify parent of variant key change
+      if (onVariantKeyChange) {
+        onVariantKeyChange(variantKey);
+      }
+      
       // Check cache first
       if (priceCache[variantKey]) {
         console.log('[ProductConfigurator] Using cached price for:', variantKey);
@@ -194,6 +201,28 @@ export function ProductConfigurator({
       setFetchingPrice(true);
       setPriceError(null);
       console.log('[ProductConfigurator] Fetching price by key:', variantKey);
+      
+      // First, check if admin has set a custom price for this configuration
+      try {
+        const { data: customPrice, error: customPriceError } = await supabase
+          .from('product_configuration_prices')
+          .select('custom_price_cents')
+          .eq('product_id', productId)
+          .eq('variant_key', variantKey)
+          .maybeSingle();
+        
+        if (!customPriceError && customPrice) {
+          console.log('[ProductConfigurator] Using admin custom price:', customPrice.custom_price_cents);
+          setPriceCache(prev => ({ ...prev, [variantKey]: customPrice.custom_price_cents }));
+          onPriceChange(customPrice.custom_price_cents);
+          setPriceError(null);
+          setFetchingPrice(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('[ProductConfigurator] Failed to check custom price:', err);
+        // Continue to fetch from Sinalite API
+      }
       
       // Create timeout promise
       const timeoutPromise = new Promise((_, reject) => {
