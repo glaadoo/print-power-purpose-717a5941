@@ -49,8 +49,6 @@ export default function ProductCard({
   const [user, setUser] = useState<any>(null);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
-  const [firstConfigPrice, setFirstConfigPrice] = useState<number | null>(null);
-  const [showConfigurator, setShowConfigurator] = useState(true); // Auto-expand configurator
   const imageSrc = product.image_url || null;
   const { isFavorite, toggleFavorite: toggleFavoriteContext } = useFavorites();
   const isProductFavorite = isFavorite(product.id);
@@ -72,90 +70,6 @@ export default function ProductCard({
   useEffect(() => {
     fetchReviewStats();
   }, [product.id]);
-
-  // Fetch first configuration price
-  useEffect(() => {
-    if (requiresConfiguration && product.pricing_data) {
-      fetchFirstConfigPrice();
-    }
-  }, [product.id, requiresConfiguration]);
-
-  const fetchFirstConfigPrice = async () => {
-    try {
-      // Get product data
-      const { data: productData, error: productError } = await supabase
-        .from("products")
-        .select("vendor_product_id, pricing_data")
-        .eq("id", product.id)
-        .maybeSingle();
-
-      if (productError || !productData) return;
-
-      // Extract options from pricing_data
-      const pricingData = productData.pricing_data as any;
-      const optionsData = pricingData?.options || pricingData?.configurations || pricingData?.attributes;
-
-      if (!Array.isArray(optionsData) || optionsData.length === 0) return;
-
-      // Group options
-      const groupMap: Record<string, any[]> = {};
-      optionsData.forEach((option: any) => {
-        if (!option.group) return;
-        if (!groupMap[option.group]) {
-          groupMap[option.group] = [];
-        }
-        groupMap[option.group].push(option);
-      });
-
-      // Get first option ID from each group
-      const defaultOptionIds = Object.values(groupMap)
-        .map(opts => {
-          const sorted = opts.sort((a, b) => {
-            // Dimension sorting
-            const dimensionRegex = /^(\d+(?:\.\d+)?)\s*[×x]\s*(\d+(?:\.\d+)?)$/;
-            const aMatch = a.name.match(dimensionRegex);
-            const bMatch = b.name.match(dimensionRegex);
-            
-            if (aMatch && bMatch) {
-              const aWidth = parseFloat(aMatch[1]);
-              const bWidth = parseFloat(bMatch[1]);
-              if (aWidth !== bWidth) return aWidth - bWidth;
-              return parseFloat(aMatch[2]) - parseFloat(bMatch[2]);
-            }
-            
-            // Numeric sorting
-            const aNum = parseInt(a.name);
-            const bNum = parseInt(b.name);
-            if (!isNaN(aNum) && !isNaN(bNum)) return aNum - bNum;
-            
-            return a.name.localeCompare(b.name);
-          });
-          return sorted[0]?.id;
-        })
-        .filter(Boolean);
-
-      if (defaultOptionIds.length === 0) return;
-
-      // Fetch price using variant key
-      const variantKey = defaultOptionIds.sort((a, b) => a - b).join('-');
-      const { data: priceData, error: priceError } = await supabase.functions.invoke('sinalite-price', {
-        body: {
-          productId: productData.vendor_product_id,
-          storeCode: 9,
-          variantKey: variantKey,
-          method: 'PRICEBYKEY'
-        },
-      });
-
-      if (!priceError && priceData && Array.isArray(priceData) && priceData.length > 0 && priceData[0].price) {
-        const priceFloat = parseFloat(priceData[0].price);
-        const priceCents = Math.round(priceFloat * 100);
-        setFirstConfigPrice(priceCents);
-      }
-    } catch (error) {
-      console.error("Error fetching first config price:", error);
-    }
-  };
 
   const fetchReviewStats = async () => {
     try {
@@ -257,10 +171,10 @@ export default function ProductCard({
             </div>
           )}
 
-          {/* Price Display - show configured price or first config price */}
-          {(displayPriceCents > 0 || firstConfigPrice !== null) && (
+          {/* Price Display - only show configured price */}
+          {displayPriceCents > 0 && (
             <p className="text-2xl font-bold text-white">
-              ${((displayPriceCents > 0 ? displayPriceCents : firstConfigPrice!) / 100).toFixed(2)}
+              ${(displayPriceCents / 100).toFixed(2)}
             </p>
           )}
           
