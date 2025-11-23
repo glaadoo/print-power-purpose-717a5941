@@ -6,6 +6,7 @@ import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
+import { addRecentlyViewed } from "@/lib/recently-viewed";
 
 type ProductRow = {
   id: string;
@@ -52,6 +53,14 @@ export default function ProductDetail() {
         setErr("Product not found");
       } else {
         setProduct(data as ProductRow);
+        
+        // Track as recently viewed when product loads
+        addRecentlyViewed({
+          id: data.id,
+          name: data.name,
+          image_url: data.image_url,
+          category: data.category
+        });
       }
       setLoading(false);
     })();
