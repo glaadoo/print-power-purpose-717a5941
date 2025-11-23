@@ -300,6 +300,13 @@ export default function ProductCard({
               </span>
             </div>
           )}
+
+          {/* Price Display */}
+          {firstConfigPrice !== null && (
+            <p className="text-2xl font-bold text-white">
+              ${(firstConfigPrice / 100).toFixed(2)}
+            </p>
+          )}
           
           {isInCart && (
             <Badge className="bg-green-600 text-white border-green-400 text-xs">
