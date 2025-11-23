@@ -287,12 +287,6 @@ export function ProductConfigurator({
     <div className="space-y-3 w-full">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">Configure Options:</h3>
-        {fetchingPrice && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            <span>Updating price...</span>
-          </div>
-        )}
       </div>
       
       {optionGroups.map((group) => (

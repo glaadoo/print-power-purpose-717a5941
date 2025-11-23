@@ -321,61 +321,81 @@ serve(async (req) => {
     const productsToSync = [];
     for (const p of enabledProducts) {
       let baseCostCents = 2000; // Default $20.00 if no price found
-      let minPriceFound = false;
+      let firstConfigPrice = false;
+      let configurationData = null; // Store configuration options
       
-      // Strategy 1: Try to get minimum price from /variants endpoint (most accurate)
+      // Strategy 1: Get FIRST configuration price (not minimum)
       try {
-        console.log(`[SYNC-SINALITE] Fetching variants/prices for product ${p.id} to find minimum price...`);
-        const variantsUrl = `${apiUrl}/${p.id}/variants/0`;
-        const variantsResponse = await fetch(variantsUrl, {
+        console.log(`[SYNC-SINALITE] Fetching first configuration price for product ${p.id}...`);
+        
+        // Get product configuration options
+        const configUrl = `${apiUrl}/${p.id}/${storeCode}`;
+        const configResponse = await fetch(configUrl, {
           headers: {
             "Authorization": `Bearer ${accessToken}`,
             "Content-Type": "application/json"
           }
         });
         
-        if (variantsResponse.ok) {
-          const variants = await variantsResponse.json();
-          console.log(`[SYNC-SINALITE] Product ${p.id} variants response:`, { 
-            count: variants?.length || 0,
-            sample: variants?.[0] 
-          });
+        if (configResponse.ok) {
+          const configData = await configResponse.json();
+          configurationData = configData; // Store for pricing_data field
+          const optionsArray = configData[0] || [];
           
-          // Find minimum price from variants
-          if (Array.isArray(variants) && variants.length > 0) {
-            const prices = variants
-              .map((v: any) => parseFloat(v.price || v.unit_price || v.base_price || 0))
-              .filter((price: number) => price > 0);
+          if (Array.isArray(optionsArray) && optionsArray.length > 0) {
+            // Group options by group field
+            const groupMap: Record<string, any[]> = {};
+            optionsArray.forEach((option: any) => {
+              if (!option.group) return;
+              if (!groupMap[option.group]) {
+                groupMap[option.group] = [];
+              }
+              groupMap[option.group].push(option);
+            });
             
-            if (prices.length > 0) {
-              const minPrice = Math.min(...prices);
-              baseCostCents = Math.round(minPrice * 100);
-              minPriceFound = true;
-              console.log(`[SYNC-SINALITE] ✅ Product ${p.id} minimum price from variants: $${minPrice.toFixed(2)}`);
+            // Get first option ID from each group
+            const firstOptionIds = Object.values(groupMap)
+              .map(opts => opts[0]?.id)
+              .filter(Boolean);
+            
+            if (firstOptionIds.length > 0) {
+              const variantKey = firstOptionIds.sort((a, b) => a - b).join('-');
+              
+              // Get price for first configuration
+              const priceUrl = `${apiUrl}/${p.id}/pricebykey/${variantKey}/${storeCode}`;
+              const priceResponse = await fetch(priceUrl, {
+                headers: {
+                  "Authorization": `Bearer ${accessToken}`,
+                  "Content-Type": "application/json"
+                }
+              });
+              
+              if (priceResponse.ok) {
+                const priceData = await priceResponse.json();
+                if (Array.isArray(priceData) && priceData.length > 0 && priceData[0].price) {
+                  const price = parseFloat(priceData[0].price);
+                  baseCostCents = Math.round(price * 100);
+                  firstConfigPrice = true;
+                  console.log(`[SYNC-SINALITE] ✅ Product ${p.id} first config price: $${price.toFixed(2)}`);
+                }
+              }
             }
           }
         }
       } catch (err) {
-        console.warn(`[SYNC-SINALITE] Failed to fetch variants for product ${p.id}:`, err);
+        console.warn(`[SYNC-SINALITE] Failed to fetch first config price for product ${p.id}:`, err);
       }
       
       // Strategy 2: Fallback to product-level price fields
-      if (!minPriceFound) {
+      if (!firstConfigPrice) {
         if (p.price && typeof p.price === 'number' && p.price > 0) {
           baseCostCents = Math.round(p.price * 100);
           console.log(`[SYNC-SINALITE] Product ${p.id} using product.price: $${p.price.toFixed(2)}`);
         } else if (p.base_price && typeof p.base_price === 'number' && p.base_price > 0) {
           baseCostCents = Math.round(p.base_price * 100);
           console.log(`[SYNC-SINALITE] Product ${p.id} using product.base_price: $${p.base_price.toFixed(2)}`);
-        } else if (p.minPrice && typeof p.minPrice === 'number' && p.minPrice > 0) {
-          baseCostCents = Math.round(p.minPrice * 100);
-          console.log(`[SYNC-SINALITE] Product ${p.id} using product.minPrice: $${p.minPrice.toFixed(2)}`);
-        } else if (p.min_price && typeof p.min_price === 'number' && p.min_price > 0) {
-          baseCostCents = Math.round(p.min_price * 100);
-          console.log(`[SYNC-SINALITE] Product ${p.id} using product.min_price: $${p.min_price.toFixed(2)}`);
         } else {
           console.warn(`[SYNC-SINALITE] Product ${p.id} (${p.name}): No price field found, using default $${baseCostCents / 100}`);
-          console.warn(`[SYNC-SINALITE] Available fields:`, Object.keys(p));
         }
       }
       
@@ -437,7 +457,7 @@ serve(async (req) => {
         vendor: "sinalite",
         vendor_id: `${p.id}_${storeCode}`, // Unique ID per store
         vendor_product_id: p.id.toString(),
-        pricing_data: p, // Store full product data for reference
+        pricing_data: configurationData || p, // Store configuration data, fallback to product data
       });
     }
     
