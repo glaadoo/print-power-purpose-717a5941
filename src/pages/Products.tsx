@@ -380,27 +380,20 @@ export default function Products() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Calculate display prices: use configured price if available, otherwise 0 for Sinalite products requiring configuration
+  // Calculate display prices: use configured price if available, otherwise base_cost_cents for immediate display
   const defaultPrices = useMemo(() => {
     const prices: Record<string, number> = {};
     rows.forEach(product => {
-      // Check if product has configured price
+      // Priority order:
+      // 1. Configured price (from user selections in ProductConfigurator)
+      // 2. Price override (admin-set custom price)
+      // 3. Base cost (minimum price from Sinalite sync)
       if (configuredPrices[product.id]) {
         prices[product.id] = configuredPrices[product.id];
       } else if (product.price_override_cents) {
         prices[product.id] = product.price_override_cents;
-      } else if (product.vendor === "sinalite" && product.pricing_data) {
-        // Sinalite products with pricing_data require configuration - don't show price until configured
-        prices[product.id] = 0;
-      } else if (product.vendor === "sinalite" && pricingSettings) {
-        // Sinalite products without pricing_data can use base cost
-        const pricing = computeGlobalPricing({
-          vendor: "sinalite",
-          base_cost_cents: product.base_cost_cents || 0,
-          settings: pricingSettings
-        });
-        prices[product.id] = pricing.final_price_per_unit_cents;
       } else {
+        // Always show base_cost_cents as the minimum/starting price
         prices[product.id] = product.base_cost_cents || 0;
       }
     });
