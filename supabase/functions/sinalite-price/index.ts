@@ -105,9 +105,23 @@ serve(async (req) => {
       });
 
       if (!authResponse.ok) {
-        console.error("[SINALITE-PRICE] Auth failed:", authResponse.status);
+        const errorText = await authResponse.text();
+        console.error("[SINALITE-PRICE] Auth failed:", {
+          status: authResponse.status,
+          statusText: authResponse.statusText,
+          mode: sinaliteMode,
+          authUrl,
+          hasClientId: !!clientId,
+          hasClientSecret: !!clientSecret,
+          hasAudience: !!audience,
+          errorBody: errorText
+        });
         return new Response(
-          JSON.stringify({ error: "Authentication failed" }),
+          JSON.stringify({ 
+            error: "Authentication failed", 
+            details: `Status: ${authResponse.status}, Mode: ${sinaliteMode}`,
+            hint: "Check Sinalite API credentials in secrets"
+          }),
           { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
