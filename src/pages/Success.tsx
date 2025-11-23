@@ -45,6 +45,7 @@ export default function Success() {
 
         if (data) {
           setOrderDetails(data as OrderDetails);
+          setLoading(false);
         } else if (retryCount < 3) {
           // Order might not be created yet, retry with exponential backoff
           const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
@@ -52,15 +53,12 @@ export default function Success() {
           setTimeout(() => fetchOrderDetails(retryCount + 1), delay);
         } else {
           setError("Order not found. Please check your email for order confirmation.");
+          setLoading(false);
         }
       } catch (err) {
         console.error("Error fetching order:", err);
         setError("Unable to load order details");
         setLoading(false);
-      } finally {
-        if (retryCount >= 3 || orderDetails) {
-          setLoading(false);
-        }
       }
     };
 
@@ -217,9 +215,11 @@ export default function Success() {
         </div>
 
         {/* Email Confirmation Note */}
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          A confirmation email has been sent to {orderDetails.customer_email}
-        </p>
+        {orderDetails.customer_email && (
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            A confirmation email has been sent to {orderDetails.customer_email}
+          </p>
+        )}
       </div>
     </div>
   );
