@@ -59,60 +59,84 @@ export default function Products() {
   const fetchProducts = async () => {
     setLoading(true);
     setErr(null);
+    
+    // Add timeout to prevent infinite loading
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout - please check your connection')), 15000)
+    );
+    
     try {
-      // Fetch pricing settings, products, and review stats in parallel
-      const [settingsResult, productsResult, reviewsResult] = await Promise.all([
-        withRetry(
-          async () => {
-            const { data, error } = await supabase
-              .from("pricing_settings")
-              .select("*")
-              .eq("vendor", "sinalite")
-              .maybeSingle();
-            
-            if (error) throw error;
-            
-            // Return NO markup if none configured - show base price only
-            return data || {
-              vendor: "sinalite",
-              markup_mode: "fixed",
-              markup_fixed_cents: 0,
-              markup_percent: 0,
-              nonprofit_share_mode: "fixed",
-              nonprofit_fixed_cents: 0,
-              nonprofit_percent_of_markup: 0,
-              currency: "USD"
-            };
-          },
-          { maxAttempts: 3, initialDelayMs: 1000, maxDelayMs: 5000 }
-        ),
-        withRetry(
-          async () => {
-            const { data, error } = await supabase
-              .from("products")
-              .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, pricing_data, vendor_product_id")
-              .eq("is_active", true)
-              .order("category", { ascending: true })
-              .order("name", { ascending: true })
-              .limit(200);
-            
-            if (error) throw error;
-            return data ?? [];
-          },
-          { maxAttempts: 3, initialDelayMs: 1000, maxDelayMs: 5000 }
-        ),
-        withRetry(
-          async () => {
-            const { data, error } = await supabase
-              .from("reviews")
-              .select("product_id, rating");
-            
-            if (error) throw error;
-            return data ?? [];
-          },
-          { maxAttempts: 3, initialDelayMs: 1000, maxDelayMs: 5000 }
-        )
-      ]);
+      // Fetch pricing settings, products, and review stats in parallel with timeout
+      const [settingsResult, productsResult, reviewsResult] = await Promise.race([
+        Promise.all([
+          withRetry(
+            async () => {
+              const { data, error } = await supabase
+                .from("pricing_settings")
+                .select("*")
+                .eq("vendor", "sinalite")
+                .maybeSingle();
+              
+              if (error) {
+                console.error('[Products] Pricing settings error:', error);
+                throw error;
+              }
+              
+              // Return NO markup if none configured - show base price only
+              return data || {
+                vendor: "sinalite",
+                markup_mode: "fixed",
+                markup_fixed_cents: 0,
+                markup_percent: 0,
+                nonprofit_share_mode: "fixed",
+                nonprofit_fixed_cents: 0,
+                nonprofit_percent_of_markup: 0,
+                currency: "USD"
+              };
+            },
+            { maxAttempts: 2, initialDelayMs: 500, maxDelayMs: 2000 }
+          ),
+          withRetry(
+            async () => {
+              const { data, error } = await supabase
+                .from("products")
+                .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, pricing_data, vendor_product_id")
+                .eq("is_active", true)
+                .order("category", { ascending: true })
+                .order("name", { ascending: true })
+                .limit(200);
+              
+              if (error) {
+                console.error('[Products] Products fetch error:', error);
+                throw error;
+              }
+              return data ?? [];
+            },
+            { maxAttempts: 2, initialDelayMs: 500, maxDelayMs: 2000 }
+          ),
+          withRetry(
+            async () => {
+              const { data, error } = await supabase
+                .from("reviews")
+                .select("product_id, rating");
+              
+              if (error) {
+                console.error('[Products] Reviews fetch error:', error);
+                // Don't fail on reviews error - just return empty array
+                return [];
+              }
+              return data ?? [];
+            },
+            { maxAttempts: 1, initialDelayMs: 500, maxDelayMs: 1000 }
+          )
+        ]),
+        timeoutPromise
+      ] as [Promise<[any, any, any]>, Promise<never>]);
+      
+      console.log('[Products] Successfully fetched data:', { 
+        productsCount: productsResult.length,
+        reviewsCount: reviewsResult.length 
+      });
       
       // Calculate review statistics for each product
       const stats: Record<string, { avgRating: number; count: number }> = {};
@@ -133,14 +157,14 @@ export default function Products() {
       setReviewStats(stats);
       setPricingSettings(settingsResult as PricingSettings);
       setRows(productsResult);
+      setLoading(false); // Explicitly set loading to false on success
     } catch (e: any) {
       console.error('[Products] Failed to load products:', e);
       setErr(e?.message || "Failed to load products. Please try again.");
       toast.error("Failed to load products", {
-        description: "Please check your connection and try again."
+        description: e?.message || "Please check your connection and try again."
       });
-    } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading is false even on error
     }
   };
 
