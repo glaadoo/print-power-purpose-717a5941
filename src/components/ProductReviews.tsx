@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, BadgeCheck } from "lucide-react";
+import { Star, BadgeCheck, ThumbsUp, ThumbsDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 interface Review {
   id: string;
@@ -10,6 +11,8 @@ interface Review {
   created_at: string;
   user_id: string;
   verified_purchase: boolean;
+  helpful_count: number;
+  not_helpful_count: number;
 }
 
 interface ProductReviewsProps {
@@ -19,11 +22,41 @@ interface ProductReviewsProps {
 export default function ProductReviews({ productId }: ProductReviewsProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [userVotes, setUserVotes] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   useEffect(() => {
+    checkAuth();
     fetchReviews();
   }, [productId]);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+    if (user) {
+      fetchUserVotes(user.id);
+    }
+  };
+
+  const fetchUserVotes = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("review_votes")
+        .select("review_id, vote_type")
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      const votes: Record<string, string> = {};
+      data?.forEach((vote) => {
+        votes[vote.review_id] = vote.vote_type;
+      });
+      setUserVotes(votes);
+    } catch (error) {
+      console.error("Error fetching user votes:", error);
+    }
+  };
 
   const fetchReviews = async () => {
     try {
@@ -44,6 +77,72 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVote = async (reviewId: string, voteType: "helpful" | "not_helpful") => {
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Please log in to vote on reviews",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const existingVote = userVotes[reviewId];
+
+      if (existingVote === voteType) {
+        // Remove vote if clicking same button
+        const { error } = await supabase
+          .from("review_votes")
+          .delete()
+          .eq("review_id", reviewId)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        setUserVotes((prev) => {
+          const newVotes = { ...prev };
+          delete newVotes[reviewId];
+          return newVotes;
+        });
+      } else if (existingVote) {
+        // Update existing vote
+        const { error } = await supabase
+          .from("review_votes")
+          .update({ vote_type: voteType })
+          .eq("review_id", reviewId)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        setUserVotes((prev) => ({ ...prev, [reviewId]: voteType }));
+      } else {
+        // Create new vote
+        const { error } = await supabase
+          .from("review_votes")
+          .insert({
+            review_id: reviewId,
+            user_id: user.id,
+            vote_type: voteType,
+          });
+
+        if (error) throw error;
+
+        setUserVotes((prev) => ({ ...prev, [reviewId]: voteType }));
+      }
+
+      // Refresh reviews to get updated counts
+      fetchReviews();
+    } catch (error: any) {
+      console.error("Error voting on review:", error);
+      toast({
+        title: "Error",
+        description: "Failed to record your vote",
+        variant: "destructive",
+      });
     }
   };
 
@@ -152,6 +251,39 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
               {review.review_text && (
                 <p className="text-sm text-foreground/90 mt-2">{review.review_text}</p>
               )}
+              
+              {/* Voting Buttons */}
+              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/20">
+                <span className="text-xs text-muted-foreground">Was this helpful?</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleVote(review.id, "helpful")}
+                    className={`gap-1 h-8 ${
+                      userVotes[review.id] === "helpful"
+                        ? "bg-green-500/20 text-green-600 hover:bg-green-500/30"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    <ThumbsUp className="w-3 h-3" />
+                    <span className="text-xs">{review.helpful_count}</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleVote(review.id, "not_helpful")}
+                    className={`gap-1 h-8 ${
+                      userVotes[review.id] === "not_helpful"
+                        ? "bg-red-500/20 text-red-600 hover:bg-red-500/30"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    <ThumbsDown className="w-3 h-3" />
+                    <span className="text-xs">{review.not_helpful_count}</span>
+                  </Button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
