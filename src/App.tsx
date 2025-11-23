@@ -107,6 +107,7 @@ import AdminTransactions from "./pages/AdminTransactions";
 const AdminProducts = lazyPage("AdminProducts", () => import("./pages/AdminProducts"));
 const AdminOrders = lazyPage("AdminOrders", () => import("./pages/AdminOrders"));
 const AdminLiveModeSetup = lazyPage("AdminLiveModeSetup", () => import("./pages/AdminLiveModeSetup"));
+const AdminAccessLogs = lazyPage("AdminAccessLogs", () => import("./pages/AdminAccessLogs"));
 const NonprofitProfile = lazyPage("NonprofitProfile", () => import("./pages/NonprofitProfile"));
 const SubmitNonprofit = lazyPage("SubmitNonprofit", () => import("./pages/SubmitNonprofit"));
 const WhoWeServeNonprofits = lazyPage("WhoWeServeNonprofits", () => import("./pages/WhoWeServeNonprofits"));
@@ -701,6 +702,18 @@ export default function App() {
               <RouteBoundary name="AdminPricing">
                 <AdminProtectedRoute>
                   <AdminPricing />
+                </AdminProtectedRoute>
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Access Logs */}
+          <Route
+            path="/admin/access-logs"
+            element={
+              <RouteBoundary name="AdminAccessLogs">
+                <AdminProtectedRoute>
+                  <AdminAccessLogs />
                 </AdminProtectedRoute>
               </RouteBoundary>
             }
