@@ -206,9 +206,8 @@ export default function App() {
             ease: [0.4, 0, 0.2, 1]
           }}
           style={{ 
-            position: 'fixed',
-            inset: 0,
-            zIndex: 1
+            minHeight: '100vh',
+            width: '100%'
           }}
         >
           <Suspense fallback={<Loading label="page" />}>
