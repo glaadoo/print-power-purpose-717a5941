@@ -124,7 +124,7 @@ export function ProductConfigurator({
     }));
   }, [pricingData]);
 
-  // Initialize with first option from each group
+  // Initialize with first option from each group - ONLY RUN ONCE
   useEffect(() => {
     if (optionGroups.length === 0) {
       console.log('[ProductConfigurator] No option groups available');
@@ -140,20 +140,22 @@ export function ProductConfigurator({
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
+  }, [optionGroups]);
 
-    // Extract and pass quantity options to parent
-    if (onQuantityOptionsChange) {
-      const qtyGroup = optionGroups.find(g => 
-        g.group.toLowerCase().includes('qty') || 
-        g.group.toLowerCase().includes('quantity')
-      );
-      if (qtyGroup) {
-        const qtyOptions = qtyGroup.options.map(opt => opt.name);
-        console.log('[ProductConfigurator] Quantity options:', qtyOptions);
-        onQuantityOptionsChange(qtyOptions);
-      }
+  // Notify parent of quantity options - separate effect
+  useEffect(() => {
+    if (!onQuantityOptionsChange || optionGroups.length === 0) return;
+    
+    const qtyGroup = optionGroups.find(g => 
+      g.group.toLowerCase().includes('qty') || 
+      g.group.toLowerCase().includes('quantity')
+    );
+    if (qtyGroup) {
+      const qtyOptions = qtyGroup.options.map(opt => opt.name);
+      console.log('[ProductConfigurator] Quantity options:', qtyOptions);
+      onQuantityOptionsChange(qtyOptions);
     }
-  }, [optionGroups, onQuantityOptionsChange]);
+  }, [optionGroups]);
 
   // Fetch price whenever selections change
   useEffect(() => {
