@@ -201,24 +201,37 @@ export default function Home() {
           </a>
         </div>
 
-        {/* Right: Find Causes */}
-        <button
-          onClick={() => {
-            const access = localStorage.getItem("ppp_access");
-            if (!access) {
-              localStorage.setItem("ppp_access", "guest");
-            }
-            nav("/select/nonprofit?flow=shopping");
-          }}
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-label="Find causes"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2" />
-            <path d="M20 20l-3.2-3.2" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="hidden sm:inline">Find Causes</span>
-        </button>
+        {/* Right: Wishlist and Find Causes */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => nav("/favorites")}
+            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+            aria-label="View wishlist"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="hidden sm:inline">Wishlist</span>
+          </button>
+          
+          <button
+            onClick={() => {
+              const access = localStorage.getItem("ppp_access");
+              if (!access) {
+                localStorage.setItem("ppp_access", "guest");
+              }
+              nav("/select/nonprofit?flow=shopping");
+            }}
+            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+            aria-label="Find causes"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2" />
+              <path d="M20 20l-3.2-3.2" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span className="hidden sm:inline">Find Causes</span>
+          </button>
+        </div>
       </header>
 
       {/* Left-side section dots */}
