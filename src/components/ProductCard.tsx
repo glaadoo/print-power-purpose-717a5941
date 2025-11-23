@@ -240,7 +240,7 @@ export default function ProductCard({
         {/* Favorite Heart Button */}
         <button
           onClick={toggleFavorite}
-          className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all ${
+          className={`absolute top-1 right-1 z-10 p-2 rounded-full transition-all ${
             isFavorite 
               ? 'bg-red-500 hover:bg-red-600 text-white' 
               : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
@@ -307,40 +307,33 @@ export default function ProductCard({
           )}
         </div>
         
-        <div className="flex flex-col gap-1 w-full items-center text-center">
-          {(requiresConfiguration && firstConfigPrice !== null) ? (
-            <>
-              <p className="text-sm text-white/70">Regular Price:</p>
-              <p className="text-2xl font-bold text-white">
-                ${(firstConfigPrice / 100).toFixed(2)}
-              </p>
-            </>
-          ) : displayPriceCents > 0 ? (
-            <>
-              <p className="text-sm text-white/70">Regular Price:</p>
-              <p className="text-2xl font-bold text-white">
-                ${(displayPriceCents / 100).toFixed(2)}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-white/70">Regular Price:</p>
-              <p className="text-sm text-white/40 animate-pulse">Loading...</p>
-            </>
-          )}
-        </div>
 
-        {/* Product Configuration */}
+        {/* Check Price Button for Configuration */}
         {requiresConfiguration && (
-          <div className="w-full">
+          <Button
+            variant="outline"
+            className="w-full border-white/30 text-white hover:bg-white/20"
+            onClick={() => {
+              // This will trigger the configurator to load
+              const event = new CustomEvent('open-configurator', { detail: { productId: product.id } });
+              window.dispatchEvent(event);
+            }}
+          >
+            Check Price
+          </Button>
+        )}
+        
+        {/* Product Configuration - Hidden by default, opens on button click */}
+        <div className="hidden w-full" data-configurator={product.id}>
+          {requiresConfiguration && (
             <ProductConfiguratorLoader
               productId={product.id}
               onPriceChange={(price) => onPriceChange(product.id, price)}
               onConfigChange={(config) => onConfigChange(product.id, config)}
               onQuantityOptionsChange={onQuantityOptionsChange ? (options) => onQuantityOptionsChange(product.id, options) : undefined}
             />
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Quantity Controls - Only show after options are loaded */}
         {quantityOptions.length > 0 && (
