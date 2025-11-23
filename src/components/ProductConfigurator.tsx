@@ -183,21 +183,14 @@ export function ProductConfigurator({
       if (priceCache[variantKey]) {
         console.log('[ProductConfigurator] Using cached price for:', variantKey);
         onPriceChange(priceCache[variantKey]);
+        setFetchingPrice(false);
         return;
       }
       
       setFetchingPrice(true);
-      
-      // Set timeout to prevent infinite loading
-      const timeoutId = setTimeout(() => {
-        console.warn('[ProductConfigurator] Price fetch timeout for variant:', variantKey);
-        setFetchingPrice(false);
-      }, 10000); // Increased to 10s
+      console.log('[ProductConfigurator] Fetching price by key:', variantKey);
       
       try {
-        console.log('[ProductConfigurator] Fetching price by key:', variantKey);
-        
-        // Direct API call without retry wrapper for speed
         const { data, error } = await supabase.functions.invoke('sinalite-price', {
           body: {
             productId: vendorProductId,
@@ -206,8 +199,6 @@ export function ProductConfigurator({
             method: 'PRICEBYKEY'
           },
         });
-
-        clearTimeout(timeoutId);
 
         if (error) {
           console.error('[ProductConfigurator] Price fetch error:', error);
@@ -218,7 +209,7 @@ export function ProductConfigurator({
         if (data && Array.isArray(data) && data.length > 0 && data[0].price) {
           const priceFloat = parseFloat(data[0].price);
           const priceCents = Math.round(priceFloat * 100);
-          console.log('[ProductConfigurator] Price received:', { price: data[0].price, priceCents });
+          console.log('[ProductConfigurator] Price received and updating:', { price: data[0].price, priceCents });
           
           setPriceCache(prev => ({ ...prev, [variantKey]: priceCents }));
           onPriceChange(priceCents);
@@ -230,7 +221,6 @@ export function ProductConfigurator({
           console.warn('[ProductConfigurator] No price in response:', data);
         }
       } catch (err) {
-        clearTimeout(timeoutId);
         console.error('[ProductConfigurator] Price fetch exception:', err);
       } finally {
         setFetchingPrice(false);
@@ -238,7 +228,7 @@ export function ProductConfigurator({
     };
 
     fetchPrice();
-  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, onPackageInfoChange]);
+  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, onPriceChange, onPackageInfoChange]);
 
   const handleOptionChange = (group: string, optionId: string) => {
     console.log('[ProductConfigurator] handleOptionChange called:', { group, optionId });

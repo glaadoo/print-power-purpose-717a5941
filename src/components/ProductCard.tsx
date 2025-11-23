@@ -301,10 +301,10 @@ export default function ProductCard({
             </div>
           )}
 
-          {/* Price Display */}
-          {firstConfigPrice !== null && (
+          {/* Price Display - show configurator price when active, otherwise first config price */}
+          {(showConfigurator ? displayPriceCents > 0 : firstConfigPrice !== null) && (
             <p className="text-2xl font-bold text-white">
-              ${(firstConfigPrice / 100).toFixed(2)}
+              ${((showConfigurator ? displayPriceCents : firstConfigPrice!) / 100).toFixed(2)}
             </p>
           )}
           
