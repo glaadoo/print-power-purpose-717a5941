@@ -55,8 +55,27 @@ export function ProductConfigurator({
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
-  const [priceCache, setPriceCache] = useState<Record<string, number>>({});
   const [priceError, setPriceError] = useState<string | null>(null);
+  
+  // Global price cache in sessionStorage
+  const getPriceCache = (): Record<string, number> => {
+    try {
+      const cached = sessionStorage.getItem('sinalite-price-cache');
+      return cached ? JSON.parse(cached) : {};
+    } catch {
+      return {};
+    }
+  };
+  
+  const setPriceCache = (key: string, value: number) => {
+    try {
+      const cache = getPriceCache();
+      cache[key] = value;
+      sessionStorage.setItem('sinalite-price-cache', JSON.stringify(cache));
+    } catch (e) {
+      console.warn('Failed to cache price:', e);
+    }
+  };
 
   console.log('[ProductConfigurator] Mounted with:', {
     productId,
@@ -189,10 +208,11 @@ export function ProductConfigurator({
         onVariantKeyChange(variantKey);
       }
       
-      // Check cache first
-      if (priceCache[variantKey]) {
+      // Check global cache first
+      const cache = getPriceCache();
+      if (cache[variantKey]) {
         console.log('[ProductConfigurator] Using cached price for:', variantKey);
-        onPriceChange(priceCache[variantKey]);
+        onPriceChange(cache[variantKey]);
         setFetchingPrice(false);
         setPriceError(null);
         return;
@@ -202,46 +222,16 @@ export function ProductConfigurator({
       setPriceError(null);
       console.log('[ProductConfigurator] Fetching price by key:', variantKey);
       
-      // First, check if admin has set a custom price for this configuration
+      // Fetch from Sinalite API directly (skip custom price check for speed)
       try {
-        const { data: customPrice, error: customPriceError } = await supabase
-          .from('product_configuration_prices')
-          .select('custom_price_cents')
-          .eq('product_id', productId)
-          .eq('variant_key', variantKey)
-          .maybeSingle();
-        
-        if (!customPriceError && customPrice) {
-          console.log('[ProductConfigurator] Using admin custom price:', customPrice.custom_price_cents);
-          setPriceCache(prev => ({ ...prev, [variantKey]: customPrice.custom_price_cents }));
-          onPriceChange(customPrice.custom_price_cents);
-          setPriceError(null);
-          setFetchingPrice(false);
-          return;
-        }
-      } catch (err) {
-        console.warn('[ProductConfigurator] Failed to check custom price:', err);
-        // Continue to fetch from Sinalite API
-      }
-      
-      // Create timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Price fetch timeout')), 10000);
-      });
-      
-      // Create fetch promise
-      const fetchPromise = supabase.functions.invoke('sinalite-price', {
-        body: {
-          productId: vendorProductId,
-          storeCode: storeCode,
-          variantKey: variantKey,
-          method: 'PRICEBYKEY'
-        },
-      });
-      
-      try {
-        // Race between fetch and timeout
-        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+        const { data, error } = await supabase.functions.invoke('sinalite-price', {
+          body: {
+            productId: vendorProductId,
+            storeCode: storeCode,
+            variantKey: variantKey,
+            method: 'PRICEBYKEY'
+          },
+        });
 
         if (error) {
           console.error('[ProductConfigurator] Price fetch error:', error);
@@ -253,9 +243,9 @@ export function ProductConfigurator({
         if (data && Array.isArray(data) && data.length > 0 && data[0].price) {
           const priceFloat = parseFloat(data[0].price);
           const priceCents = Math.round(priceFloat * 100);
-          console.log('[ProductConfigurator] Price received and updating:', { price: data[0].price, priceCents });
+          console.log('[ProductConfigurator] Price received:', priceCents);
           
-          setPriceCache(prev => ({ ...prev, [variantKey]: priceCents }));
+          setPriceCache(variantKey, priceCents);
           onPriceChange(priceCents);
           setPriceError(null);
           
@@ -264,13 +254,11 @@ export function ProductConfigurator({
           }
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
-          setPriceError('Price unavailable for this configuration');
+          setPriceError('Price unavailable');
         }
       } catch (err) {
         console.error('[ProductConfigurator] Price fetch exception:', err);
-        setPriceError(err instanceof Error && err.message === 'Price fetch timeout' 
-          ? 'Price fetch timed out - please try again' 
-          : 'Failed to fetch price');
+        setPriceError('Failed to fetch price');
       } finally {
         setFetchingPrice(false);
       }

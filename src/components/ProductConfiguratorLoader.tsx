@@ -132,25 +132,8 @@ export default function ProductConfiguratorLoader({
           
           if (defaultOptionIds.length > 0) {
             const variantKey = defaultOptionIds.sort((a, b) => a - b).join('-');
-            console.log('[ProductConfiguratorLoader] Fetching default price for variant:', variantKey);
-            
-            supabase.functions.invoke('sinalite-price', {
-              body: {
-                productId: product.vendor_product_id,
-                storeCode: 9,
-                variantKey: variantKey,
-                method: 'PRICEBYKEY'
-              },
-            }).then(({ data: priceData, error: priceError }) => {
-              if (!priceError && priceData && Array.isArray(priceData) && priceData.length > 0 && priceData[0].price) {
-                const priceFloat = parseFloat(priceData[0].price);
-                const priceCents = Math.round(priceFloat * 100);
-                console.log('[ProductConfiguratorLoader] Default price fetched:', priceCents);
-                onPriceChange(priceCents);
-              }
-            }).catch(err => {
-              console.error('[ProductConfiguratorLoader] Failed to fetch default price:', err);
-            });
+            console.log('[ProductConfiguratorLoader] Will fetch default price for variant:', variantKey);
+            // Price will be fetched by ProductConfigurator - skip duplicate call
           }
           
           // Cache the result
@@ -259,28 +242,8 @@ export default function ProductConfiguratorLoader({
       
       if (defaultOptionIds.length > 0) {
         const variantKey = defaultOptionIds.sort((a, b) => a - b).join('-');
-        console.log('[ProductConfiguratorLoader] Fetching default price for variant:', variantKey);
-        
-        // Fetch default price immediately
-        try {
-          const { data: priceData, error: priceError } = await supabase.functions.invoke('sinalite-price', {
-            body: {
-              productId: product.vendor_product_id,
-              storeCode: 9,
-              variantKey: variantKey,
-              method: 'PRICEBYKEY'
-            },
-          });
-          
-          if (!priceError && priceData && Array.isArray(priceData) && priceData.length > 0 && priceData[0].price) {
-            const priceFloat = parseFloat(priceData[0].price);
-            const priceCents = Math.round(priceFloat * 100);
-            console.log('[ProductConfiguratorLoader] Default price fetched:', priceCents);
-            onPriceChange(priceCents);
-          }
-        } catch (err) {
-          console.error('[ProductConfiguratorLoader] Failed to fetch default price:', err);
-        }
+        console.log('[ProductConfiguratorLoader] Will fetch default price for variant:', variantKey);
+        // Price will be fetched by ProductConfigurator - skip duplicate call
       }
       
       // Cache the result
