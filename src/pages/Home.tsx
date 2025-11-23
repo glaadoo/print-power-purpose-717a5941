@@ -8,6 +8,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import ScrollDots from "@/components/ScrollDots";
 import MascotHeader from "@/components/MascotHeader";
 import ColorSelector from "@/components/ColorSelector";
+import RecentlyViewed from "@/components/RecentlyViewed";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -372,6 +373,11 @@ export default function Home() {
           />
 
           <div className="relative w-full h-full flex flex-col">
+            {/* Recently Viewed Section */}
+            <div className="w-full max-w-7xl mx-auto px-6 pt-12">
+              <RecentlyViewed />
+            </div>
+
             <div className="flex-1 w-full flex items-center justify-center px-6">
               <div className="text-center max-w-4xl mx-auto text-white">
                 <h2 className="font-serif text-[clamp(2.2rem,6vw,4.2rem)] leading-tight font-semibold drop-shadow">

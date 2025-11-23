@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import VideoBackground from "@/components/VideoBackground";
 import ProductCard from "@/components/ProductCard";
+import RecentlyViewed from "@/components/RecentlyViewed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +12,7 @@ import { ShoppingCart, ArrowLeft, Search, X, SlidersHorizontal } from "lucide-re
 import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
+import { addRecentlyViewed } from "@/lib/recently-viewed";
 
 type ProductRow = {
   id: string;
@@ -135,6 +137,14 @@ export default function Products() {
   };
 
   const handleAddToCart = (product: ProductRow) => {
+    // Track as recently viewed when interacting with product
+    addRecentlyViewed({
+      id: product.id,
+      name: product.name,
+      image_url: product.image_url,
+      category: product.category
+    });
+
     const requiresConfiguration = product.pricing_data && 
       Array.isArray(product.pricing_data) && 
       product.pricing_data.length > 0;
@@ -379,6 +389,9 @@ export default function Products() {
           />
 
           <div className="relative w-full max-w-7xl mx-auto px-6 pt-6">
+            {/* Recently Viewed Section */}
+            <RecentlyViewed />
+
             {/* Search and Sort Controls */}
             <div className="mb-8">
               <div className="flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto">
