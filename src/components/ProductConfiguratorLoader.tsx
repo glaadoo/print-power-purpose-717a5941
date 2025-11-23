@@ -19,9 +19,9 @@ export default function ProductConfiguratorLoader({
 }: LoaderProps) {
   const [productData, setProductData] = useState<any | null>(null);
   const [pricingOptions, setPricingOptions] = useState<any[] | null>(null);
-  const [loading, setLoading] = useState(false); // Only load when user requests
+  const [loading, setLoading] = useState(true); // Load immediately
   const [error, setError] = useState<string | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true); // Show immediately
   const [isMounted, setIsMounted] = useState(false);
   const [fetchingRef, setFetchingRef] = useState(false);
 
@@ -282,24 +282,18 @@ export default function ProductConfiguratorLoader({
     }
   };
 
-  // Mount configurator immediately but don't fetch until visible
+  // Mount and fetch immediately
   useEffect(() => {
     console.log('[ProductConfiguratorLoader] Component mounted for product:', productId);
     setIsMounted(true);
-    setLoading(false); // Not loading until user requests
-  }, [productId]);
-
-  // Only fetch when user clicks to expand
-  useEffect(() => {
-    if (visible && !pricingOptions && !fetchingRef) {
-      console.log('[ProductConfiguratorLoader] Visible - starting fetch');
+    
+    // Fetch immediately on mount
+    if (!pricingOptions && !fetchingRef) {
+      console.log('[ProductConfiguratorLoader] Auto-fetching on mount');
       fetchPricingOptions();
     }
-  }, [visible]);
+  }, [productId]);
 
-  const handleToggle = () => {
-    setVisible(!visible);
-  };
 
   // Debug render
   console.log('[ProductConfiguratorLoader] Render state:', {
@@ -315,41 +309,36 @@ export default function ProductConfiguratorLoader({
 
   return (
     <div className="w-full space-y-3">
-      {/* Always mount configurator immediately for instant price loading */}
-      {isMounted && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 && productData && (
-        <div className={visible ? 'block' : 'hidden'}>
-          <ProductConfigurator
-            productId={productId}
-            vendorProductId={productData.vendor_product_id || productId}
-            storeCode={9}
-            pricingData={pricingOptions}
-            onPriceChange={onPriceChange}
-            onConfigChange={onConfigChange}
-            onQuantityOptionsChange={onQuantityOptionsChange}
-          />
+      {loading && (
+        <div className="flex items-center gap-2 text-sm text-white/80 justify-center py-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
+          <span>Loading configuration...</span>
         </div>
       )}
       
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full bg-white/10 text-white border-white/20 hover:bg-white/20"
-        onClick={handleToggle}
-        disabled={loading}
-      >
-        {loading ? "Loading..." : visible ? "Hide Options" : "Customize Product"}
-      </Button>
-
-      {visible && (
-        <div className="w-full space-y-2">
-          {loading && <p className="text-sm text-white/80">Loading options…</p>}
-          {error && (
-            <p className="text-sm text-red-300 font-semibold">Error: {error}</p>
-          )}
-          {!loading && !error && !pricingOptions && (
-            <p className="text-sm text-white/70">No configuration options available for this product.</p>
-          )}
-        </div>
+      {error && (
+        <p className="text-sm text-red-300 font-semibold bg-red-900/20 border border-red-600/30 rounded p-3">
+          Error: {error}
+        </p>
+      )}
+      
+      {/* Show configurator when loaded */}
+      {!loading && !error && isMounted && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 && productData && (
+        <ProductConfigurator
+          productId={productId}
+          vendorProductId={productData.vendor_product_id || productId}
+          storeCode={9}
+          pricingData={pricingOptions}
+          onPriceChange={onPriceChange}
+          onConfigChange={onConfigChange}
+          onQuantityOptionsChange={onQuantityOptionsChange}
+        />
+      )}
+      
+      {!loading && !error && !pricingOptions && (
+        <p className="text-sm text-white/70 bg-white/5 border border-white/10 rounded p-3">
+          No configuration options available for this product.
+        </p>
       )}
     </div>
   );
