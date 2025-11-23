@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import GlassCard from "./GlassCard";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Plus, Minus, Heart } from "lucide-react";
+import { Plus, Minus, Heart, Star } from "lucide-react";
 import ProductConfiguratorLoader from "./ProductConfiguratorLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -47,6 +47,8 @@ export default function ProductCard({
   const [imageError, setImageError] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [averageRating, setAverageRating] = useState<number | null>(null);
+  const [reviewCount, setReviewCount] = useState(0);
   const imageSrc = product.image_url || null;
 
   // Check authentication and favorite status
@@ -69,6 +71,30 @@ export default function ProductCard({
 
     return () => subscription.unsubscribe();
   }, [product.id]);
+
+  // Fetch review statistics
+  useEffect(() => {
+    fetchReviewStats();
+  }, [product.id]);
+
+  const fetchReviewStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("rating")
+        .eq("product_id", product.id);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+        setAverageRating(avg);
+        setReviewCount(data.length);
+      }
+    } catch (error) {
+      console.error("Error fetching review stats:", error);
+    }
+  };
 
   const checkFavoriteStatus = async (userId: string) => {
     try {
@@ -167,6 +193,28 @@ export default function ProductCard({
           <h3 className="text-lg font-bold text-white text-center">
             {product.name}
           </h3>
+          
+          {/* Rating Display */}
+          {averageRating !== null && reviewCount > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-4 h-4 ${
+                      star <= Math.round(averageRating)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-white/30"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-xs text-white/70">
+                {averageRating.toFixed(1)} ({reviewCount})
+              </span>
+            </div>
+          )}
+          
           {isInCart && (
             <Badge className="bg-green-600 text-white border-green-400 text-xs">
               In Cart
