@@ -86,10 +86,22 @@ export default function ProductCard({
         <div className="flex flex-col gap-1 w-full items-center text-center">
           {displayPriceCents > 0 ? (
             <>
-              <p className="text-sm text-white/70">Regular Price:</p>
+              <p className="text-sm text-white/70">
+                {requiresConfiguration ? 'Starting at:' : 'Price:'}
+              </p>
               <p className="text-2xl font-bold text-white">
                 ${(displayPriceCents / 100).toFixed(2)}
               </p>
+              {requiresConfiguration && !isConfigured && (
+                <p className="text-xs text-white/50 mt-1">
+                  Configure for final price
+                </p>
+              )}
+            </>
+          ) : requiresConfiguration ? (
+            <>
+              <p className="text-sm text-white/70">Price:</p>
+              <p className="text-lg text-white/60">Configure to see pricing</p>
             </>
           ) : (
             <p className="text-2xl font-bold text-white/60">—</p>
