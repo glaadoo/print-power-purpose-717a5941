@@ -108,25 +108,58 @@ serve(async (req) => {
       );
     }
 
-    // Step 3: Transform and upsert products to database
+    // Step 3: Fetch detailed product information and transform
     let synced = 0;
     let errors = 0;
 
     for (const product of allProducts) {
       try {
+        console.log(`[SYNC-SCALABLEPRESS] Fetching details for: ${product.name}`);
+        
+        // Fetch detailed product information
+        const detailsResponse = await fetch(`${apiUrl}/products/${product.id}`, {
+          headers: {
+            "Authorization": `Basic ${btoa(":" + apiKey)}`,
+            "Accept": "application/json",
+          },
+        });
+
+        let productDetails = product;
+        if (detailsResponse.ok) {
+          productDetails = await detailsResponse.json();
+        }
+
+        // Extract colors and sizes for pricing_data
+        const colors = productDetails.colors || [];
+        const sizes = colors.length > 0 ? colors[0].sizes || [] : [];
+        
+        // Use first color's first image as product image
+        const firstColorImage = colors.length > 0 && colors[0].images?.length > 0 
+          ? colors[0].images[0].url 
+          : product.image?.url || productDetails.image?.url || null;
+
         // Build product data object
         const productData = {
-          name: product.name || "Unnamed Product",
-          base_cost_cents: 0, // Will be populated when we fetch pricing details
+          name: productDetails.name || product.name || "Unnamed Product",
+          base_cost_cents: 0, // Will be populated from Quote API
           category: product.categoryName || "apparel",
-          image_url: product.image?.url || null,
-          description: `${product.name} - Style ${product.style}`,
+          image_url: firstColorImage,
+          description: productDetails.description || productDetails.comments || null,
           vendor: "scalablepress",
           vendor_id: product.id,
           vendor_product_id: product.id,
-          is_active: true,
+          is_active: productDetails.available !== false,
           pricing_data: {
-            style: product.style,
+            style: productDetails.properties?.style || product.style,
+            brand: productDetails.properties?.brand,
+            material: productDetails.properties?.material,
+            colors: colors.map((c: any) => ({
+              name: c.name,
+              hex: c.hex,
+              sizes: c.sizes,
+              images: c.images
+            })),
+            sizes: sizes,
             productUrl: product.url
           }
         };
