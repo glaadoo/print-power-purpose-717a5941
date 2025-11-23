@@ -10,12 +10,18 @@ interface OrderConfirmationRequest {
   orderNumber: string;
   customerEmail: string;
   orderDetails: {
-    productName: string;
-    quantity: number;
+    items: Array<{
+      name: string;
+      quantity: number;
+      priceCents: number;
+    }>;
+    subtotalCents: number;
+    taxCents: number;
     totalAmount: number;
     donationAmount: number;
     causeName?: string;
     nonprofitName?: string;
+    nonprofitEin?: string;
   };
 }
 
@@ -42,7 +48,19 @@ serve(async (req) => {
 
     const totalFormatted = (orderDetails.totalAmount / 100).toFixed(2);
     const donationFormatted = (orderDetails.donationAmount / 100).toFixed(2);
-    const productCost = ((orderDetails.totalAmount - orderDetails.donationAmount) / 100).toFixed(2);
+    const subtotalFormatted = (orderDetails.subtotalCents / 100).toFixed(2);
+    const taxFormatted = (orderDetails.taxCents / 100).toFixed(2);
+
+    // Generate items HTML
+    const itemsHtml = orderDetails.items.map((item, idx) => `
+      <div class="detail-row">
+        <div style="flex: 1;">
+          <div class="detail-value">${item.name}</div>
+          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Qty: ${item.quantity} × $${(item.priceCents / 100).toFixed(2)}</div>
+        </div>
+        <span class="detail-value">$${((item.priceCents * item.quantity) / 100).toFixed(2)}</span>
+      </div>
+    `).join('');
 
     // Create email HTML
     const emailHtml = `
@@ -204,21 +222,16 @@ serve(async (req) => {
 
             <div class="order-details">
               <h3 style="margin-top: 0;">Order Details</h3>
+              ${itemsHtml}
+              ${orderDetails.taxCents > 0 ? `
               <div class="detail-row">
-                <span class="detail-label">Product</span>
-                <span class="detail-value">${orderDetails.productName}</span>
+                <span class="detail-label">Tax</span>
+                <span class="detail-value">$${taxFormatted}</span>
               </div>
-              <div class="detail-row">
-                <span class="detail-label">Quantity</span>
-                <span class="detail-value">${orderDetails.quantity}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Product Cost</span>
-                <span class="detail-value">$${productCost}</span>
-              </div>
+              ` : ''}
               ${orderDetails.donationAmount > 0 ? `
               <div class="detail-row">
-                <span class="detail-label">Donation</span>
+                <span class="detail-label">💚 Donation</span>
                 <span class="detail-value">$${donationFormatted}</span>
               </div>
               ` : ''}
@@ -242,10 +255,12 @@ serve(async (req) => {
             <div class="next-steps">
               <h3>What's Next?</h3>
               <ul>
-                <li><strong>Order Processing:</strong> Your order is being prepared and will be shipped soon</li>
-                <li><strong>Tracking:</strong> You'll receive shipping updates via email</li>
+                <li><strong>Order Processing:</strong> Your order #${orderNumber} is being prepared</li>
+                <li><strong>Production:</strong> Your custom prints will be created with care</li>
+                <li><strong>Shipping:</strong> You'll receive tracking information via email once shipped</li>
+                <li><strong>Delivery:</strong> Estimated 5-7 business days after shipping</li>
+                ${orderDetails.donationAmount > 0 ? `<li><strong>Tax Receipt:</strong> Your donation receipt will be sent separately for tax purposes</li>` : ''}
                 <li><strong>Questions?</strong> Contact us anytime - we're here to help!</li>
-                ${orderDetails.donationAmount > 0 ? `<li><strong>Tax Receipt:</strong> Your donation receipt will be sent separately</li>` : ''}
               </ul>
             </div>
 

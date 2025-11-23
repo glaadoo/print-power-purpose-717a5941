@@ -282,7 +282,41 @@ serve(async (req) => {
           }
         }
         
-        // Send auto-receipt email with PDF attachment
+        // Send order confirmation email
+        if (session.customer_details?.email && orderData) {
+          try {
+            console.log('[WEBHOOK] Sending order confirmation email');
+            
+            // Call the send-order-confirmation edge function
+            await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-order-confirmation`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+              },
+              body: JSON.stringify({
+                orderNumber: orderData.order_number,
+                customerEmail: session.customer_details.email,
+                orderDetails: {
+                  items: orderData.items || [],
+                  subtotalCents: orderData.subtotal_cents || 0,
+                  taxCents: orderData.tax_cents || 0,
+                  totalAmount: orderData.amount_total_cents || 0,
+                  donationAmount: orderData.donation_cents || 0,
+                  causeName: orderData.cause_name || null,
+                  nonprofitName: orderData.nonprofit_name || null,
+                  nonprofitEin: orderData.nonprofit_ein || null,
+                },
+              }),
+            });
+            
+            console.log('[WEBHOOK] Order confirmation email sent successfully');
+          } catch (emailErr) {
+            console.error('[WEBHOOK] Failed to send order confirmation email (non-blocking):', emailErr);
+          }
+        }
+        
+        // Legacy: Send auto-receipt email with PDF attachment (keeping for backup)
         if (session.customer_details?.email && orderData) {
           try {
             // Generate PDF receipt
