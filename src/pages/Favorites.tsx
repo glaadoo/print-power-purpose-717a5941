@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import VideoBackground from "@/components/VideoBackground";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ type FavoriteProduct = {
 export default function Favorites() {
   const navigate = useNavigate();
   const { add, items, count, totalCents } = useCart();
+  const { refreshFavorites } = useFavorites();
   const [favorites, setFavorites] = useState<FavoriteProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -113,6 +115,7 @@ export default function Favorites() {
       if (error) throw error;
 
       setFavorites(prev => prev.filter(p => p.id !== productId));
+      await refreshFavorites(); // Refresh global state
       toast.success("Removed from favorites");
     } catch (error: any) {
       console.error("Error removing favorite:", error);

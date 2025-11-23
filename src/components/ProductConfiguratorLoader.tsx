@@ -81,65 +81,76 @@ export default function ProductConfiguratorLoader({
       if (product.pricing_data && typeof product.pricing_data === 'object') {
         const pricingData = product.pricing_data as any;
         
-        // Check if pricing_data includes options/configurations
-        if (pricingData.options || pricingData.configurations || pricingData.attributes) {
+        // Handle different possible data structures
+        let optionsData = null;
+        
+        if (Array.isArray(pricingData)) {
+          optionsData = pricingData;
+        } else if (pricingData.options && Array.isArray(pricingData.options)) {
+          optionsData = pricingData.options;
+        } else if (pricingData.configurations && Array.isArray(pricingData.configurations)) {
+          optionsData = pricingData.configurations;
+        } else if (pricingData.attributes && Array.isArray(pricingData.attributes)) {
+          optionsData = pricingData.attributes;
+        }
+        
+        if (optionsData && optionsData.length > 0) {
           console.log('[ProductConfiguratorLoader] Using options from pricing_data');
-          const optionsData = pricingData.options || pricingData.configurations || pricingData.attributes;
           
-          if (Array.isArray(optionsData) && optionsData.length > 0) {
-            // Format as expected by ProductConfigurator: [options, {}, {}]
-            const options = [optionsData, {}, {}];
-            setPricingOptions(options);
-            setProductData(product);
+          // Format as expected by ProductConfigurator: [options, {}, {}]
+          const options = [optionsData, {}, {}];
+          setPricingOptions(options);
+          setProductData(product);
+          
+          // Immediately fetch default price (first option from each group)
+          const groupMap: Record<string, any[]> = {};
+          optionsData.forEach((option: any) => {
+            if (!option.group) return;
+            if (!groupMap[option.group]) {
+              groupMap[option.group] = [];
+            }
+            groupMap[option.group].push(option);
+          });
+          
+          const defaultOptionIds = Object.values(groupMap)
+            .map(opts => opts[0]?.id)
+            .filter(Boolean);
+          
+          if (defaultOptionIds.length > 0) {
+            const variantKey = defaultOptionIds.sort((a, b) => a - b).join('-');
+            console.log('[ProductConfiguratorLoader] Fetching default price for variant:', variantKey);
             
-            // Immediately fetch default price (first option from each group)
-            const groupMap: Record<string, any[]> = {};
-            optionsData.forEach((option: any) => {
-              if (!option.group) return;
-              if (!groupMap[option.group]) {
-                groupMap[option.group] = [];
+            supabase.functions.invoke('sinalite-price', {
+              body: {
+                productId: product.vendor_product_id,
+                storeCode: 9,
+                variantKey: variantKey,
+                method: 'PRICEBYKEY'
+              },
+            }).then(({ data: priceData, error: priceError }) => {
+              if (!priceError && priceData && Array.isArray(priceData) && priceData.length > 0 && priceData[0].price) {
+                const priceFloat = parseFloat(priceData[0].price);
+                const priceCents = Math.round(priceFloat * 100);
+                console.log('[ProductConfiguratorLoader] Default price fetched:', priceCents);
+                onPriceChange(priceCents);
               }
-              groupMap[option.group].push(option);
+            }).catch(err => {
+              console.error('[ProductConfiguratorLoader] Failed to fetch default price:', err);
             });
-            
-            const defaultOptionIds = Object.values(groupMap)
-              .map(opts => opts[0]?.id)
-              .filter(Boolean);
-            
-            if (defaultOptionIds.length > 0) {
-              const variantKey = defaultOptionIds.sort((a, b) => a - b).join('-');
-              console.log('[ProductConfiguratorLoader] Fetching default price for variant:', variantKey);
-              
-              supabase.functions.invoke('sinalite-price', {
-                body: {
-                  productId: product.vendor_product_id,
-                  storeCode: 9,
-                  variantKey: variantKey,
-                  method: 'PRICEBYKEY'
-                },
-              }).then(({ data: priceData, error: priceError }) => {
-                if (!priceError && priceData && Array.isArray(priceData) && priceData.length > 0 && priceData[0].price) {
-                  const priceFloat = parseFloat(priceData[0].price);
-                  const priceCents = Math.round(priceFloat * 100);
-                  console.log('[ProductConfiguratorLoader] Default price fetched:', priceCents);
-                  onPriceChange(priceCents);
-                }
-              }).catch(err => {
-                console.error('[ProductConfiguratorLoader] Failed to fetch default price:', err);
-              });
-            }
-            
-            // Cache the result
-            try {
-              sessionStorage.setItem(cacheKey, JSON.stringify({
-                data: { pricingOptions: options, product },
-                timestamp: Date.now()
-              }));
-            } catch (e) {
-              console.warn('[ProductConfiguratorLoader] Failed to cache options:', e);
-            }
-            return;
           }
+          
+          // Cache the result
+          try {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+              data: { pricingOptions: options, product },
+              timestamp: Date.now()
+            }));
+          } catch (e) {
+            console.warn('[ProductConfiguratorLoader] Failed to cache options:', e);
+          }
+          setLoading(false);
+          setFetchingRef(false);
+          return;
         }
       }
       

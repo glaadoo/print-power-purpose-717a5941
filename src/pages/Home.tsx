@@ -11,11 +11,14 @@ import ColorSelector from "@/components/ColorSelector";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
+import { Heart } from "lucide-react";
+import { useFavorites } from "@/context/FavoritesContext";
 
 export default function Home() {
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const menu = useToggle(false);
+  const { count } = useFavorites();
 
   // Real stats from database
   const [stats, setStats] = useState({
@@ -205,12 +208,15 @@ export default function Home() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => nav("/favorites")}
-            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
+            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30 relative"
             aria-label="View wishlist"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <Heart className="w-5 h-5" />
+            {count > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {count}
+              </span>
+            )}
             <span className="hidden sm:inline">Wishlist</span>
           </button>
           

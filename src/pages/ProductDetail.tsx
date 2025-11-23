@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const nav = useNavigate();
   const { add, items } = useCart();
+  const { count: favoritesCount } = useFavorites();
 
   const [product, setProduct] = useState<ProductRow | null>(null);
   const [qty, setQty] = useState(1);
@@ -146,9 +148,14 @@ export default function ProductDetail() {
             variant="outline"
             size="sm"
             onClick={() => nav("/favorites")}
-            className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20"
+            className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative"
           >
             <Heart className="w-4 h-4" />
+            {favoritesCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {favoritesCount}
+              </span>
+            )}
           </Button>
           
           <button
