@@ -42,6 +42,7 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name-asc" | "price-low" | "price-high" | "rating-high" | "most-reviewed">("name-asc");
   const [reviewStats, setReviewStats] = useState<Record<string, { avgRating: number; count: number }>>({});
+  const [ratingFilter, setRatingFilter] = useState<"all" | "4plus" | "has-reviews">("all");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -312,6 +313,19 @@ export default function Products() {
     // Exclude Canada products
     filtered = filtered.filter(product => !product.name.toLowerCase().includes('canada'));
     
+    // Apply rating filter
+    if (ratingFilter === "4plus") {
+      filtered = filtered.filter(product => {
+        const stats = reviewStats[product.id];
+        return stats && stats.avgRating >= 4;
+      });
+    } else if (ratingFilter === "has-reviews") {
+      filtered = filtered.filter(product => {
+        const stats = reviewStats[product.id];
+        return stats && stats.count > 0;
+      });
+    }
+    
     // Sort products
     const sorted = [...filtered].sort((a, b) => {
       if (sortBy === "name-asc") {
@@ -348,7 +362,7 @@ export default function Products() {
     });
     
     return sorted;
-  }, [rows, searchTerm, sortBy, defaultPrices, reviewStats]);
+  }, [rows, searchTerm, sortBy, defaultPrices, reviewStats, ratingFilter]);
 
   // Group products by category
   const groupedProducts = useMemo(() => {
@@ -496,11 +510,12 @@ export default function Products() {
                 </div>
                 
                 {/* Clear Filters Button */}
-                {(searchTerm || sortBy !== "name-asc") && (
+                {(searchTerm || sortBy !== "name-asc" || ratingFilter !== "all") && (
                   <Button
                     onClick={() => {
                       setSearchTerm("");
                       setSortBy("name-asc");
+                      setRatingFilter("all");
                     }}
                     variant="outline"
                     size="default"
@@ -510,6 +525,40 @@ export default function Products() {
                     Clear
                   </Button>
                 )}
+              </div>
+
+              {/* Rating Filter Pills */}
+              <div className="flex flex-wrap gap-3 max-w-3xl mx-auto mt-4">
+                <button
+                  onClick={() => setRatingFilter("all")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    ratingFilter === "all"
+                      ? "bg-white text-black"
+                      : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                  }`}
+                >
+                  All Products
+                </button>
+                <button
+                  onClick={() => setRatingFilter("4plus")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    ratingFilter === "4plus"
+                      ? "bg-white text-black"
+                      : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                  }`}
+                >
+                  ⭐ 4+ Stars
+                </button>
+                <button
+                  onClick={() => setRatingFilter("has-reviews")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    ratingFilter === "has-reviews"
+                      ? "bg-white text-black"
+                      : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                  }`}
+                >
+                  Has Reviews
+                </button>
               </div>
             </div>
             {loading && <p className="text-center text-xl">Loading products…</p>}
