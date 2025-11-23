@@ -489,7 +489,10 @@ export default function Products() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate("/cart")}
+          onClick={() => {
+            console.log('[Products] Header cart button clicked - navigating to /cart');
+            navigate("/cart");
+          }}
           className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative flex items-center gap-2 pr-4"
         >
           <div className="relative">
@@ -670,7 +673,10 @@ export default function Products() {
               <div className="text-xl font-semibold">${(totalCents / 100).toFixed(2)}</div>
             </div>
             <Button
-              onClick={() => navigate("/cart")}
+              onClick={() => {
+                console.log('[Products] Floating cart button clicked - navigating to /cart');
+                navigate("/cart");
+              }}
               variant="outline"
               size="lg"
               className="rounded-full border-white/50 bg-transparent text-white hover:bg-white/10"
