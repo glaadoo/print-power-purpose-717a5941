@@ -313,10 +313,10 @@ export default function ProductCard({
         {requiresConfiguration && !showConfigurator && (
           <Button
             variant="outline"
-            className="w-full border-white/30 text-white hover:bg-white/20 hover:text-white"
+            className="w-full border-white/30 bg-white text-black hover:bg-white/90 hover:text-black"
             onClick={() => setShowConfigurator(true)}
           >
-            <span className="text-white">Check Price</span>
+            Check Price
           </Button>
         )}
         
@@ -340,7 +340,7 @@ export default function ProductCard({
               size="icon"
               onClick={() => onQuantityChange(product.id, -1)}
               disabled={quantity === 0}
-              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+              className="bg-white border-white/30 text-black hover:bg-white/90"
             >
               <Minus className="w-4 h-4" />
             </Button>
@@ -351,7 +351,7 @@ export default function ProductCard({
               variant="outline"
               size="icon"
               onClick={() => onQuantityChange(product.id, 1)}
-              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+              className="bg-white border-white/30 text-black hover:bg-white/90"
             >
               <Plus className="w-4 h-4" />
             </Button>
