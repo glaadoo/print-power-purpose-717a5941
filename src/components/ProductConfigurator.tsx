@@ -54,6 +54,7 @@ export function ProductConfigurator({
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [priceCache, setPriceCache] = useState<Record<string, number>>({});
+  const [priceError, setPriceError] = useState<string | null>(null);
 
   console.log('[ProductConfigurator] Mounted with:', {
     productId,
@@ -186,24 +187,36 @@ export function ProductConfigurator({
         console.log('[ProductConfigurator] Using cached price for:', variantKey);
         onPriceChange(priceCache[variantKey]);
         setFetchingPrice(false);
+        setPriceError(null);
         return;
       }
       
       setFetchingPrice(true);
+      setPriceError(null);
       console.log('[ProductConfigurator] Fetching price by key:', variantKey);
       
+      // Create timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Price fetch timeout')), 10000);
+      });
+      
+      // Create fetch promise
+      const fetchPromise = supabase.functions.invoke('sinalite-price', {
+        body: {
+          productId: vendorProductId,
+          storeCode: storeCode,
+          variantKey: variantKey,
+          method: 'PRICEBYKEY'
+        },
+      });
+      
       try {
-        const { data, error } = await supabase.functions.invoke('sinalite-price', {
-          body: {
-            productId: vendorProductId,
-            storeCode: storeCode,
-            variantKey: variantKey,
-            method: 'PRICEBYKEY'
-          },
-        });
+        // Race between fetch and timeout
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
         if (error) {
           console.error('[ProductConfigurator] Price fetch error:', error);
+          setPriceError('Failed to fetch price');
           setFetchingPrice(false);
           return;
         }
@@ -215,15 +228,20 @@ export function ProductConfigurator({
           
           setPriceCache(prev => ({ ...prev, [variantKey]: priceCents }));
           onPriceChange(priceCents);
+          setPriceError(null);
           
           if (onPackageInfoChange) {
             onPackageInfoChange(null);
           }
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
+          setPriceError('Price unavailable for this configuration');
         }
       } catch (err) {
         console.error('[ProductConfigurator] Price fetch exception:', err);
+        setPriceError(err instanceof Error && err.message === 'Price fetch timeout' 
+          ? 'Price fetch timed out - please try again' 
+          : 'Failed to fetch price');
       } finally {
         setFetchingPrice(false);
       }
@@ -292,6 +310,11 @@ export function ProductConfigurator({
           <div className="flex items-center gap-1 text-xs text-white/60">
             <Loader2 className="w-3 h-3 animate-spin" />
             <span>Updating price...</span>
+          </div>
+        )}
+        {!fetchingPrice && priceError && (
+          <div className="text-xs text-red-400">
+            {priceError}
           </div>
         )}
       </div>
