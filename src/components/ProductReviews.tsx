@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Star, BadgeCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +51,15 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : 0;
 
+  // Calculate rating distribution
+  const ratingDistribution = useMemo(() => {
+    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(review => {
+      dist[review.rating as keyof typeof dist]++;
+    });
+    return dist;
+  }, [reviews]);
+
   const renderStars = (rating: number, size: "sm" | "lg" = "sm") => {
     const sizeClass = size === "lg" ? "w-6 h-6" : "w-4 h-4";
     return (
@@ -77,13 +86,39 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
     <div className="space-y-6">
       {/* Rating Summary */}
       {reviews.length > 0 && (
-        <div className="flex items-center gap-4 pb-4 border-b border-border/40">
-          <div className="text-center">
-            <p className="text-4xl font-bold">{averageRating.toFixed(1)}</p>
-            {renderStars(Math.round(averageRating), "lg")}
-            <p className="text-sm text-muted-foreground mt-1">
-              {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
-            </p>
+        <div className="pb-6 border-b border-border/40">
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Average Rating */}
+            <div className="text-center md:text-left md:w-1/3">
+              <p className="text-5xl font-bold mb-2">{averageRating.toFixed(1)}</p>
+              {renderStars(Math.round(averageRating), "lg")}
+              <p className="text-sm text-muted-foreground mt-2">
+                {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+              </p>
+            </div>
+
+            {/* Rating Distribution */}
+            <div className="flex-1 space-y-2">
+              {[5, 4, 3, 2, 1].map((rating) => {
+                const count = ratingDistribution[rating as keyof typeof ratingDistribution];
+                const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                
+                return (
+                  <div key={rating} className="flex items-center gap-3">
+                    <span className="text-sm font-medium w-12">{rating} star</span>
+                    <div className="flex-1 h-3 bg-muted/30 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-yellow-400 transition-all duration-300"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-sm text-muted-foreground w-12 text-right">
+                      {count}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
