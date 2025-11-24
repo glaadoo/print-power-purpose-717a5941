@@ -100,7 +100,7 @@ export default function Products() {
             async () => {
               const { data, error } = await supabase
                 .from("products")
-                .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, pricing_data, vendor_product_id")
+                .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, pricing_data, vendor_product_id")
                 .eq("is_active", true)
                 .order("category", { ascending: true })
                 .order("name", { ascending: true })
@@ -641,14 +641,20 @@ export default function Products() {
                     </h2>
                     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
                       {products.map((product) => {
-                        // All SinaLite products require configuration - they support dynamic options
+                        // SinaLite products require configuration, Scalable Press products do not
                         const requiresConfiguration = product.vendor === "sinalite";
                         
                         // Show configured price if available, otherwise show default price instantly
                         const displayPriceCents = configuredPrices[product.id] || defaultPrices[product.id] || 0;
                         
                         const qty = quantities[product.id] || 0;
-                        const isConfigured = !!configuredPrices[product.id];
+                        
+                        // For SinaLite: need configured price. For Scalable Press: just need base price
+                        const isConfigured = product.vendor === "scalablepress" 
+                          ? displayPriceCents > 0 
+                          : !!configuredPrices[product.id];
+                        
+                        // Can add to cart if configured and has quantity
                         const canAddToCart = isConfigured && qty > 0;
                         const isInCart = items.some(item => item.id === product.id);
 

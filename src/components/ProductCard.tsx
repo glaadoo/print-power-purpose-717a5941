@@ -12,6 +12,8 @@ type ProductCardProps = {
   product: {
     id: string;
     name: string;
+    description?: string | null;
+    vendor?: string | null;
     image_url?: string | null;
     generated_image_url?: string | null;
     pricing_data?: any;
@@ -150,6 +152,13 @@ export default function ProductCard({
             {product.name}
           </h3>
           
+          {/* Product Description */}
+          {product.description && (
+            <p className="text-sm text-white/70 text-center line-clamp-2">
+              {product.description}
+            </p>
+          )}
+          
           {/* Rating Display */}
           {averageRating !== null && reviewCount > 0 && (
             <div className="flex items-center gap-2">
@@ -187,7 +196,7 @@ export default function ProductCard({
         
 
         {/* Product Configuration - Auto-expanded */}
-        {requiresConfiguration && (
+        {requiresConfiguration && product.vendor === 'sinalite' && (
           <div className="w-full">
             <ProductConfiguratorLoader
               productId={product.id}
@@ -197,9 +206,61 @@ export default function ProductCard({
             />
           </div>
         )}
+        
+        {/* Scalable Press Configuration */}
+        {product.vendor === 'scalablepress' && product.pricing_data && (
+          <div className="w-full space-y-3">
+            {/* Colors */}
+            {product.pricing_data.colors && Array.isArray(product.pricing_data.colors) && product.pricing_data.colors.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Available Colors:</label>
+                <div className="flex flex-wrap gap-2">
+                  {product.pricing_data.colors.map((color: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20"
+                      title={color.name}
+                    >
+                      <div
+                        className="w-4 h-4 rounded-full border border-white/30"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      <span className="text-xs text-white">{color.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Sizes */}
+            {product.pricing_data.sizes && Array.isArray(product.pricing_data.sizes) && product.pricing_data.sizes.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Available Sizes:</label>
+                <div className="flex flex-wrap gap-2">
+                  {product.pricing_data.sizes.map((size: string, idx: number) => (
+                    <div
+                      key={idx}
+                      className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white"
+                    >
+                      {size}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Material/Brand Info */}
+            {(product.pricing_data.brand || product.pricing_data.material) && (
+              <div className="text-xs text-white/60 space-y-1">
+                {product.pricing_data.brand && <div>Brand: {product.pricing_data.brand}</div>}
+                {product.pricing_data.material && <div>Material: {product.pricing_data.material}</div>}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Quantity Controls - Only show after options are loaded */}
-        {quantityOptions.length > 0 && (
+        {/* Quantity Controls - Show for all products with valid price */}
+        {displayPriceCents > 0 && (
           <div className="flex items-center justify-center gap-3 w-full">
             <Button
               variant="outline"
