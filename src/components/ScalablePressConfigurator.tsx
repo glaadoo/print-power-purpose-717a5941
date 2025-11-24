@@ -129,15 +129,7 @@ export default function ScalablePressConfigurator({
               <div key={color.name} className="flex flex-col items-center gap-2">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (hasStock) {
-                      handleColorChange(color.name);
-                    }
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     if (hasStock) {
                       handleColorChange(color.name);
                     }
@@ -165,7 +157,7 @@ export default function ScalablePressConfigurator({
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md" />
                   )}
                 </button>
-                <span className="text-xs text-foreground font-medium text-center max-w-[60px] truncate">{color.name}</span>
+                <span className="text-xs text-foreground font-medium text-center">{color.name}</span>
               </div>
             );
           })}
