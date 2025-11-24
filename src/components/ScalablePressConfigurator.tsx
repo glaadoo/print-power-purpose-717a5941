@@ -34,14 +34,24 @@ export default function ScalablePressConfigurator({
   const items = pricingData?.items || {};
   const availability = pricingData?.availability || {};
 
+  // Helper to find matching color key (case-insensitive)
+  const findColorKey = (colorName: string) => {
+    if (!colorName) return null;
+    const lowerColorName = colorName.toLowerCase();
+    const matchingKey = Object.keys(items).find(key => key.toLowerCase() === lowerColorName);
+    return matchingKey || null;
+  };
+
   // Get available sizes for selected color
-  const availableSizes = selectedColor && items[selectedColor] 
-    ? Object.keys(items[selectedColor]) 
+  const colorKey = findColorKey(selectedColor);
+  const availableSizes = colorKey && items[colorKey] 
+    ? Object.keys(items[colorKey]) 
     : [];
   
   // Get stock status for currently selected color/size
-  const currentStock = selectedColor && selectedSize && availability[selectedColor]?.[selectedSize]
-    ? availability[selectedColor][selectedSize]
+  const availabilityColorKey = selectedColor ? Object.keys(availability).find(key => key.toLowerCase() === selectedColor.toLowerCase()) : null;
+  const currentStock = availabilityColorKey && selectedSize && availability[availabilityColorKey]?.[selectedSize]
+    ? availability[availabilityColorKey][selectedSize]
     : undefined;
 
   // Initialize with first available color and size
@@ -50,7 +60,8 @@ export default function ScalablePressConfigurator({
       const firstColor = colors[0].name;
       setSelectedColor(firstColor);
       
-      const firstColorSizes = items[firstColor] ? Object.keys(items[firstColor]) : [];
+      const colorKey = findColorKey(firstColor);
+      const firstColorSizes = colorKey && items[colorKey] ? Object.keys(items[colorKey]) : [];
       if (firstColorSizes.length > 0) {
         setSelectedSize(firstColorSizes[0]);
       }
@@ -60,12 +71,13 @@ export default function ScalablePressConfigurator({
   // Update price and notify completion when selection changes
   useEffect(() => {
     const isComplete = !!(selectedColor && selectedSize);
+    const colorKey = findColorKey(selectedColor);
     
-    if (isComplete && items[selectedColor]?.[selectedSize]) {
-      const priceData = items[selectedColor][selectedSize];
+    if (isComplete && colorKey && items[colorKey]?.[selectedSize]) {
+      const priceData = items[colorKey][selectedSize];
       const priceCents = priceData.price || 0;
       
-      console.log('[ScalablePressConfigurator] Price update:', { selectedColor, selectedSize, priceCents });
+      console.log('[ScalablePressConfigurator] Price update:', { selectedColor, selectedSize, colorKey, priceCents });
       onPriceChange(priceCents);
       onConfigChange({
         color: selectedColor,
@@ -81,9 +93,12 @@ export default function ScalablePressConfigurator({
     setSelectedColor(colorName);
     
     // Reset size to first available for new color
-    const newColorSizes = items[colorName] ? Object.keys(items[colorName]) : [];
+    const colorKey = findColorKey(colorName);
+    const newColorSizes = colorKey && items[colorKey] ? Object.keys(items[colorKey]) : [];
     if (newColorSizes.length > 0) {
       setSelectedSize(newColorSizes[0]);
+    } else {
+      setSelectedSize("");
     }
   };
 
@@ -104,7 +119,8 @@ export default function ScalablePressConfigurator({
         </label>
         <div className="flex flex-wrap gap-2">
           {colors.map((color: any) => {
-            const colorAvailability = availability[color.name];
+            const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === color.name.toLowerCase());
+            const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
             const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
             
             return (
@@ -145,7 +161,8 @@ export default function ScalablePressConfigurator({
         <div className="flex flex-wrap gap-1.5">
           {availableSizes.length > 0 ? (
             availableSizes.map((size: string) => {
-              const stockQty = selectedColor && availability[selectedColor]?.[size];
+              const availabilityColorKey = selectedColor ? Object.keys(availability).find(key => key.toLowerCase() === selectedColor.toLowerCase()) : null;
+              const stockQty = availabilityColorKey && availability[availabilityColorKey]?.[size];
               const stockInfo = getStockStatus(stockQty);
               const isOutOfStock = stockInfo.status === 'out';
               
