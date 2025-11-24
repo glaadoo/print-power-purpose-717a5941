@@ -105,7 +105,7 @@ export default function Products() {
                 .eq("is_active", true)
                 .order("category", { ascending: true })
                 .order("name", { ascending: true })
-                .limit(200);
+                .limit(50); // Reduced from 200 to prevent database timeout
               
               if (error) {
                 console.error('[Products] Products fetch error:', error);

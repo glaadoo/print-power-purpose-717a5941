@@ -56,6 +56,7 @@ export function ProductConfigurator({
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
+  const [userInteracted, setUserInteracted] = useState(false); // Track if user has manually changed options
   
   // Global price cache in sessionStorage
   const getPriceCache = (): Record<string, number> => {
@@ -179,8 +180,14 @@ export function ProductConfigurator({
     }
   }, [optionGroups]);
 
-  // Fetch price whenever selections change
+  // Fetch price whenever selections change (only after user interaction)
   useEffect(() => {
+    // CRITICAL: Skip auto-fetch on initial mount to prevent database overload
+    if (!userInteracted) {
+      console.log('[ProductConfigurator] Skipping auto-fetch: user has not interacted yet');
+      return;
+    }
+    
     const optionIds = Object.values(selectedOptions);
     
     console.log('[ProductConfigurator] Price fetch check:', {
@@ -324,10 +331,13 @@ export function ProductConfigurator({
     };
 
     fetchPrice();
-  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, onPriceChange, onPackageInfoChange]);
+  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, onPriceChange, onPackageInfoChange, userInteracted]); // Added userInteracted
 
   const handleOptionChange = (group: string, optionId: string) => {
     console.log('[ProductConfigurator] handleOptionChange called:', { group, optionId });
+    
+    // Mark that user has interacted - enables price fetching
+    setUserInteracted(true);
     
     const id = parseInt(optionId, 10);
     if (isNaN(id)) {
