@@ -1150,6 +1150,53 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_notifications: {
+        Row: {
+          color: string
+          created_at: string
+          email: string
+          id: string
+          notified: boolean
+          notified_at: string | null
+          product_id: string
+          product_name: string
+          size: string
+          vendor: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          email: string
+          id?: string
+          notified?: boolean
+          notified_at?: string | null
+          product_id: string
+          product_name: string
+          size: string
+          vendor: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notified?: boolean
+          notified_at?: string | null
+          product_id?: string
+          product_name?: string
+          size?: string
+          vendor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_notifications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_requests: {
         Row: {
           cause_id: string

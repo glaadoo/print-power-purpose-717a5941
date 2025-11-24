@@ -213,6 +213,8 @@ export default function ProductCard({
         {product.vendor === 'scalablepress' && product.pricing_data && (
           <div className="w-full">
             <ScalablePressConfigurator
+              productId={product.id}
+              productName={product.name}
               pricingData={product.pricing_data}
               onPriceChange={(price) => onPriceChange(product.id, price)}
               onConfigChange={(config) => onConfigChange(product.id, config)}
