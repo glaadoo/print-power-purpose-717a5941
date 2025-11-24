@@ -273,17 +273,27 @@ export default function Home() {
                 One platform for professional print orders and optional donations—connecting
                 communities and nonprofits in a single, seamless checkout.
               </p>
-              <div className="mt-10">
+              <div className="mt-10 relative z-10">
                 <Link
                   to="/auth"
-                  className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 font-semibold transition-all shadow-2xl border-2"
+                  className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-5 font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                   style={{ 
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#FFD700',
                     color: '#000000',
-                    borderColor: '#000000'
+                    border: '3px solid #000000',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FFC700';
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FFD700';
+                    e.currentTarget.style.transform = 'scale(1)';
                   }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <line x1="19" x2="19" y1="8" y2="14"/>
