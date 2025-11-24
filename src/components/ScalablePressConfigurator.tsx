@@ -114,8 +114,8 @@ export default function ScalablePressConfigurator({
     <div className="space-y-4 p-3 bg-white/5 rounded-lg border border-white/10">
       {/* Color Selection */}
       <div>
-        <label className="block text-sm font-semibold text-white mb-3">
-          Color: {selectedColor && <span className="text-primary-foreground">{selectedColor}</span>}
+        <label className="block text-sm font-semibold text-foreground mb-3">
+          Color: {selectedColor && <span className="text-primary font-medium">{selectedColor}</span>}
         </label>
         <div className="flex flex-wrap gap-3">
           {colors.map((color: any) => {
@@ -157,8 +157,8 @@ export default function ScalablePressConfigurator({
 
       {/* Size Selection */}
       <div>
-        <label className="block text-sm font-semibold text-white mb-3">
-          Size: {selectedSize && <span className="text-primary-foreground">{selectedSize.toUpperCase()}</span>}
+        <label className="block text-sm font-semibold text-foreground mb-3">
+          Size: {selectedSize && <span className="text-primary font-medium">{selectedSize.toUpperCase()}</span>}
         </label>
         <div className="flex flex-wrap gap-1.5">
           {availableSizes.length > 0 ? (
