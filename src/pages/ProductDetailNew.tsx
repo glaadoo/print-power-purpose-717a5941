@@ -65,6 +65,8 @@ export default function ProductDetailNew() {
     (async () => {
       setLoading(true);
       setErr(null);
+      
+      // Fetch product data first (critical path)
       const { data, error } = await supabase
         .from("products")
         .select("*")
@@ -73,10 +75,13 @@ export default function ProductDetailNew() {
         
       if (error) {
         setErr(error.message);
+        setLoading(false);
       } else if (!data) {
         setErr("Product not found");
+        setLoading(false);
       } else {
         setProduct(data as ProductRow);
+        setLoading(false); // Allow page to render immediately
         
         // Track as recently viewed
         addRecentlyViewed({
@@ -86,8 +91,8 @@ export default function ProductDetailNew() {
           category: data.category
         });
 
-        // Load all data in parallel for faster page display
-        const [reviewsResult, relatedResult, frequentResult] = await Promise.all([
+        // Load supplementary data in background (non-blocking)
+        Promise.all([
           supabase
             .from("reviews")
             .select("rating")
@@ -107,23 +112,24 @@ export default function ProductDetailNew() {
             .neq("id", productId)
             .eq("is_active", true)
             .limit(6)
-        ]);
+        ]).then(([reviewsResult, relatedResult, frequentResult]) => {
+          if (reviewsResult.data && reviewsResult.data.length > 0) {
+            const sum = reviewsResult.data.reduce((acc, r) => acc + r.rating, 0);
+            setAvgRating(sum / reviewsResult.data.length);
+            setReviewCount(reviewsResult.data.length);
+          }
 
-        if (reviewsResult.data && reviewsResult.data.length > 0) {
-          const sum = reviewsResult.data.reduce((acc, r) => acc + r.rating, 0);
-          setAvgRating(sum / reviewsResult.data.length);
-          setReviewCount(reviewsResult.data.length);
-        }
+          if (relatedResult.data) {
+            setRelatedProducts(relatedResult.data as ProductRow[]);
+          }
 
-        if (relatedResult.data) {
-          setRelatedProducts(relatedResult.data as ProductRow[]);
-        }
-
-        if (frequentResult.data) {
-          setFrequentlyBought(frequentResult.data as ProductRow[]);
-        }
+          if (frequentResult.data) {
+            setFrequentlyBought(frequentResult.data as ProductRow[]);
+          }
+        }).catch(err => {
+          console.error('[ProductDetailNew] Background data fetch error:', err);
+        });
       }
-      setLoading(false);
     })();
   }, [productId]);
 
