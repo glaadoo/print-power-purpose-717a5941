@@ -111,43 +111,45 @@ export default function ScalablePressConfigurator({
   }
 
   return (
-    <div className="space-y-3 p-2">
+    <div className="space-y-4 p-3 bg-white/5 rounded-lg border border-white/10">
       {/* Color Selection */}
       <div>
-        <label className="text-xs font-medium text-white/80 mb-2 block">
-          Color
+        <label className="text-sm font-semibold text-white mb-3 block">
+          Color: {selectedColor && <span className="text-primary-foreground">{selectedColor}</span>}
         </label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           {colors.map((color: any) => {
             const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === color.name.toLowerCase());
             const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
             const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
             
             return (
-              <button
-                key={color.name}
-                onClick={() => handleColorChange(color.name)}
-                className={`
-                  relative w-8 h-8 rounded-full border-2 transition-all
-                  ${selectedColor === color.name 
-                    ? 'border-white ring-2 ring-white/50 scale-110' 
-                    : 'border-white/30 hover:border-white/60 hover:scale-105'
-                  }
-                  ${!hasStock ? 'opacity-40' : ''}
-                `}
-                style={{ backgroundColor: color.hex }}
-                title={color.name}
-                aria-label={`Select ${color.name}`}
-              >
-                {selectedColor === color.name && (
-                  <span className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold">
-                    ✓
-                  </span>
-                )}
-                {!hasStock && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
-                )}
-              </button>
+              <div key={color.name} className="flex flex-col items-center gap-1">
+                <button
+                  onClick={() => handleColorChange(color.name)}
+                  className={`
+                    relative w-10 h-10 rounded-full border-2 transition-all
+                    ${selectedColor === color.name 
+                      ? 'border-white ring-2 ring-primary-foreground scale-110' 
+                      : 'border-white/30 hover:border-white/60 hover:scale-105'
+                    }
+                    ${!hasStock ? 'opacity-40' : ''}
+                  `}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                  aria-label={`Select ${color.name}`}
+                >
+                  {selectedColor === color.name && (
+                    <span className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold">
+                      ✓
+                    </span>
+                  )}
+                  {!hasStock && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+                  )}
+                </button>
+                <span className="text-xs text-white/80 text-center">{color.name}</span>
+              </div>
             );
           })}
         </div>
@@ -155,8 +157,8 @@ export default function ScalablePressConfigurator({
 
       {/* Size Selection */}
       <div>
-        <label className="text-xs font-medium text-white/80 mb-2 block">
-          Size
+        <label className="text-sm font-semibold text-white mb-3 block">
+          Size: {selectedSize && <span className="text-primary-foreground">{selectedSize.toUpperCase()}</span>}
         </label>
         <div className="flex flex-wrap gap-1.5">
           {availableSizes.length > 0 ? (

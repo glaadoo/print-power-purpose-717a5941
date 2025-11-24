@@ -512,7 +512,6 @@ export default function Products() {
                   {selectedCategory === cat && categoryProducts.length > 0 && (
                     <div 
                       className="absolute top-full left-0 mt-2 w-64 max-h-96 overflow-y-auto bg-background/95 backdrop-blur border border-border rounded-xl shadow-2xl z-[60]"
-                      onMouseLeave={() => setSelectedCategory(null)}
                     >
                       {categoryProducts.slice(0, 10).map(product => {
                         const categorySlug = cat.toLowerCase().replace(/\s+/g, '-');
@@ -520,14 +519,18 @@ export default function Products() {
                         return (
                           <button
                             key={product.id}
-                            onClick={() => navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } })}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedCategory(null);
+                              navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } });
+                            }}
                             className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0 flex items-center gap-3"
                           >
                             {product.image_url && (
                               <img src={product.image_url} alt="" className="w-10 h-10 object-cover rounded" />
                             )}
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium truncate">{product.name}</div>
+                              <div className="text-sm font-medium truncate text-foreground">{product.name}</div>
                               <div className="text-xs text-muted-foreground">
                                 ${((defaultPrices[product.id] || product.base_cost_cents) / 100).toFixed(2)}
                               </div>

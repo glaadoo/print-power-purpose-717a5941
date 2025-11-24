@@ -150,7 +150,7 @@ export default function ProductCard({
         </div>
         
         <div className="flex flex-col items-center justify-center w-full space-y-2">
-          <h3 className="text-lg font-bold text-foreground text-center group-hover:text-primary transition-colors">
+          <h3 className="text-lg font-bold text-white text-center group-hover:text-primary-foreground transition-colors drop-shadow-lg">
             {product.name}
           </h3>
           
