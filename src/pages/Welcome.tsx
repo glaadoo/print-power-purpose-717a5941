@@ -32,14 +32,21 @@ export default function Welcome() {
   useEffect(() => {
     document.title = "Welcome - Print Power Purpose";
 
-    // Function to load user profile
+    // Function to load user profile with timeout
     const loadUserProfile = async (userId: string) => {
       try {
-        const { data, error } = await supabase
+        // Set timeout to 5 seconds
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Profile load timeout')), 5000)
+        );
+        
+        const fetchPromise = supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .maybeSingle();
+
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
         
         if (!error && data) {
           setUserProfile(data);
@@ -48,6 +55,7 @@ export default function Welcome() {
         }
       } catch (err) {
         console.error("Failed to load profile:", err);
+        // Continue anyway - user can still proceed without profile data
       } finally {
         setLoading(false);
       }
