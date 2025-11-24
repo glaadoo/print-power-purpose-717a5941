@@ -28,11 +28,8 @@ export default function Home() {
     orderCount: 0,
   });
 
-  // Featured story/video state
-  const [featuredStory, setFeaturedStory] = useState<{
-    video_url: string | null;
-    cause_id: string | null;
-  } | null>(null);
+  // Featured video state from storage bucket
+  const [featuredVideo, setFeaturedVideo] = useState<string | null>(null);
 
   // Set document title
   useEffect(() => {
@@ -88,27 +85,28 @@ export default function Home() {
 
     loadStats();
 
-    // Load featured story
-    async function loadFeaturedStory() {
+    // Load featured video from storage bucket
+    async function loadFeaturedVideo() {
       try {
-        const { data } = await supabase
-          .from("story_requests")
-          .select("video_url, cause_id")
-          .not("video_url", "is", null)
-          .eq("status", "completed")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (data) {
-          setFeaturedStory(data);
+        const { data, error } = await supabase.storage.from('videos').list();
+        
+        if (error) throw error;
+        
+        // Get the most recent video
+        if (data && data.length > 0) {
+          const sortedVideos = data.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+          const latestVideo = sortedVideos[0];
+          const videoUrl = supabase.storage.from('videos').getPublicUrl(latestVideo.name).data.publicUrl;
+          setFeaturedVideo(videoUrl);
         }
       } catch (error) {
-        console.error("Error loading featured story:", error);
+        console.error("Error loading featured video:", error);
       }
     }
 
-    loadFeaturedStory();
+    loadFeaturedVideo();
 
     // Subscribe to realtime updates
     const donationsChannel = supabase
@@ -129,19 +127,9 @@ export default function Home() {
       )
       .subscribe();
 
-    const storiesChannel = supabase
-      .channel("stories-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "story_requests" },
-        () => loadFeaturedStory()
-      )
-      .subscribe();
-
     return () => {
       supabase.removeChannel(donationsChannel);
       supabase.removeChannel(ordersChannel);
-      supabase.removeChannel(storiesChannel);
     };
   }, []);
 
@@ -333,14 +321,15 @@ export default function Home() {
             {/* band: placeholder (L) + stats (R) */}
             <div className="w-full px-6 pb-10 mt-12">
               <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
-                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex flex-col h-full">
-                  {featuredStory?.video_url ? (
-                    <div className="w-full h-full flex flex-col">
-                      <div className="text-sm uppercase tracking-wide opacity-80 mb-3">Featured Story</div>
+                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex flex-col h-full min-h-[400px]">
+                  <div className="text-sm uppercase tracking-wide opacity-80 mb-3">Featured Story</div>
+                  {featuredVideo ? (
+                    <div className="flex-1 flex flex-col">
+                      <h3 className="text-2xl font-bold mb-4">Milestone Donor Stories</h3>
                       <div className="flex-1 rounded-lg overflow-hidden bg-black/30">
                         <video
-                          className="w-full h-full object-contain"
-                          src={featuredStory.video_url}
+                          className="w-full h-full object-cover"
+                          src={featuredVideo}
                           controls
                           autoPlay
                           muted
@@ -348,12 +337,14 @@ export default function Home() {
                           playsInline
                         />
                       </div>
+                      <p className="mt-4 opacity-90 text-sm">
+                        When donations reach $777 milestones, we feature the donor's story here. Help us reach the next milestone!
+                      </p>
                     </div>
                   ) : (
-                    <div className="opacity-90">
-                      <div className="text-sm uppercase tracking-wide opacity-80">Featured Story</div>
-                      <h3 className="mt-2 text-2xl font-bold">Milestone Donor Stories</h3>
-                      <p className="mt-2 opacity-90">
+                    <div className="flex-1 flex flex-col justify-center opacity-90">
+                      <h3 className="text-2xl font-bold">Milestone Donor Stories</h3>
+                      <p className="mt-4 opacity-90">
                         When donations reach $777 milestones, we feature the donor's story here. Help us reach the next milestone!
                       </p>
                     </div>
