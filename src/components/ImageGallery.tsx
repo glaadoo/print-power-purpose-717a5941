@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import BlurImage from "@/components/BlurImage";
 
 interface ImageGalleryProps {
   images: Array<{ url: string; label?: string }>;
@@ -81,13 +82,12 @@ export default function ImageGallery({ images, alt, onError }: ImageGalleryProps
           onMouseLeave={handleMouseLeave}
           onClick={() => setIsModalOpen(true)}
         >
-          <img 
-            src={currentImage} 
+          <BlurImage
+            src={currentImage}
             alt={alt}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={onError}
+            className="w-full h-full transition-transform duration-300 group-hover:scale-105"
             loading="eager"
-            decoding="async"
+            onError={onError}
           />
 
           {/* Zoom Overlay on Hover */}
@@ -164,15 +164,14 @@ export default function ImageGallery({ images, alt, onError }: ImageGalleryProps
                     : "border-border hover:border-primary/50 hover:scale-105"
                 )}
               >
-                <img
+                <BlurImage
                   src={image.url}
                   alt={image.label || `${alt} - View ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full"
                   loading={index < 3 ? "eager" : "lazy"}
-                  decoding="async"
                 />
                 {currentIndex === index && (
-                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center pointer-events-none">
                     <div className="w-2 h-2 bg-primary rounded-full" />
                   </div>
                 )}
@@ -227,13 +226,12 @@ export default function ImageGallery({ images, alt, onError }: ImageGalleryProps
             )}
 
             {/* Zoomed Image */}
-            <img 
-              src={currentImage} 
+            <BlurImage
+              src={currentImage}
               alt={alt}
               className="max-w-full max-h-[90vh] object-contain rounded-lg animate-scale-in"
-              onError={onError}
               loading="eager"
-              decoding="async"
+              onError={onError}
             />
           </div>
         </DialogContent>
