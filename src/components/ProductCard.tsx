@@ -110,7 +110,7 @@ export default function ProductCard({
   };
 
   return (
-    <GlassCard padding="p-6">
+    <GlassCard padding="p-6" className="group">
       <div className="flex flex-col items-start text-left space-y-4 w-full relative">
         {/* Favorite Heart Button */}
         <button
@@ -150,7 +150,7 @@ export default function ProductCard({
         </div>
         
         <div className="flex flex-col items-center justify-center w-full space-y-2">
-          <h3 className="text-lg font-bold text-white text-center">
+          <h3 className="text-lg font-bold text-foreground text-center group-hover:text-primary transition-colors">
             {product.name}
           </h3>
           
@@ -197,8 +197,8 @@ export default function ProductCard({
         </div>
         
 
-        {/* Product Configuration - Auto-expanded */}
-        {requiresConfiguration && product.vendor === 'sinalite' && (
+        {/* Product Configuration - Auto-expanded - only show if pricing data exists */}
+        {requiresConfiguration && product.vendor === 'sinalite' && product.pricing_data && (
           <div className="w-full">
             <ProductConfiguratorLoader
               productId={product.id}
@@ -209,8 +209,8 @@ export default function ProductCard({
           </div>
         )}
         
-        {/* Scalable Press Configuration */}
-        {product.vendor === 'scalablepress' && product.pricing_data && (
+        {/* Scalable Press Configuration - only show if pricing data exists */}
+        {product.vendor === 'scalablepress' && product.pricing_data && product.pricing_data.colors && product.pricing_data.items && (
           <div className="w-full">
             <ScalablePressConfigurator
               productId={product.id}

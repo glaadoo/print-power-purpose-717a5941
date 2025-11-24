@@ -81,43 +81,41 @@ export default function ProductDetailNew() {
           category: data.category
         });
 
-        // Fetch reviews stats
-        const { data: reviews } = await supabase
-          .from("reviews")
-          .select("rating")
-          .eq("product_id", productId);
-          
-        if (reviews && reviews.length > 0) {
-          const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-          setAvgRating(sum / reviews.length);
-          setReviewCount(reviews.length);
+        // Fetch reviews, related products, and frequently bought together in parallel
+        const [reviewsResult, relatedResult, frequentResult] = await Promise.all([
+          supabase
+            .from("reviews")
+            .select("rating")
+            .eq("product_id", productId),
+          supabase
+            .from("products")
+            .select("*")
+            .eq("category", data.category)
+            .neq("id", productId)
+            .eq("is_active", true)
+            .limit(6),
+          supabase
+            .from("products")
+            .select("*")
+            .eq("vendor", data.vendor)
+            .neq("category", data.category)
+            .neq("id", productId)
+            .eq("is_active", true)
+            .limit(6)
+        ]);
+
+        if (reviewsResult.data && reviewsResult.data.length > 0) {
+          const sum = reviewsResult.data.reduce((acc, r) => acc + r.rating, 0);
+          setAvgRating(sum / reviewsResult.data.length);
+          setReviewCount(reviewsResult.data.length);
         }
 
-        // Fetch related products (same category)
-        const { data: related } = await supabase
-          .from("products")
-          .select("*")
-          .eq("category", data.category)
-          .neq("id", productId)
-          .eq("is_active", true)
-          .limit(6);
-        
-        if (related) {
-          setRelatedProducts(related as ProductRow[]);
+        if (relatedResult.data) {
+          setRelatedProducts(relatedResult.data as ProductRow[]);
         }
 
-        // Fetch frequently bought together
-        const { data: frequent } = await supabase
-          .from("products")
-          .select("*")
-          .eq("vendor", data.vendor)
-          .neq("category", data.category)
-          .neq("id", productId)
-          .eq("is_active", true)
-          .limit(6);
-        
-        if (frequent) {
-          setFrequentlyBought(frequent as ProductRow[]);
+        if (frequentResult.data) {
+          setFrequentlyBought(frequentResult.data as ProductRow[]);
         }
       }
       setLoading(false);
