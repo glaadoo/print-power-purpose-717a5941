@@ -85,28 +85,11 @@ export default function ProductDetailNew() {
           category: data.category
         });
 
-        // Fetch reviews, related products, and frequently bought together in parallel
-        const [reviewsResult, relatedResult, frequentResult] = await Promise.all([
-          supabase
-            .from("reviews")
-            .select("rating")
-            .eq("product_id", productId),
-          supabase
-            .from("products")
-            .select("*")
-            .eq("category", data.category)
-            .neq("id", productId)
-            .eq("is_active", true)
-            .limit(6),
-          supabase
-            .from("products")
-            .select("*")
-            .eq("vendor", data.vendor)
-            .neq("category", data.category)
-            .neq("id", productId)
-            .eq("is_active", true)
-            .limit(6)
-        ]);
+        // Fetch only reviews on initial load for faster page display
+        const reviewsResult = await supabase
+          .from("reviews")
+          .select("rating")
+          .eq("product_id", productId);
 
         if (reviewsResult.data && reviewsResult.data.length > 0) {
           const sum = reviewsResult.data.reduce((acc, r) => acc + r.rating, 0);
@@ -114,13 +97,34 @@ export default function ProductDetailNew() {
           setReviewCount(reviewsResult.data.length);
         }
 
-        if (relatedResult.data) {
-          setRelatedProducts(relatedResult.data as ProductRow[]);
-        }
+        // Load related products and frequently bought items after initial page load
+        setTimeout(async () => {
+          const [relatedResult, frequentResult] = await Promise.all([
+            supabase
+              .from("products")
+              .select("*")
+              .eq("category", data.category)
+              .neq("id", productId)
+              .eq("is_active", true)
+              .limit(6),
+            supabase
+              .from("products")
+              .select("*")
+              .eq("vendor", data.vendor)
+              .neq("category", data.category)
+              .neq("id", productId)
+              .eq("is_active", true)
+              .limit(6)
+          ]);
 
-        if (frequentResult.data) {
-          setFrequentlyBought(frequentResult.data as ProductRow[]);
-        }
+          if (relatedResult.data) {
+            setRelatedProducts(relatedResult.data as ProductRow[]);
+          }
+
+          if (frequentResult.data) {
+            setFrequentlyBought(frequentResult.data as ProductRow[]);
+          }
+        }, 100);
       }
       setLoading(false);
     })();

@@ -477,17 +477,6 @@ export default function Products() {
       <nav className="fixed top-10 inset-x-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-wrap items-center gap-2 py-3 justify-center">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={cn(
-                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                !selectedCategory 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              )}
-            >
-              All Products
-            </button>
             {categories.map(cat => {
               const categoryProducts = rows.filter(p => p.category === cat && !p.name.toLowerCase().includes('canada'));
               return (
