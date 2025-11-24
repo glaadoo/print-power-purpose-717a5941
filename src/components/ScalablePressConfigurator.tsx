@@ -96,59 +96,41 @@ export default function ScalablePressConfigurator({
   }
 
   return (
-    <div className="space-y-5 p-4 bg-white/5 rounded-lg border border-white/10">
+    <div className="space-y-3 p-2">
       {/* Color Selection */}
       <div>
-        <label className="text-sm font-semibold text-white mb-3 block flex items-center gap-2">
-          <span className="text-red-400">*</span> Select Color
+        <label className="text-xs font-medium text-white/80 mb-2 block">
+          Color
         </label>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           {colors.map((color: any) => {
-            // Check if color has any sizes in stock
             const colorAvailability = availability[color.name];
             const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
-            const isLowStock = colorAvailability && Object.values(colorAvailability).every((qty: any) => typeof qty === 'number' && qty < 50 && qty > 0);
             
             return (
               <button
                 key={color.name}
                 onClick={() => handleColorChange(color.name)}
                 className={`
-                  group relative flex flex-col items-center gap-2 p-2 rounded-lg transition-all
+                  relative w-8 h-8 rounded-full border-2 transition-all
                   ${selectedColor === color.name 
-                    ? 'bg-white/20 border-2 border-white shadow-lg' 
-                    : 'bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-white/40'
+                    ? 'border-white ring-2 ring-white/50 scale-110' 
+                    : 'border-white/30 hover:border-white/60 hover:scale-105'
                   }
-                  ${!hasStock ? 'opacity-50' : ''}
+                  ${!hasStock ? 'opacity-40' : ''}
                 `}
-                title={`${color.name}${!hasStock ? ' (Out of Stock)' : isLowStock ? ' (Low Stock)' : ''}`}
+                style={{ backgroundColor: color.hex }}
+                title={color.name}
                 aria-label={`Select ${color.name}`}
               >
-                <div 
-                  className={`
-                    w-12 h-12 rounded-full border-2 transition-all
-                    ${selectedColor === color.name 
-                      ? 'border-white shadow-xl scale-110' 
-                      : 'border-white/30 group-hover:border-white/60 group-hover:scale-105'
-                    }
-                  `}
-                  style={{ backgroundColor: color.hex }}
-                >
-                  {selectedColor === color.name && (
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-2xl font-bold drop-shadow-lg">
-                      ✓
-                    </span>
-                  )}
-                  {!hasStock && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white" />
-                  )}
-                  {hasStock && isLowStock && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full border-2 border-white" />
-                  )}
-                </div>
-                <span className="text-xs text-white/90 font-medium capitalize max-w-[80px] text-center leading-tight">
-                  {color.name}
-                </span>
+                {selectedColor === color.name && (
+                  <span className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold">
+                    ✓
+                  </span>
+                )}
+                {!hasStock && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+                )}
               </button>
             );
           })}
@@ -156,13 +138,13 @@ export default function ScalablePressConfigurator({
       </div>
 
       {/* Size Selection */}
-      {availableSizes.length > 0 && (
-        <div>
-          <label className="text-sm font-semibold text-white mb-3 block flex items-center gap-2">
-            <span className="text-red-400">*</span> Select Size
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {availableSizes.map((size: string) => {
+      <div>
+        <label className="text-xs font-medium text-white/80 mb-2 block">
+          Size
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {availableSizes.length > 0 ? (
+            availableSizes.map((size: string) => {
               const stockQty = selectedColor && availability[selectedColor]?.[size];
               const stockInfo = getStockStatus(stockQty);
               const isOutOfStock = stockInfo.status === 'out';
@@ -173,57 +155,46 @@ export default function ScalablePressConfigurator({
                   onClick={() => !isOutOfStock && setSelectedSize(size)}
                   disabled={isOutOfStock}
                   className={`
-                    min-w-[70px] px-4 py-2.5 rounded-full font-semibold text-sm transition-all border-2 relative
+                    px-3 py-1.5 rounded-full text-xs font-medium transition-all
                     ${isOutOfStock 
-                      ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed' 
+                      ? 'bg-white/5 text-white/30 cursor-not-allowed' 
                       : selectedSize === size 
-                        ? 'bg-white text-black border-white shadow-lg scale-105' 
-                        : 'bg-white/10 text-white border-white/30 hover:bg-white/20 hover:border-white/50 hover:scale-105'
+                        ? 'bg-white text-black' 
+                        : 'bg-white/10 text-white hover:bg-white/20'
                     }
                   `}
                   title={stockInfo.label}
                 >
                   {size.toUpperCase()}
-                  {isOutOfStock && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white" />
-                  )}
                 </button>
               );
-            })}
+            })
+          ) : (
+            <p className="text-xs text-white/50">Select a color first</p>
+          )}
+        </div>
+        
+        {/* Stock indicator for selected size */}
+        {selectedSize && currentStock !== undefined && (
+          <div className={`mt-1.5 text-xs ${getStockStatus(currentStock).color} flex items-center gap-1`}>
+            <span>●</span>
+            {getStockStatus(currentStock).label}
           </div>
-          
-          {/* Stock indicator for selected size */}
-          {selectedSize && currentStock !== undefined && (
-            <div className={`mt-2 text-xs ${getStockStatus(currentStock).color} flex items-center gap-1`}>
-              <span className="font-semibold">●</span>
-              {getStockStatus(currentStock).label}
-            </div>
-          )}
-          
-          {/* Stock Notification Form - Show when selected size is out of stock */}
-          {selectedColor && selectedSize && getStockStatus(currentStock).status === 'out' && (
-            <div className="mt-3">
-              <StockNotificationForm
-                productId={productId}
-                productName={productName}
-                color={selectedColor}
-                size={selectedSize}
-                vendor="scalablepress"
-              />
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Validation Message */}
-      {(!selectedColor || !selectedSize) && (
-        <div className="flex items-start gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-          <span className="text-yellow-400 text-lg">⚠️</span>
-          <p className="text-xs text-yellow-200">
-            Please select both a color and size to continue
-          </p>
-        </div>
-      )}
+        )}
+        
+        {/* Stock Notification Form */}
+        {selectedColor && selectedSize && getStockStatus(currentStock).status === 'out' && (
+          <div className="mt-2">
+            <StockNotificationForm
+              productId={productId}
+              productName={productName}
+              color={selectedColor}
+              size={selectedSize}
+              vendor="scalablepress"
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
