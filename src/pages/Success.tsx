@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home } from "lucide-react";
 
@@ -19,6 +20,7 @@ interface OrderDetails {
 export default function Success() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const cart = useCart();
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,11 @@ export default function Success() {
         if (data) {
           console.log("[SUCCESS PAGE] Order found:", data.order_number);
           setOrderDetails(data as OrderDetails);
+          
+          // Clear cart after successful order
+          console.log("[SUCCESS PAGE] Clearing cart after successful order");
+          cart.clear();
+          
           setLoading(false);
         } else if (retryCount < 3) {
           // Order might not be created yet, retry with exponential backoff
