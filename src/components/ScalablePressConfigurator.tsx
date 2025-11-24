@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import StockNotificationForm from "@/components/StockNotificationForm";
 
 interface ScalablePressConfiguratorProps {
+  productId: string;
+  productName: string;
   pricingData: any;
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
@@ -16,6 +19,8 @@ const getStockStatus = (quantity: number | undefined): { status: string; color: 
 };
 
 export default function ScalablePressConfigurator({
+  productId,
+  productName,
   pricingData,
   onPriceChange,
   onConfigChange,
@@ -192,6 +197,19 @@ export default function ScalablePressConfigurator({
             <div className={`mt-2 text-xs ${getStockStatus(currentStock).color} flex items-center gap-1`}>
               <span className="font-semibold">●</span>
               {getStockStatus(currentStock).label}
+            </div>
+          )}
+          
+          {/* Stock Notification Form - Show when selected size is out of stock */}
+          {selectedColor && selectedSize && getStockStatus(currentStock).status === 'out' && (
+            <div className="mt-3">
+              <StockNotificationForm
+                productId={productId}
+                productName={productName}
+                color={selectedColor}
+                size={selectedSize}
+                vendor="scalablepress"
+              />
             </div>
           )}
         </div>
