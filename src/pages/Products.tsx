@@ -744,13 +744,36 @@ export default function Products() {
               </div>
             )}
 
-            {!loading && !err && (
+            {!loading && !err && Object.entries(finalGroupedProducts).length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-white/70 text-xl">No products found matching your criteria.</p>
+                <Button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSortBy("name-asc");
+                    setRatingFilter("all");
+                    setSelectedCategory(null);
+                  }}
+                  variant="outline"
+                  className="mt-4 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                >
+                  Clear All Filters
+                </Button>
+              </div>
+            )}
+            
+            {!loading && !err && Object.entries(finalGroupedProducts).length > 0 && (
               <div className="space-y-12">
                 {Object.entries(finalGroupedProducts).map(([category, products]) => (
                   <div key={category} className="space-y-6">
-                    <h2 className="text-3xl font-bold text-white uppercase tracking-wider border-b border-white/20 pb-3">
-                      {category}
-                    </h2>
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-bold text-white uppercase tracking-wider border-b border-white/20 pb-3 flex-1">
+                        {category}
+                      </h2>
+                      <span className="text-white/60 text-sm">
+                        {products.length} {products.length === 1 ? 'product' : 'products'}
+                      </span>
+                    </div>
                     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
                       {products.map((product) => {
                         // SinaLite products require configuration, Scalable Press products do not
