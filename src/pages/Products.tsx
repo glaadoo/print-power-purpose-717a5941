@@ -508,17 +508,22 @@ export default function Products() {
                       className="absolute top-full left-0 mt-2 w-64 max-h-96 overflow-y-auto bg-background/95 backdrop-blur border border-border rounded-xl shadow-2xl z-[60]"
                     >
                       {categoryProducts.slice(0, 10).map(product => {
-                        const categorySlug = cat.toLowerCase().replace(/\s+/g, '-');
+                         const categorySlug = cat.toLowerCase().replace(/\s+/g, '-');
                         const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        
+                        const handleProductClick = (e: React.MouseEvent) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedCategory(null);
+                          navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } });
+                        };
+                        
                         return (
                           <button
                             key={product.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedCategory(null);
-                              navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } });
-                            }}
-                            className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0 flex items-center gap-3"
+                            onClick={handleProductClick}
+                            onMouseDown={handleProductClick}
+                            className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0 flex items-center gap-3 cursor-pointer"
                           >
                             {product.image_url && (
                               <img src={product.image_url} alt="" className="w-10 h-10 object-cover rounded" />

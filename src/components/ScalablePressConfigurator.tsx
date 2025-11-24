@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import StockNotificationForm from "@/components/StockNotificationForm";
+import { getColorHex } from "@/lib/utils";
 
 interface ScalablePressConfiguratorProps {
   productId: string;
@@ -122,36 +123,43 @@ export default function ScalablePressConfigurator({
             const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === color.name.toLowerCase());
             const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
             const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
+            const colorHex = getColorHex(color.name, color.hex);
             
             return (
               <div key={color.name} className="flex flex-col items-center gap-2">
                 <button
-                  onClick={() => handleColorChange(color.name)}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (hasStock) {
+                      handleColorChange(color.name);
+                    }
+                  }}
                   className={`
-                    relative w-12 h-12 rounded-full border-3 transition-all duration-200
+                    relative w-12 h-12 rounded-full border-4 transition-all duration-200 shadow-md
                     ${selectedColor === color.name 
                       ? 'border-primary ring-4 ring-primary/30 scale-110 shadow-lg shadow-primary/50' 
-                      : 'border-border hover:border-primary/50 hover:scale-105 hover:shadow-md'
+                      : 'border-white/30 hover:border-primary/50 hover:scale-105 hover:shadow-xl'
                     }
-                    ${!hasStock ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
+                    ${!hasStock ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:brightness-110'}
                   `}
-                  style={{ backgroundColor: color.hex }}
-                  title={color.name}
+                  style={{ backgroundColor: colorHex }}
+                  title={`${color.name}${!hasStock ? ' (Out of Stock)' : ''}`}
                   aria-label={`Select ${color.name}`}
                   disabled={!hasStock}
                 >
                   {selectedColor === color.name && (
-                    <span className="absolute inset-0 flex items-center justify-center text-white drop-shadow-lg">
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <span className="absolute inset-0 flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                      <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </span>
                   )}
                   {!hasStock && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background" />
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md" />
                   )}
                 </button>
-                <span className="text-xs text-foreground font-medium text-center">{color.name}</span>
+                <span className="text-xs text-foreground font-medium text-center max-w-[60px] truncate">{color.name}</span>
               </div>
             );
           })}
