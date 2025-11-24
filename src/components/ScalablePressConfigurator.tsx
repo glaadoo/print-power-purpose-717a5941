@@ -117,38 +117,41 @@ export default function ScalablePressConfigurator({
         <label className="block text-sm font-semibold text-foreground mb-3">
           Color: {selectedColor && <span className="text-primary font-medium">{selectedColor}</span>}
         </label>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-4">
           {colors.map((color: any) => {
             const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === color.name.toLowerCase());
             const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
             const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
             
             return (
-              <div key={color.name} className="flex flex-col items-center gap-1">
+              <div key={color.name} className="flex flex-col items-center gap-2">
                 <button
                   onClick={() => handleColorChange(color.name)}
                   className={`
-                    relative w-10 h-10 rounded-full border-2 transition-all
+                    relative w-12 h-12 rounded-full border-3 transition-all duration-200
                     ${selectedColor === color.name 
-                      ? 'border-white ring-2 ring-primary-foreground scale-110' 
-                      : 'border-white/30 hover:border-white/60 hover:scale-105'
+                      ? 'border-primary ring-4 ring-primary/30 scale-110 shadow-lg shadow-primary/50' 
+                      : 'border-border hover:border-primary/50 hover:scale-105 hover:shadow-md'
                     }
-                    ${!hasStock ? 'opacity-40' : ''}
+                    ${!hasStock ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                   `}
                   style={{ backgroundColor: color.hex }}
                   title={color.name}
                   aria-label={`Select ${color.name}`}
+                  disabled={!hasStock}
                 >
                   {selectedColor === color.name && (
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold">
-                      ✓
+                    <span className="absolute inset-0 flex items-center justify-center text-white drop-shadow-lg">
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                     </span>
                   )}
                   {!hasStock && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background" />
                   )}
                 </button>
-                <span className="text-xs text-white/80 text-center">{color.name}</span>
+                <span className="text-xs text-foreground font-medium text-center">{color.name}</span>
               </div>
             );
           })}
@@ -160,7 +163,7 @@ export default function ScalablePressConfigurator({
         <label className="block text-sm font-semibold text-foreground mb-3">
           Size: {selectedSize && <span className="text-primary font-medium">{selectedSize.toUpperCase()}</span>}
         </label>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {availableSizes.length > 0 ? (
             availableSizes.map((size: string) => {
               const availabilityColorKey = selectedColor ? Object.keys(availability).find(key => key.toLowerCase() === selectedColor.toLowerCase()) : null;
@@ -174,12 +177,12 @@ export default function ScalablePressConfigurator({
                   onClick={() => !isOutOfStock && setSelectedSize(size)}
                   disabled={isOutOfStock}
                   className={`
-                    px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                    px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200
                     ${isOutOfStock 
-                      ? 'bg-white/5 text-white/30 cursor-not-allowed' 
+                      ? 'bg-muted/30 text-muted-foreground/40 cursor-not-allowed border-2 border-muted' 
                       : selectedSize === size 
-                        ? 'bg-white text-black' 
-                        : 'bg-white/10 text-white hover:bg-white/20'
+                        ? 'bg-primary text-primary-foreground border-2 border-primary ring-4 ring-primary/30 shadow-lg scale-105' 
+                        : 'bg-background border-2 border-border text-foreground hover:border-primary/50 hover:bg-accent hover:scale-105'
                     }
                   `}
                   title={stockInfo.label}
@@ -189,7 +192,7 @@ export default function ScalablePressConfigurator({
               );
             })
           ) : (
-            <p className="text-xs text-white/50">Select a color first</p>
+            <p className="text-xs text-muted-foreground">Select a color first</p>
           )}
         </div>
         
