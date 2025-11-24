@@ -190,6 +190,12 @@ export function ProductConfigurator({
       selectedOptions
     });
     
+    // CRITICAL: Block all API calls if we have no selections at all
+    if (optionIds.length === 0) {
+      console.log('[ProductConfigurator] Skipping price fetch: no option IDs selected yet');
+      return;
+    }
+    
     // CRITICAL: Don't fetch if there are no option groups at all
     if (optionGroups.length === 0) {
       console.log('[ProductConfigurator] Skipping price fetch: no option groups available');
