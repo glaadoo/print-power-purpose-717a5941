@@ -79,6 +79,12 @@ export default function ProductConfiguratorLoader({
       console.log('[ProductConfiguratorLoader] Product data:', product);
       console.log('[ProductConfiguratorLoader] Pricing data available:', !!product.pricing_data);
       
+      // CRITICAL: Validate vendor_product_id before proceeding
+      if (!product.vendor_product_id || product.vendor_product_id === 'null' || product.vendor_product_id === 'undefined') {
+        console.error('[ProductConfiguratorLoader] Invalid vendor_product_id:', product.vendor_product_id);
+        throw new Error("Product configuration unavailable - missing vendor product ID");
+      }
+      
       // Check if product has pricing_data from sync that includes options
       if (product.pricing_data && typeof product.pricing_data === 'object') {
         const pricingData = product.pricing_data as any;
@@ -258,6 +264,9 @@ export default function ProductConfiguratorLoader({
     } catch (e: any) {
       console.error('[ProductConfiguratorLoader] Error fetching pricing options:', e);
       setError(e.message || "Failed to load configuration options");
+      
+      // Set error price to 0 to clear any loading states
+      onPriceChange(0);
     } finally {
       console.log('[ProductConfiguratorLoader] Fetch complete', { 
         hasPricingOptions: !!pricingOptions, 

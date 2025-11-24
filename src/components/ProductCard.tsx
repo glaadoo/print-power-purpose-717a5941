@@ -51,6 +51,8 @@ export default function ProductCard({
   const [user, setUser] = useState<any>(null);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const imageSrc = product.image_url || null;
   const { isFavorite, toggleFavorite: toggleFavoriteContext } = useFavorites();
   const isProductFavorite = isFavorite(product.id);
@@ -213,12 +215,17 @@ export default function ProductCard({
             {/* Colors */}
             {product.pricing_data.colors && Array.isArray(product.pricing_data.colors) && product.pricing_data.colors.length > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Available Colors:</label>
+                <label className="text-sm font-medium text-white">Select Color:</label>
                 <div className="flex flex-wrap gap-2">
                   {product.pricing_data.colors.map((color: any, idx: number) => (
-                    <div
+                    <button
                       key={idx}
-                      className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20"
+                      onClick={() => setSelectedColor(color.name)}
+                      className={`flex items-center gap-2 px-3 py-1 rounded-full transition-all ${
+                        selectedColor === color.name
+                          ? 'bg-white/30 border-2 border-white'
+                          : 'bg-white/10 border border-white/20 hover:bg-white/20'
+                      }`}
                       title={color.name}
                     >
                       <div
@@ -226,7 +233,7 @@ export default function ProductCard({
                         style={{ backgroundColor: color.hex }}
                       />
                       <span className="text-xs text-white">{color.name}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -235,15 +242,20 @@ export default function ProductCard({
             {/* Sizes */}
             {product.pricing_data.sizes && Array.isArray(product.pricing_data.sizes) && product.pricing_data.sizes.length > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Available Sizes:</label>
+                <label className="text-sm font-medium text-white">Select Size:</label>
                 <div className="flex flex-wrap gap-2">
                   {product.pricing_data.sizes.map((size: string, idx: number) => (
-                    <div
+                    <button
                       key={idx}
-                      className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white"
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-3 py-1 rounded-full text-xs transition-all ${
+                        selectedSize === size
+                          ? 'bg-white/30 border-2 border-white text-white font-semibold'
+                          : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+                      }`}
                     >
                       {size}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>

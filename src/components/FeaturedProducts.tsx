@@ -43,10 +43,10 @@ export default function FeaturedProducts() {
   useEffect(() => {
     async function loadFeaturedProducts() {
       try {
-        // Simplified query without pricing_data for faster loading
+        // Include description and pricing_data for proper product detail display
         const { data, error } = await supabase
           .from("products")
-          .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor, vendor_product_id")
+          .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, vendor, vendor_product_id, pricing_data")
           .eq("is_active", true)
           .not("name", "ilike", "%canada%")
           .order("created_at", { ascending: false })
