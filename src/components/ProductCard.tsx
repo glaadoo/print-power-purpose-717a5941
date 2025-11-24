@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Plus, Minus, Heart, Star } from "lucide-react";
 import ProductConfiguratorLoader from "./ProductConfiguratorLoader";
+import ScalablePressConfigurator from "./ScalablePressConfigurator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -51,8 +52,6 @@ export default function ProductCard({
   const [user, setUser] = useState<any>(null);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const imageSrc = product.image_url || null;
   const { isFavorite, toggleFavorite: toggleFavoriteContext } = useFavorites();
   const isProductFavorite = isFavorite(product.id);
@@ -211,63 +210,12 @@ export default function ProductCard({
         
         {/* Scalable Press Configuration */}
         {product.vendor === 'scalablepress' && product.pricing_data && (
-          <div className="w-full space-y-3">
-            {/* Colors */}
-            {product.pricing_data.colors && Array.isArray(product.pricing_data.colors) && product.pricing_data.colors.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Select Color:</label>
-                <div className="flex flex-wrap gap-2">
-                  {product.pricing_data.colors.map((color: any, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedColor(color.name)}
-                      className={`flex items-center gap-2 px-3 py-1 rounded-full transition-all ${
-                        selectedColor === color.name
-                          ? 'bg-white/30 border-2 border-white'
-                          : 'bg-white/10 border border-white/20 hover:bg-white/20'
-                      }`}
-                      title={color.name}
-                    >
-                      <div
-                        className="w-4 h-4 rounded-full border border-white/30"
-                        style={{ backgroundColor: color.hex }}
-                      />
-                      <span className="text-xs text-white">{color.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Sizes */}
-            {product.pricing_data.sizes && Array.isArray(product.pricing_data.sizes) && product.pricing_data.sizes.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Select Size:</label>
-                <div className="flex flex-wrap gap-2">
-                  {product.pricing_data.sizes.map((size: string, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-3 py-1 rounded-full text-xs transition-all ${
-                        selectedSize === size
-                          ? 'bg-white/30 border-2 border-white text-white font-semibold'
-                          : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Material/Brand Info */}
-            {(product.pricing_data.brand || product.pricing_data.material) && (
-              <div className="text-xs text-white/60 space-y-1">
-                {product.pricing_data.brand && <div>Brand: {product.pricing_data.brand}</div>}
-                {product.pricing_data.material && <div>Material: {product.pricing_data.material}</div>}
-              </div>
-            )}
+          <div className="w-full">
+            <ScalablePressConfigurator
+              pricingData={product.pricing_data}
+              onPriceChange={(price) => onPriceChange(product.id, price)}
+              onConfigChange={(config) => onConfigChange(product.id, config)}
+            />
           </div>
         )}
 
