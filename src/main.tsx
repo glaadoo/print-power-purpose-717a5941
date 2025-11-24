@@ -8,6 +8,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { CauseProvider } from "./context/CauseContext";
 import { CartProvider } from "./context/CartContext";
 import { FavoritesProvider } from "./context/FavoritesContext";
+import { ComparisonProvider } from "./context/ComparisonContext";
 import { Toaster } from "sonner";
 import DebugPageIndicator from "./components/DebugPageIndicator";
 import { initPricePrefetch } from "./lib/price-prefetch";
@@ -17,12 +18,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <CauseProvider>
       <CartProvider>
         <FavoritesProvider>
-          <BrowserRouter>
-            <ErrorBoundary>
-              <App />
-              <DebugPageIndicator />
-            </ErrorBoundary>
-          </BrowserRouter>
+          <ComparisonProvider>
+            <BrowserRouter>
+              <ErrorBoundary>
+                <App />
+                <DebugPageIndicator />
+              </ErrorBoundary>
+            </BrowserRouter>
+          </ComparisonProvider>
         </FavoritesProvider>
       </CartProvider>
     </CauseProvider>
