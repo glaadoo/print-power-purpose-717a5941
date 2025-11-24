@@ -28,7 +28,7 @@ export default function ColorSelector() {
     document.documentElement.style.setProperty('--app-text', textColor);
     document.documentElement.style.setProperty('background', color, 'important');
     document.body.style.setProperty('background', color, 'important');
-    document.body.style.setProperty('color', textColor, 'important');
+    document.body.style.setProperty('color', textColor);
     document.body.style.transition = 'background 0.5s ease, color 0.5s ease';
     console.log('Color applied:', color, 'Text color:', textColor);
   };
