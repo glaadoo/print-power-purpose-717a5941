@@ -31,4 +31,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 );
 
 // Initialize background price prefetching after 2 seconds
-initPricePrefetch(2000);
+// Temporarily disabled due to database timeout issues
+// initPricePrefetch(2000);
