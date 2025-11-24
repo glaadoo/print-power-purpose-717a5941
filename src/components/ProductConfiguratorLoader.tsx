@@ -69,7 +69,7 @@ export default function ProductConfiguratorLoader({
       // First, get product metadata including pricing_data from sync
       const { data: product, error: productError } = await supabase
         .from("products")
-        .select("vendor_product_id, vendor, pricing_data")
+        .select("vendor_product_id, vendor, pricing_data, base_cost_cents")
         .eq("id", productId)
         .maybeSingle();
       
@@ -77,9 +77,57 @@ export default function ProductConfiguratorLoader({
       if (!product) throw new Error("Product not found");
       
       console.log('[ProductConfiguratorLoader] Product data:', product);
+      console.log('[ProductConfiguratorLoader] Vendor:', product.vendor);
       console.log('[ProductConfiguratorLoader] Pricing data available:', !!product.pricing_data);
       
-      // CRITICAL: Validate vendor_product_id before proceeding
+      // Handle Scalable Press products separately - they have pricing in pricing_data
+      if (product.vendor === 'scalablepress') {
+        console.log('[ProductConfiguratorLoader] Scalable Press product detected - using embedded pricing');
+        
+        // Extract price from pricing_data items
+        if (product.pricing_data && typeof product.pricing_data === 'object') {
+          const pricingData = product.pricing_data as any;
+          
+          if (pricingData.items && typeof pricingData.items === 'object') {
+            // Get all prices from items
+            const prices: number[] = [];
+            Object.values(pricingData.items).forEach((colorData: any) => {
+              if (typeof colorData === 'object') {
+                Object.values(colorData).forEach((sizeData: any) => {
+                  if (sizeData && typeof sizeData.price === 'number') {
+                    prices.push(sizeData.price);
+                  }
+                });
+              }
+            });
+            
+            if (prices.length > 0) {
+              // Use first available price (typically the base price)
+              const priceCents = prices[0];
+              console.log('[ProductConfiguratorLoader] Found Scalable Press price:', priceCents, 'cents');
+              onPriceChange(priceCents);
+              setProductData(product);
+              setLoading(false);
+              setFetchingRef(false);
+              return;
+            }
+          }
+        }
+        
+        // Fallback to base_cost_cents if pricing_data doesn't have prices
+        if (product.base_cost_cents > 0) {
+          console.log('[ProductConfiguratorLoader] Using base_cost_cents:', product.base_cost_cents);
+          onPriceChange(product.base_cost_cents);
+          setProductData(product);
+          setLoading(false);
+          setFetchingRef(false);
+          return;
+        }
+        
+        throw new Error("No pricing information available for Scalable Press product");
+      }
+      
+      // CRITICAL: Validate vendor_product_id before proceeding (SinaLite only)
       if (!product.vendor_product_id || product.vendor_product_id === 'null' || product.vendor_product_id === 'undefined') {
         console.error('[ProductConfiguratorLoader] Invalid vendor_product_id:', product.vendor_product_id);
         throw new Error("Product configuration unavailable - missing vendor product ID");
