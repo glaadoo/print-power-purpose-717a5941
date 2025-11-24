@@ -187,8 +187,16 @@ export function ProductConfigurator({
       optionIdsLength: optionIds.length,
       optionGroupsLength: optionGroups.length,
       optionIds,
-      selectedOptions
+      selectedOptions,
+      vendorProductId
     });
+    
+    // CRITICAL: Validate vendorProductId before any API calls
+    if (!vendorProductId || vendorProductId === 'null' || vendorProductId === 'undefined') {
+      console.error('[ProductConfigurator] Invalid vendorProductId:', vendorProductId);
+      setPriceError('Product configuration unavailable');
+      return;
+    }
     
     // CRITICAL: Block all API calls if we have no selections at all
     if (optionIds.length === 0) {

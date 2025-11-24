@@ -191,14 +191,33 @@ export default function Checkout() {
     // Normalize donation amount
     const normalizedDonation = normalizeDonationCents(donation);
 
-    const payload = {
-      cart: {
-        items: cartItems.map(item => ({
+    // Build cart items - use cart if available, otherwise use single product
+    const checkoutItems = cartItems.length > 0 
+      ? cartItems.map(item => ({
           id: item.id,
           quantity: item.quantity,
           name: item.name,
           priceCents: item.priceCents,
-        })),
+        }))
+      : product 
+        ? [{
+            id: product.id,
+            quantity: merged.qty || 1,
+            name: product.name,
+            priceCents: product.priceCents || priceFromBase(product.base_cost_cents),
+          }]
+        : [];
+
+    // Don't proceed if no items
+    if (checkoutItems.length === 0) {
+      toast.push({ title: "Cart is empty - please add items first" });
+      setLoading(false);
+      return;
+    }
+
+    const payload = {
+      cart: {
+        items: checkoutItems,
       },
       nonprofitId: (causeCtx as any)?.nonprofit?.id || null,
       donationCents: normalizedDonation,
