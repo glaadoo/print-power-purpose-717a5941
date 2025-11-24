@@ -273,35 +273,19 @@ export default function Home() {
                 One platform for professional print orders and optional donations—connecting
                 communities and nonprofits in a single, seamless checkout.
               </p>
-              <div className="mt-10 relative z-30">
-                <Link
-                  to="/auth"
-                  className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-5 font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                  style={{ 
-                    backgroundColor: '#FFD700',
-                    color: '#000000',
-                    border: '3px solid #000000',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FFC700';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FFD700';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
+              <div className="mt-10 relative z-50">
+                <button
+                  onClick={() => nav("/auth")}
+                  className="inline-flex items-center justify-center gap-3 bg-[#FFD700] text-black rounded-full px-10 py-5 font-bold text-lg border-[3px] border-black shadow-[0_8px_32px_rgba(0,0,0,0.4)] transition-all duration-300 hover:bg-[#FFC700] hover:scale-105 hover:shadow-2xl cursor-pointer"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <line x1="19" x2="19" y1="8" y2="14"/>
                     <line x1="22" x2="16" y1="11" y2="11"/>
                   </svg>
-                  Sign Up/Sign In
-                </Link>
+                  <span>Sign Up / Sign In</span>
+                </button>
               </div>
             </div>
           </div>
