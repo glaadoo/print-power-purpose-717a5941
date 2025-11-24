@@ -215,12 +215,21 @@ export default function Products() {
 
     const qty = quantities[product.id] || 1;
     
-    // MUST use configured price from API for Sinalite products
-    const unitCents = configuredPrices[product.id];
-
-    if (!unitCents || unitCents <= 0) {
-      toast.error("Please configure product to see pricing");
-      return;
+    // Get price based on vendor: SinaLite uses configured price, others use base price
+    let unitCents = 0;
+    if (product.vendor === "sinalite") {
+      unitCents = configuredPrices[product.id] || 0;
+      if (!unitCents || unitCents <= 0) {
+        toast.error("Please configure product to see pricing");
+        return;
+      }
+    } else {
+      // Scalable Press and other vendors: use base_cost_cents directly
+      unitCents = product.base_cost_cents || 0;
+      if (!unitCents || unitCents <= 0) {
+        toast.error("Product price not available");
+        return;
+      }
     }
 
     add(
@@ -308,17 +317,21 @@ export default function Products() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Calculate display prices: use configured price from API (not base_cost_cents)
+  // Calculate display prices: SinaLite uses configured prices, other vendors use base_cost_cents
   const defaultPrices = useMemo(() => {
     const prices: Record<string, number> = {};
     rows.forEach(product => {
-      // ONLY use configured prices from Sinalite API
-      // Do NOT show price until configurator loads and fetches it
-      if (configuredPrices[product.id]) {
-        prices[product.id] = configuredPrices[product.id];
-      } else {
-        // Show 0 until first configuration price is loaded
-        prices[product.id] = 0;
+      // SinaLite products: ONLY use configured prices from API
+      if (product.vendor === "sinalite") {
+        if (configuredPrices[product.id]) {
+          prices[product.id] = configuredPrices[product.id];
+        } else {
+          prices[product.id] = 0; // Show 0 until configurator loads
+        }
+      } 
+      // Other vendors (Scalable Press, etc.): use base_cost_cents immediately
+      else {
+        prices[product.id] = product.base_cost_cents || 0;
       }
     });
     return prices;
