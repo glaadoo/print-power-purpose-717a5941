@@ -14,6 +14,7 @@ import ProductReviews from "@/components/ProductReviews";
 import ReviewForm from "@/components/ReviewForm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import ImageZoom from "@/components/ImageZoom";
 
 type ProductRow = {
   id: string;
@@ -262,15 +263,14 @@ export default function ProductDetailNew() {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Left: Product Image */}
             <div className="space-y-4">
-              <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border">
-                {product.image_url && !imageError ? (
-                  <img 
-                    src={product.image_url} 
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    onError={() => setImageError(true)}
-                  />
-                ) : (
+              {product.image_url && !imageError ? (
+                <ImageZoom
+                  src={product.image_url}
+                  alt={product.name}
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border">
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="text-center p-6">
                       <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,8 +279,8 @@ export default function ProductDetailNew() {
                       <p className="text-muted-foreground text-sm mt-3">No image available</p>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Right: Product Details */}
