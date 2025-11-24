@@ -158,6 +158,20 @@ serve(async (req) => {
           }
         }
 
+        // Fetch availability information
+        const availabilityResponse = await fetch(`${apiUrl}/products/${product.id}/availability`, {
+          headers: {
+            "Authorization": `Basic ${btoa(":" + apiKey)}`,
+            "Accept": "application/json",
+          },
+        });
+
+        let availabilityData = null;
+        if (availabilityResponse.ok) {
+          availabilityData = await availabilityResponse.json();
+          console.log(`[SYNC-SCALABLEPRESS] Availability data for ${product.id}:`, Object.keys(availabilityData || {}).length, 'colors');
+        }
+
         // Extract colors and sizes for pricing_data
         const colors = productDetails.colors || [];
         const sizes = colors.length > 0 ? colors[0].sizes || [] : [];
@@ -212,7 +226,8 @@ serve(async (req) => {
               images: c.images
             })),
             sizes: sizes,
-            items: itemsData, // Store full pricing/availability data
+            items: itemsData, // Store full pricing data by color/size
+            availability: availabilityData, // Store stock availability by color/size
             productUrl: product.url
           }
         };
