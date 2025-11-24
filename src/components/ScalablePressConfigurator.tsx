@@ -129,18 +129,14 @@ export default function ScalablePressConfigurator({
               <div key={color.name} className="flex flex-col items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (hasStock) {
-                      handleColorChange(color.name);
-                    }
-                  }}
+                  onClick={() => handleColorChange(color.name)}
                   className={`
-                    relative w-12 h-12 rounded-full border-4 transition-all duration-200 shadow-md
+                    relative w-12 h-12 rounded-full border-4 transition-all duration-200 shadow-md cursor-pointer
                     ${selectedColor === color.name 
                       ? 'border-primary ring-4 ring-primary/30 scale-110 shadow-lg shadow-primary/50' 
                       : 'border-white/30 hover:border-primary/50 hover:scale-105 hover:shadow-xl'
                     }
-                    ${!hasStock ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer hover:brightness-110'}
+                    ${!hasStock ? 'opacity-40' : 'hover:brightness-110'}
                   `}
                   style={{ backgroundColor: colorHex }}
                   title={`${color.name}${!hasStock ? ' (Out of Stock)' : ''}`}
