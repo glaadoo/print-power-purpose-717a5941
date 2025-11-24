@@ -425,10 +425,86 @@ export default function Products() {
   }, [filteredAndSortedProducts, sortBy]);
 
 
+  // Extract unique categories for menu
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    rows.forEach(product => {
+      if (product.category && !product.name.toLowerCase().includes('canada')) {
+        cats.add(product.category);
+      }
+    });
+    return Array.from(cats).sort();
+  }, [rows]);
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Filter by selected category
+  const categoryFilteredProducts = useMemo(() => {
+    if (!selectedCategory) return filteredAndSortedProducts;
+    return filteredAndSortedProducts.filter(p => p.category === selectedCategory);
+  }, [filteredAndSortedProducts, selectedCategory]);
+
+  // Group products by category
+  const finalGroupedProducts = useMemo(() => {
+    const groups: Record<string, ProductRow[]> = {};
+    
+    // If sorting by price, don't group by category - show all products in one list
+    if (sortBy === "price-low" || sortBy === "price-high") {
+      groups["All Products"] = categoryFilteredProducts;
+    } else {
+      // Group by category for name sorting
+      categoryFilteredProducts.forEach(product => {
+        const category = product.category || "Uncategorized";
+        if (!groups[category]) {
+          groups[category] = [];
+        }
+        groups[category].push(product);
+      });
+    }
+    
+    return groups;
+  }, [categoryFilteredProducts, sortBy]);
+
   return (
     <div className="fixed inset-0 text-white">{/* Removed z-40 to work with App animation wrapper */}
-      {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10 relative">
+      {/* Top Mission Banner */}
+      <div className="fixed top-0 inset-x-0 z-50 bg-gradient-to-r from-primary/90 to-primary-foreground/90 backdrop-blur text-white py-2 text-center text-sm font-medium">
+        Print Power Purpose - Every Order Supports a Cause
+      </div>
+
+      {/* Category Navigation Menu */}
+      <nav className="fixed top-10 inset-x-0 z-50 bg-background/95 backdrop-blur border-b border-border">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                !selectedCategory 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              All Products
+            </button>
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                  selectedCategory === category
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* Top bar with search and filters */}
+      <header className="fixed top-28 inset-x-0 z-40 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
         {/* Left: Back button */}
         <Button
           onClick={() => navigate(-1)}
@@ -439,11 +515,6 @@ export default function Products() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-
-        {/* Center: Title */}
-        <h1 className="absolute left-1/2 -translate-x-1/2 tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
-          SELECT PRODUCTS
-        </h1>
 
         {/* Right: Wishlist and Cart buttons */}
         <div className="flex items-center gap-2">
@@ -487,7 +558,7 @@ export default function Products() {
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16 pb-24">
+      <div className="h-full overflow-y-auto scroll-smooth pt-44 pb-24">
         <section className="relative min-h-screen py-12">
           <VideoBackground
             srcMp4="/media/hero.mp4"
@@ -634,7 +705,7 @@ export default function Products() {
 
             {!loading && !err && (
               <div className="space-y-12">
-                {Object.entries(groupedProducts).map(([category, products]) => (
+                {Object.entries(finalGroupedProducts).map(([category, products]) => (
                   <div key={category} className="space-y-6">
                     <h2 className="text-3xl font-bold text-white uppercase tracking-wider border-b border-white/20 pb-3">
                       {category}
