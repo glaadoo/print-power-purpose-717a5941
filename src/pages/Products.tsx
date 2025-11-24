@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
+import { cn } from "@/lib/utils";
 
 type ProductRow = {
   id: string;
@@ -472,33 +473,73 @@ export default function Products() {
         Print Power Purpose - Every Order Supports a Cause
       </div>
 
-      {/* Category Navigation Menu */}
+  {/* Category Navigation Menu */}
       <nav className="fixed top-10 inset-x-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide">
+          <div className="flex flex-wrap items-center gap-2 py-3 justify-center">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
                 !selectedCategory 
                   ? 'bg-primary text-primary-foreground' 
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
+              )}
             >
               All Products
             </button>
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+            {categories.map(cat => {
+              const categoryProducts = rows.filter(p => p.category === cat && !p.name.toLowerCase().includes('canada'));
+              return (
+                <div 
+                  key={cat}
+                  className="relative group"
+                >
+                  <button
+                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                    onMouseEnter={() => setSelectedCategory(cat)}
+                    className={cn(
+                      "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                      selectedCategory === cat
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    )}
+                  >
+                    {cat}
+                  </button>
+                  
+                  {/* Hover Dropdown */}
+                  {selectedCategory === cat && categoryProducts.length > 0 && (
+                    <div 
+                      className="absolute top-full left-0 mt-2 w-64 max-h-96 overflow-y-auto bg-background/95 backdrop-blur border border-border rounded-xl shadow-2xl z-[60]"
+                      onMouseLeave={() => setSelectedCategory(null)}
+                    >
+                      {categoryProducts.slice(0, 10).map(product => {
+                        const categorySlug = cat.toLowerCase().replace(/\s+/g, '-');
+                        const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        return (
+                          <button
+                            key={product.id}
+                            onClick={() => navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } })}
+                            className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0 flex items-center gap-3"
+                          >
+                            {product.image_url && (
+                              <img src={product.image_url} alt="" className="w-10 h-10 object-cover rounded" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium truncate">{product.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                ${((defaultPrices[product.id] || product.base_cost_cents) / 100).toFixed(2)}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </nav>
