@@ -400,7 +400,7 @@ export function ProductConfigurator({
   return (
     <div className="space-y-4 w-full p-4 bg-white/5 rounded-lg border border-white/10">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-white uppercase tracking-wide">Product Configuration</h3>
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Product Configuration</h3>
         {fetchingPrice && (
           <div className="flex items-center gap-1 text-xs text-white/60">
             <Loader2 className="w-3 h-3 animate-spin" />
@@ -421,7 +421,7 @@ export function ProductConfigurator({
         
         return (
           <div key={group.group} className="space-y-2">
-            <label htmlFor={group.group} className="block text-white font-semibold text-sm mb-1">
+            <label htmlFor={group.group} className="block text-foreground font-semibold text-sm mb-1">
               {formatGroupName(group.group)}
             </label>
             <Select
