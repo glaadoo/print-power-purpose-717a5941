@@ -47,6 +47,7 @@ async function checkPasswordBreached(password: string): Promise<boolean> {
 }
 
 export default function Auth() {
+  console.log('[Auth] Component rendering');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [session, setSession] = useState<Session | null>(null);
@@ -68,6 +69,7 @@ export default function Auth() {
     zipCode: "",
     country: "United States",
   });
+  console.log('[Auth] State initialized');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -241,16 +243,18 @@ export default function Auth() {
     return null;
   }
 
+  console.log('[Auth] Rendering return JSX');
+  
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen text-white relative z-10">
       <header className="sticky top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <a
-          href="/"
+        <button
+          onClick={() => navigate("/")}
           className="size-9 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 grid place-items-center transition-colors"
           aria-label="Back to home"
         >
           <ArrowLeft className="h-5 w-5" />
-        </a>
+        </button>
         
         <span className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
           Sign In
@@ -265,10 +269,10 @@ export default function Auth() {
             srcMp4="/media/hero.mp4"
             srcWebm="/media/hero.webm"
             poster="/media/hero-poster.jpg"
-            overlay={<div className="absolute inset-0 bg-black/50" />}
+            overlay={<div className="absolute inset-0 bg-black/50 -z-10" />}
           />
 
-          <div className="relative w-full max-w-md mx-auto">
+          <div className="relative w-full max-w-md mx-auto z-20">
             <div className="flex justify-center mb-8">
               <div className="inline-flex rounded-full border border-white/30 bg-white/10 backdrop-blur p-1">
                 <button
