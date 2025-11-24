@@ -190,6 +190,12 @@ export function ProductConfigurator({
       selectedOptions
     });
     
+    // CRITICAL: Don't fetch if there are no option groups at all
+    if (optionGroups.length === 0) {
+      console.log('[ProductConfigurator] Skipping price fetch: no option groups available');
+      return;
+    }
+    
     // Only fetch if we have selections for all groups
     if (optionIds.length !== optionGroups.length) {
       console.log('[ProductConfigurator] Skipping price fetch: not all groups selected');
