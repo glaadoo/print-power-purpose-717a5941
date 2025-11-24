@@ -129,6 +129,35 @@ serve(async (req) => {
           productDetails = await detailsResponse.json();
         }
 
+        // Fetch item pricing information
+        const itemsResponse = await fetch(`${apiUrl}/products/${product.id}/items`, {
+          headers: {
+            "Authorization": `Basic ${btoa(":" + apiKey)}`,
+            "Accept": "application/json",
+          },
+        });
+
+        let itemsData = null;
+        let lowestPrice = 0;
+        
+        if (itemsResponse.ok) {
+          itemsData = await itemsResponse.json();
+          
+          // Extract lowest price from all color/size combinations
+          const allPrices: number[] = [];
+          for (const colorData of Object.values(itemsData)) {
+            for (const sizeData of Object.values(colorData as any)) {
+              if (typeof sizeData === 'object' && sizeData !== null && 'price' in sizeData) {
+                allPrices.push((sizeData as any).price);
+              }
+            }
+          }
+          
+          if (allPrices.length > 0) {
+            lowestPrice = Math.min(...allPrices);
+          }
+        }
+
         // Extract colors and sizes for pricing_data
         const colors = productDetails.colors || [];
         const sizes = colors.length > 0 ? colors[0].sizes || [] : [];
@@ -141,7 +170,7 @@ serve(async (req) => {
         // Build product data object
         const productData = {
           name: productDetails.name || product.name || "Unnamed Product",
-          base_cost_cents: 0, // Will be populated from Quote API
+          base_cost_cents: lowestPrice, // Lowest price from items endpoint
           category: product.categoryName || "apparel",
           image_url: firstColorImage,
           description: productDetails.description || productDetails.comments || null,
@@ -160,6 +189,7 @@ serve(async (req) => {
               images: c.images
             })),
             sizes: sizes,
+            items: itemsData, // Store full pricing/availability data
             productUrl: product.url
           }
         };
