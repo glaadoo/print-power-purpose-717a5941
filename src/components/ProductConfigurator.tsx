@@ -203,6 +203,12 @@ export function ProductConfigurator({
     const fetchPrice = async () => {
       const variantKey = optionIds.sort((a, b) => a - b).join('-');
       
+      // CRITICAL: Prevent API call with empty variantKey
+      if (!variantKey || variantKey.trim() === '') {
+        console.log('[ProductConfigurator] Skipping price fetch: empty variantKey');
+        return;
+      }
+      
       // Notify parent of variant key change
       if (onVariantKeyChange) {
         onVariantKeyChange(variantKey);
