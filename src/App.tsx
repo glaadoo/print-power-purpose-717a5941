@@ -115,6 +115,7 @@ const SubmitNonprofit = lazyPage("SubmitNonprofit", () => import("./pages/Submit
 const WhoWeServeNonprofits = lazyPage("WhoWeServeNonprofits", () => import("./pages/WhoWeServeNonprofits"));
 const WhoWeServeSchools = lazyPage("WhoWeServeSchools", () => import("./pages/WhoWeServeSchools"));
 const OrderHistory = lazyPage("OrderHistory", () => import("./pages/OrderHistory"));
+const VideoGallery = lazyPage("VideoGallery", () => import("./pages/VideoGallery"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -758,6 +759,16 @@ export default function App() {
                 <ProtectedRoute>
                   <NonprofitProfile />
                 </ProtectedRoute>
+              </RouteBoundary>
+            }
+          />
+
+          {/* Video Gallery - Public */}
+          <Route
+            path="/videos"
+            element={
+              <RouteBoundary name="VideoGallery">
+                <VideoGallery />
               </RouteBoundary>
             }
           />
