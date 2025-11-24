@@ -6,6 +6,7 @@ import KenzieChat from "@/components/KenzieChat";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import ScrollToTop from "@/components/ScrollToTop";
 import { StripeModeIndicator } from "@/components/StripeModeIndicator";
+import ComparisonBar from "@/components/ComparisonBar";
 
 
 /** Per-route error boundary so crashes inside a page don't blank the whole app */
@@ -116,6 +117,7 @@ const WhoWeServeNonprofits = lazyPage("WhoWeServeNonprofits", () => import("./pa
 const WhoWeServeSchools = lazyPage("WhoWeServeSchools", () => import("./pages/WhoWeServeSchools"));
 const OrderHistory = lazyPage("OrderHistory", () => import("./pages/OrderHistory"));
 const VideoGallery = lazyPage("VideoGallery", () => import("./pages/VideoGallery"));
+const Compare = lazyPage("Compare", () => import("./pages/Compare"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -773,6 +775,18 @@ export default function App() {
             }
           />
 
+          {/* Compare - Protected */}
+          <Route
+            path="/compare"
+            element={
+              <RouteBoundary name="Compare">
+                <ProtectedRoute>
+                  <Compare />
+                </ProtectedRoute>
+              </RouteBoundary>
+            }
+          />
+
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -795,6 +809,11 @@ export default function App() {
       {/* Stripe Mode Indicator - shows current API mode */}
       <RouteBoundary name="StripeModeIndicator">
         <StripeModeIndicator />
+      </RouteBoundary>
+
+      {/* Comparison Bar - floating bar for product comparison */}
+      <RouteBoundary name="ComparisonBar">
+        <ComparisonBar />
       </RouteBoundary>
     </>
   );

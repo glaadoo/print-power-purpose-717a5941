@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import GlassCard from "./GlassCard";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Plus, Minus, Heart, Star } from "lucide-react";
+import { Plus, Minus, Heart, Star, Scale } from "lucide-react";
 import ProductConfiguratorLoader from "./ProductConfiguratorLoader";
 import ScalablePressConfigurator from "./ScalablePressConfigurator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useComparison } from "@/context/ComparisonContext";
 
 type ProductCardProps = {
   product: {
@@ -18,6 +19,8 @@ type ProductCardProps = {
     image_url?: string | null;
     generated_image_url?: string | null;
     pricing_data?: any;
+    base_cost_cents: number;
+    category?: string | null;
   };
   displayPriceCents: number;
   quantity: number;
@@ -56,6 +59,8 @@ export default function ProductCard({
   const imageSrc = product.image_url || null;
   const { isFavorite, toggleFavorite: toggleFavoriteContext } = useFavorites();
   const isProductFavorite = isFavorite(product.id);
+  const { add: addToComparison, remove: removeFromComparison, isInComparison, canAddMore } = useComparison();
+  const isInCompare = isInComparison(product.id);
 
   // Check authentication
   useEffect(() => {
@@ -109,21 +114,60 @@ export default function ProductCard({
     }
   };
 
+  const handleToggleComparison = () => {
+    if (isInCompare) {
+      removeFromComparison(product.id);
+      toast.success("Removed from comparison");
+    } else {
+      if (!canAddMore) {
+        toast.error("Maximum 4 products can be compared");
+        return;
+      }
+      addToComparison({
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        base_cost_cents: displayPriceCents || product.base_cost_cents,
+        image_url: product.image_url,
+        category: product.category,
+        vendor: product.vendor,
+        pricing_data: product.pricing_data,
+      });
+      toast.success("Added to comparison");
+    }
+  };
+
   return (
     <GlassCard padding="p-6" className="group">
       <div className="flex flex-col items-start text-left space-y-4 w-full relative">
-        {/* Favorite Heart Button */}
-        <button
-          onClick={handleToggleFavorite}
-          className={`absolute top-1 right-1 z-10 p-2 rounded-full transition-all ${
-            isProductFavorite 
-              ? 'bg-red-500 hover:bg-red-600 text-white' 
-              : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-          }`}
-          aria-label={isProductFavorite ? "Remove from favorites" : "Add to favorites"}
-        >
-          <Heart className={`w-5 h-5 ${isProductFavorite ? 'fill-current' : ''}`} />
-        </button>
+        {/* Action Buttons - Top Right */}
+        <div className="absolute top-1 right-1 z-10 flex gap-1">
+          {/* Compare Button */}
+          <button
+            onClick={handleToggleComparison}
+            className={`p-2 rounded-full transition-all ${
+              isInCompare 
+                ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+            }`}
+            aria-label={isInCompare ? "Remove from comparison" : "Add to comparison"}
+          >
+            <Scale className={`w-5 h-5 ${isInCompare ? 'fill-current' : ''}`} />
+          </button>
+          
+          {/* Favorite Heart Button */}
+          <button
+            onClick={handleToggleFavorite}
+            className={`p-2 rounded-full transition-all ${
+              isProductFavorite 
+                ? 'bg-red-500 hover:bg-red-600 text-white' 
+                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+            }`}
+            aria-label={isProductFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Heart className={`w-5 h-5 ${isProductFavorite ? 'fill-current' : ''}`} />
+          </button>
+        </div>
 
         {/* Product Image */}
         <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10">

@@ -2,16 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useComparison } from "@/context/ComparisonContext";
 import { supabase } from "@/integrations/supabase/client";
 import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Heart, Star, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Heart, Star, ShoppingCart, Scale } from "lucide-react";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 import ScalablePressConfigurator from "@/components/ScalablePressConfigurator";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
 import ProductReviews from "@/components/ProductReviews";
 import ReviewForm from "@/components/ReviewForm";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type ProductRow = {
   id: string;
@@ -35,6 +37,7 @@ export default function ProductDetailNew() {
   const nav = useNavigate();
   const { add, items } = useCart();
   const { count: favoritesCount } = useFavorites();
+  const { add: addToComparison, remove: removeFromComparison, isInComparison, canAddMore } = useComparison();
 
   const [product, setProduct] = useState<ProductRow | null>(null);
   const [qty, setQty] = useState(1);
@@ -378,6 +381,38 @@ export default function ProductDetailNew() {
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   Add to Cart
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    const isInCompare = isInComparison(product.id);
+                    if (isInCompare) {
+                      removeFromComparison(product.id);
+                      toast.success("Removed from comparison");
+                    } else {
+                      if (!canAddMore) {
+                        toast.error("Maximum 4 products can be compared");
+                        return;
+                      }
+                      addToComparison({
+                        id: product.id,
+                        name: product.name,
+                        description: product.description,
+                        base_cost_cents: unitPrice * 100 || product.base_cost_cents,
+                        image_url: product.image_url,
+                        category: product.category,
+                        vendor: product.vendor,
+                        pricing_data: product.pricing_data,
+                      });
+                      toast.success("Added to comparison");
+                    }
+                  }}
+                  variant="outline"
+                  size="lg"
+                  className="flex-1"
+                >
+                  <Scale className="mr-2 h-4 w-4" />
+                  {isInComparison(product.id) ? "Remove from Compare" : "Add to Compare"}
                 </Button>
 
                 <Button
