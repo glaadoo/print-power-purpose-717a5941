@@ -360,11 +360,30 @@ export function ProductConfigurator({
     });
   };
 
-  // Format group name for display
+  // Format group name for display with better readability
   const formatGroupName = (group: string) => {
+    // Handle common abbreviations
+    const abbreviations: Record<string, string> = {
+      'qty': 'Quantity',
+      'qtyid': 'Quantity',
+      'turnaround': 'Turnaround Time',
+      'colour': 'Color',
+      'color': 'Color',
+      'size': 'Size',
+      'material': 'Material',
+      'stock': 'Stock Type',
+      'coating': 'Coating',
+      'finish': 'Finish'
+    };
+    
+    const lowerGroup = group.toLowerCase();
+    if (abbreviations[lowerGroup]) {
+      return abbreviations[lowerGroup];
+    }
+    
     return group
-      .split(/[-_]/)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .split(/[-_\s]/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
   };
 
@@ -379,9 +398,9 @@ export function ProductConfigurator({
   }
 
   return (
-    <div className="space-y-3 w-full">
+    <div className="space-y-3 w-full p-4 bg-white/5 rounded-lg border border-white/10">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">Configure Options:</h3>
+        <h3 className="text-sm font-semibold text-white uppercase tracking-wide">Product Configuration</h3>
         {fetchingPrice && (
           <div className="flex items-center gap-1 text-xs text-white/60">
             <Loader2 className="w-3 h-3 animate-spin" />
@@ -402,7 +421,7 @@ export function ProductConfigurator({
         
         return (
           <div key={group.group} className="space-y-2">
-            <Label htmlFor={group.group} className="text-foreground font-medium">
+            <Label htmlFor={group.group} className="text-white font-medium text-sm">
               {formatGroupName(group.group)}
             </Label>
             <Select
