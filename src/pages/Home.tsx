@@ -321,28 +321,26 @@ export default function Home() {
             {/* band: placeholder (L) + stats (R) */}
             <div className="w-full px-6 pb-10 mt-12">
               <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
-                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex flex-col h-full min-h-[400px]">
+                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex flex-col">
                   <div className="text-sm uppercase tracking-wide opacity-80 mb-3">Featured Story</div>
                   {featuredVideo ? (
-                    <div className="flex-1 flex flex-col">
-                      <h3 className="text-2xl font-bold mb-4">Milestone Donor Stories</h3>
-                      <div className="flex-1 rounded-lg overflow-hidden bg-black/30">
+                    <div className="flex flex-col">
+                      <h3 className="text-2xl font-bold mb-3">Milestone Donor Stories</h3>
+                      <div className="rounded-lg overflow-hidden bg-black/30 max-h-[280px]">
                         <video
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           src={featuredVideo}
                           controls
-                          autoPlay
                           muted
-                          loop
                           playsInline
                         />
                       </div>
-                      <p className="mt-4 opacity-90 text-sm">
+                      <p className="mt-3 opacity-90 text-sm">
                         When donations reach $777 milestones, we feature the donor's story here. Help us reach the next milestone!
                       </p>
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col justify-center opacity-90">
+                    <div className="flex flex-col justify-center opacity-90">
                       <h3 className="text-2xl font-bold">Milestone Donor Stories</h3>
                       <p className="mt-4 opacity-90">
                         When donations reach $777 milestones, we feature the donor's story here. Help us reach the next milestone!
