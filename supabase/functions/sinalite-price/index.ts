@@ -18,9 +18,30 @@ serve(async (req) => {
 
     console.log("[SINALITE-PRICE] Request:", { method, productId, storeCode, productOptions, variantKey });
 
+    // Validate productId and storeCode are valid
     if (!productId || !storeCode) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: productId, storeCode" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // CRITICAL: Validate productId is not NaN or invalid
+    const productIdNum = Number(productId);
+    if (isNaN(productIdNum) || productIdNum <= 0) {
+      console.error("[SINALITE-PRICE] Invalid productId:", productId);
+      return new Response(
+        JSON.stringify({ error: "Invalid productId - must be a valid positive number", received: productId }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate storeCode
+    const storeCodeNum = Number(storeCode);
+    if (isNaN(storeCodeNum) || storeCodeNum <= 0) {
+      console.error("[SINALITE-PRICE] Invalid storeCode:", storeCode);
+      return new Response(
+        JSON.stringify({ error: "Invalid storeCode - must be a valid positive number", received: storeCode }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
