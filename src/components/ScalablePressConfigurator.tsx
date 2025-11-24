@@ -5,12 +5,14 @@ interface ScalablePressConfiguratorProps {
   pricingData: any;
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
+  onSelectionComplete?: (isComplete: boolean) => void;
 }
 
 export default function ScalablePressConfigurator({
   pricingData,
   onPriceChange,
   onConfigChange,
+  onSelectionComplete,
 }: ScalablePressConfiguratorProps) {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -37,9 +39,11 @@ export default function ScalablePressConfigurator({
     }
   }, [colors, items, selectedColor]);
 
-  // Update price when selection changes
+  // Update price and notify completion when selection changes
   useEffect(() => {
-    if (selectedColor && selectedSize && items[selectedColor]?.[selectedSize]) {
+    const isComplete = !!(selectedColor && selectedSize);
+    
+    if (isComplete && items[selectedColor]?.[selectedSize]) {
       const priceData = items[selectedColor][selectedSize];
       const priceCents = priceData.price || 0;
       
@@ -50,7 +54,10 @@ export default function ScalablePressConfigurator({
         size: selectedSize,
       });
     }
-  }, [selectedColor, selectedSize, items, onPriceChange, onConfigChange]);
+    
+    // Notify parent about selection completion status
+    onSelectionComplete?.(isComplete);
+  }, [selectedColor, selectedSize, items, onPriceChange, onConfigChange, onSelectionComplete]);
 
   const handleColorChange = (colorName: string) => {
     setSelectedColor(colorName);
@@ -71,66 +78,84 @@ export default function ScalablePressConfigurator({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 p-4 bg-white/5 rounded-lg border border-white/10">
       {/* Color Selection */}
       <div>
-        <label className="text-sm font-medium text-white/90 mb-2 block">
-          Color
+        <label className="text-sm font-semibold text-white mb-3 block flex items-center gap-2">
+          <span className="text-red-400">*</span> Select Color
         </label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           {colors.map((color: any) => (
             <button
               key={color.name}
               onClick={() => handleColorChange(color.name)}
               className={`
-                relative w-10 h-10 rounded-full border-2 transition-all
+                group relative flex flex-col items-center gap-2 p-2 rounded-lg transition-all
                 ${selectedColor === color.name 
-                  ? 'border-white shadow-lg scale-110' 
-                  : 'border-white/30 hover:border-white/60 hover:scale-105'
+                  ? 'bg-white/20 border-2 border-white shadow-lg' 
+                  : 'bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-white/40'
                 }
               `}
-              style={{ backgroundColor: color.hex }}
               title={color.name}
               aria-label={`Select ${color.name}`}
             >
-              {selectedColor === color.name && (
-                <span className="absolute inset-0 flex items-center justify-center text-white text-xl">
-                  ✓
-                </span>
-              )}
+              <div 
+                className={`
+                  w-12 h-12 rounded-full border-2 transition-all
+                  ${selectedColor === color.name 
+                    ? 'border-white shadow-xl scale-110' 
+                    : 'border-white/30 group-hover:border-white/60 group-hover:scale-105'
+                  }
+                `}
+                style={{ backgroundColor: color.hex }}
+              >
+                {selectedColor === color.name && (
+                  <span className="absolute inset-0 flex items-center justify-center text-white text-2xl font-bold drop-shadow-lg">
+                    ✓
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-white/90 font-medium capitalize max-w-[80px] text-center leading-tight">
+                {color.name}
+              </span>
             </button>
           ))}
         </div>
-        {selectedColor && (
-          <p className="text-xs text-white/70 mt-1 capitalize">{selectedColor}</p>
-        )}
       </div>
 
       {/* Size Selection */}
       {availableSizes.length > 0 && (
         <div>
-          <label className="text-sm font-medium text-white/90 mb-2 block">
-            Size
+          <label className="text-sm font-semibold text-white mb-3 block flex items-center gap-2">
+            <span className="text-red-400">*</span> Select Size
           </label>
           <div className="flex flex-wrap gap-2">
             {availableSizes.map((size: string) => (
-              <Button
+              <button
                 key={size}
                 onClick={() => setSelectedSize(size)}
-                variant={selectedSize === size ? "default" : "outline"}
-                size="sm"
                 className={`
-                  min-w-[60px] transition-all
+                  min-w-[70px] px-4 py-2.5 rounded-full font-semibold text-sm transition-all border-2
                   ${selectedSize === size 
-                    ? 'bg-white text-primary' 
-                    : 'bg-white/10 text-white border-white/30 hover:bg-white/20 hover:border-white/60'
+                    ? 'bg-white text-black border-white shadow-lg scale-105' 
+                    : 'bg-white/10 text-white border-white/30 hover:bg-white/20 hover:border-white/50 hover:scale-105'
                   }
                 `}
               >
                 {size.toUpperCase()}
-              </Button>
+              </button>
             ))}
           </div>
+        </div>
+      )}
+      
+      {/* Validation Message */}
+      {(!selectedColor || !selectedSize) && (
+        <div className="flex items-start gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+          <span className="text-yellow-400 text-lg">⚠️</span>
+          <p className="text-xs text-yellow-200">
+            Please select both a color and size to continue
+          </p>
         </div>
       )}
     </div>

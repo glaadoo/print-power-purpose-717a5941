@@ -52,6 +52,7 @@ export default function ProductCard({
   const [user, setUser] = useState<any>(null);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
+  const [scalablePressSelectionComplete, setScalablePressSelectionComplete] = useState(false);
   const imageSrc = product.image_url || null;
   const { isFavorite, toggleFavorite: toggleFavoriteContext } = useFavorites();
   const isProductFavorite = isFavorite(product.id);
@@ -215,6 +216,7 @@ export default function ProductCard({
               pricingData={product.pricing_data}
               onPriceChange={(price) => onPriceChange(product.id, price)}
               onConfigChange={(config) => onConfigChange(product.id, config)}
+              onSelectionComplete={setScalablePressSelectionComplete}
             />
           </div>
         )}
@@ -248,12 +250,23 @@ export default function ProductCard({
         {/* Add to Cart Button */}
         <Button
           onClick={() => onAddToCart(product)}
-          disabled={!canAddToCart || quantity === 0}
+          disabled={
+            !canAddToCart || 
+            quantity === 0 || 
+            (product.vendor === 'scalablepress' && !scalablePressSelectionComplete)
+          }
           className="w-full rounded-full"
           size="lg"
         >
           Add to Cart
         </Button>
+        
+        {/* Validation Message for Scalable Press */}
+        {product.vendor === 'scalablepress' && !scalablePressSelectionComplete && quantity > 0 && (
+          <div className="text-xs text-red-300 text-center bg-red-900/20 border border-red-500/30 rounded-lg p-2">
+            Please select a color and size before adding to cart.
+          </div>
+        )}
       </div>
     </GlassCard>
   );
