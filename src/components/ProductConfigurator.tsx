@@ -398,7 +398,7 @@ export function ProductConfigurator({
   }
 
   return (
-    <div className="space-y-3 w-full p-4 bg-white/5 rounded-lg border border-white/10">
+    <div className="space-y-4 w-full p-4 bg-white/5 rounded-lg border border-white/10">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-white uppercase tracking-wide">Product Configuration</h3>
         {fetchingPrice && (
@@ -421,9 +421,9 @@ export function ProductConfigurator({
         
         return (
           <div key={group.group} className="space-y-2">
-            <Label htmlFor={group.group} className="text-white font-medium text-sm">
+            <label htmlFor={group.group} className="block text-white font-semibold text-sm mb-1">
               {formatGroupName(group.group)}
-            </Label>
+            </label>
             <Select
               value={stringValue}
               onValueChange={(value) => {
