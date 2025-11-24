@@ -40,6 +40,8 @@ export default function ProductDetail() {
   const [packageInfo, setPackageInfo] = useState<any>(null);
   const [imageError, setImageError] = useState(false);
   const [reviewsKey, setReviewsKey] = useState(0);
+  const [relatedProducts, setRelatedProducts] = useState<ProductRow[]>([]);
+  const [frequentlyBought, setFrequentlyBought] = useState<ProductRow[]>([]);
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -66,6 +68,33 @@ export default function ProductDetail() {
           image_url: data.image_url,
           category: data.category
         });
+
+        // Fetch related products (same category, different product)
+        const { data: related } = await supabase
+          .from("products")
+          .select("*")
+          .eq("category", data.category)
+          .neq("id", id)
+          .eq("is_active", true)
+          .limit(6);
+        
+        if (related) {
+          setRelatedProducts(related as ProductRow[]);
+        }
+
+        // Fetch frequently bought together (same vendor, different category)
+        const { data: frequent } = await supabase
+          .from("products")
+          .select("*")
+          .eq("vendor", data.vendor)
+          .neq("category", data.category)
+          .neq("id", id)
+          .eq("is_active", true)
+          .limit(6);
+        
+        if (frequent) {
+          setFrequentlyBought(frequent as ProductRow[]);
+        }
       }
       setLoading(false);
     })();
@@ -326,6 +355,86 @@ export default function ProductDetail() {
                 </>
               )}
             </div>
+
+            {/* Related Products Section */}
+            {!loading && !err && product && relatedProducts.length > 0 && (
+              <div className="relative w-full max-w-6xl mx-auto mt-8">
+                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
+                  <h2 className="text-2xl font-serif font-semibold mb-6">Related Products</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {relatedProducts.map((relatedProduct) => (
+                      <div 
+                        key={relatedProduct.id}
+                        onClick={() => nav(`/products/${relatedProduct.id}`)}
+                        className="cursor-pointer group"
+                      >
+                        <div className="aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2">
+                          {relatedProduct.image_url ? (
+                            <img 
+                              src={relatedProduct.image_url} 
+                              alt={relatedProduct.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                          {relatedProduct.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Starting at ${(relatedProduct.base_cost_cents / 100).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Frequently Bought Together Section */}
+            {!loading && !err && product && frequentlyBought.length > 0 && (
+              <div className="relative w-full max-w-6xl mx-auto mt-8">
+                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
+                  <h2 className="text-2xl font-serif font-semibold mb-6">Frequently Bought Together</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {frequentlyBought.map((frequentProduct) => (
+                      <div 
+                        key={frequentProduct.id}
+                        onClick={() => nav(`/products/${frequentProduct.id}`)}
+                        className="cursor-pointer group"
+                      >
+                        <div className="aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2">
+                          {frequentProduct.image_url ? (
+                            <img 
+                              src={frequentProduct.image_url} 
+                              alt={frequentProduct.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                          {frequentProduct.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Starting at ${(frequentProduct.base_cost_cents / 100).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Reviews Section */}
             {!loading && !err && product && (
