@@ -162,10 +162,33 @@ serve(async (req) => {
         const colors = productDetails.colors || [];
         const sizes = colors.length > 0 ? colors[0].sizes || [] : [];
         
-        // Use first color's first image as product image
-        const firstColorImage = colors.length > 0 && colors[0].images?.length > 0 
-          ? colors[0].images[0].url 
-          : product.image?.url || productDetails.image?.url || null;
+        // CRITICAL: Extract image from multiple possible locations
+        // Priority: detailed product images > color-specific images > category product image
+        let firstColorImage = null;
+        
+        // Try detailed product response images first
+        if (productDetails.images && Array.isArray(productDetails.images) && productDetails.images.length > 0) {
+          firstColorImage = productDetails.images[0].url || productDetails.images[0];
+        }
+        // Try color-specific images next
+        else if (colors.length > 0 && colors[0].images?.length > 0) {
+          firstColorImage = colors[0].images[0].url || colors[0].images[0];
+        }
+        // Try product.image from category endpoint
+        else if (product.image?.url) {
+          firstColorImage = product.image.url;
+        }
+        // Try productDetails.image as fallback
+        else if (productDetails.image?.url) {
+          firstColorImage = productDetails.image.url;
+        }
+        
+        console.log(`[SYNC-SCALABLEPRESS] Image extraction for ${product.id}:`, { 
+          hasDetailImages: !!(productDetails.images?.length),
+          hasColorImages: !!(colors[0]?.images?.length),
+          hasCategoryImage: !!product.image?.url,
+          extractedImage: firstColorImage
+        });
 
         // Build product data object
         const productData = {
