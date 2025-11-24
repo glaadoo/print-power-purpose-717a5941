@@ -131,6 +131,13 @@ export default function ScalablePressConfigurator({
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
+                    if (hasStock) {
+                      handleColorChange(color.name);
+                    }
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
                     if (hasStock) {
                       handleColorChange(color.name);
                     }
@@ -141,12 +148,11 @@ export default function ScalablePressConfigurator({
                       ? 'border-primary ring-4 ring-primary/30 scale-110 shadow-lg shadow-primary/50' 
                       : 'border-white/30 hover:border-primary/50 hover:scale-105 hover:shadow-xl'
                     }
-                    ${!hasStock ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:brightness-110'}
+                    ${!hasStock ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer hover:brightness-110'}
                   `}
                   style={{ backgroundColor: colorHex }}
                   title={`${color.name}${!hasStock ? ' (Out of Stock)' : ''}`}
                   aria-label={`Select ${color.name}`}
-                  disabled={!hasStock}
                 >
                   {selectedColor === color.name && (
                     <span className="absolute inset-0 flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
