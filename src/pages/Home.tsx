@@ -3,10 +3,7 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import GlassCard from "../components/GlassCard";
-import VideoBackground from "@/components/VideoBackground";
 import MenuOverlay from "@/components/MenuOverlay";
-// ScrollDots removed for normal scrolling behavior
-import MascotHeader from "@/components/MascotHeader";
 import ColorSelector from "@/components/ColorSelector";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import FeaturedProducts from "@/components/FeaturedProducts";
@@ -14,6 +11,7 @@ import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart } from "lucide-react";
 import { useFavorites } from "@/context/FavoritesContext";
+import kenzieMascot from "@/assets/kenzie-mascot.png";
 
 export default function Home() {
   const nav = useNavigate();
@@ -254,7 +252,16 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20" />
           <div className="absolute inset-0 bg-black/35" />
 
-          <div className="px-6 text-center w-full">
+          <div className="px-6 text-center w-full max-w-7xl mx-auto">
+            {/* Mascot */}
+            <div className="flex justify-center mb-8">
+              <img
+                src={kenzieMascot}
+                alt="Kenzie - Print Power Purpose Mascot"
+                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain drop-shadow-2xl"
+              />
+            </div>
+
             {/* Hero quote + CTA */}
             <div className="mx-auto w-full">
               <h1 className="font-serif text-[clamp(2.4rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow-md">
