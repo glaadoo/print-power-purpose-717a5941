@@ -251,10 +251,10 @@ export default function Home() {
       >
         {/* ===== HERO SECTION ===== */}
         <section id="hero" className="relative min-h-screen flex items-center justify-center py-20">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20" />
-          <div className="absolute inset-0 bg-black/35" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20 -z-10" />
+          <div className="absolute inset-0 bg-black/35 -z-10" />
 
-          <div className="px-6 text-center w-full max-w-7xl mx-auto">
+          <div className="px-6 text-center w-full max-w-7xl mx-auto relative z-20">
             {/* Mascot */}
             <div className="flex justify-center mb-8">
               <img
@@ -273,7 +273,7 @@ export default function Home() {
                 One platform for professional print orders and optional donations—connecting
                 communities and nonprofits in a single, seamless checkout.
               </p>
-              <div className="mt-10 relative z-10">
+              <div className="mt-10 relative z-30">
                 <Link
                   to="/auth"
                   className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-5 font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
@@ -282,7 +282,8 @@ export default function Home() {
                     color: '#000000',
                     border: '3px solid #000000',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    pointerEvents: 'auto'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#FFC700';
