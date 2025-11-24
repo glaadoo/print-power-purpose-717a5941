@@ -477,7 +477,12 @@ export default function Products() {
       <nav className="fixed top-10 inset-x-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-wrap items-center gap-2 py-3 justify-center">
-            {categories.map(cat => {
+            {loading ? (
+              // Show skeleton loaders while categories are loading
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="w-24 h-9 bg-muted/50 animate-pulse rounded-full" />
+              ))
+            ) : categories.map(cat => {
               const categoryProducts = rows.filter(p => p.category === cat && !p.name.toLowerCase().includes('canada'));
               return (
                 <div 
@@ -498,7 +503,7 @@ export default function Products() {
                   </button>
                   
                   {/* Hover Dropdown */}
-                  {selectedCategory === cat && categoryProducts.length > 0 && (
+                  {!loading && selectedCategory === cat && categoryProducts.length > 0 && (
                     <div 
                       className="absolute top-full left-0 mt-2 w-64 max-h-96 overflow-y-auto bg-background/95 backdrop-blur border border-border rounded-xl shadow-2xl z-[60]"
                     >
@@ -527,8 +532,8 @@ export default function Products() {
                           </button>
                         );
                       })}
-                    </div>
-                  )}
+                  </div>
+                )}
                 </div>
               );
             })}
