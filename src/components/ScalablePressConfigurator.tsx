@@ -126,7 +126,7 @@ export default function ScalablePressConfigurator({
             const colorHex = getColorHex(color.name, color.hex);
             
             return (
-              <div key={color.name} className="flex flex-col items-center gap-2">
+              <div key={color.name} className="flex flex-col items-center gap-1">
                 <button
                   type="button"
                   onClick={() => handleColorChange(color.name)}
@@ -154,6 +154,9 @@ export default function ScalablePressConfigurator({
                   )}
                 </button>
                 <span className="text-xs text-foreground font-medium text-center">{color.name}</span>
+                <span className={`text-[10px] font-semibold ${hasStock ? 'text-green-400' : 'text-red-400'}`}>
+                  {hasStock ? 'In Stock' : 'Out of Stock'}
+                </span>
               </div>
             );
           })}
@@ -174,23 +177,27 @@ export default function ScalablePressConfigurator({
               const isOutOfStock = stockInfo.status === 'out';
               
               return (
-                <button
-                  key={size}
-                  onClick={() => !isOutOfStock && setSelectedSize(size)}
-                  disabled={isOutOfStock}
-                  className={`
-                    px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200
-                    ${isOutOfStock 
-                      ? 'bg-muted/30 text-muted-foreground/40 cursor-not-allowed border-2 border-muted' 
-                      : selectedSize === size 
-                        ? 'bg-primary text-primary-foreground border-2 border-primary ring-4 ring-primary/30 shadow-lg scale-105' 
-                        : 'bg-background border-2 border-border text-foreground hover:border-primary/50 hover:bg-accent hover:scale-105'
-                    }
-                  `}
-                  title={stockInfo.label}
-                >
-                  {size.toUpperCase()}
-                </button>
+                <div key={size} className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => !isOutOfStock && setSelectedSize(size)}
+                    disabled={isOutOfStock}
+                    className={`
+                      px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200
+                      ${isOutOfStock 
+                        ? 'bg-muted/30 text-muted-foreground/40 cursor-not-allowed border-2 border-muted' 
+                        : selectedSize === size 
+                          ? 'bg-primary text-primary-foreground border-2 border-primary ring-4 ring-primary/30 shadow-lg scale-105' 
+                          : 'bg-background border-2 border-border text-foreground hover:border-primary/50 hover:bg-accent hover:scale-105'
+                      }
+                    `}
+                    title={stockInfo.label}
+                  >
+                    {size.toUpperCase()}
+                  </button>
+                  <span className={`text-[10px] font-semibold ${isOutOfStock ? 'text-red-400' : 'text-green-400'}`}>
+                    {isOutOfStock ? 'Out of Stock' : 'In Stock'}
+                  </span>
+                </div>
               );
             })
           ) : (
@@ -200,7 +207,7 @@ export default function ScalablePressConfigurator({
         
         {/* Stock indicator for selected size */}
         {selectedSize && currentStock !== undefined && (
-          <div className={`mt-1.5 text-xs ${getStockStatus(currentStock).color} flex items-center gap-1`}>
+          <div className={`mt-3 text-sm ${getStockStatus(currentStock).color} flex items-center gap-1.5 font-semibold`}>
             <span>●</span>
             {getStockStatus(currentStock).label}
           </div>
@@ -208,7 +215,7 @@ export default function ScalablePressConfigurator({
         
         {/* Stock Notification Form */}
         {selectedColor && selectedSize && getStockStatus(currentStock).status === 'out' && (
-          <div className="mt-2">
+          <div className="mt-3">
             <StockNotificationForm
               productId={productId}
               productName={productName}
