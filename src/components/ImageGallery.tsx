@@ -1,4 +1,4 @@
-import { useState, useRef, MouseEvent } from "react";
+import { useState, useRef, MouseEvent, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,26 @@ export default function ImageGallery({ images, alt, onError }: ImageGalleryProps
   const imageRef = useRef<HTMLDivElement>(null);
 
   const currentImage = images[currentIndex]?.url || images[0]?.url;
+
+  // Preload current, previous, and next images for smooth navigation
+  useEffect(() => {
+    const preloadImages = () => {
+      const indicesToPreload = [
+        currentIndex,
+        currentIndex - 1 >= 0 ? currentIndex - 1 : images.length - 1,
+        currentIndex + 1 < images.length ? currentIndex + 1 : 0,
+      ];
+
+      indicesToPreload.forEach((index) => {
+        const img = new Image();
+        img.src = images[index]?.url;
+      });
+    };
+
+    if (images.length > 0) {
+      preloadImages();
+    }
+  }, [currentIndex, images]);
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     if (!imageRef.current) return;
@@ -66,6 +86,8 @@ export default function ImageGallery({ images, alt, onError }: ImageGalleryProps
             alt={alt}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={onError}
+            loading="eager"
+            decoding="async"
           />
 
           {/* Zoom Overlay on Hover */}
@@ -146,6 +168,8 @@ export default function ImageGallery({ images, alt, onError }: ImageGalleryProps
                   src={image.url}
                   alt={image.label || `${alt} - View ${index + 1}`}
                   className="w-full h-full object-cover"
+                  loading={index < 3 ? "eager" : "lazy"}
+                  decoding="async"
                 />
                 {currentIndex === index && (
                   <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
@@ -208,6 +232,8 @@ export default function ImageGallery({ images, alt, onError }: ImageGalleryProps
               alt={alt}
               className="max-w-full max-h-[90vh] object-contain rounded-lg animate-scale-in"
               onError={onError}
+              loading="eager"
+              decoding="async"
             />
           </div>
         </DialogContent>
