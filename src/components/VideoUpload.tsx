@@ -161,36 +161,41 @@ export default function VideoUpload() {
             <div className="space-y-3">
               {videos.map((video) => (
                 <Card key={video.name} className="p-4">
-                  <div className="flex items-start gap-4">
+                  <div className="space-y-3">
                     <video
                       src={video.url}
-                      className="w-32 h-20 object-cover rounded"
-                      controls={false}
+                      className="w-full rounded-lg"
+                      controls
+                      preload="metadata"
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{video.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatFileSize(video.size)}
-                      </p>
-                      <p className="text-xs text-muted-foreground font-mono truncate mt-1">
-                        {video.url}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => copyUrl(video.url)}
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(video.name)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{video.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatFileSize(video.size)}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono truncate mt-1">
+                          {video.url}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyUrl(video.url)}
+                          title="Copy URL"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(video.name)}
+                          title="Delete video"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Card>
