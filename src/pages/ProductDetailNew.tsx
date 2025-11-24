@@ -14,7 +14,7 @@ import ProductReviews from "@/components/ProductReviews";
 import ReviewForm from "@/components/ReviewForm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import ImageZoom from "@/components/ImageZoom";
+import ImageGallery from "@/components/ImageGallery";
 
 type ProductRow = {
   id: string;
@@ -189,6 +189,33 @@ export default function ProductDetailNew() {
     );
   }
 
+  // Build image gallery array
+  const galleryImages: Array<{ url: string; label?: string }> = [];
+  
+  // Add main product image
+  if (product.image_url && !imageError) {
+    galleryImages.push({ url: product.image_url, label: "Main" });
+  }
+  
+  // Add color variant images for Scalable Press products
+  if (product.vendor === 'scalablepress' && product.pricing_data?.colors) {
+    product.pricing_data.colors.forEach((color: any) => {
+      if (color.images && Array.isArray(color.images)) {
+        color.images.forEach((img: any, idx: number) => {
+          if (img.url || img) {
+            const imageUrl = typeof img === 'string' ? img : img.url;
+            if (imageUrl && !galleryImages.some(g => g.url === imageUrl)) {
+              galleryImages.push({ 
+                url: imageUrl, 
+                label: `${color.name} ${idx > 0 ? `- View ${idx + 1}` : ''}`
+              });
+            }
+          }
+        });
+      }
+    });
+  }
+
   return (
     <div className="fixed inset-0 bg-background text-foreground">
       {/* Top bar */}
@@ -261,11 +288,11 @@ export default function ProductDetailNew() {
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Left: Product Image */}
-            <div className="space-y-4">
-              {product.image_url && !imageError ? (
-                <ImageZoom
-                  src={product.image_url}
+            {/* Left: Product Image Gallery */}
+            <div>
+              {galleryImages.length > 0 ? (
+                <ImageGallery
+                  images={galleryImages}
                   alt={product.name}
                   onError={() => setImageError(true)}
                 />
