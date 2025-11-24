@@ -170,8 +170,8 @@ serve(async (req) => {
         },
       });
     } else if (method === 'PRICEBYKEY') {
-      // GET /pricebykey/{id}/{key} - Returns price for specific variant key
-      const priceByKeyUrl = `${baseUrl}/pricebykey/${productId}/${variantKey}`;
+      // GET /pricebykey/{id}/{key}/{storeCode} - Returns price for specific variant key
+      const priceByKeyUrl = `${baseUrl}/pricebykey/${productId}/${variantKey}/${storeCode}`;
       console.log("[SINALITE-PRICE] Calling PRICEBYKEY:", priceByKeyUrl);
       
       apiResponse = await fetch(priceByKeyUrl, {
