@@ -7,6 +7,7 @@ import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart, Star, ShoppingCart } from "lucide-react";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
+import ScalablePressConfigurator from "@/components/ScalablePressConfigurator";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
 import ProductReviews from "@/components/ProductReviews";
 import ReviewForm from "@/components/ReviewForm";
@@ -322,8 +323,8 @@ export default function ProductDetailNew() {
                 )}
               </div>
 
-              {/* Configuration */}
-              {(product.pricing_data || product.vendor === 'sinalite') && (
+              {/* Configuration for SinaLite Products */}
+              {product.vendor === 'sinalite' && product.pricing_data && (
                 <div className="border border-border rounded-lg p-4 bg-muted/30">
                   <h3 className="font-semibold mb-4">Product Options</h3>
                   <ProductConfiguratorLoader
@@ -331,6 +332,20 @@ export default function ProductDetailNew() {
                     onPriceChange={setConfiguredPriceCents}
                     onConfigChange={setProductConfig}
                     onQuantityOptionsChange={() => {}}
+                  />
+                </div>
+              )}
+              
+              {/* Configuration for Scalable Press Products */}
+              {product.vendor === 'scalablepress' && product.pricing_data && product.pricing_data.colors && product.pricing_data.items && (
+                <div className="border border-border rounded-lg p-4 bg-muted/30">
+                  <h3 className="font-semibold mb-4">Product Options</h3>
+                  <ScalablePressConfigurator
+                    productId={product.id}
+                    productName={product.name}
+                    pricingData={product.pricing_data}
+                    onPriceChange={setConfiguredPriceCents}
+                    onConfigChange={setProductConfig}
                   />
                 </div>
               )}
