@@ -111,6 +111,10 @@ export default function Admin() {
             // Store passcode in sessionStorage for subsequent checks
             sessionStorage.setItem("admin_passcode", passcode);
             setAdminPasscode(passcode);
+            // Store session token for admin API calls
+            if (data.sessionToken) {
+              sessionStorage.setItem("admin_session", data.sessionToken);
+            }
             loadAllData();
             setCheckingAuth(false);
             return;
@@ -129,6 +133,10 @@ export default function Admin() {
 
           if (!error && data?.valid) {
             setIsAuthenticated(true);
+            // Store session token for admin API calls
+            if (data.sessionToken) {
+              sessionStorage.setItem("admin_session", data.sessionToken);
+            }
             loadAllData();
             setCheckingAuth(false);
             return;

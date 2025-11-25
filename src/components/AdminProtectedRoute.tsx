@@ -66,6 +66,10 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
         if (!result.error && result.data?.valid) {
           console.log("[AdminProtectedRoute] Access granted");
           sessionStorage.setItem("admin_passcode", passcodeToVerify);
+          // Store session token for subsequent admin API calls
+          if (result.data.sessionToken) {
+            sessionStorage.setItem("admin_session", result.data.sessionToken);
+          }
           setIsAuthorized(true);
           setErrorMessage(null);
         } else {
