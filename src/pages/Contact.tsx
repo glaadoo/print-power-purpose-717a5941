@@ -79,16 +79,16 @@ export default function Contact() {
               <Button
                 onClick={() => navigate(-1)}
                 variant="outline"
-                className="mb-4 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="mb-4 bg-white/10 border-white/20 text-black hover:bg-white/20"
                 size="sm"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
                 Contact Us
               </h1>
-              <p className="text-white/80 mb-6">
+              <p className="text-black mb-6">
                 Have questions? We'd love to hear from you. Send us a message
                 and we'll respond as soon as possible.
               </p>
@@ -96,9 +96,9 @@ export default function Contact() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   {isSuccess && (
-                    <div className="rounded-lg border border-green-500/50 bg-green-500/10 p-4 text-white">
+                    <div className="rounded-lg border border-green-500/50 bg-green-500/10 p-4 text-black">
                       <p className="font-semibold">✓ Message sent successfully!</p>
-                      <p className="text-sm text-white/80 mt-1">
+                      <p className="text-sm text-black mt-1">
                         We'll get back to you as soon as possible.
                       </p>
                     </div>
@@ -108,15 +108,15 @@ export default function Contact() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Name *</FormLabel>
+                        <FormLabel className="text-black">Name *</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="Your name"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-black placeholder:text-gray-500"
                           />
                         </FormControl>
-                        <FormMessage className="text-red-400" />
+                        <FormMessage className="text-red-600" />
                       </FormItem>
                     )}
                   />
@@ -126,16 +126,16 @@ export default function Contact() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Email *</FormLabel>
+                        <FormLabel className="text-black">Email *</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="email"
                             placeholder="your@email.com"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-black placeholder:text-gray-500"
                           />
                         </FormControl>
-                        <FormMessage className="text-red-400" />
+                        <FormMessage className="text-red-600" />
                       </FormItem>
                     )}
                   />
@@ -145,16 +145,16 @@ export default function Contact() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Phone (Optional)</FormLabel>
+                        <FormLabel className="text-black">Phone (Optional)</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="tel"
                             placeholder="(555) 123-4567"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                            className="bg-white/10 border-white/20 text-black placeholder:text-gray-500"
                           />
                         </FormControl>
-                        <FormMessage className="text-red-400" />
+                        <FormMessage className="text-red-600" />
                       </FormItem>
                     )}
                   />
@@ -164,16 +164,16 @@ export default function Contact() {
                     name="message"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Message *</FormLabel>
+                        <FormLabel className="text-black">Message *</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
                             placeholder="How can we help you?"
                             rows={5}
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 resize-none"
+                            className="bg-white/10 border-white/20 text-black placeholder:text-gray-500 resize-none"
                           />
                         </FormControl>
-                        <FormMessage className="text-red-400" />
+                        <FormMessage className="text-red-600" />
                       </FormItem>
                     )}
                   />
@@ -190,7 +190,7 @@ export default function Contact() {
                       type="button"
                       variant="outline"
                       onClick={() => navigate(-1)}
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                      className="bg-white/10 border-white/20 text-black hover:bg-white/20"
                     >
                       Back
                     </Button>
@@ -202,10 +202,10 @@ export default function Contact() {
             {/* Right: Contact Info */}
             <div className="flex flex-col justify-center space-y-6">
               <div className="rounded-2xl border border-white/20 bg-white/5 p-6">
-                <h2 className="text-xl font-semibold text-white mb-4">
+                <h2 className="text-xl font-semibold text-black mb-4">
                   Get in Touch
                 </h2>
-                <div className="space-y-4 text-white/90">
+                <div className="space-y-4 text-black">
                   <div className="flex items-start gap-3">
                     <svg
                       className="w-6 h-6 mt-1 flex-shrink-0"
@@ -221,14 +221,14 @@ export default function Contact() {
                       />
                     </svg>
                     <div>
-                      <p className="font-semibold text-white">Phone</p>
+                      <p className="font-semibold text-black">Phone</p>
                       <a
                         href="tel:+15551234567"
-                        className="hover:text-white transition-colors"
+                        className="hover:text-gray-700 transition-colors"
                       >
                         (555) 123-4567
                       </a>
-                      <p className="text-sm text-white/70 mt-1">
+                      <p className="text-sm text-gray-700 mt-1">
                         Monday - Friday, 9AM - 5PM EST
                       </p>
                     </div>
@@ -249,14 +249,14 @@ export default function Contact() {
                       />
                     </svg>
                     <div>
-                      <p className="font-semibold text-white">Email</p>
+                      <p className="font-semibold text-black">Email</p>
                       <a
                         href="mailto:support@printpowerpurpose.com"
-                        className="hover:text-white transition-colors"
+                        className="hover:text-gray-700 transition-colors"
                       >
                         support@printpowerpurpose.com
                       </a>
-                      <p className="text-sm text-white/70 mt-1">
+                      <p className="text-sm text-gray-700 mt-1">
                         We'll respond within 24 hours
                       </p>
                     </div>
@@ -265,25 +265,25 @@ export default function Contact() {
               </div>
 
               <div className="rounded-2xl border border-white/20 bg-white/5 p-6">
-                <h3 className="text-lg font-semibold text-white mb-2">
+                <h3 className="text-lg font-semibold text-black mb-2">
                   Quick Links
                 </h3>
                 <div className="space-y-2">
                   <a
                     href="/causes"
-                    className="block text-white/80 hover:text-white transition-colors"
+                    className="block text-black hover:text-gray-700 transition-colors"
                   >
                     → Browse Causes
                   </a>
                   <a
                     href="/products"
-                    className="block text-white/80 hover:text-white transition-colors"
+                    className="block text-black hover:text-gray-700 transition-colors"
                   >
                     → View Products
                   </a>
                   <a
                     href="/about"
-                    className="block text-white/80 hover:text-white transition-colors"
+                    className="block text-black hover:text-gray-700 transition-colors"
                   >
                     → About Us
                   </a>
