@@ -29,14 +29,18 @@ serve(async (req) => {
     );
 
     // Verify the session token is valid
-    const { data: session } = await supabase
+    console.log('[admin-stats] Checking session token:', sessionToken ? sessionToken.substring(0, 8) + '...' : 'NULL');
+    const { data: session, error: sessionError } = await supabase
       .from("admin_sessions")
       .select("*")
       .eq("token", sessionToken)
       .gt("expires_at", new Date().toISOString())
       .single();
 
+    console.log('[admin-stats] Session query result:', session ? 'FOUND' : 'NOT FOUND', sessionError);
+
     if (!session) {
+      console.error('[admin-stats] Invalid session - no matching token found');
       return new Response(
         JSON.stringify({ error: "Invalid or expired session" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }

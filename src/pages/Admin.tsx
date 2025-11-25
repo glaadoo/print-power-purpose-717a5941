@@ -107,12 +107,14 @@ export default function Admin() {
           });
 
           if (!error && data?.valid) {
+            console.log("[Admin] Passcode verified, sessionToken:", data.sessionToken ? 'YES' : 'NO');
             setIsAuthenticated(true);
             // Store passcode in sessionStorage for subsequent checks
             sessionStorage.setItem("admin_passcode", passcode);
             setAdminPasscode(passcode);
             // Store session token for admin API calls
             if (data.sessionToken) {
+              console.log("[Admin] Storing sessionToken:", data.sessionToken.substring(0, 8) + '...');
               sessionStorage.setItem("admin_session", data.sessionToken);
             }
             loadAllData();
@@ -258,6 +260,7 @@ export default function Admin() {
   const loadAllData = async () => {
     try {
       const sessionToken = sessionStorage.getItem("admin_session");
+      console.log("[Admin] loadAllData - sessionToken from storage:", sessionToken ? sessionToken.substring(0, 8) + '...' : 'NULL');
       if (!sessionToken) {
         toast.error("Session expired. Please log in again.");
         setIsAuthenticated(false);
@@ -265,9 +268,11 @@ export default function Admin() {
       }
 
       // Fetch admin stats from edge function using service role
+      console.log("[Admin] Calling admin-stats with sessionToken");
       const { data: stats, error } = await supabase.functions.invoke('admin-stats', {
         body: { sessionToken }
       });
+      console.log("[Admin] admin-stats response:", error ? 'ERROR' : 'SUCCESS', error);
 
       if (error) {
         console.error('Failed to load admin stats:', error);

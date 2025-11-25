@@ -114,12 +114,19 @@ serve(async (req) => {
         const token = crypto.randomUUID();
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-        await supabase
+        console.log('[verify-admin-passcode] Creating session token:', token.substring(0, 8) + '...');
+        const { error: insertError } = await supabase
           .from('admin_sessions')
           .insert({
             token,
             expires_at: expiresAt.toISOString(),
           });
+
+        if (insertError) {
+          console.error('[verify-admin-passcode] Failed to insert session:', insertError);
+        } else {
+          console.log('[verify-admin-passcode] Session inserted successfully');
+        }
 
         await logAccess(supabase, path || '/admin', clientIp, userAgent, true, 'valid_passcode');
         return new Response(
