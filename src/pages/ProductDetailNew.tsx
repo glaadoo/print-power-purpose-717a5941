@@ -32,7 +32,7 @@ type ProductRow = {
 };
 
 export default function ProductDetailNew() {
-  const { category, productName } = useParams();
+  const { category, subcategory, productName } = useParams();
   const location = useLocation();
   const productId = location.state?.productId;
   const nav = useNavigate();
