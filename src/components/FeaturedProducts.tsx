@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ProductCard from "./ProductCard";
@@ -8,6 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
 import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 type ProductRow = {
   id: string;
@@ -31,7 +32,16 @@ export default function FeaturedProducts() {
   const [configuredPrices, setConfiguredPrices] = useState<Record<string, number>>({});
   const [productConfigs, setProductConfigs] = useState<Record<string, Record<string, string>>>({});
   const [quantityOptions, setQuantityOptions] = useState<Record<string, string[]>>({});
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "start" });
+  
+  // Autoplay plugin with 5 second interval and pause on hover
+  const autoplayPlugin = useCallback(() => {
+    return Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true });
+  }, []);
+  
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: "start" },
+    [autoplayPlugin()]
+  );
 
   // Sync quantities with cart items
   useEffect(() => {
