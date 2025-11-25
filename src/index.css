@@ -4,13 +4,14 @@
 
 @layer base {
   :root {
-    /* Vistaprint-style color system */
+    /* Vistaprint-style color system with auto-contrast */
     --background: 0 0% 100%;
-    --foreground: 215 16% 17%;
+    /* Blue text for light backgrounds */
+    --foreground: 217 91% 51%;
     --card: 0 0% 100%;
-    --card-foreground: 215 16% 17%;
+    --card-foreground: 217 91% 51%;
     --popover: 0 0% 100%;
-    --popover-foreground: 215 16% 17%;
+    --popover-foreground: 217 91% 51%;
     
     /* Primary blue (Vistaprint-inspired) */
     --primary: 217 91% 51%;
@@ -18,11 +19,11 @@
     
     /* Secondary grays */
     --secondary: 210 40% 96%;
-    --secondary-foreground: 215 16% 17%;
+    --secondary-foreground: 217 91% 51%;
     --muted: 210 40% 97%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 217 91% 45%;
     --accent: 210 40% 96%;
-    --accent-foreground: 215 16% 17%;
+    --accent-foreground: 217 91% 51%;
     
     /* Destructive */
     --destructive: 0 84% 60%;
@@ -36,11 +37,14 @@
     
     /* Mascot header colors */
     --mascot-bg: 0 0% 100%;
-    --mascot-text: 215 16% 17%;
+    --mascot-text: 217 91% 51%;
     
-    /* App background */
-    --app-bg: #FFFFFF;
-    --app-text: #1F2937;
+    /* App background - light backgrounds use blue text */
+    --app-bg: 0 0% 100%;
+    --app-text: 217 91% 51%;
+    
+    /* Text color for dark backgrounds */
+    --text-on-dark: 0 0% 0%;
   }
 
   .dark {
@@ -82,7 +86,32 @@ body {
   color: hsl(var(--foreground));
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
   min-height: 100vh;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Auto-contrast text utilities */
+.text-auto-contrast {
+  color: hsl(var(--foreground));
+}
+
+/* Explicit light background = blue text */
+.bg-white, .bg-gray-50, .bg-gray-100, [class*="bg-white"], [class*="bg-gray-50"] {
+  color: hsl(var(--foreground));
+}
+
+/* Explicit dark background = black text */
+.bg-gray-800, .bg-gray-900, .bg-black, [class*="bg-gray-800"], [class*="bg-gray-900"], [class*="bg-black"] {
+  color: hsl(var(--text-on-dark));
+}
+
+/* Ensure headings inherit proper contrast */
+h1, h2, h3, h4, h5, h6 {
+  color: inherit;
+}
+
+/* Card text inherits from card-foreground */
+[class*="bg-card"] {
+  color: hsl(var(--card-foreground));
 }
 
 /* Optional: soft overlay utility you can add on pages that need contrast */
