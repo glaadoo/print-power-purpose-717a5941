@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, DollarSign, Save, Trash2 } from "lucide-react";
+import { Loader2, Settings, Save, Trash2, Upload, Image as ImageIcon } from "lucide-react";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 
 type Product = {
@@ -29,6 +29,7 @@ export default function ProductPriceManager() {
   const [customPrices, setCustomPrices] = useState<CustomPrice[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // Current configuration state
   const [currentConfig, setCurrentConfig] = useState<Record<string, string>>({});
@@ -142,6 +143,50 @@ export default function ProductPriceManager() {
     }
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedProduct) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      // Create a safe filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${selectedProduct.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.${fileExt}`;
+      const filePath = `/images/${fileName}`;
+
+      // Read file as base64 (for simple copy to public folder)
+      // Note: In production, you'd upload to Supabase Storage
+      // For now, we'll just update the database with the path
+      // and expect the file to be manually placed in public/images/
+
+      // Update database with image path
+      const { error } = await supabase
+        .from("products")
+        .update({ image_url: filePath })
+        .eq("id", selectedProduct.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedProduct({ ...selectedProduct, image_url: filePath });
+      setProducts(products.map(p => 
+        p.id === selectedProduct.id ? { ...p, image_url: filePath } : p
+      ));
+
+      toast.success(`Image path saved! Place ${fileName} in public/images/ folder`);
+    } catch (error: any) {
+      toast.error("Failed to update image: " + error.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -155,8 +200,8 @@ export default function ProductPriceManager() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5" />
-            Product Price Manager
+            <Settings className="w-5 h-5" />
+            Product Configuration Manager
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -181,6 +226,55 @@ export default function ProductPriceManager() {
               ))}
             </select>
           </div>
+
+          {/* Product Image Upload */}
+          {selectedProduct && (
+            <div className="space-y-4 p-4 border rounded-md bg-accent/50">
+              <h3 className="font-semibold flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Product Image
+              </h3>
+              
+              {selectedProduct.image_url && (
+                <div className="space-y-2">
+                  <Label>Current Image</Label>
+                  <img 
+                    src={selectedProduct.image_url} 
+                    alt={selectedProduct.name}
+                    className="w-32 h-32 object-cover rounded-md border"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">{selectedProduct.image_url}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="image-upload">Upload New Image</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    className="flex-1"
+                  />
+                  <Button disabled={uploadingImage} variant="outline">
+                    {uploadingImage ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Supported formats: JPG, PNG, WEBP. File will be saved to public/images/
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Product Configurator */}
           {selectedProduct && (

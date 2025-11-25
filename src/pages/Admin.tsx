@@ -780,11 +780,11 @@ export default function Admin() {
                 >
                   Products
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="prices" 
+                <TabsTrigger
+                  value="prices"
                   className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
                 >
-                  Product Prices
+                  Product Configuration
                 </TabsTrigger>
                 <TabsTrigger 
                   value="causes" 
