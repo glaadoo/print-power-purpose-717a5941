@@ -22,7 +22,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <BrowserRouter>
               <ErrorBoundary>
                 <App />
-                <DebugPageIndicator />
               </ErrorBoundary>
             </BrowserRouter>
           </ComparisonProvider>
