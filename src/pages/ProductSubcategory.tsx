@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import VistaprintNav from "@/components/VistaprintNav";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
+import ProductFilterSidebar from "@/components/ProductFilterSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,6 +41,11 @@ export default function ProductSubcategory() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [filters, setFilters] = useState({
+    priceRange: [0, 100000] as [number, number],
+    vendors: [] as string[],
+    minRating: 0,
+  });
 
   // Fetch subcategory data
   useEffect(() => {
@@ -128,6 +134,17 @@ export default function ProductSubcategory() {
     return prices;
   }, [products, pricingSettings]);
 
+  // Get available vendors and max price for filters
+  const availableVendors = useMemo(() => {
+    const vendors = new Set(products.map(p => p.vendor).filter(Boolean));
+    return Array.from(vendors) as string[];
+  }, [products]);
+
+  const maxPrice = useMemo(() => {
+    const prices = Object.values(defaultPrices);
+    return prices.length > 0 ? Math.max(...prices) : 100000;
+  }, [defaultPrices]);
+
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
@@ -139,6 +156,25 @@ export default function ProductSubcategory() {
         p.name.toLowerCase().includes(term) ||
         p.description?.toLowerCase().includes(term)
       );
+    }
+
+    // Price range filter
+    filtered = filtered.filter(p => {
+      const price = defaultPrices[p.id] || 0;
+      return price >= filters.priceRange[0] && price <= filters.priceRange[1];
+    });
+
+    // Vendor filter
+    if (filters.vendors.length > 0) {
+      filtered = filtered.filter(p => 
+        p.vendor && filters.vendors.includes(p.vendor)
+      );
+    }
+
+    // Rating filter (placeholder - you'll need to add ratings to products)
+    // For now, this is a stub that doesn't filter anything
+    if (filters.minRating > 0) {
+      // filtered = filtered.filter(p => p.rating >= filters.minRating);
     }
     
     // Sort
@@ -154,7 +190,7 @@ export default function ProductSubcategory() {
     });
     
     return filtered;
-  }, [products, searchTerm, sortBy, defaultPrices]);
+  }, [products, searchTerm, sortBy, defaultPrices, filters]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
@@ -167,7 +203,7 @@ export default function ProductSubcategory() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, sortBy, subcategory]);
+  }, [searchTerm, sortBy, subcategory, filters]);
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -226,6 +262,13 @@ export default function ProductSubcategory() {
 
         {/* Search and Sort */}
         <div className="mb-6 flex flex-col md:flex-row gap-4">
+          <ProductFilterSidebar
+            filters={filters}
+            onFiltersChange={setFilters}
+            availableVendors={availableVendors}
+            maxPrice={maxPrice}
+          />
+          
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
