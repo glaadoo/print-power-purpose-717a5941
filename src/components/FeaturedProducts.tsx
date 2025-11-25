@@ -173,73 +173,31 @@ export default function FeaturedProducts() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-12">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-          Featured Products
-        </h2>
-        <p className="text-white/80 text-lg">
-          Explore our most popular printing solutions
-        </p>
-      </div>
+    <section className="bg-gray-50 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            Popular Products
+          </h2>
+          <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {products.map(product => {
-          const displayPriceCents = product.price_override_cents || product.base_cost_cents || 0;
-          const isInCart = items.some(item => item.id === product.id);
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {products.map(product => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
 
-          return (
-            <div
-              key={product.id}
-              className="rounded-2xl border border-white/30 bg-white/10 backdrop-blur p-4 flex flex-col hover:border-white/50 transition-all cursor-pointer"
-              onClick={() => {
-                addRecentlyViewed({
-                  id: product.id,
-                  name: product.name,
-                  image_url: product.image_url,
-                  category: product.category
-                });
-                navigate(`/products/${product.id}`);
-              }}
-            >
-              {product.image_url && (
-                <div className="w-full h-48 mb-4 rounded-lg overflow-hidden bg-white/5">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <h3 className="text-lg font-bold text-white mb-2">{product.name}</h3>
-              <p className="text-2xl font-bold text-white mb-4">
-                ${(displayPriceCents / 100).toFixed(2)}
-              </p>
-              <div className="mt-auto">
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/products/${product.id}`);
-                  }}
-                  className="w-full rounded-full bg-white text-black hover:bg-white/90"
-                >
-                  {isInCart ? "View in Cart" : "View Details"}
-                </Button>
-              </div>
-            </div>
-          );
-        })}
+        <div className="text-center">
+          <Button
+            onClick={() => navigate("/products")}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg text-base"
+          >
+            View All Products
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
       </div>
-
-      <div className="text-center">
-        <Button
-          onClick={() => navigate("/products")}
-          className="rounded-full bg-white text-black hover:bg-white/90 px-8 py-6 text-lg font-semibold"
-        >
-          View All Products
-          <ArrowRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
+    </section>
   );
 }
