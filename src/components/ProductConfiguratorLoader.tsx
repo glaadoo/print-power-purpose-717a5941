@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
+import ScalablePressConfigurator from "@/components/ScalablePressConfigurator";
 // Removed withRetry import - using direct API calls for speed
 
 interface LoaderProps {
@@ -97,47 +98,84 @@ export default function ProductConfiguratorLoader({
       if (product.vendor === 'scalablepress') {
         console.log('[ProductConfiguratorLoader] Scalable Press product detected - using embedded pricing');
         
-        // Extract price from pricing_data items
-        if (product.pricing_data && typeof product.pricing_data === 'object') {
-          const pricingData = product.pricing_data as any;
-          
-          if (pricingData.items && typeof pricingData.items === 'object') {
-            // Get all prices from items
-            const prices: number[] = [];
-            Object.values(pricingData.items).forEach((colorData: any) => {
-              if (typeof colorData === 'object') {
-                Object.values(colorData).forEach((sizeData: any) => {
-                  if (sizeData && typeof sizeData.price === 'number') {
-                    prices.push(sizeData.price);
-                  }
-                });
-              }
-            });
-            
-            if (prices.length > 0) {
-              // Use first available price (typically the base price)
-              const priceCents = prices[0];
-              console.log('[ProductConfiguratorLoader] Found Scalable Press price:', priceCents, 'cents');
-              onPriceChange(priceCents);
-              setProductData(product);
-              setLoading(false);
-              setFetchingRef(false);
-              return;
+        if (!product.pricing_data || typeof product.pricing_data !== 'object') {
+          throw new Error("No pricing data available for this Scalable Press product. Please re-sync from Scalable Press.");
+        }
+        
+        const pricingData = product.pricing_data as any;
+        
+        // Validate required structure
+        if (!pricingData.colors || !Array.isArray(pricingData.colors) || pricingData.colors.length === 0) {
+          console.error('[ProductConfiguratorLoader] Invalid pricing_data structure:', {
+            hasColors: !!pricingData.colors,
+            isColorsArray: Array.isArray(pricingData.colors),
+            colorsLength: pricingData.colors?.length,
+            pricingDataKeys: Object.keys(pricingData)
+          });
+          throw new Error("Product configuration incomplete. Missing color options. Please re-sync this product.");
+        }
+        
+        console.log('[ProductConfiguratorLoader] Scalable Press pricing data structure:', {
+          colorsCount: pricingData.colors.length,
+          colorNames: pricingData.colors.map((c: any) => c.name).join(', '),
+          hasItems: !!pricingData.items,
+          itemsKeys: pricingData.items ? Object.keys(pricingData.items).length : 0,
+          hasAvailability: !!pricingData.availability,
+          availabilityKeys: pricingData.availability ? Object.keys(pricingData.availability).length : 0
+        });
+        
+        // Extract colors, items, and availability
+        const colors = pricingData.colors;
+        const items = pricingData.items || {};
+        const availability = pricingData.availability || {};
+        
+        // Set pricing options in the format expected by ScalablePressConfigurator
+        setPricingOptions([{
+          colors,
+          items,
+          availability
+        }]);
+        
+        setProductData({ ...product, vendor: 'scalablepress' });
+        
+        // Calculate initial price from first available item
+        let initialPrice = product.base_cost_cents || 0;
+        if (items && typeof items === 'object') {
+          const allPrices: number[] = [];
+          Object.values(items).forEach((colorData: any) => {
+            if (typeof colorData === 'object') {
+              Object.values(colorData).forEach((sizeData: any) => {
+                if (sizeData && typeof sizeData.price === 'number') {
+                  allPrices.push(sizeData.price);
+                }
+              });
             }
+          });
+          
+          if (allPrices.length > 0) {
+            initialPrice = Math.min(...allPrices); // Use lowest price as initial
           }
         }
         
-        // Fallback to base_cost_cents if pricing_data doesn't have prices
-        if (product.base_cost_cents > 0) {
-          console.log('[ProductConfiguratorLoader] Using base_cost_cents:', product.base_cost_cents);
-          onPriceChange(product.base_cost_cents);
-          setProductData(product);
-          setLoading(false);
-          setFetchingRef(false);
-          return;
+        console.log('[ProductConfiguratorLoader] Setting initial Scalable Press price:', initialPrice, 'cents');
+        onPriceChange(initialPrice);
+        
+        // Cache the result
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            data: { 
+              pricingOptions: [{ colors, items, availability }], 
+              product: { ...product, vendor: 'scalablepress' }
+            },
+            timestamp: Date.now()
+          }));
+        } catch (e) {
+          console.warn('[ProductConfiguratorLoader] Failed to cache options:', e);
         }
         
-        throw new Error("No pricing information available for Scalable Press product");
+        setLoading(false);
+        setFetchingRef(false);
+        return;
       }
       
       // CRITICAL: Validate vendor_product_id before proceeding (SinaLite only)
@@ -381,16 +419,27 @@ export default function ProductConfiguratorLoader({
       )}
       
       {!loading && !error && isMounted && pricingOptions && Array.isArray(pricingOptions) && pricingOptions.length > 0 && productData && (
-        <ProductConfigurator
-          productId={productId}
-          vendorProductId={productData.vendor_product_id || productId}
-          storeCode={9}
-          pricingData={pricingOptions}
-          onPriceChange={onPriceChange}
-          onConfigChange={onConfigChange}
-          onQuantityOptionsChange={onQuantityOptionsChange}
-          onVariantKeyChange={onVariantKeyChange}
-        />
+        productData.vendor === 'scalablepress' ? (
+          <ScalablePressConfigurator
+            productId={productId}
+            productName={productData.name}
+            pricingData={pricingOptions[0]}
+            onPriceChange={onPriceChange}
+            onConfigChange={onConfigChange}
+            onSelectionComplete={() => {}}
+          />
+        ) : (
+          <ProductConfigurator
+            productId={productId}
+            vendorProductId={productData.vendor_product_id || productId}
+            storeCode={9}
+            pricingData={pricingOptions}
+            onPriceChange={onPriceChange}
+            onConfigChange={onConfigChange}
+            onQuantityOptionsChange={onQuantityOptionsChange}
+            onVariantKeyChange={onVariantKeyChange}
+          />
+        )
       )}
       
       {!loading && !error && !pricingOptions && (
