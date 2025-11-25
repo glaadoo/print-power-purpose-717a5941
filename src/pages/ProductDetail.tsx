@@ -10,6 +10,7 @@ import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
 import ProductReviews from "@/components/ProductReviews";
 import ReviewForm from "@/components/ReviewForm";
+import ArtworkUpload from "@/components/ArtworkUpload";
 
 type ProductRow = {
   id: string;
@@ -42,6 +43,8 @@ export default function ProductDetail() {
   const [reviewsKey, setReviewsKey] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<ProductRow[]>([]);
   const [frequentlyBought, setFrequentlyBought] = useState<ProductRow[]>([]);
+  const [artworkFileUrl, setArtworkFileUrl] = useState<string>("");
+  const [artworkFileName, setArtworkFileName] = useState<string>("");
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -114,7 +117,11 @@ export default function ProductDetail() {
     product.pricing_data.length > 0;
   
   const isConfigured = configuredPriceCents !== null;
-  const canAddToCart = !requiresConfiguration || isConfigured;
+  
+  // Check if artwork is uploaded (required for all products)
+  const hasArtwork = artworkFileUrl && artworkFileName;
+  
+  const canAddToCart = (!requiresConfiguration || isConfigured) && hasArtwork;
 
   // For Sinalite products with pricing_data, price ONLY comes from API after configuration
   let unitCents: number;
@@ -312,6 +319,20 @@ export default function ProductDetail() {
                       </div>
                     )}
 
+                    {/* Artwork Upload - Required */}
+                    <div className="w-full mt-6">
+                      <ArtworkUpload
+                        productId={product.id}
+                        productName={product.name}
+                        onUploadComplete={(fileUrl, fileName) => {
+                          setArtworkFileUrl(fileUrl);
+                          setArtworkFileName(fileName);
+                        }}
+                        initialFileUrl={artworkFileUrl}
+                        initialFileName={artworkFileName}
+                      />
+                    </div>
+
                     <div className="w-full max-w-xs">
                       <label className="block text-sm font-medium mb-2 text-center">Quantity</label>
                       <input
@@ -326,6 +347,12 @@ export default function ProductDetail() {
                     {requiresConfiguration && !isConfigured && (
                       <p className="text-sm text-yellow-300 mb-3">
                         Please select product options above before adding to cart
+                      </p>
+                    )}
+                    
+                    {!hasArtwork && (
+                      <p className="text-sm text-yellow-300 mb-3">
+                        Please upload your artwork before adding to cart
                       </p>
                     )}
 
