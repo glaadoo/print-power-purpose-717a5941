@@ -24,6 +24,8 @@ type ProductRow = {
   vendor?: string | null;
   markup_fixed_cents?: number | null;
   markup_percent?: number | null;
+  category?: string | null;
+  subcategory?: string | null;
 };
 
 export default function ProductDetail() {
@@ -45,6 +47,14 @@ export default function ProductDetail() {
   const [frequentlyBought, setFrequentlyBought] = useState<ProductRow[]>([]);
   const [artworkFileUrl, setArtworkFileUrl] = useState<string>("");
   const [artworkFileName, setArtworkFileName] = useState<string>("");
+
+  // Helper function to navigate to product
+  const navigateToProduct = (product: ProductRow) => {
+    const category = product.category || 'uncategorized';
+    const subcategory = product.subcategory || 'all';
+    const productSlug = product.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    nav(`/products/${category}/${subcategory}/${productSlug}`);
+  };
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -396,7 +406,7 @@ export default function ProductDetail() {
                     {relatedProducts.map((relatedProduct) => (
                       <div 
                         key={relatedProduct.id}
-                        onClick={() => nav(`/products/${relatedProduct.id}`)}
+                        onClick={() => navigateToProduct(relatedProduct)}
                         className="cursor-pointer group"
                       >
                         <div className="aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2">
@@ -436,7 +446,7 @@ export default function ProductDetail() {
                     {frequentlyBought.map((frequentProduct) => (
                       <div 
                         key={frequentProduct.id}
-                        onClick={() => nav(`/products/${frequentProduct.id}`)}
+                        onClick={() => navigateToProduct(frequentProduct)}
                         className="cursor-pointer group"
                       >
                         <div className="aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2">
