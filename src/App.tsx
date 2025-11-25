@@ -73,6 +73,7 @@ const Donate          = lazyPage("Donate",          () => import("./pages/Donate
 const Products        = lazyPage("Products",        () => import("./pages/Products"));
 const ProductDetail   = lazyPage("ProductDetail",   () => import("./pages/ProductDetail"));
 const ProductDetailNew = lazyPage("ProductDetailNew", () => import("./pages/ProductDetailNew"));
+const ProductSubcategory = lazyPage("ProductSubcategory", () => import("./pages/ProductSubcategory"));
 const Favorites       = lazyPage("Favorites",       () => import("./pages/Favorites"));
 const Success         = lazyPage("Success",         () => import("./pages/Success"));
 const Cancel          = lazyPage("Cancel",          () => import("./pages/Cancel"));
@@ -410,7 +411,17 @@ export default function App() {
             }
           />
           <Route
-            path="/product/:category/:productName"
+            path="/products/:category/:subcategory"
+            element={
+              <RouteBoundary name="ProductSubcategory">
+                <ProtectedRoute>
+                  <ProductSubcategory />
+                </ProtectedRoute>
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/products/:category/:subcategory/:productName"
             element={
               <RouteBoundary name="ProductDetailNew">
                 <ProtectedRoute>

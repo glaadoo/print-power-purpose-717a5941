@@ -113,9 +113,15 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   const handleCardClick = () => {
-    const categorySlug = (product.category || 'uncategorized').toLowerCase().replace(/\s+/g, '-');
+    // Extract category and subcategory from product.category
+    // Category format might be "parent-category/subcategory" or just "category"
+    const categoryParts = (product.category || 'uncategorized').toLowerCase().split('/');
+    const categorySlug = categoryParts[0].replace(/\s+/g, '-');
+    const subcategorySlug = categoryParts.length > 1 
+      ? categoryParts[1].replace(/\s+/g, '-')
+      : 'all';
     const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } });
+    navigate(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: { productId: product.id } });
   };
 
   return (

@@ -55,6 +55,11 @@ export default function ProductMegaMenu({
     setOpenMenu(null);
   };
 
+  const handleSubcategoryClick = (parentSlug: string, subSlug: string) => {
+    navigate(`/products/${parentSlug}/${subSlug}`);
+    setOpenMenu(null);
+  };
+
   const handleMouseEnter = (categoryId: string) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -121,7 +126,7 @@ export default function ProductMegaMenu({
                       {subcategories.map((sub) => (
                         <button
                           key={sub.id}
-                          onClick={() => handleCategoryClick(sub.slug)}
+                          onClick={() => handleSubcategoryClick(parent.slug, sub.slug)}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           {sub.name}
