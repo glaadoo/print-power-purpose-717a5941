@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Star, Scale } from "lucide-react";
+import { Heart, Star, Scale, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useComparison } from "@/context/ComparisonContext";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import useToggle from "@/hooks/useToggle";
 
 type ProductCardProps = {
   product: {
@@ -31,6 +33,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isProductFavorite = isFavorite(product.id);
   const { add: addToComparison, remove: removeFromComparison, isInComparison, canAddMore } = useComparison();
   const isInCompare = isInComparison(product.id);
+  const { open: descriptionOpen, toggle: toggleDescription } = useToggle(false);
 
   // Check authentication
   useEffect(() => {
@@ -177,6 +180,24 @@ export default function ProductCard({ product }: ProductCardProps) {
         <h3 className="text-base font-bold text-[#0057FF] line-clamp-2 mb-2 min-h-[48px]">
           {product.name}
         </h3>
+        
+        {/* Description Toggle */}
+        {product.description && (
+          <Collapsible open={descriptionOpen} onOpenChange={toggleDescription}>
+            <CollapsibleTrigger 
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors mb-2"
+            >
+              <span>{descriptionOpen ? 'Hide Details' : 'Show Details'}</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${descriptionOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="animate-accordion-down">
+              <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                {product.description}
+              </p>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
         
         {/* Rating */}
         {averageRating !== null && reviewCount > 0 && (

@@ -4,12 +4,91 @@ import { supabase } from "@/integrations/supabase/client";
 import { getRecentlyViewed, type RecentlyViewedProduct } from "@/lib/recently-viewed";
 import GlassCard from "./GlassCard";
 import { Button } from "./ui/button";
-import { Clock, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, X, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import useToggle from "@/hooks/useToggle";
 
 type ProductDetails = RecentlyViewedProduct & {
   base_cost_cents?: number;
   pricing_data?: any;
+  description?: string | null;
 };
+
+function RecentlyViewedCard({ product, onClick }: { product: ProductDetails; onClick: () => void }) {
+  const { open: descriptionOpen, toggle: toggleDescription } = useToggle(false);
+  
+  return (
+    <div className="flex-shrink-0 w-[250px]">
+      <GlassCard padding="p-4">
+        <div className="cursor-pointer space-y-3">
+          {/* Product Image */}
+          <div 
+            onClick={onClick}
+            className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10"
+          >
+            {product.image_url ? (
+              <img 
+                src={product.image_url} 
+                alt={product.name}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-white/5">
+                <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* Product Info */}
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-[#0057FF] line-clamp-2" onClick={onClick}>
+              {product.name}
+            </h3>
+            {product.category && (
+              <p className="text-xs text-gray-600">{product.category}</p>
+            )}
+            <p className="text-xs text-gray-500">
+              Viewed {formatTimeAgo(product.viewedAt)}
+            </p>
+            
+            {/* Description Toggle */}
+            {product.description && (
+              <Collapsible open={descriptionOpen} onOpenChange={toggleDescription}>
+                <CollapsibleTrigger 
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <span>{descriptionOpen ? 'Hide Details' : 'Show Details'}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${descriptionOpen ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="animate-accordion-down">
+                  <p className="text-xs text-gray-600 mt-2 line-clamp-3">
+                    {product.description}
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+          </div>
+
+          {/* View Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+          >
+            View Product
+          </Button>
+        </div>
+      </GlassCard>
+    </div>
+  );
+}
 
 export default function RecentlyViewed() {
   const navigate = useNavigate();
@@ -36,7 +115,7 @@ export default function RecentlyViewed() {
       const productIds = recent.map(p => p.id);
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, image_url, category, base_cost_cents, pricing_data")
+        .select("id, name, image_url, category, base_cost_cents, pricing_data, description")
         .in("id", productIds)
         .eq("is_active", true);
 
@@ -141,60 +220,11 @@ export default function RecentlyViewed() {
         }}
       >
         {products.map(product => (
-          <div
-            key={product.id}
-            className="flex-shrink-0 w-[250px]"
-          >
-            <GlassCard padding="p-4">
-              <div 
-                onClick={() => handleProductClick(product.id)}
-                className="cursor-pointer space-y-3"
-              >
-                {/* Product Image */}
-                <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10">
-                  {product.image_url ? (
-                    <img 
-                      src={product.image_url} 
-                      alt={product.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-white/5">
-                      <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Info */}
-                <div className="space-y-1">
-                  <h3 className="text-sm font-semibold text-[#0057FF] line-clamp-2">
-                    {product.name}
-                  </h3>
-                  {product.category && (
-                    <p className="text-xs text-gray-600">{product.category}</p>
-                  )}
-                  <p className="text-xs text-gray-500">
-                    Viewed {formatTimeAgo(product.viewedAt)}
-                  </p>
-                </div>
-
-                {/* View Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleProductClick(product.id);
-                  }}
-                >
-                  View Product
-                </Button>
-              </div>
-            </GlassCard>
-          </div>
+          <RecentlyViewedCard 
+            key={product.id} 
+            product={product} 
+            onClick={() => handleProductClick(product.id)} 
+          />
         ))}
       </div>
 
