@@ -35,46 +35,47 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
 
       if (!passcodeToVerify) {
         console.log("[AdminProtectedRoute] No passcode found - redirecting to home");
-        
-        // Log failed attempt (no passcode provided)
-        try {
-          await supabase.functions.invoke('verify-admin-passcode', {
-            body: { 
-              passcode: '', 
-              path: location.pathname
-            }
-          });
-        } catch (err) {
-          console.error("[AdminProtectedRoute] Failed to log access attempt:", err);
-        }
-        
         setIsChecking(false);
         return;
       }
 
       try {
-        // Verify passcode and log access attempt
+        // Verify passcode with timeout
         console.log("[AdminProtectedRoute] Calling verify-admin-passcode edge function");
-        const { data, error } = await supabase.functions.invoke('verify-admin-passcode', {
-          body: { 
-            passcode: passcodeToVerify, 
-            path: location.pathname
-          }
-        });
+        
+        // Create timeout promise
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 10000)
+        );
+        
+        // Race between function call and timeout
+        const result = await Promise.race([
+          supabase.functions.invoke('verify-admin-passcode', {
+            body: { 
+              passcode: passcodeToVerify, 
+              path: location.pathname
+            }
+          }),
+          timeoutPromise
+        ]) as any;
 
-        console.log("[AdminProtectedRoute] Edge function response:", { data, error });
+        console.log("[AdminProtectedRoute] Edge function response:", result);
 
-        if (!error && data?.valid) {
-          console.log("[AdminProtectedRoute] Access granted - logged to admin_access_logs");
-          // Store passcode for subsequent admin page visits
+        if (!result.error && result.data?.valid) {
+          console.log("[AdminProtectedRoute] Access granted");
           sessionStorage.setItem("admin_passcode", passcodeToVerify);
           setIsAuthorized(true);
         } else {
-          console.log("[AdminProtectedRoute] Access denied:", { error, data });
+          console.log("[AdminProtectedRoute] Access denied:", result);
           sessionStorage.removeItem("admin_passcode");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("[AdminProtectedRoute] Verification error:", err);
+        
+        if (err.message === 'Timeout') {
+          console.error("[AdminProtectedRoute] Request timed out - edge function not responding");
+        }
+        
         sessionStorage.removeItem("admin_passcode");
       }
 
