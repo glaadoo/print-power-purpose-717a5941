@@ -134,7 +134,9 @@ export default function RecentlyViewed() {
         })
         .filter(Boolean) as ProductDetails[];
 
-      setProducts(enriched);
+      // Filter out Canada products
+      const filteredProducts = enriched.filter(product => !product.name.toLowerCase().includes('canada'));
+      setProducts(filteredProducts);
     } catch (error) {
       console.error("Error loading recently viewed:", error);
     } finally {

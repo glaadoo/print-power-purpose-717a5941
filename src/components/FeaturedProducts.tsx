@@ -67,7 +67,9 @@ export default function FeaturedProducts() {
           setProducts([]);
         } else {
           console.log("[FeaturedProducts] Loaded products:", data?.length);
-          setProducts(data || []);
+          // Filter out Canada products
+          const filteredProducts = (data || []).filter(product => !product.name.toLowerCase().includes('canada'));
+          setProducts(filteredProducts);
         }
       } catch (error) {
         console.error("[FeaturedProducts] Exception:", error);

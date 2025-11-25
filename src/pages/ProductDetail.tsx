@@ -79,7 +79,9 @@ export default function ProductDetail() {
           .limit(6);
         
         if (related) {
-          setRelatedProducts(related as ProductRow[]);
+          // Filter out Canada products
+          const filteredRelated = (related as ProductRow[]).filter(product => !product.name.toLowerCase().includes('canada'));
+          setRelatedProducts(filteredRelated);
         }
 
         // Fetch frequently bought together (same vendor, different category)
@@ -93,7 +95,9 @@ export default function ProductDetail() {
           .limit(6);
         
         if (frequent) {
-          setFrequentlyBought(frequent as ProductRow[]);
+          // Filter out Canada products
+          const filteredFrequent = (frequent as ProductRow[]).filter(product => !product.name.toLowerCase().includes('canada'));
+          setFrequentlyBought(filteredFrequent);
         }
       }
       setLoading(false);
