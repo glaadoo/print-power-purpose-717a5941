@@ -85,6 +85,16 @@ export default function ColorSelector() {
                 </button>
               ))}
             </div>
+            
+            {/* Reset Button */}
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <button
+                onClick={() => handleColorChange(COLOR_OPTIONS[0].value)}
+                className="w-full px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150"
+              >
+                Reset to Default
+              </button>
+            </div>
           </div>
         )}
       </div>
