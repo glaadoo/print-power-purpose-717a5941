@@ -349,10 +349,7 @@ export default function ProductConfiguratorLoader({
     setFetchingRef(false);
     setIsMounted(true);
     
-    // Clear sessionStorage cache for previous product
-    sessionStorage.removeItem(`product-options-${productId}`);
-    
-    // Fetch pricing options for new product
+    // Fetch pricing options for new product (will use cache if available)
     fetchPricingOptions();
   }, [productId]);
 
