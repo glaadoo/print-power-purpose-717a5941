@@ -79,24 +79,26 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  background-color: var(--app-bg, #FDF4E3) !important;
 }
 
 body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: var(--app-bg, #FDF4E3) !important;
+  color: var(--app-text, hsl(var(--foreground))) !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
   min-height: 100vh;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 /* Auto-contrast text utilities */
 .text-auto-contrast {
-  color: hsl(var(--foreground));
+  color: var(--app-text, hsl(var(--foreground)));
 }
 
-/* Explicit light background = blue text */
+/* Override common background classes to respect global theme */
 .bg-white, .bg-gray-50, .bg-gray-100, [class*="bg-white"], [class*="bg-gray-50"] {
-  color: hsl(var(--foreground));
+  background-color: var(--app-bg, #FDF4E3) !important;
+  color: var(--app-text, hsl(var(--foreground))) !important;
 }
 
 /* Explicit dark background = black text */

@@ -24,13 +24,19 @@ export default function ColorSelector() {
     const option = COLOR_OPTIONS.find(opt => opt.value === color);
     const textColor = option?.textColor || '#222222';
     
-    // Set CSS variables only - let components use them as needed
+    // Apply to CSS variables for global theming
     document.documentElement.style.setProperty('--app-bg', color);
     document.documentElement.style.setProperty('--app-text', textColor);
-    document.documentElement.style.setProperty('background', color, 'important');
-    document.body.style.setProperty('background', color, 'important');
-    document.body.style.transition = 'background 0.5s ease';
-    console.log('Color applied:', color, 'Text color:', textColor);
+    
+    // Apply to root and body with smooth transition
+    document.documentElement.style.setProperty('background-color', color);
+    document.body.style.setProperty('background-color', color);
+    document.body.style.setProperty('color', textColor);
+    document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+    
+    // Force all white/gray backgrounds to use the selected color
+    document.documentElement.classList.remove('bg-white', 'bg-gray-50', 'bg-gray-100');
+    document.documentElement.style.setProperty('--background-override', color);
   };
 
   const handleColorChange = (color: string) => {
