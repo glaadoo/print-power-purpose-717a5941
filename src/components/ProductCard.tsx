@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import GlassCard from "./GlassCard";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Plus, Minus, Heart, Star, Scale } from "lucide-react";
-import ProductConfiguratorLoader from "./ProductConfiguratorLoader";
-import ScalablePressConfigurator from "./ScalablePressConfigurator";
+import { Heart, Star, Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -22,40 +19,14 @@ type ProductCardProps = {
     base_cost_cents: number;
     category?: string | null;
   };
-  displayPriceCents: number;
-  quantity: number;
-  quantityOptions: string[];
-  isInCart: boolean;
-  requiresConfiguration: boolean;
-  isConfigured: boolean;
-  canAddToCart: boolean;
-  onQuantityChange: (productId: string, delta: number) => void;
-  onAddToCart: (product: any) => void;
-  onPriceChange: (productId: string, price: number) => void;
-  onConfigChange: (productId: string, config: Record<string, string>) => void;
-  onQuantityOptionsChange?: (productId: string, options: string[]) => void;
 };
 
-export default function ProductCard({
-  product,
-  displayPriceCents,
-  quantity,
-  quantityOptions,
-  isInCart,
-  requiresConfiguration,
-  isConfigured,
-  canAddToCart,
-  onQuantityChange,
-  onAddToCart,
-  onPriceChange,
-  onConfigChange,
-  onQuantityOptionsChange,
-}: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
+  const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
-  const [scalablePressSelectionComplete, setScalablePressSelectionComplete] = useState(false);
   const imageSrc = product.image_url || null;
   const { isFavorite, toggleFavorite: toggleFavoriteContext } = useFavorites();
   const isProductFavorite = isFavorite(product.id);
@@ -114,7 +85,8 @@ export default function ProductCard({
     }
   };
 
-  const handleToggleComparison = () => {
+  const handleToggleComparison = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isInCompare) {
       removeFromComparison(product.id);
       toast.success("Removed from comparison");
@@ -127,7 +99,7 @@ export default function ProductCard({
         id: product.id,
         name: product.name,
         description: product.description,
-        base_cost_cents: displayPriceCents || product.base_cost_cents,
+        base_cost_cents: product.base_cost_cents,
         image_url: product.image_url,
         category: product.category,
         vendor: product.vendor,
@@ -137,8 +109,18 @@ export default function ProductCard({
     }
   };
 
+  const handleCardClick = () => {
+    const categorySlug = (product.category || 'uncategorized').toLowerCase().replace(/\s+/g, '-');
+    const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } });
+  };
+
   return (
-    <GlassCard padding="p-6" className="group">
+    <GlassCard 
+      padding="p-6" 
+      className="group cursor-pointer hover:scale-105 transition-transform duration-200"
+      onClick={handleCardClick}
+    >
       <div className="flex flex-col items-start text-left space-y-4 w-full relative">
         {/* Action Buttons - Top Right */}
         <div className="absolute top-1 right-1 z-10 flex gap-1">
@@ -157,7 +139,10 @@ export default function ProductCard({
           
           {/* Favorite Heart Button */}
           <button
-            onClick={handleToggleFavorite}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleFavorite();
+            }}
             className={`p-2 rounded-full transition-all ${
               isProductFavorite 
                 ? 'bg-red-500 hover:bg-red-600 text-white' 
@@ -193,17 +178,11 @@ export default function ProductCard({
           )}
         </div>
         
-        <div className="flex flex-col items-center justify-center w-full space-y-2">
-          <h3 className="text-lg font-bold text-white text-center group-hover:text-primary-foreground transition-colors drop-shadow-lg">
+        {/* Product Title */}
+        <div className="flex flex-col items-center justify-center w-full space-y-2 min-h-[60px]">
+          <h3 className="text-lg font-bold text-white text-center group-hover:text-primary-foreground transition-colors drop-shadow-lg line-clamp-2">
             {product.name}
           </h3>
-          
-          {/* Product Description */}
-          {product.description && (
-            <p className="text-sm text-white/70 text-center line-clamp-2">
-              {product.description}
-            </p>
-          )}
           
           {/* Rating Display */}
           {averageRating !== null && reviewCount > 0 && (
@@ -225,94 +204,7 @@ export default function ProductCard({
               </span>
             </div>
           )}
-
-          {/* Price Display - only show configured price */}
-          {displayPriceCents > 0 && (
-            <p className="text-2xl font-bold text-white">
-              ${(displayPriceCents / 100).toFixed(2)}
-            </p>
-          )}
-          
-          {isInCart && (
-            <Badge className="bg-green-600 text-white border-green-400 text-xs">
-              In Cart
-            </Badge>
-          )}
         </div>
-        
-
-        {/* Product Configuration - Auto-expanded - only show if pricing data exists */}
-        {requiresConfiguration && product.vendor === 'sinalite' && product.pricing_data && (
-          <div className="w-full">
-            <ProductConfiguratorLoader
-              productId={product.id}
-              onPriceChange={(price) => onPriceChange(product.id, price)}
-              onConfigChange={(config) => onConfigChange(product.id, config)}
-              onQuantityOptionsChange={onQuantityOptionsChange ? (options) => onQuantityOptionsChange(product.id, options) : undefined}
-            />
-          </div>
-        )}
-        
-        {/* Scalable Press Configuration - only show if pricing data exists */}
-        {product.vendor === 'scalablepress' && product.pricing_data && product.pricing_data.colors && product.pricing_data.items && (
-          <div className="w-full">
-            <ScalablePressConfigurator
-              productId={product.id}
-              productName={product.name}
-              pricingData={product.pricing_data}
-              onPriceChange={(price) => onPriceChange(product.id, price)}
-              onConfigChange={(config) => onConfigChange(product.id, config)}
-              onSelectionComplete={setScalablePressSelectionComplete}
-            />
-          </div>
-        )}
-
-        {/* Quantity Controls - Show for all products with valid price */}
-        {displayPriceCents > 0 && (
-          <div className="flex items-center justify-center gap-3 w-full">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => onQuantityChange(product.id, -1)}
-              disabled={quantity === 0}
-              className="bg-white border-white/30 text-black hover:bg-white/90"
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <span className="text-white font-medium w-12 text-center">
-              {quantity}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => onQuantityChange(product.id, 1)}
-              className="bg-white border-white/30 text-black hover:bg-white/90"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-
-        {/* Add to Cart Button */}
-        <Button
-          onClick={() => onAddToCart(product)}
-          disabled={
-            !canAddToCart || 
-            quantity === 0 || 
-            (product.vendor === 'scalablepress' && !scalablePressSelectionComplete)
-          }
-          className="w-full rounded-full"
-          size="lg"
-        >
-          Add to Cart
-        </Button>
-        
-        {/* Validation Message for Scalable Press */}
-        {product.vendor === 'scalablepress' && !scalablePressSelectionComplete && quantity > 0 && (
-          <div className="text-xs text-red-300 text-center bg-red-900/20 border border-red-500/30 rounded-lg p-2">
-            Please select a color and size before adding to cart.
-          </div>
-        )}
       </div>
     </GlassCard>
   );
