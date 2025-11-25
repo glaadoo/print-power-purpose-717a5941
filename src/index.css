@@ -90,24 +90,32 @@ body {
 
 /* Auto-contrast text utilities */
 .text-auto-contrast {
+  color: var(--app-text) !important;
+}
+
+/* Ensure all text elements use readable colors */
+body, body * {
   color: var(--app-text);
-}
-
-/* Override common background classes to respect global theme */
-.bg-white, .bg-gray-50, .bg-gray-100, [class*="bg-white"], [class*="bg-gray-50"] {
-  background-color: var(--app-bg) !important;
-  color: var(--app-text) !important;
-}
-
-/* Dark backgrounds use light text */
-.bg-gray-800, .bg-gray-900, .bg-black, [class*="bg-gray-800"], [class*="bg-gray-900"], [class*="bg-black"] {
-  background-color: var(--app-bg) !important;
-  color: var(--app-text) !important;
 }
 
 /* Ensure headings use main text color */
 h1, h2, h3, h4, h5, h6 {
+  color: var(--app-text) !important;
+}
+
+/* Ensure paragraphs and labels are visible */
+p, label, span, div {
   color: var(--app-text);
+}
+
+/* Override light text colors that cause invisibility */
+.text-white, .text-gray-50, .text-gray-100, .text-gray-200, .text-gray-300 {
+  color: var(--app-text) !important;
+}
+
+/* Ensure form inputs are visible */
+input, textarea, select {
+  color: var(--app-text) !important;
 }
 
 /* Admin page always uses dark theme regardless of global theme */
