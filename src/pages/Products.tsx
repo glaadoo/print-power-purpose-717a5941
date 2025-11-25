@@ -790,18 +790,6 @@ export default function Products() {
                           <ProductCard
                             key={product.id}
                             product={product}
-                            displayPriceCents={displayPriceCents}
-                            quantity={qty}
-                            quantityOptions={quantityOptions[product.id] || []}
-                            isInCart={isInCart}
-                            requiresConfiguration={requiresConfiguration}
-                            isConfigured={isConfigured}
-                            canAddToCart={canAddToCart}
-                            onQuantityChange={updateQuantity}
-                            onAddToCart={handleAddToCart}
-                            onPriceChange={handlePriceChange}
-                            onConfigChange={handleConfigChange}
-                            onQuantityOptionsChange={handleQuantityOptionsChange}
                           />
                         );
                       })}
