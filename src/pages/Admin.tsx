@@ -637,7 +637,7 @@ export default function Admin() {
 
   // Main admin panel content  
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col">
+    <div className="admin-dark-theme fixed inset-0 w-screen h-screen overflow-hidden flex flex-col">
       <VideoBackground 
         srcMp4="/media/hero.mp4"
         srcWebm="/media/hero.webm"
