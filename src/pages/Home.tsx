@@ -1,16 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "sonner";
-
-import GlassCard from "../components/GlassCard";
-import MenuOverlay from "@/components/MenuOverlay";
+import VistaprintNav from "../components/VistaprintNav";
 import ColorSelector from "@/components/ColorSelector";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import FeaturedProducts from "@/components/FeaturedProducts";
+import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart } from "lucide-react";
-import { useFavorites } from "@/context/FavoritesContext";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
 
 export default function Home() {
@@ -18,8 +15,7 @@ export default function Home() {
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const menu = useToggle(false);
-  const { count } = useFavorites();
-  console.log('[Home] State initialized, count:', count);
+  console.log('[Home] State initialized');
 
   // Real stats from database
   const [stats, setStats] = useState({
@@ -153,333 +149,138 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen bg-background">
+      <VistaprintNav />
       <ColorSelector />
-      
-      {/* Top bar (Menu | PPP | Find Causes) */}
-      <header
-        className="
-          fixed top-0 inset-x-0 z-50
-          px-4 md:px-6 py-3
-          flex items-center justify-between
-          text-white
-          backdrop-blur bg-black/20
-          border-b border-white/10
-        "
-      >
-        {/* Left: Hamburger */}
-        <button
-          onClick={menu.on}
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-haspopup="dialog"
-          aria-controls="menu"
-          aria-label="Open menu"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M3 6h18M3 12h18M3 18h18" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="hidden sm:inline">Menu</span>
-        </button>
 
-        {/* Center: Brand */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <a
-            href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
-        </div>
-
-        {/* Right: Wishlist and Find Causes */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => nav("/favorites")}
-            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30 relative"
-            aria-label="View wishlist"
-          >
-            <Heart className="w-5 h-5" />
-            {count > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {count}
-              </span>
-            )}
-            <span className="hidden sm:inline">Wishlist</span>
-          </button>
-          
-          <button
-            onClick={() => {
-              const access = localStorage.getItem("ppp_access");
-              if (!access) {
-                localStorage.setItem("ppp_access", "guest");
-              }
-              nav("/select/nonprofit?flow=shopping");
-            }}
-            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-            aria-label="Find causes"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2" />
-              <path d="M20 20l-3.2-3.2" stroke="white" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <span className="hidden sm:inline">Find Causes</span>
-          </button>
-        </div>
-      </header>
-
-      {/* ScrollDots removed for normal scrolling behavior */}
-
-      {/* Scroll container with 3 slides */}
-      <div 
-        className="scroll-smooth focus:outline-none"
-        tabIndex={0}
-        role="main"
-        aria-label="Main content"
-      >
-        {/* ===== HERO SECTION ===== */}
-        <section id="hero" className="relative min-h-screen flex items-center justify-center py-20">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20 -z-10" />
-          <div className="absolute inset-0 bg-black/35 -z-10" />
-
-          <div className="px-6 text-center w-full max-w-7xl mx-auto relative z-20">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-blue-50 to-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
             {/* Mascot */}
             <div className="flex justify-center mb-8">
               <img
                 src={kenzieMascot}
                 alt="Kenzie - Print Power Purpose Mascot"
-                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain drop-shadow-2xl"
+                className="w-40 h-40 sm:w-48 sm:h-48 object-contain drop-shadow-2xl"
               />
             </div>
 
-            {/* Hero quote + CTA */}
-            <div className="mx-auto w-full">
-              <h1 className="font-serif text-[clamp(2.4rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow-md">
-                E-commerce printing, centered around <em>your cause</em>
-              </h1>
-              <p className="mt-4 text-base md:text-lg opacity-90">
-                One platform for professional print orders and optional donations—connecting
-                communities and nonprofits in a single, seamless checkout.
-              </p>
-              <div className="mt-10 relative z-50">
-                <button
-                  onClick={() => nav("/auth")}
-                  className="inline-flex items-center justify-center gap-3 bg-[#FFD700] text-black rounded-full px-10 py-5 font-bold text-lg border-[3px] border-black shadow-[0_8px_32px_rgba(0,0,0,0.4)] transition-all duration-300 hover:bg-[#FFC700] hover:scale-105 hover:shadow-2xl cursor-pointer"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <line x1="19" x2="19" y1="8" y2="14"/>
-                    <line x1="22" x2="16" y1="11" y2="11"/>
-                  </svg>
-                  <span>Sign Up / Sign In</span>
-                </button>
-              </div>
+            {/* Hero Headline */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              E-commerce printing, centered around <span className="text-blue-600">your cause</span>
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
+              One platform for professional print orders and optional donations—connecting
+              communities and nonprofits in a single, seamless checkout.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => nav("/auth")}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-colors shadow-lg"
+              >
+                Sign Up / Sign In
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem("ppp_access", "guest");
+                  nav("/welcome");
+                }}
+                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-8 py-4 rounded-lg text-lg border-2 border-gray-300 transition-colors"
+              >
+                Continue as Guest
+              </button>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===== FEATURED PRODUCTS ===== */}
-        <section id="featured" className="relative flex items-center justify-center py-20">
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-background to-primary/20" />
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="relative w-full">
-            <FeaturedProducts />
+      {/* Featured Products Section */}
+      <FeaturedProducts />
+
+      {/* Stats Section */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Real impact requires real community
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Comprehensive print + donation tools designed to help nonprofits grow from a
+              360-degree perspective.
+            </p>
           </div>
-        </section>
 
-        {/* ===== SOLUTIONS SECTION ===== */}
-        <section id="solutions" className="relative min-h-screen flex items-center justify-center py-20">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20" />
-          <div className="absolute inset-0 bg-black/35" />
-
-          <div className="relative w-full h-full flex flex-col">
-            {/* centered quote */}
-            <div className="flex-1 w-full flex items-center justify-center px-6">
-              <div className="text-center max-w-5xl mx-auto">
-                <h2 className="font-serif text-[clamp(2.2rem,6vw,4.2rem)] leading-tight font-semibold drop-shadow">
-                  Real impact requires real community
-                </h2>
-                <p className="mt-3 opacity-90 text-base md:text-lg">
-                  Comprehensive print + donation tools designed to help nonprofits grow from a
-                  360-degree perspective.
-                </p>
-                <div className="mt-8">
-                  <button
-                    onClick={() => {
-                      localStorage.setItem("ppp_access", "guest");
-                      nav("/welcome");
-                    }}
-                    className="inline-flex items-center justify-center rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
-                  >
-                    Continue as Guest
-                  </button>
-                </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">
+                ${(stats.totalRaised / 100).toLocaleString('en-US', { 
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0 
+                })}
               </div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide">Raised for nonprofits</div>
             </div>
-
-            {/* band: placeholder (L) + stats (R) */}
-            <div className="w-full px-6 pb-10 mt-12">
-              <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
-                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex flex-col">
-                  <div className="text-sm uppercase tracking-wide opacity-80 mb-3">Featured Story</div>
-                  {featuredVideo ? (
-                    <div className="flex flex-col">
-                      <h3 className="text-2xl font-bold mb-3">Milestone Donor Stories</h3>
-                      <div className="rounded-lg overflow-hidden bg-black/30 max-h-[280px]">
-                        <video
-                          className="w-full h-full object-contain"
-                          src={featuredVideo}
-                          controls
-                          muted
-                          playsInline
-                        />
-                      </div>
-                      <p className="mt-3 opacity-90 text-sm">
-                        When donations reach $777 milestones, we feature the donor's story here. Help us reach the next milestone!
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col justify-center opacity-90">
-                      <h3 className="text-2xl font-bold">Milestone Donor Stories</h3>
-                      <p className="mt-4 opacity-90">
-                        When donations reach $777 milestones, we feature the donor's story here. Help us reach the next milestone!
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur p-6 md:p-8 flex items-center justify-center">
-                  <div className="grid grid-cols-2 gap-6 text-center w-full">
-                    <Stat 
-                      value={`$${(stats.totalRaised / 100).toLocaleString('en-US', { 
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0 
-                      })}`} 
-                      label="Raised for nonprofits" 
-                    />
-                    <Stat 
-                      value={`${stats.organizationCount}+`} 
-                      label="Partner organizations" 
-                    />
-                    <Stat value="99.95%" label="Platform uptime" />
-                    <Stat 
-                      value={`${stats.orderCount.toLocaleString()}+`} 
-                      label="Orders fulfilled" 
-                    />
-                  </div>
-                </div>
-              </div>
-              <p className="mt-3 text-center text-xs opacity-70">
-                Live stats updated in real-time from our database.
-              </p>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">{stats.organizationCount}+</div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide">Partner organizations</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">99.95%</div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide">Platform uptime</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">{stats.orderCount.toLocaleString()}+</div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide">Orders fulfilled</div>
             </div>
           </div>
-        </section>
 
-        {/* ===== LEARN SECTION ===== */}
-        <section id="learn" className="relative min-h-screen flex items-center justify-center py-20">
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-background to-primary/20" />
-          <div className="absolute inset-0 bg-black/40" />
-
-          <div className="relative w-full h-full flex flex-col">
-            {/* Recently Viewed Section */}
-            <div className="w-full max-w-7xl mx-auto px-6 pt-12">
-              <RecentlyViewed />
-            </div>
-
-            <div className="flex-1 w-full flex items-center justify-center px-6">
-              <div className="text-center max-w-4xl mx-auto text-white">
-                <h2 className="font-serif text-[clamp(2.2rem,6vw,4.2rem)] leading-tight font-semibold drop-shadow">
-                  Learn more about <span className="whitespace-nowrap">Print Power Purpose</span>
-                </h2>
-                <p className="mt-3 opacity-90 text-base md:text-lg">
-                  Discover how our e-commerce printing + donations platform lets every order fund a cause—
-                  all in one seamless checkout experience.
-                </p>
-
-                {/* lightweight local lead capture; replace with Supabase later */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    try {
-                      const fd = new FormData(e.currentTarget as HTMLFormElement);
-                      const payload = {
-                        first: fd.get("first") as string,
-                        last: fd.get("last") as string,
-                        email: fd.get("email") as string,
-                        optin: !!fd.get("optin"),
-                        ts: Date.now(),
-                      };
-                      localStorage.setItem("ppp:lead", JSON.stringify(payload));
-                      alert("Thanks! We'll be in touch soon.");
-                      (e.currentTarget as HTMLFormElement).reset();
-                    } catch {}
-                  }}
-                  className="
-                    mt-8 mx-auto w-full max-w-3xl
-                    rounded-3xl border border-white/30 bg-white/10 backdrop-blur
-                    shadow-2xl p-6 md:p-8 text-left
-                  "
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field label="First Name" name="first" placeholder="Kenzie" />
-                    <Field label="Last Name" name="last" placeholder="Supporter" />
-                    <Field label="Email" name="email" type="email" placeholder="you@example.com" colSpan />
-                  </div>
-
-                  <label className="mt-4 flex items-center gap-2 text-sm opacity-90">
-                    <input type="checkbox" name="optin" className="size-4" />
-                    <span>
-                      Yes, send me PPP updates. I agree to the{" "}
-                      <Link to="/policies/privacy" className="underline">Privacy Policy</Link> and{" "}
-                      <Link to="/policies/terms" className="underline">Terms of Use</Link>.
-                    </span>
-                  </label>
-
-                  <div className="mt-6 flex justify-center">
-                    <button type="submit" className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90">
-                      SUBMIT
-                    </button>
-                  </div>
-
-                  <p className="mt-3 text-center text-xs opacity-70">
-                    This site may be protected by reCAPTCHA; the Google Privacy Policy and Terms of Service apply.
-                  </p>
-                </form>
+          {featuredVideo && (
+            <div className="mt-16 max-w-4xl mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Milestone Donor Stories</h3>
+              <div className="rounded-lg overflow-hidden shadow-xl bg-gray-900 aspect-video">
+                <video
+                  className="w-full h-full object-contain"
+                  src={featuredVideo}
+                  controls
+                  muted
+                  playsInline
+                />
               </div>
             </div>
+          )}
+        </div>
+      </section>
 
-            <div className="w-full px-6">
-              <div className="mx-auto max-w-3xl text-center text-white py-6">
-                <div className="text-sm uppercase tracking-wide opacity-80">Continue Your Journey</div>
-                <div className="mt-1 text-3xl font-serif">Speak to a Partner</div>
-                <div className="mt-4">
-                  <Link to="/contact" className="inline-flex items-center justify-center rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90">
-                    CONTACT US
-                  </Link>
-                </div>
-              </div>
-            </div>
+      {/* Recently Viewed */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <RecentlyViewed />
+        </div>
+      </section>
 
-            <FooterStrip />
-          </div>
-        </section>
-      </div>
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FooterStrip />
+        </div>
+      </footer>
 
-      {/* Full-screen overlay menu */}
-      <MenuOverlay
-        open={menu.open}
-        onClose={menu.off}
-        items={[
-          { label: "Solutions", href: "#solutions" },
-          { label: "Learn", href: "#learn" },
-          { label: "Products", href: "/products" },
-          { label: "Causes", href: "/causes" },
-          { label: "Contact", href: "/contact" },
-          { label: "Donate", href: "/select/nonprofit?flow=donation" },
-        ]}
-      />
+      {/* Menu Overlay */}
+      {menu.open && (
+        <MenuOverlay
+          open={menu.open}
+          onClose={menu.off}
+          items={[
+            { label: "Products", href: "/products" },
+            { label: "Causes", href: "/causes" },
+            { label: "Contact", href: "/contact" },
+            { label: "Donate", href: "/select/nonprofit?flow=donation" },
+          ]}
+        />
+      )}
     </div>
   );
 }
@@ -488,9 +289,9 @@ export default function Home() {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-2xl bg-white/5 border border-white/20 p-4">
-      <div className="text-3xl md:text-4xl font-extrabold">{value}</div>
-      <div className="mt-1 text-xs uppercase tracking-wide opacity-80">{label}</div>
+    <div className="text-center">
+      <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">{value}</div>
+      <div className="text-sm text-gray-600 uppercase tracking-wide">{label}</div>
     </div>
   );
 }

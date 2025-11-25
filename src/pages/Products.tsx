@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
-import VideoBackground from "@/components/VideoBackground";
+import VistaprintNav from "@/components/VistaprintNav";
 import ProductCard from "@/components/ProductCard";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { Button } from "@/components/ui/button";
@@ -468,14 +468,39 @@ export default function Products() {
   }, [categoryFilteredProducts, sortBy]);
 
   return (
-    <div className="fixed inset-0 text-white">{/* Removed z-40 to work with App animation wrapper */}
-      {/* Top Mission Banner */}
-      <div className="fixed top-0 inset-x-0 z-50 bg-gradient-to-r from-primary/90 to-primary-foreground/90 backdrop-blur text-white py-2 text-center text-sm font-medium">
-        Print Power Purpose - Every Order Supports a Cause
-      </div>
-
-  {/* Category Navigation Menu */}
-      <nav className="fixed top-10 inset-x-0 z-50 bg-background/95 backdrop-blur border-b border-border">
+    <div className="min-h-screen bg-background">
+      <VistaprintNav />
+      
+      {/* Category Navigation Menu */}
+      <nav className="bg-white border-b border-gray-200 sticky top-16 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-4 py-4 overflow-x-auto">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                !selectedCategory 
+                  ? "bg-blue-600 text-white" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              All Products
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedCategory === cat 
+                    ? "bg-blue-600 text-white" 
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-wrap items-center gap-2 py-3 justify-center">
             {loading ? (

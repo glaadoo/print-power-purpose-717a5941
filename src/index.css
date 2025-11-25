@@ -4,34 +4,43 @@
 
 @layer base {
   :root {
+    /* Vistaprint-style color system */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 215 16% 17%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 16% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 215 16% 17%;
+    
+    /* Primary blue (Vistaprint-inspired) */
+    --primary: 217 91% 51%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary grays */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 16% 17%;
+    --muted: 210 40% 97%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 215 16% 17%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders and inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 51%;
     --radius: 0.5rem;
     
-    /* Mascot header colors - warm tones */
-    --mascot-bg: 35 40% 92%;
-    --mascot-text: 25 25% 25%;
+    /* Mascot header colors */
+    --mascot-bg: 0 0% 100%;
+    --mascot-text: 215 16% 17%;
     
-    /* App background and text colors (for ColorSelector) */
-    --app-bg: #FDF4E3;
-    --app-text: #222222;
+    /* App background */
+    --app-bg: #FFFFFF;
+    --app-text: #1F2937;
   }
 
   .dark {
@@ -69,10 +78,11 @@ html, body, #root {
 }
 
 body {
-  background: linear-gradient(135deg, hsl(var(--mascot-bg)) 0%, hsl(35 40% 88%) 50%, hsl(25 45% 90%) 100%);
-  background-attachment: fixed;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
   min-height: 100vh;
-  transition: background 0.5s ease;
+  transition: background 0.3s ease;
 }
 
 /* Optional: soft overlay utility you can add on pages that need contrast */

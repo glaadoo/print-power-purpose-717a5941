@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import GlassCard from "./GlassCard";
 import { Heart, Star, Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -70,7 +69,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  const handleToggleFavorite = async () => {
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!user) {
       toast.error("Please log in to save favorites");
       return;
@@ -116,96 +116,102 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <GlassCard 
-      padding="p-6" 
-      className="group cursor-pointer hover:scale-105 transition-transform duration-200"
+    <div 
+      className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer overflow-hidden group"
       onClick={handleCardClick}
     >
-      <div className="flex flex-col items-start text-left space-y-4 w-full relative">
-        {/* Action Buttons - Top Right */}
-        <div className="absolute top-1 right-1 z-10 flex gap-1">
-          {/* Compare Button */}
+      {/* Product Image */}
+      <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
+        {imageSrc && !imageError ? (
+          <img 
+            src={imageSrc} 
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <svg className="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        )}
+        
+        {/* Action Buttons Overlay */}
+        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={handleToggleComparison}
-            className={`p-2 rounded-full transition-all ${
+            className={`p-2 rounded-full shadow-lg transition-all ${
               isInCompare 
-                ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                ? 'bg-blue-600 text-white' 
+                : 'bg-white text-gray-700 hover:bg-gray-50'
             }`}
             aria-label={isInCompare ? "Remove from comparison" : "Add to comparison"}
           >
-            <Scale className={`w-5 h-5 ${isInCompare ? 'fill-current' : ''}`} />
+            <Scale className="w-4 h-4" />
           </button>
           
-          {/* Favorite Heart Button */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggleFavorite();
-            }}
-            className={`p-2 rounded-full transition-all ${
+            onClick={handleToggleFavorite}
+            className={`p-2 rounded-full shadow-lg transition-all ${
               isProductFavorite 
-                ? 'bg-red-500 hover:bg-red-600 text-white' 
-                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                ? 'bg-red-500 text-white' 
+                : 'bg-white text-gray-700 hover:bg-gray-50'
             }`}
             aria-label={isProductFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <Heart className={`w-5 h-5 ${isProductFavorite ? 'fill-current' : ''}`} />
+            <Heart className={`w-4 h-4 ${isProductFavorite ? 'fill-current' : ''}`} />
           </button>
         </div>
-
-        {/* Product Image */}
-        <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10">
-          {imageSrc && !imageError ? (
-            <img 
-              src={imageSrc} 
-              alt={product.name}
-              className="w-full h-full object-cover"
-              loading="eager"
-              onError={() => {
-                setImageError(true);
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-white/5">
-              <div className="text-center p-4">
-                <svg className="w-16 h-16 mx-auto text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-white/40 text-xs mt-2">No image available</p>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Product Title */}
-        <div className="flex flex-col items-center justify-center w-full space-y-2 min-h-[60px]">
-          <h3 className="text-lg font-bold text-white text-center group-hover:text-primary-foreground transition-colors drop-shadow-lg line-clamp-2">
-            {product.name}
-          </h3>
-          
-          {/* Rating Display */}
-          {averageRating !== null && reviewCount > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-4 h-4 ${
-                      star <= Math.round(averageRating)
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-white/30"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-white/70">
-                {averageRating.toFixed(1)} ({reviewCount})
-              </span>
-            </div>
-          )}
-        </div>
       </div>
-    </GlassCard>
+
+      {/* Product Info */}
+      <div className="p-4">
+        {/* Category Label */}
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+          {product.category || "Product"}
+        </p>
+        
+        {/* Product Name */}
+        <h3 className="text-base font-bold text-gray-900 line-clamp-2 mb-2 min-h-[48px]">
+          {product.name}
+        </h3>
+        
+        {/* Rating */}
+        {averageRating !== null && reviewCount > 0 && (
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className={`w-3.5 h-3.5 ${
+                    star <= Math.round(averageRating)
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-xs text-gray-600">
+              {averageRating.toFixed(1)} ({reviewCount})
+            </span>
+          </div>
+        )}
+        
+        {/* Price */}
+        <p className="text-xl font-bold text-gray-900 mb-3">
+          Starting at ${(product.base_cost_cents / 100).toFixed(2)}
+        </p>
+        
+        {/* CTA Button */}
+        <button 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+          onClick={handleCardClick}
+        >
+          Customize
+        </button>
+      </div>
+    </div>
   );
 }
