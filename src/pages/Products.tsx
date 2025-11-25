@@ -426,12 +426,14 @@ export default function Products() {
   }, [filteredAndSortedProducts, sortBy]);
 
 
-  // Extract unique categories for menu
+  // Extract unique categories for menu - include ALL categories from all vendors
   const categories = useMemo(() => {
     const cats = new Set<string>();
     rows.forEach(product => {
-      if (product.category && !product.name.toLowerCase().includes('canada')) {
-        cats.add(product.category);
+      // Exclude Canada variants but include all products with categories
+      if (!product.name.toLowerCase().includes('canada')) {
+        const category = product.category || "Uncategorized";
+        cats.add(category);
       }
     });
     return Array.from(cats).sort();
