@@ -164,12 +164,32 @@ export function ProductConfigurator({
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
     
-    // CRITICAL FIX: Mark as user-interacted after initial setup to enable first price fetch
-    // This ensures the default configuration fetches a price immediately
+    // CRITICAL FIX: Immediately notify parent of the initial variant key
+    // This enables admin price fields for the default configuration without requiring manual changes
+    const optionIds = Object.values(initial);
+    if (optionIds.length > 0 && onVariantKeyChange) {
+      const variantKey = optionIds.sort((a, b) => a - b).join('-');
+      console.log('[ProductConfigurator] Initial variant key set:', variantKey);
+      onVariantKeyChange(variantKey);
+    }
+    
+    // Also notify parent of the initial config
+    const configUpdate = Object.fromEntries(
+      Object.entries(initial).map(([g, oId]) => {
+        const name = optionGroups
+          .find(og => og.group === g)
+          ?.options.find(o => o.id === oId)?.name || String(oId);
+        return [g, name];
+      })
+    );
+    console.log('[ProductConfigurator] Initial config set:', configUpdate);
+    onConfigChange(configUpdate);
+    
+    // Mark as user-interacted after initial setup to enable first price fetch
     setTimeout(() => {
       setUserInteracted(true);
     }, 100);
-  }, [optionGroups]);
+  }, [optionGroups, onVariantKeyChange, onConfigChange]);
 
   // Notify parent of quantity options - separate effect
   useEffect(() => {

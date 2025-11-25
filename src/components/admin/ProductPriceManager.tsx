@@ -37,6 +37,14 @@ export default function ProductPriceManager() {
   const [currentVariantKey, setCurrentVariantKey] = useState<string>("");
   const [customPriceInput, setCustomPriceInput] = useState("");
 
+  // Pre-fill custom price input with current price when variant changes
+  useEffect(() => {
+    if (currentPrice > 0 && currentVariantKey && !customPriceInput) {
+      // Only pre-fill if input is empty to avoid overwriting user's typing
+      setCustomPriceInput((currentPrice / 100).toFixed(2));
+    }
+  }, [currentPrice, currentVariantKey]);
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -214,7 +222,10 @@ export default function ProductPriceManager() {
               onChange={(e) => {
                 const product = products.find((p) => p.id === e.target.value);
                 setSelectedProduct(product || null);
+                // Reset all configuration state when switching products
                 setCurrentConfig({});
+                setCurrentPrice(0);
+                setCurrentVariantKey("");
                 setCustomPriceInput("");
               }}
             >
@@ -302,7 +313,7 @@ export default function ProductPriceManager() {
           {selectedProduct && !currentVariantKey && (
             <div className="p-4 border rounded-md bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                ℹ️ Complete all configuration selections above to set a custom price for this product variant
+                ℹ️ Loading product configuration...
               </p>
             </div>
           )}
