@@ -61,6 +61,7 @@ export default function ProductFilterSidebar({
     };
     setLocalFilters(resetState);
     onFiltersChange(resetState);
+    localStorage.removeItem('product-subcategory-filters');
   };
 
   const activeFilterCount =
