@@ -163,6 +163,12 @@ export function ProductConfigurator({
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
+    
+    // CRITICAL FIX: Mark as user-interacted after initial setup to enable first price fetch
+    // This ensures the default configuration fetches a price immediately
+    setTimeout(() => {
+      setUserInteracted(true);
+    }, 100);
   }, [optionGroups]);
 
   // Notify parent of quantity options - separate effect
@@ -180,14 +186,8 @@ export function ProductConfigurator({
     }
   }, [optionGroups]);
 
-  // Fetch price whenever selections change (only after user interaction)
+  // Fetch price whenever selections change
   useEffect(() => {
-    // CRITICAL: Skip auto-fetch on initial mount to prevent database overload
-    if (!userInteracted) {
-      console.log('[ProductConfigurator] Skipping auto-fetch: user has not interacted yet');
-      return;
-    }
-    
     const optionIds = Object.values(selectedOptions);
     
     console.log('[ProductConfigurator] Price fetch check:', {

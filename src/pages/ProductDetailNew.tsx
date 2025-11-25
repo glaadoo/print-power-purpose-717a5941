@@ -147,10 +147,14 @@ export default function ProductDetailNew() {
 
   // Calculate price
   let unitCents: number;
-  if (configuredPriceCents !== null) {
+  if (configuredPriceCents !== null && configuredPriceCents > 0) {
     unitCents = configuredPriceCents;
   } else if (product && product.vendor === "sinalite" && product.pricing_data) {
+    // SinaLite products require configuration - show 0 until configured
     unitCents = 0;
+  } else if (product && product.vendor === "scalablepress") {
+    // Scalable Press should use configuredPriceCents or base_cost_cents fallback
+    unitCents = configuredPriceCents ?? product.base_cost_cents;
   } else if (product) {
     const markup_fixed = product.markup_fixed_cents ?? 0;
     const markup_percent = product.markup_percent ?? 0;
@@ -346,6 +350,13 @@ export default function ProductDetailNew() {
                   <div className="mb-4">
                     <span className="text-3xl font-bold">${unitPrice.toFixed(2)}</span>
                     <span className="text-sm text-muted-foreground ml-2">per unit</span>
+                  </div>
+                ) : product?.vendor === 'sinalite' && product.pricing_data ? (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary/30 border-t-primary"></div>
+                      <span className="text-sm text-muted-foreground">Loading price...</span>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-4">
