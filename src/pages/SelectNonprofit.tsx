@@ -1,128 +1,215 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import VideoBackground from "@/components/VideoBackground";
-import { ArrowLeft } from "lucide-react";
-import NonprofitSearch from "@/components/NonprofitSearch";
-import GlassCard from "@/components/GlassCard";
+import { ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { useCause } from "@/context/CauseContext";
+import { supabase } from "@/integrations/supabase/client";
+import VistaprintNav from "@/components/VistaprintNav";
+
+type Nonprofit = {
+  id: string;
+  name: string;
+  ein?: string | null;
+  city?: string | null;
+  state?: string | null;
+  description?: string | null;
+  source?: string | null;
+  irs_status?: string | null;
+};
 
 export default function SelectNonprofit() {
   const nav = useNavigate();
   const { setNonprofit, nonprofit } = useCause();
-  const [selectedNonprofit, setSelectedNonprofit] = useState<any | null>(nonprofit);
+  const [searchParams] = useSearchParams();
+  const flow = searchParams.get("flow");
+
+  const [allNonprofits, setAllNonprofits] = useState<Nonprofit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [selectedNonprofit, setSelectedNonprofit] = useState<Nonprofit | null>(nonprofit);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Display nonprofits: first 10 if no search, filtered results if searching
+  const displayedNonprofits = searchQuery.trim()
+    ? allNonprofits.filter((np) => {
+        const query = searchQuery.toLowerCase();
+        const name = np.name?.toLowerCase() || "";
+        const ein = np.ein?.toLowerCase() || "";
+        const city = np.city?.toLowerCase() || "";
+        const state = np.state?.toLowerCase() || "";
+        return name.includes(query) || ein.includes(query) || city.includes(query) || state.includes(query);
+      })
+    : allNonprofits.slice(0, 10);
 
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
+    
+    let alive = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("nonprofits")
+          .select("id, name, ein, city, state, description, source, irs_status")
+          .eq("approved", true)
+          .order("name", { ascending: true });
+
+        if (error) throw error;
+        if (alive) setAllNonprofits(data || []);
+      } catch (e: any) {
+        if (alive) setErr(e?.message || "Failed to load nonprofits");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  function handleNonprofitSelect(np: any) {
+  function handleNonprofitSelect(np: Nonprofit) {
     setSelectedNonprofit(np);
     setNonprofit(np);
   }
 
   function handleContinue() {
     if (!selectedNonprofit) return;
-    
-    // Check flow parameter to determine destination
-    const params = new URLSearchParams(window.location.search);
-    const flow = params.get("flow");
-    
+
     if (flow === "donation") {
       nav("/donate");
     } else {
-      // Shopping flow goes to products
       nav("/products");
     }
   }
 
-  return (
+  const body = loading ? (
+    <div className="text-center text-muted-foreground py-8">
+      <p>Loading nonprofits…</p>
+    </div>
+  ) : err ? (
+    <div className="text-center text-destructive py-8">
+      <p>{err}</p>
+    </div>
+  ) : (
     <>
-      {/* Fixed header */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <button onClick={() => nav('/')} className="hover:opacity-80 transition">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
-          SELECT A NONPROFIT
+      {/* Search bar */}
+      <div className="mb-8">
+        <div className="relative max-w-2xl mx-auto">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search for a Nonprofit..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-12 h-12 text-base"
+          />
         </div>
-        <div className="w-5" />
-      </header>
-
-      {/* Fixed bottom header with Continue button */}
-      {selectedNonprofit && (
-        <header className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-t border-white/10">
-          <Button
-            onClick={handleContinue}
-            size="lg"
-            className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-bold px-8"
-          >
-            Continue
-          </Button>
-        </header>
-      )}
-
-      {/* Fullscreen content */}
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden">
-        <VideoBackground
-          srcMp4="/media/hero.mp4"
-          srcWebm="/media/hero.webm"
-          poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/50" />}
-        />
-
-        <div className="relative w-full h-full pt-16 pb-20 overflow-y-auto">
-          <div className="w-full max-w-6xl mx-auto px-4 space-y-6">
-            {/* Nonprofit Search Section */}
-            <GlassCard className="w-full" padding="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-xl font-bold text-white mb-2">
-                    Select a Nonprofit
-                  </h2>
-                  <p className="text-white/70 text-sm">
-                    Search for a specific nonprofit organization
-                  </p>
-                </div>
-                <NonprofitSearch
-                  onSelect={handleNonprofitSelect}
-                  selectedId={selectedNonprofit?.id}
-                />
-              </div>
-            </GlassCard>
-
-            {/* Selected Nonprofit Card - same design as /causes page */}
-            {selectedNonprofit && (
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                <div
-                  className="
-                    rounded-xl border-2 p-2 flex flex-col items-center justify-center text-center transition-all cursor-pointer
-                    h-24 md:h-28
-                    scale-110 bg-white/25 border-white/90 ring-4 ring-primary/70 shadow-xl shadow-primary/30
-                    hover:scale-110 hover:bg-white/30 hover:border-white hover:ring-primary/80 hover:shadow-primary/40 hover:brightness-110 animate-enter
-                  "
-                  aria-selected={true}
-                  data-selected
-                >
-                  <h3 className="text-xs md:text-sm font-bold mb-0.5 line-clamp-2">{selectedNonprofit.name}</h3>
-                  
-                  {selectedNonprofit.ein && (
-                    <p className="text-[10px] md:text-xs opacity-70">EIN: {selectedNonprofit.ein}</p>
-                  )}
-                  
-                  {(selectedNonprofit.city || selectedNonprofit.state) && (
-                    <p className="text-[10px] md:text-xs opacity-70 line-clamp-1">
-                      {[selectedNonprofit.city, selectedNonprofit.state]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {!searchQuery.trim() && (
+          <p className="text-sm text-muted-foreground text-center mt-2">
+            Showing first 10 nonprofits. Use search to find more.
+          </p>
+        )}
       </div>
+
+      {/* Nonprofits Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {displayedNonprofits.map((np) => {
+          const isSelected = selectedNonprofit?.id === np.id;
+
+          return (
+            <Card
+              key={np.id}
+              onClick={() => handleNonprofitSelect(np)}
+              className={`
+                cursor-pointer p-6 flex flex-col transition-all hover:shadow-lg
+                ${
+                  isSelected
+                    ? "border-primary ring-2 ring-primary"
+                    : "border-border hover:border-primary/50"
+                }
+              `}
+            >
+              <h3 className="text-lg font-semibold text-primary mb-2 line-clamp-2">
+                {np.name}
+              </h3>
+
+              {np.ein && (
+                <p className="text-sm text-muted-foreground mb-1">
+                  EIN: {np.ein}
+                </p>
+              )}
+
+              {(np.city || np.state) && (
+                <p className="text-sm text-muted-foreground mb-4">
+                  {[np.city, np.state].filter(Boolean).join(", ")}
+                </p>
+              )}
+
+              {np.description && (
+                <p className="text-sm text-foreground mb-4 line-clamp-3 flex-grow">
+                  {np.description}
+                </p>
+              )}
+
+              {/* Select Button */}
+              <Button
+                variant={isSelected ? "default" : "outline"}
+                className="w-full mt-auto rounded-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNonprofitSelect(np);
+                }}
+              >
+                {isSelected ? "Selected" : "Select Nonprofit"}
+              </Button>
+            </Card>
+          );
+        })}
+        {displayedNonprofits.length === 0 && searchQuery.trim() && (
+          <div className="col-span-full text-center py-12">
+            <p className="text-lg text-foreground">
+              No nonprofits found for "{searchQuery}"
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Try a different search term
+            </p>
+          </div>
+        )}
+      </div>
+
+      {selectedNonprofit && (
+        <div className="flex justify-center mt-12">
+          <Button onClick={handleContinue} size="lg" className="px-8 rounded-full">
+            Continue with {selectedNonprofit.name}
+          </Button>
+        </div>
+      )}
     </>
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      <VistaprintNav />
+
+      <main className="container mx-auto px-4 py-12 max-w-7xl">
+        {/* Page Header */}
+        <div className="mb-12 text-center">
+          <Button onClick={() => nav(-1)} variant="ghost" className="mb-4" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-4xl font-bold text-primary mb-2">
+            Select a Nonprofit
+          </h1>
+          <p className="text-muted-foreground">
+            Choose a nonprofit organization to support with your purchase
+          </p>
+        </div>
+
+        {body}
+      </main>
+    </div>
   );
 }
