@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ export default function ProductMegaMenu({
   onCategorySelect,
   selectedCategory,
 }: ProductMegaMenuProps) {
+  const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -119,7 +121,10 @@ export default function ProductMegaMenu({
                       {subcategories.map((sub) => (
                         <button
                           key={sub.id}
-                          onClick={() => handleCategoryClick(sub.slug)}
+                          onClick={() => {
+                            navigate(`/products/${parent.slug}/${sub.slug}`);
+                            setOpenMenu(null);
+                          }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           {sub.name}
