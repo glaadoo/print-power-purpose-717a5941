@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 import VistaprintNav from "../components/VistaprintNav";
-import ColorSelector from "@/components/ColorSelector";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import FeaturedProducts from "@/components/FeaturedProducts";
 import MenuOverlay from "@/components/MenuOverlay";
@@ -151,7 +150,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <VistaprintNav />
-      <ColorSelector />
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-50 to-white py-20">
