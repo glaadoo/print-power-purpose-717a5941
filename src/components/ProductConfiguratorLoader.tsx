@@ -67,18 +67,31 @@ export default function ProductConfiguratorLoader({
     
     try {
       // First, get product metadata including pricing_data from sync
+      console.log('[ProductConfiguratorLoader] Fetching product metadata for:', productId);
+      
       const { data: product, error: productError } = await supabase
         .from("products")
-        .select("vendor_product_id, vendor, pricing_data, base_cost_cents")
+        .select("vendor_product_id, vendor, pricing_data, base_cost_cents, name")
         .eq("id", productId)
         .maybeSingle();
       
-      if (productError) throw productError;
-      if (!product) throw new Error("Product not found");
+      if (productError) {
+        console.error('[ProductConfiguratorLoader] Product query error:', productError);
+        throw productError;
+      }
+      if (!product) {
+        console.error('[ProductConfiguratorLoader] Product not found:', productId);
+        throw new Error("Product not found");
+      }
       
-      console.log('[ProductConfiguratorLoader] Product data:', product);
-      console.log('[ProductConfiguratorLoader] Vendor:', product.vendor);
-      console.log('[ProductConfiguratorLoader] Pricing data available:', !!product.pricing_data);
+      console.log('[ProductConfiguratorLoader] Product loaded:', {
+        name: product.name,
+        vendor: product.vendor,
+        vendor_product_id: product.vendor_product_id,
+        has_pricing_data: !!product.pricing_data,
+        pricing_data_type: typeof product.pricing_data,
+        pricing_data_is_array: Array.isArray(product.pricing_data)
+      });
       
       // Handle Scalable Press products separately - they have pricing in pricing_data
       if (product.vendor === 'scalablepress') {

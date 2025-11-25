@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.generate-product-image]
 verify_jwt = false
+
+[functions.test-product-pricing]
+verify_jwt = false

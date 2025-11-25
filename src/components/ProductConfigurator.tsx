@@ -230,6 +230,12 @@ export function ProductConfigurator({
     const fetchPrice = async () => {
       const variantKey = optionIds.sort((a, b) => a - b).join('-');
       
+      console.log('[ProductConfigurator] ===== PRICE FETCH START =====');
+      console.log('[ProductConfigurator] Variant key:', variantKey);
+      console.log('[ProductConfigurator] Vendor product ID:', vendorProductId);
+      console.log('[ProductConfigurator] Store code:', storeCode);
+      console.log('[ProductConfigurator] Option IDs:', optionIds);
+      
       // CRITICAL: Prevent API call with empty variantKey
       if (!variantKey || variantKey.trim() === '') {
         console.log('[ProductConfigurator] Skipping price fetch: empty variantKey');
@@ -253,10 +259,19 @@ export function ProductConfigurator({
       
       setFetchingPrice(true);
       setPriceError(null);
-      console.log('[ProductConfigurator] Fetching price by key:', variantKey);
+      console.log('[ProductConfigurator] Calling sinalite-price edge function...');
+      console.log('[ProductConfigurator] Request body:', {
+        productId: vendorProductId,
+        storeCode: storeCode,
+        variantKey: variantKey,
+        method: 'PRICEBYKEY'
+      });
       
       // Fetch from Sinalite API with retry logic for resilience
       try {
+        const startTime = Date.now();
+        console.log('[ProductConfigurator] invokeWithRetry starting...');
+        
         const { data, error } = await invokeWithRetry(
           supabase,
           'sinalite-price',
@@ -281,17 +296,32 @@ export function ProductConfigurator({
             }
           }
         );
+        
+        const endTime = Date.now();
+        console.log('[ProductConfigurator] invokeWithRetry completed in', endTime - startTime, 'ms');
+        console.log('[ProductConfigurator] Response data:', data);
+        console.log('[ProductConfigurator] Response error:', error);
 
         if (error) {
           console.error('[ProductConfigurator] Price fetch error:', error);
+          console.error('[ProductConfigurator] Error details:', {
+            message: error.message,
+            status: error.status,
+            vendorProductId,
+            variantKey,
+            storeCode
+          });
           
-          // User-friendly error messages
+          // User-friendly error messages with more context
           if (error.message?.includes('503') || error.message?.includes('Service Unavailable')) {
             setPriceError('Pricing service temporarily unavailable. Please try again in a moment.');
           } else if (error.message?.includes('Network connection lost') || error.message?.includes('Failed to fetch')) {
             setPriceError('Connection issue. Please check your internet and try again.');
+          } else if (error.message?.includes('Invalid productId')) {
+            setPriceError('Product configuration error. Please contact support.');
+            console.error('[ProductConfigurator] Invalid vendor product ID:', vendorProductId);
           } else {
-            setPriceError('Unable to load price. Please try again.');
+            setPriceError(`Unable to load price${error.message ? ': ' + error.message : ''}`);
           }
           
           setFetchingPrice(false);
@@ -316,14 +346,24 @@ export function ProductConfigurator({
         }
       } catch (err: any) {
         console.error('[ProductConfigurator] Price fetch exception:', err);
+        console.error('[ProductConfigurator] Exception details:', {
+          name: err?.name,
+          message: err?.message,
+          stack: err?.stack,
+          vendorProductId,
+          variantKey,
+          storeCode
+        });
         
         // Handle caught exceptions with user-friendly messages
         if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable')) {
           setPriceError('Pricing service temporarily down. Please try again shortly.');
         } else if (err?.message?.includes('Network') || err?.message?.includes('fetch')) {
           setPriceError('Connection problem. Please check your internet.');
+        } else if (err?.message?.includes('timeout')) {
+          setPriceError('Price request timed out. Please try again.');
         } else {
-          setPriceError('Unable to load price at this time');
+          setPriceError(`Error loading price${err?.message ? ': ' + err.message : ''}`);
         }
       } finally {
         setFetchingPrice(false);
