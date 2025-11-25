@@ -251,9 +251,9 @@ export function ProductConfigurator({
       const cache = getPriceCache();
       if (cache[variantKey]) {
         console.log('[ProductConfigurator] Using cached price for:', variantKey);
-        onPriceChange(cache[variantKey]);
+        setPriceError(null); // Clear any previous errors when using cached price
         setFetchingPrice(false);
-        setPriceError(null);
+        onPriceChange(cache[variantKey]);
         return;
       }
       
@@ -328,21 +328,29 @@ export function ProductConfigurator({
           return;
         }
 
+        // CRITICAL: Clear error state FIRST before processing valid price
         if (data && Array.isArray(data) && data.length > 0 && data[0].price) {
           const priceFloat = parseFloat(data[0].price);
           const priceCents = Math.round(priceFloat * 100);
           console.log('[ProductConfigurator] Price received:', priceCents);
           
+          // Clear error IMMEDIATELY when valid price received
+          setPriceError(null);
+          setFetchingPrice(false);
+          
           setPriceCache(variantKey, priceCents);
           onPriceChange(priceCents);
-          setPriceError(null);
           
           if (onPackageInfoChange) {
             onPackageInfoChange(null);
           }
+          
+          console.log('[ProductConfigurator] Error state cleared, price updated');
+          return; // Exit early to prevent further processing
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
           setPriceError('Price not available for this configuration');
+          setFetchingPrice(false);
         }
       } catch (err: any) {
         console.error('[ProductConfigurator] Price fetch exception:', err);
@@ -365,7 +373,6 @@ export function ProductConfigurator({
         } else {
           setPriceError(`Error loading price${err?.message ? ': ' + err.message : ''}`);
         }
-      } finally {
         setFetchingPrice(false);
       }
     };
