@@ -113,6 +113,11 @@ p, label, span, div {
   color: var(--app-text) !important;
 }
 
+/* Footer text must always be white regardless of theme */
+footer, footer *, footer a, footer h1, footer h2, footer h3, footer h4, footer h5, footer h6, footer p, footer span, footer li, footer label {
+  color: #FFFFFF !important;
+}
+
 /* Ensure form inputs are visible */
 input, textarea, select {
   color: var(--app-text) !important;
