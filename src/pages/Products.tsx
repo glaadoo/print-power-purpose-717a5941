@@ -6,6 +6,7 @@ import { useFavorites } from "@/context/FavoritesContext";
 import VistaprintNav from "@/components/VistaprintNav";
 import ProductMegaMenu from "@/components/ProductMegaMenu";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -512,25 +513,29 @@ export default function Products() {
   }, [filteredAndSortedProducts, selectedCategory, cachedCategories]);
 
   // Group products by category
-  const finalGroupedProducts = useMemo(() => {
-    const groups: Record<string, ProductRow[]> = {};
-    
-    // If sorting by price, don't group by category - show all products in one list
-    if (sortBy === "price-low" || sortBy === "price-high") {
-      groups["All Products"] = categoryFilteredProducts;
-    } else {
-      // Group by category for name sorting
-      categoryFilteredProducts.forEach(product => {
-        const category = product.category || "Uncategorized";
-        if (!groups[category]) {
-          groups[category] = [];
-        }
-        groups[category].push(product);
-      });
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(categoryFilteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return categoryFilteredProducts.slice(startIndex, endIndex);
+  }, [categoryFilteredProducts, currentPage]);
+
+  // Reset to page 1 when filters/search/category changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, selectedCategory, ratingFilter]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    if (currentPage > 1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    
-    return groups;
-  }, [categoryFilteredProducts, sortBy]);
+  }, [currentPage]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -547,8 +552,197 @@ export default function Products() {
       <div className="h-full overflow-y-auto scroll-smooth pb-24">
         <section className="min-h-screen py-16 bg-gray-50">
           <div className="w-full max-w-7xl mx-auto px-6">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                {selectedCategory === "all" ? "All Products" : selectedCategory?.replace(/-/g, ' ')}
+              </h1>
+              <p className="text-gray-600">
+                Showing {paginatedProducts.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{Math.min(currentPage * ITEMS_PER_PAGE, categoryFilteredProducts.length)} of {categoryFilteredProducts.length} {categoryFilteredProducts.length === 1 ? 'product' : 'products'}
+              </p>
+            </div>
+
+            {/* Search and Sort Controls */}
+            <div className="mb-6 flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative" ref={searchRef}>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={handleSearchKeyDown}
+                  className="pl-10"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setShowSuggestions(false);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                
+                {/* Search Suggestions Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                    {suggestions.map((product, index) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleSuggestionClick(product.name)}
+                        className={cn(
+                          "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0",
+                          index === suggestionIndex && "bg-gray-50"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          {product.image_url && (
+                            <img 
+                              src={product.image_url} 
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+                            <p className="text-xs text-gray-500">{product.category}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <Select value={sortBy} onValueChange={(val: any) => setSortBy(val)}>
+                <SelectTrigger className="w-full md:w-64">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                  <SelectItem value="price-low">Price (Low to High)</SelectItem>
+                  <SelectItem value="price-high">Price (High to Low)</SelectItem>
+                  <SelectItem value="rating-high">Rating (High to Low)</SelectItem>
+                  <SelectItem value="most-reviewed">Most Reviewed</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={ratingFilter} onValueChange={(val: any) => setRatingFilter(val)}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Filter by rating" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Ratings</SelectItem>
+                  <SelectItem value="4plus">4+ Stars</SelectItem>
+                  <SelectItem value="has-reviews">Has Reviews</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Products Grid */}
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : err ? (
+              <div className="text-center py-12">
+                <p className="text-red-600 mb-4">{err}</p>
+                <Button onClick={() => window.location.reload()}>Retry</Button>
+              </div>
+            ) : paginatedProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600 mb-4">No products found</p>
+                <Button onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("all");
+                  setRatingFilter("all");
+                }}>
+                  Clear Filters
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in mb-12">
+                  {paginatedProducts.map((product, index) => (
+                    <div 
+                      key={product.id}
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <ProductCard 
+                        product={product}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="mt-12 flex items-center justify-center gap-2 pb-8">
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="rounded-full px-6"
+                    >
+                      ← Previous
+                    </Button>
+                    
+                    <div className="flex items-center gap-1">
+                      {[...Array(totalPages)].map((_, i) => {
+                        const pageNum = i + 1;
+                        // Show first page, last page, current page, and pages around current
+                        if (
+                          pageNum === 1 ||
+                          pageNum === totalPages ||
+                          (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                        ) {
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className="w-10 h-10 rounded-full"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        } else if (
+                          pageNum === currentPage - 2 ||
+                          pageNum === currentPage + 2
+                        ) {
+                          return <span key={pageNum} className="px-2 text-gray-400">...</span>;
+                        }
+                        return null;
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="rounded-full px-6"
+                    >
+                      Next →
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+
             {/* Recently Viewed Section */}
-            <RecentlyViewed />
+            <div className="mt-16">
+              <RecentlyViewed />
+            </div>
           </div>
         </section>
       </div>
