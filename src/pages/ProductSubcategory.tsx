@@ -101,18 +101,25 @@ export default function ProductSubcategory() {
         }
 
         // Fetch products matching the subcategory
-        // Convert slug (pull-up-banners) to match category format (Pull Up Banners)
-        // Handle various category formats in database
+        // Convert slug to match category format - handle both spaced and hyphenated versions
+        // Example: "covid-19-decals" should match both "Covid 19 Decals" and "Covid-19 Decals"
         const categorySearch = subcategory
-          .replace(/-/g, ' ')  // Replace hyphens with spaces
+          .replace(/-/g, ' ')  // Replace hyphens with spaces: "covid-19-decals" -> "covid 19 decals"
           .replace(/\s+/g, ' ') // Normalize multiple spaces
+          .trim();
+        
+        // Also create a version preserving number-related hyphens for cases like "Covid-19"
+        const categorySearchWithHyphens = subcategory
+          .replace(/(\d)-(\d)/g, '$1-$2')  // Keep hyphens between numbers: "covid-19-decals" -> keep "19"
+          .replace(/-/g, ' ')  // Replace other hyphens with spaces
+          .replace(/\s+/g, ' ')
           .trim();
         
         const { data, error: productsError } = await supabase
           .from("products")
           .select("*")
           .eq("is_active", true)
-          .or(`category.ilike.%${categorySearch}%,category.ilike.%${categorySearch}-%`);
+          .or(`category.ilike.%${categorySearch}%,category.ilike.%${categorySearchWithHyphens}%,category.ilike.%${subcategory.replace(/-/g, '%')}%`);
         
         if (productsError) throw productsError;
         
