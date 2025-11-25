@@ -50,10 +50,11 @@ export default function ProductDetail() {
 
   // Helper function to navigate to product
   const navigateToProduct = (product: ProductRow) => {
-    const category = product.category || 'uncategorized';
-    const subcategory = product.subcategory || 'all';
-    const productSlug = product.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    nav(`/products/${category}/${subcategory}/${productSlug}`);
+    const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const categorySlug = slugify(product.category || 'uncategorized');
+    const subcategorySlug = slugify(product.subcategory || 'all');
+    const productSlug = slugify(product.name);
+    nav(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`);
   };
 
   // Fetch product by ID from Supabase
