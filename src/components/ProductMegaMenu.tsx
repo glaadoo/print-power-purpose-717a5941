@@ -24,6 +24,7 @@ export default function ProductMegaMenu({
 }: ProductMegaMenuProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Organize categories by parent
   const parentCategories = categories.filter((cat) => !cat.parent_id);
@@ -52,23 +53,26 @@ export default function ProductMegaMenu({
     setOpenMenu(null);
   };
 
+  const handleMouseEnter = (categoryId: string) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenMenu(categoryId);
+    }, 150);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    setOpenMenu(null);
+  };
+
   return (
     <div ref={menuRef} className="relative bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-1 py-3 overflow-x-auto">
-          {/* All Products */}
-          <button
-            onClick={() => handleCategoryClick("all")}
-            className={cn(
-              "px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
-              selectedCategory === "all" || !selectedCategory
-                ? "bg-blue-600 text-white"
-                : "text-gray-700 hover:bg-gray-100"
-            )}
-          >
-            All Products
-          </button>
-
+        <div className="flex items-center gap-2 py-3 flex-wrap">
           {/* Parent Categories with Mega Menu */}
           {parentCategories.map((parent) => {
             const subcategories = subcategoriesByParent[parent.id] || [];
@@ -76,9 +80,13 @@ export default function ProductMegaMenu({
             const isSelected = selectedCategory === parent.slug;
 
             return (
-              <div key={parent.id} className="relative">
+              <div 
+                key={parent.id} 
+                className="relative"
+                onMouseEnter={() => handleMouseEnter(parent.id)}
+                onMouseLeave={handleMouseLeave}
+              >
                 <button
-                  onClick={() => setOpenMenu(isOpen ? null : parent.id)}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
                     isSelected
@@ -98,7 +106,7 @@ export default function ProductMegaMenu({
 
                 {/* Mega Menu Dropdown */}
                 {isOpen && subcategories.length > 0 && (
-                  <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 max-h-96 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <button
                         onClick={() => handleCategoryClick(parent.slug)}
@@ -107,7 +115,7 @@ export default function ProductMegaMenu({
                         View All {parent.name}
                       </button>
                     </div>
-                    <div className="max-h-96 overflow-y-auto">
+                    <div>
                       {subcategories.map((sub) => (
                         <button
                           key={sub.id}
