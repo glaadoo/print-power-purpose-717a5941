@@ -129,17 +129,22 @@ export default function ProductPriceManager() {
 
       const { error } = await supabase
         .from("product_configuration_prices")
-        .upsert({
-          product_id: selectedProduct.id,
-          variant_key: variantKey,
-          custom_price_cents: priceInCents,
-          configuration_label: configLabel,
-        });
+        .upsert(
+          {
+            product_id: selectedProduct.id,
+            variant_key: variantKey,
+            custom_price_cents: priceInCents,
+            configuration_label: configLabel,
+          },
+          {
+            onConflict: 'product_id,variant_key'
+          }
+        );
 
       if (error) throw error;
 
       toast.success("✓ Custom price saved successfully!");
-      fetchCustomPrices(selectedProduct.id);
+      await fetchCustomPrices(selectedProduct.id);
     } catch (error: any) {
       toast.error(`✗ Failed to save custom price: ${error.message}`);
     } finally {
@@ -168,12 +173,17 @@ export default function ProductPriceManager() {
 
           const { error } = await supabase
             .from("product_configuration_prices")
-            .upsert({
-              product_id: selectedProduct.id,
-              variant_key: currentVariantKey,
-              custom_price_cents: priceInCents,
-              configuration_label: configLabel,
-            });
+            .upsert(
+              {
+                product_id: selectedProduct.id,
+                variant_key: currentVariantKey,
+                custom_price_cents: priceInCents,
+                configuration_label: configLabel,
+              },
+              {
+                onConflict: 'product_id,variant_key'
+              }
+            );
 
           if (error) {
             errors.push(`Price: ${error.message}`);
