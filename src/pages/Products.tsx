@@ -478,7 +478,7 @@ export default function Products() {
       <nav className="bg-white border-b border-gray-200 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Toggle Button */}
-          <div className="flex justify-center py-3">
+          <div className="flex justify-center items-center gap-4 py-3">
             <button
               onClick={toggleCategories}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
@@ -489,6 +489,14 @@ export default function Products() {
                 showCategories && "rotate-180"
               )} />
             </button>
+            
+            <Button
+              onClick={() => setSelectedCategory(null)}
+              variant={selectedCategory === null ? "default" : "outline"}
+              className="rounded-full"
+            >
+              View All Products
+            </Button>
           </div>
 
           <Collapsible open={showCategories}>
