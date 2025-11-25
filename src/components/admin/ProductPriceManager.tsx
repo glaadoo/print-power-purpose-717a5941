@@ -138,11 +138,64 @@ export default function ProductPriceManager() {
 
       if (error) throw error;
 
-      toast.success("Custom price saved successfully!");
-      setCustomPriceInput("");
+      toast.success("✓ Custom price saved successfully!");
       fetchCustomPrices(selectedProduct.id);
     } catch (error: any) {
-      toast.error("Failed to save custom price: " + error.message);
+      toast.error(`✗ Failed to save custom price: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveAllChanges = async () => {
+    if (!selectedProduct) {
+      toast.error("Please select a product first");
+      return;
+    }
+
+    setSaving(true);
+    const updates: string[] = [];
+    const errors: string[] = [];
+
+    try {
+      // Save custom price if configured
+      if (customPriceInput && currentVariantKey) {
+        const priceInCents = Math.round(parseFloat(customPriceInput) * 100);
+        if (!isNaN(priceInCents) && priceInCents > 0) {
+          const configLabel = Object.entries(currentConfig)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ");
+
+          const { error } = await supabase
+            .from("product_configuration_prices")
+            .upsert({
+              product_id: selectedProduct.id,
+              variant_key: currentVariantKey,
+              custom_price_cents: priceInCents,
+              configuration_label: configLabel,
+            });
+
+          if (error) {
+            errors.push(`Price: ${error.message}`);
+          } else {
+            updates.push("Custom price");
+            await fetchCustomPrices(selectedProduct.id);
+          }
+        }
+      }
+
+      // Refresh products list to show updates
+      await fetchProducts();
+
+      if (errors.length > 0) {
+        toast.error(`Some updates failed: ${errors.join(", ")}`);
+      } else if (updates.length > 0) {
+        toast.success(`✓ All changes saved! Updated: ${updates.join(", ")}`);
+      } else {
+        toast.info("No changes to save");
+      }
+    } catch (error: any) {
+      toast.error(`Failed to save changes: ${error.message}`);
     } finally {
       setSaving(false);
     }
@@ -183,11 +236,6 @@ export default function ProductPriceManager() {
       const fileName = `${selectedProduct.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.${fileExt}`;
       const filePath = `/images/${fileName}`;
 
-      // Read file as base64 (for simple copy to public folder)
-      // Note: In production, you'd upload to Supabase Storage
-      // For now, we'll just update the database with the path
-      // and expect the file to be manually placed in public/images/
-
       // Update database with image path
       const { error } = await supabase
         .from("products")
@@ -202,9 +250,9 @@ export default function ProductPriceManager() {
         p.id === selectedProduct.id ? { ...p, image_url: filePath } : p
       ));
 
-      toast.success(`Image path saved! Place ${fileName} in public/images/ folder`);
+      toast.success(`✓ Image uploaded successfully! Path: ${filePath}`);
     } catch (error: any) {
-      toast.error("Failed to update image: " + error.message);
+      toast.error(`✗ Failed to upload image: ${error.message}`);
     } finally {
       setUploadingImage(false);
     }
@@ -414,6 +462,33 @@ export default function ProductPriceManager() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Save All Changes Button */}
+          {selectedProduct && (
+            <div className="mt-6 pt-6 border-t">
+              <Button 
+                onClick={saveAllChanges} 
+                disabled={saving}
+                className="w-full"
+                size="lg"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Saving All Changes...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5 mr-2" />
+                    Save All Changes
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                This will save all custom pricing and configuration updates
+              </p>
             </div>
           )}
         </CardContent>
