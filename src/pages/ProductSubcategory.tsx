@@ -41,10 +41,26 @@ export default function ProductSubcategory() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [filters, setFilters] = useState({
-    priceRange: [0, 100000] as [number, number],
-    vendors: [] as string[],
-    minRating: 0,
+  
+  // Initialize filters from localStorage
+  const [filters, setFilters] = useState(() => {
+    const stored = localStorage.getItem('product-subcategory-filters');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return {
+          priceRange: [0, 100000] as [number, number],
+          vendors: [] as string[],
+          minRating: 0,
+        };
+      }
+    }
+    return {
+      priceRange: [0, 100000] as [number, number],
+      vendors: [] as string[],
+      minRating: 0,
+    };
   });
 
   // Fetch subcategory data
@@ -209,6 +225,11 @@ export default function ProductSubcategory() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
+
+  // Save filters to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('product-subcategory-filters', JSON.stringify(filters));
+  }, [filters]);
 
   // Show/hide back to top button based on scroll position
   useEffect(() => {
