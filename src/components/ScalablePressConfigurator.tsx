@@ -10,6 +10,7 @@ interface ScalablePressConfiguratorProps {
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
   onSelectionComplete?: (isComplete: boolean) => void;
+  onVariantKeyChange?: (variantKey: string) => void;
 }
 
 const getStockStatus = (quantity: number | undefined): { status: string; color: string; label: string } => {
@@ -26,6 +27,7 @@ export default function ScalablePressConfigurator({
   onPriceChange,
   onConfigChange,
   onSelectionComplete,
+  onVariantKeyChange,
 }: ScalablePressConfiguratorProps) {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -78,17 +80,30 @@ export default function ScalablePressConfigurator({
       const priceData = items[colorKey][selectedSize];
       const priceCents = priceData.price || 0;
       
-      console.log('[ScalablePressConfigurator] Price update:', { selectedColor, selectedSize, colorKey, priceCents });
+      // Generate variant key: "color-size" (e.g., "red-small")
+      const variantKey = `${selectedColor.toLowerCase().replace(/\s+/g, '-')}-${selectedSize.toLowerCase()}`;
+      
+      console.log('[ScalablePressConfigurator] Price update:', { selectedColor, selectedSize, colorKey, priceCents, variantKey });
       onPriceChange(priceCents);
       onConfigChange({
         color: selectedColor,
         size: selectedSize,
       });
+      
+      // Notify parent of variant key for custom pricing
+      if (onVariantKeyChange) {
+        onVariantKeyChange(variantKey);
+      }
+    } else {
+      // Clear variant key when selection is incomplete
+      if (onVariantKeyChange) {
+        onVariantKeyChange("");
+      }
     }
     
     // Notify parent about selection completion status
     onSelectionComplete?.(isComplete);
-  }, [selectedColor, selectedSize, items, onPriceChange, onConfigChange, onSelectionComplete]);
+  }, [selectedColor, selectedSize, items, onPriceChange, onConfigChange, onSelectionComplete, onVariantKeyChange]);
 
   const handleColorChange = (colorName: string) => {
     setSelectedColor(colorName);

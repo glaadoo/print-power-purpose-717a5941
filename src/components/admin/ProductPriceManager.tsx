@@ -14,6 +14,7 @@ type Product = {
   category: string | null;
   image_url: string | null;
   vendor_product_id: string | null;
+  vendor: string;
 };
 
 type CustomPrice = {
@@ -59,7 +60,7 @@ export default function ProductPriceManager() {
     try {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, category, image_url, vendor_product_id")
+        .select("id, name, category, image_url, vendor_product_id, vendor")
         .eq("is_active", true)
         .order("name");
 
@@ -304,7 +305,7 @@ export default function ProductPriceManager() {
               
               {currentPrice > 0 && (
                 <div className="text-sm text-muted-foreground">
-                  Current Price (from Sinalite): ${(currentPrice / 100).toFixed(2)}
+                  Current Price (from {selectedProduct?.vendor === 'scalablepress' ? 'Scalable Press' : 'Sinalite'}): ${(currentPrice / 100).toFixed(2)}
                 </div>
               )}
             </div>

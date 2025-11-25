@@ -427,6 +427,7 @@ export default function ProductConfiguratorLoader({
             onPriceChange={onPriceChange}
             onConfigChange={onConfigChange}
             onSelectionComplete={() => {}}
+            onVariantKeyChange={onVariantKeyChange}
           />
         ) : (
           <ProductConfigurator
