@@ -39,12 +39,10 @@
     --mascot-bg: 0 0% 100%;
     --mascot-text: 217 91% 51%;
     
-    /* App background - light backgrounds use blue text */
-    --app-bg: 0 0% 100%;
-    --app-text: 217 91% 51%;
-    
-    /* Text color for dark backgrounds */
-    --text-on-dark: 0 0% 0%;
+    /* App background and text colors - controlled by ColorSelector */
+    --app-bg: #F5F7FF;
+    --app-text: #111827;
+    --app-accent: #2563EB;
   }
 
   .dark {
@@ -74,17 +72,17 @@
   }
 }
 
-/* Ensure full-height layout and no global filters */
+/* Ensure full-height layout with theme colors */
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: var(--app-bg, #FDF4E3) !important;
+  background-color: var(--app-bg) !important;
 }
 
 body {
-  background-color: var(--app-bg, #FDF4E3) !important;
-  color: var(--app-text, hsl(var(--foreground))) !important;
+  background-color: var(--app-bg) !important;
+  color: var(--app-text) !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
   min-height: 100vh;
   transition: background-color 0.5s ease, color 0.5s ease;
@@ -92,28 +90,47 @@ body {
 
 /* Auto-contrast text utilities */
 .text-auto-contrast {
-  color: var(--app-text, hsl(var(--foreground)));
+  color: var(--app-text);
 }
 
 /* Override common background classes to respect global theme */
 .bg-white, .bg-gray-50, .bg-gray-100, [class*="bg-white"], [class*="bg-gray-50"] {
-  background-color: var(--app-bg, #FDF4E3) !important;
-  color: var(--app-text, hsl(var(--foreground))) !important;
+  background-color: var(--app-bg) !important;
+  color: var(--app-text) !important;
 }
 
-/* Explicit dark background = black text */
+/* Dark backgrounds use light text */
 .bg-gray-800, .bg-gray-900, .bg-black, [class*="bg-gray-800"], [class*="bg-gray-900"], [class*="bg-black"] {
-  color: hsl(var(--text-on-dark));
+  background-color: var(--app-bg) !important;
+  color: var(--app-text) !important;
 }
 
-/* Ensure headings inherit proper contrast */
+/* Ensure headings use main text color */
 h1, h2, h3, h4, h5, h6 {
-  color: inherit;
+  color: var(--app-text);
 }
 
-/* Card text inherits from card-foreground */
+/* Product names, titles, and important links use accent color (blue) */
+.product-name,
+.text-blue-600,
+.text-blue-700,
+.text-blue-800,
+a.product-link,
+.section-title,
+[class*="product-title"] {
+  color: var(--app-accent) !important;
+}
+
+/* Navigation links respect accent color */
+nav a.text-blue-600,
+nav button.hover\:text-blue-600:hover {
+  color: var(--app-accent) !important;
+}
+
+/* Card backgrounds respect theme */
 [class*="bg-card"] {
-  color: hsl(var(--card-foreground));
+  background-color: var(--app-bg);
+  color: var(--app-text);
 }
 
 /* Optional: soft overlay utility you can add on pages that need contrast */
