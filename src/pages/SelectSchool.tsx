@@ -276,8 +276,8 @@ export default function SelectSchool() {
         description: `You've selected ${school.name}`,
       });
 
-      // Navigate to causes
-      setTimeout(() => nav('/causes'), 500);
+      // Navigate to nonprofit selection
+      setTimeout(() => nav('/select/nonprofit'), 500);
     } catch (error) {
       console.error('[SelectSchool] Error selecting school:', error);
       toast({
