@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Palette } from 'lucide-react';
 
 const COLOR_OPTIONS = [
-  { id: 'light', value: '#FFFFFF', name: 'Light Background', textColor: '#111827', accentColor: '#2563EB' },
-  { id: 'dark', value: '#0B1120', name: 'Dark Background', textColor: '#FFFFFF', accentColor: '#2563EB' },
+  { id: 'light', value: '#F5F7FF', name: 'Light Mode', textColor: '#111827', accentColor: '#2563EB' },
+  { id: 'dark', value: '#0B1120', name: 'Dark Mode', textColor: '#FFFFFF', accentColor: '#2563EB' },
 ];
 
 export default function ColorSelector() {
