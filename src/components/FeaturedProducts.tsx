@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ProductCard from "./ProductCard";
 import { Button } from "./ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
+import useEmblaCarousel from "embla-carousel-react";
 
 type ProductRow = {
   id: string;
@@ -30,6 +31,7 @@ export default function FeaturedProducts() {
   const [configuredPrices, setConfiguredPrices] = useState<Record<string, number>>({});
   const [productConfigs, setProductConfigs] = useState<Record<string, Record<string, string>>>({});
   const [quantityOptions, setQuantityOptions] = useState<Record<string, string[]>>({});
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "start" });
 
   // Sync quantities with cart items
   useEffect(() => {
@@ -43,25 +45,22 @@ export default function FeaturedProducts() {
   useEffect(() => {
     async function loadFeaturedProducts() {
       try {
-        // Include description and pricing_data for proper product detail display
+        console.log("[FeaturedProducts] Starting to load products...");
         const { data, error } = await supabase
           .from("products")
           .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, vendor, vendor_product_id, pricing_data")
           .eq("is_active", true)
-          .not("name", "ilike", "%canada%")
-          .order("created_at", { ascending: false })
-          .limit(4);
+          .limit(8);
 
         if (error) {
-          console.error("Error loading featured products:", error);
-          // Continue with empty products array instead of crashing
+          console.error("[FeaturedProducts] Error loading:", error);
           setProducts([]);
         } else {
+          console.log("[FeaturedProducts] Loaded products:", data?.length);
           setProducts(data || []);
         }
       } catch (error) {
-        console.error("Error loading featured products:", error);
-        // Fail gracefully - show empty state
+        console.error("[FeaturedProducts] Exception:", error);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -172,6 +171,9 @@ export default function FeaturedProducts() {
     );
   }
 
+  const scrollPrev = () => emblaApi?.scrollPrev();
+  const scrollNext = () => emblaApi?.scrollNext();
+
   return (
     <section className="bg-gray-50 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -182,13 +184,36 @@ export default function FeaturedProducts() {
           <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {products.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div className="relative">
+          {/* Carousel Container */}
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex gap-6">
+              {products.map(product => (
+                <div key={product.id} className="flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_25%] min-w-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Navigation Buttons */}
+          <button
+            onClick={scrollPrev}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-3 shadow-lg hover:bg-gray-50 transition-colors z-10"
+            aria-label="Previous products"
+          >
+            <ChevronLeft className="w-6 h-6 text-gray-700" />
+          </button>
+          <button
+            onClick={scrollNext}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-3 shadow-lg hover:bg-gray-50 transition-colors z-10"
+            aria-label="Next products"
+          >
+            <ChevronRight className="w-6 h-6 text-gray-700" />
+          </button>
         </div>
 
-        <div className="text-center">
+        <div className="text-center mt-10">
           <Button
             onClick={() => navigate("/products")}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg text-base"
