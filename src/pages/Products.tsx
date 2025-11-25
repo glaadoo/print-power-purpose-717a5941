@@ -53,12 +53,54 @@ export default function Products() {
   const searchRef = useRef<HTMLDivElement>(null);
   const { open: showCategories, toggle: toggleCategories } = useToggle(true);
 
+  // Load cached categories from localStorage immediately
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [cachedCategories, setCachedCategories] = useState<string[]>(() => {
+    try {
+      const cached = localStorage.getItem('ppp_categories');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
   useEffect(() => {
     console.log('[Products] Component mounted');
     return () => {
       console.log('[Products] Component unmounting');
     };
   }, []);
+
+  // Fetch categories independently from the database
+  const fetchCategories = async () => {
+    setCategoriesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("name")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+      
+      if (error) {
+        console.error('[Products] Categories fetch error:', error);
+        // If fetch fails, keep using cached categories
+        return;
+      }
+      
+      const categoryNames = (data || []).map(cat => cat.name);
+      
+      // Update state and cache in localStorage
+      setCachedCategories(categoryNames);
+      localStorage.setItem('ppp_categories', JSON.stringify(categoryNames));
+      
+      console.log('[Products] Categories loaded:', categoryNames);
+    } catch (e) {
+      console.error('[Products] Failed to load categories:', e);
+      // Keep using cached categories on error
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -182,6 +224,8 @@ export default function Products() {
 
   useEffect(() => {
     document.title = "Products - Print Power Purpose";
+    // Fetch categories and products independently
+    fetchCategories();
     fetchProducts();
   }, []);
 
@@ -428,18 +472,10 @@ export default function Products() {
   }, [filteredAndSortedProducts, sortBy]);
 
 
-  // Extract unique categories for menu - include ALL categories from all vendors
+  // Use cached categories (loads instantly) - no need to compute from products
   const categories = useMemo(() => {
-    const cats = new Set<string>();
-    rows.forEach(product => {
-      // Exclude Canada variants but include all products with categories
-      if (!product.name.toLowerCase().includes('canada')) {
-        const category = product.category || "Uncategorized";
-        cats.add(category);
-      }
-    });
-    return Array.from(cats).sort();
-  }, [rows]);
+    return cachedCategories;
+  }, [cachedCategories]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -502,8 +538,8 @@ export default function Products() {
           <Collapsible open={showCategories}>
             <CollapsibleContent className="transition-all duration-300 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
               <div className="flex flex-wrap items-center gap-2 pb-3 justify-center">
-            {loading ? (
-              // Show skeleton loaders while categories are loading
+            {categories.length === 0 && categoriesLoading ? (
+              // Show skeleton loaders only if no cached categories available
               Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="w-24 h-9 bg-muted/50 animate-pulse rounded-full" />
               ))
