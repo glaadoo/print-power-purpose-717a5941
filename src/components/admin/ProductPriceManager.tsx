@@ -38,13 +38,27 @@ export default function ProductPriceManager() {
   const [currentVariantKey, setCurrentVariantKey] = useState<string>("");
   const [customPriceInput, setCustomPriceInput] = useState("");
 
-  // Pre-fill custom price input with current price when variant changes
+  // Pre-fill custom price input when variant changes
+  // Priority: saved custom price > API base price
   useEffect(() => {
-    if (currentPrice > 0 && currentVariantKey && !customPriceInput) {
-      // Only pre-fill if input is empty to avoid overwriting user's typing
-      setCustomPriceInput((currentPrice / 100).toFixed(2));
+    if (currentVariantKey && currentPrice > 0) {
+      // Check if there's an existing custom price for this variant
+      const existingCustomPrice = customPrices.find(
+        (cp) => cp.variant_key === currentVariantKey
+      );
+      
+      if (existingCustomPrice) {
+        // Show the existing custom price
+        setCustomPriceInput((existingCustomPrice.custom_price_cents / 100).toFixed(2));
+      } else {
+        // Show the API base price as default
+        setCustomPriceInput((currentPrice / 100).toFixed(2));
+      }
+    } else if (!currentVariantKey) {
+      // Clear input when no variant is selected
+      setCustomPriceInput("");
     }
-  }, [currentPrice, currentVariantKey]);
+  }, [currentPrice, currentVariantKey, customPrices]);
 
   useEffect(() => {
     fetchProducts();
@@ -323,6 +337,28 @@ export default function ProductPriceManager() {
           {selectedProduct && currentVariantKey && (
             <div className="space-y-4 p-4 border rounded-md bg-primary/5">
               <h3 className="font-semibold">Set Custom Price</h3>
+              
+              {/* Indicator for existing vs new custom price */}
+              {customPrices.find((cp) => cp.variant_key === currentVariantKey) ? (
+                <div className="p-3 border rounded-md bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700">
+                  <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                    ✓ Custom price already set for this configuration
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                    Edit the value below to update it, or delete it from the list at the bottom
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 border rounded-md bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700">
+                  <p className="text-sm text-green-800 dark:text-green-200 font-medium">
+                    ➕ New custom price (showing API base price)
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-300 mt-1">
+                    Adjust the value below to override the default pricing
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label>Custom Price (USD)</Label>
                 <div className="flex gap-2">
