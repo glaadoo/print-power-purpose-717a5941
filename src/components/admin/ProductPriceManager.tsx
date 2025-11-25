@@ -231,30 +231,50 @@ export default function ProductPriceManager() {
 
     setUploadingImage(true);
     try {
-      // Create a safe filename
+      // Create a safe filename with timestamp to avoid conflicts
       const fileExt = file.name.split('.').pop();
-      const fileName = `${selectedProduct.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.${fileExt}`;
-      const filePath = `/images/${fileName}`;
+      const timestamp = Date.now();
+      const fileName = `${selectedProduct.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${timestamp}.${fileExt}`;
+      const storagePath = `product-images/${fileName}`;
 
-      // Update database with image path
-      const { error } = await supabase
+      // Upload file to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('videos') // Using existing public bucket
+        .upload(storagePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('videos')
+        .getPublicUrl(storagePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Update database with public URL
+      const { error: dbError } = await supabase
         .from("products")
-        .update({ image_url: filePath })
+        .update({ image_url: publicUrl })
         .eq("id", selectedProduct.id);
 
-      if (error) throw error;
+      if (dbError) throw dbError;
 
       // Update local state
-      setSelectedProduct({ ...selectedProduct, image_url: filePath });
+      setSelectedProduct({ ...selectedProduct, image_url: publicUrl });
       setProducts(products.map(p => 
-        p.id === selectedProduct.id ? { ...p, image_url: filePath } : p
+        p.id === selectedProduct.id ? { ...p, image_url: publicUrl } : p
       ));
 
-      toast.success(`✓ Image uploaded successfully! Path: ${filePath}`);
+      toast.success(`✓ Image uploaded successfully!`);
     } catch (error: any) {
       toast.error(`✗ Failed to upload image: ${error.message}`);
     } finally {
       setUploadingImage(false);
+      // Clear the file input
+      event.target.value = '';
     }
   };
 
