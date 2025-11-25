@@ -26,7 +26,6 @@ export default function ProductMegaMenu({
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Organize categories by parent
   const parentCategories = categories.filter((cat) => !cat.parent_id);
@@ -60,20 +59,15 @@ export default function ProductMegaMenu({
     setOpenMenu(null);
   };
 
-  const handleMouseEnter = (categoryId: string) => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    hoverTimeoutRef.current = setTimeout(() => {
-      setOpenMenu(categoryId);
-    }, 150);
+  const handleToggleMenu = (categoryId: string) => {
+    setOpenMenu((prev) => (prev === categoryId ? null : categoryId));
   };
 
-  const handleMouseLeave = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
+  const handleKeyDown = (event: React.KeyboardEvent, categoryId: string) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleToggleMenu(categoryId);
     }
-    setOpenMenu(null);
   };
 
   return (
@@ -90,16 +84,18 @@ export default function ProductMegaMenu({
               <div 
                 key={parent.id} 
                 className="relative"
-                onMouseEnter={() => handleMouseEnter(parent.id)}
-                onMouseLeave={handleMouseLeave}
               >
                 <button
+                  onClick={() => handleToggleMenu(parent.id)}
+                  onKeyDown={(e) => handleKeyDown(e, parent.id)}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
                     isSelected
                       ? "bg-blue-600 text-white"
                       : "text-gray-700 hover:bg-gray-100"
                   )}
+                  aria-expanded={isOpen}
+                  aria-haspopup="true"
                 >
                   {parent.icon_emoji && <span>{parent.icon_emoji}</span>}
                   {parent.name}
