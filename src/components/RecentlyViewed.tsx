@@ -105,9 +105,9 @@ export default function RecentlyViewed() {
     <div className="w-full py-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-white/70" />
-          <h2 className="text-xl font-bold text-white">Recently Viewed</h2>
-          <span className="text-sm text-white/60">({products.length})</span>
+          <Clock className="w-5 h-5 text-[#0057FF]" />
+          <h2 className="text-xl font-bold text-[#0057FF]">Recently Viewed</h2>
+          <span className="text-sm text-gray-600">({products.length})</span>
         </div>
         
         {products.length > 3 && (
@@ -169,13 +169,13 @@ export default function RecentlyViewed() {
 
                 {/* Product Info */}
                 <div className="space-y-1">
-                  <h3 className="text-sm font-semibold text-white line-clamp-2 hover:text-primary transition-colors">
+                  <h3 className="text-sm font-semibold text-[#0057FF] line-clamp-2">
                     {product.name}
                   </h3>
                   {product.category && (
-                    <p className="text-xs text-white/60">{product.category}</p>
+                    <p className="text-xs text-gray-600">{product.category}</p>
                   )}
-                  <p className="text-xs text-white/50">
+                  <p className="text-xs text-gray-500">
                     Viewed {formatTimeAgo(product.viewedAt)}
                   </p>
                 </div>

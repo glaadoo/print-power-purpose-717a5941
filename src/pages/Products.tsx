@@ -527,7 +527,7 @@ export default function Products() {
                               <img src={product.image_url} alt="" className="w-10 h-10 object-cover rounded" />
                             )}
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium truncate text-gray-900 dark:text-white">{product.name}</div>
+                              <div className="text-sm font-medium truncate text-[#0057FF]">{product.name}</div>
                               <div className="text-xs text-gray-600 dark:text-gray-400">
                                 ${((defaultPrices[product.id] || product.base_cost_cents) / 100).toFixed(2)}
                               </div>
@@ -696,10 +696,10 @@ export default function Products() {
                 {Object.entries(finalGroupedProducts).map(([category, products]) => (
                   <div key={category} className="space-y-6">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-3xl font-bold text-white uppercase tracking-wider border-b border-white/20 pb-3 flex-1">
+                      <h2 className="text-3xl font-bold text-[#0057FF] uppercase tracking-wider border-b border-gray-200 pb-3 flex-1">
                         {category}
                       </h2>
-                      <span className="text-white/60 text-sm">
+                      <span className="text-gray-600 text-sm">
                         {products.length} {products.length === 1 ? 'product' : 'products'}
                       </span>
                     </div>
