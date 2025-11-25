@@ -37,6 +37,8 @@ export default function ProductSubcategory() {
   const [sortBy, setSortBy] = useState<"name-asc" | "price-low" | "price-high">("name-asc");
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [subcategoryData, setSubcategoryData] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
   // Fetch subcategory data
   useEffect(() => {
@@ -153,6 +155,19 @@ export default function ProductSubcategory() {
     return filtered;
   }, [products, searchTerm, sortBy, defaultPrices]);
 
+  // Pagination
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [filteredProducts, currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, subcategory]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <VistaprintNav />
@@ -185,7 +200,7 @@ export default function ProductSubcategory() {
             {subcategoryData?.name || subcategory?.replace(/-/g, ' ')}
           </h1>
           <p className="text-gray-600">
-            {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+            Showing {paginatedProducts.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)} of {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
           </p>
         </div>
 
@@ -234,21 +249,75 @@ export default function ProductSubcategory() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
-            {filteredProducts.map((product, index) => (
-              <div 
-                key={product.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <ProductCard 
-                  product={product}
-                  categorySlug={category}
-                  subcategorySlug={subcategory}
-                />
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
+              {paginatedProducts.map((product, index) => (
+                <div 
+                  key={product.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <ProductCard 
+                    product={product}
+                    categorySlug={category}
+                    subcategorySlug={subcategory}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-full"
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => {
+                    const pageNum = i + 1;
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      pageNum === 1 ||
+                      pageNum === totalPages ||
+                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                    ) {
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="w-10 h-10 rounded-full"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    } else if (
+                      pageNum === currentPage - 2 ||
+                      pageNum === currentPage + 2
+                    ) {
+                      return <span key={pageNum} className="px-2 text-gray-400">...</span>;
+                    }
+                    return null;
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-full"
+                >
+                  Next
+                </Button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 
