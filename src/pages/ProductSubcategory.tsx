@@ -8,7 +8,7 @@ import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Search, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Search, ShoppingCart, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
 
@@ -39,6 +39,7 @@ export default function ProductSubcategory() {
   const [subcategoryData, setSubcategoryData] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   // Fetch subcategory data
   useEffect(() => {
@@ -172,6 +173,20 @@ export default function ProductSubcategory() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
+
+  // Show/hide back to top button based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -341,6 +356,17 @@ export default function ProductSubcategory() {
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg transition-all duration-300 z-50 animate-fade-in"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="w-6 h-6" />
+        </button>
       )}
     </div>
   );
