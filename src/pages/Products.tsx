@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import VistaprintNav from "@/components/VistaprintNav";
+import ProductMegaMenu from "@/components/ProductMegaMenu";
 import ProductCard from "@/components/ProductCard";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,15 @@ export default function Products() {
 
   // Load cached categories from localStorage immediately
   const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [cachedCategories, setCachedCategories] = useState<string[]>(() => {
+  type CategoryData = {
+    id: string;
+    name: string;
+    slug: string;
+    parent_id: string | null;
+    icon_emoji: string | null;
+    display_order: number;
+  };
+  const [cachedCategories, setCachedCategories] = useState<CategoryData[]>(() => {
     try {
       const cached = localStorage.getItem('ppp_categories');
       return cached ? JSON.parse(cached) : [];
@@ -63,6 +72,7 @@ export default function Products() {
       return [];
     }
   });
+  const [selectedCategory, setSelectedCategory] = useState<string | null>("all");
 
   useEffect(() => {
     console.log('[Products] Component mounted');
@@ -77,7 +87,7 @@ export default function Products() {
     try {
       const { data, error } = await supabase
         .from("categories")
-        .select("name")
+        .select("id, name, slug, parent_id, icon_emoji, display_order")
         .eq("is_active", true)
         .order("display_order", { ascending: true });
       
@@ -87,13 +97,13 @@ export default function Products() {
         return;
       }
       
-      const categoryNames = (data || []).map(cat => cat.name);
+      const categoryData = data || [];
       
       // Update state and cache in localStorage
-      setCachedCategories(categoryNames);
-      localStorage.setItem('ppp_categories', JSON.stringify(categoryNames));
+      setCachedCategories(categoryData);
+      localStorage.setItem('ppp_categories', JSON.stringify(categoryData));
       
-      console.log('[Products] Categories loaded:', categoryNames);
+      console.log('[Products] Categories loaded:', categoryData);
     } catch (e) {
       console.error('[Products] Failed to load categories:', e);
       // Keep using cached categories on error
@@ -472,18 +482,34 @@ export default function Products() {
   }, [filteredAndSortedProducts, sortBy]);
 
 
-  // Use cached categories (loads instantly) - no need to compute from products
-  const categories = useMemo(() => {
+  // Use cached categories (loads instantly) - organized hierarchically
+  const categoryData = useMemo(() => {
     return cachedCategories;
   }, [cachedCategories]);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  // Filter by selected category
+  // Filter by selected category (matches slug)
   const categoryFilteredProducts = useMemo(() => {
-    if (!selectedCategory) return filteredAndSortedProducts;
+    if (!selectedCategory || selectedCategory === "all") {
+      return filteredAndSortedProducts;
+    }
+    
+    // Find the selected category to check if it's a parent
+    const selectedCat = cachedCategories.find(c => c.slug === selectedCategory);
+    if (!selectedCat) return filteredAndSortedProducts;
+    
+    // If parent category selected, show all products from child categories
+    if (!selectedCat.parent_id) {
+      const childSlugs = cachedCategories
+        .filter(c => c.parent_id === selectedCat.id)
+        .map(c => c.slug);
+      return filteredAndSortedProducts.filter(p => 
+        p.category === selectedCategory || childSlugs.includes(p.category || "")
+      );
+    }
+    
+    // If child category selected, show only products from that category
     return filteredAndSortedProducts.filter(p => p.category === selectedCategory);
-  }, [filteredAndSortedProducts, selectedCategory]);
+  }, [filteredAndSortedProducts, selectedCategory, cachedCategories]);
 
   // Group products by category
   const finalGroupedProducts = useMemo(() => {
@@ -510,104 +536,12 @@ export default function Products() {
     <div className="min-h-screen bg-background">
       <VistaprintNav />
       
-      {/* Category Navigation Menu with Dropdown */}
-      <nav className="bg-white border-b border-gray-200 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Toggle Button */}
-          <div className="flex justify-center items-center gap-4 py-3">
-            <button
-              onClick={toggleCategories}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              {showCategories ? "Hide Categories" : "Show Categories"}
-              <ChevronDown className={cn(
-                "w-4 h-4 transition-transform duration-200",
-                showCategories && "rotate-180"
-              )} />
-            </button>
-            
-            <Button
-              onClick={() => setSelectedCategory(null)}
-              variant={selectedCategory === null ? "default" : "outline"}
-              className="rounded-full"
-            >
-              View All Products
-            </Button>
-          </div>
-
-          <Collapsible open={showCategories}>
-            <CollapsibleContent className="transition-all duration-300 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-              <div className="flex flex-wrap items-center gap-2 pb-3 justify-center">
-            {categories.length === 0 && categoriesLoading ? (
-              // Show skeleton loaders only if no cached categories available
-              Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="w-24 h-9 bg-muted/50 animate-pulse rounded-full" />
-              ))
-            ) : categories.map(cat => {
-              const categoryProducts = rows.filter(p => p.category === cat && !p.name.toLowerCase().includes('canada'));
-              return (
-                <div 
-                  key={cat}
-                  className="relative group"
-                >
-                  <button
-                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-                    onMouseEnter={() => setSelectedCategory(cat)}
-                    className={cn(
-                      "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                      selectedCategory === cat
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    )}
-                  >
-                    {cat}
-                  </button>
-                  
-                  {/* Hover Dropdown */}
-                  {!loading && selectedCategory === cat && categoryProducts.length > 0 && (
-                    <div 
-                      className="absolute top-full left-0 mt-2 w-64 max-h-96 overflow-y-auto bg-white dark:bg-gray-900 backdrop-blur border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-[60]"
-                    >
-                      {categoryProducts.slice(0, 10).map(product => {
-                         const categorySlug = cat.toLowerCase().replace(/\s+/g, '-');
-                        const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                        
-                        const handleProductClick = (e: React.MouseEvent) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedCategory(null);
-                          navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } });
-                        };
-                        
-                        return (
-                          <button
-                            key={product.id}
-                            onClick={handleProductClick}
-                            onMouseDown={handleProductClick}
-                            className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-b-0 flex items-center gap-3 cursor-pointer"
-                          >
-                            {product.image_url && (
-                              <img src={product.image_url} alt="" className="w-10 h-10 object-cover rounded" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium truncate text-[#0057FF]">{product.name}</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
-                                ${((defaultPrices[product.id] || product.base_cost_cents) / 100).toFixed(2)}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                  </div>
-                )}
-                </div>
-              );
-            })}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-      </nav>
+      {/* Mega Menu Category Navigation */}
+      <ProductMegaMenu
+        categories={categoryData}
+        onCategorySelect={(slug) => setSelectedCategory(slug)}
+        selectedCategory={selectedCategory}
+      />
 
       {/* Scrollable content */}
       <div className="h-full overflow-y-auto scroll-smooth pb-24">
