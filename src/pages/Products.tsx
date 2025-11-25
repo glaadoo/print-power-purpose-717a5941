@@ -9,12 +9,14 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, ArrowLeft, Search, X, SlidersHorizontal, Heart } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ShoppingCart, ArrowLeft, Search, X, SlidersHorizontal, Heart, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
 import { cn } from "@/lib/utils";
+import useToggle from "@/hooks/useToggle";
 
 type ProductRow = {
   id: string;
@@ -49,6 +51,7 @@ export default function Products() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
+  const { open: showCategories, toggle: toggleCategories } = useToggle(true);
 
   useEffect(() => {
     console.log('[Products] Component mounted');
@@ -474,7 +477,23 @@ export default function Products() {
       {/* Category Navigation Menu with Dropdown */}
       <nav className="bg-white border-b border-gray-200 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center gap-2 py-3 justify-center">
+          {/* Toggle Button */}
+          <div className="flex justify-center py-3">
+            <button
+              onClick={toggleCategories}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              {showCategories ? "Hide Categories" : "Show Categories"}
+              <ChevronDown className={cn(
+                "w-4 h-4 transition-transform duration-200",
+                showCategories && "rotate-180"
+              )} />
+            </button>
+          </div>
+
+          <Collapsible open={showCategories}>
+            <CollapsibleContent className="transition-all duration-300 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+              <div className="flex flex-wrap items-center gap-2 pb-3 justify-center">
             {loading ? (
               // Show skeleton loaders while categories are loading
               Array.from({ length: 8 }).map((_, i) => (
@@ -540,7 +559,9 @@ export default function Products() {
                 </div>
               );
             })}
-          </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </nav>
 
