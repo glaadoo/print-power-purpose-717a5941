@@ -9,7 +9,7 @@ import ProductFilterSidebar from "@/components/ProductFilterSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Search, ShoppingCart, ArrowUp } from "lucide-react";
+import { ArrowLeft, Search, ShoppingCart, ArrowUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
 
@@ -245,6 +245,41 @@ export default function ProductSubcategory() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const removeVendorFilter = (vendor: string) => {
+    setFilters(prev => ({
+      ...prev,
+      vendors: prev.vendors.filter(v => v !== vendor)
+    }));
+  };
+
+  const removePriceRangeFilter = () => {
+    setFilters(prev => ({
+      ...prev,
+      priceRange: [0, maxPrice]
+    }));
+  };
+
+  const removeRatingFilter = () => {
+    setFilters(prev => ({
+      ...prev,
+      minRating: 0
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      priceRange: [0, maxPrice],
+      vendors: [],
+      minRating: 0
+    });
+    localStorage.removeItem('product-subcategory-filters');
+  };
+
+  const hasActiveFilters = 
+    (filters.priceRange[0] > 0 || filters.priceRange[1] < maxPrice) ||
+    filters.vendors.length > 0 ||
+    filters.minRating > 0;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <VistaprintNav />
@@ -312,6 +347,68 @@ export default function ProductSubcategory() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Active Filter Tags */}
+        {hasActiveFilters && (
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">Active Filters:</span>
+            
+            {/* Price Range Filter Tag */}
+            {(filters.priceRange[0] > 0 || filters.priceRange[1] < maxPrice) && (
+              <div className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                <span>
+                  ${(filters.priceRange[0] / 100).toFixed(0)} - ${(filters.priceRange[1] / 100).toFixed(0)}
+                </span>
+                <button
+                  onClick={removePriceRangeFilter}
+                  className="ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                  aria-label="Remove price filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
+            {/* Vendor Filter Tags */}
+            {filters.vendors.map(vendor => (
+              <div
+                key={vendor}
+                className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm capitalize"
+              >
+                <span>{vendor}</span>
+                <button
+                  onClick={() => removeVendorFilter(vendor)}
+                  className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
+                  aria-label={`Remove ${vendor} filter`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+
+            {/* Rating Filter Tag */}
+            {filters.minRating > 0 && (
+              <div className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
+                <span>{filters.minRating}+ Stars</span>
+                <button
+                  onClick={removeRatingFilter}
+                  className="ml-1 hover:bg-yellow-200 rounded-full p-0.5 transition-colors"
+                  aria-label="Remove rating filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
+            {/* Clear All Button */}
+            <button
+              onClick={clearAllFilters}
+              className="text-sm text-gray-600 hover:text-gray-900 underline ml-2"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
 
         {/* Products Grid */}
         {loading ? (
