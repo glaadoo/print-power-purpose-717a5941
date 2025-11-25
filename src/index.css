@@ -108,8 +108,8 @@ p, label, span, div {
   color: var(--app-text);
 }
 
-/* Override light text colors that cause invisibility */
-.text-white, .text-gray-50, .text-gray-100, .text-gray-200, .text-gray-300 {
+/* Override light text colors that cause invisibility (but not text-white which footer needs) */
+.text-gray-50, .text-gray-100, .text-gray-200, .text-gray-300 {
   color: var(--app-text) !important;
 }
 
