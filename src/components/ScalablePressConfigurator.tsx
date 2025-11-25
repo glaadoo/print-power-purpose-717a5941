@@ -78,22 +78,56 @@ export default function ScalablePressConfigurator({
     
     if (isComplete && colorKey && items[colorKey]?.[selectedSize]) {
       const priceData = items[colorKey][selectedSize];
-      const priceCents = priceData.price || 0;
+      const defaultPriceCents = priceData.price || 0;
       
       // Generate variant key: "color-size" (e.g., "red-small")
       const variantKey = `${selectedColor.toLowerCase().replace(/\s+/g, '-')}-${selectedSize.toLowerCase()}`;
       
-      console.log('[ScalablePressConfigurator] Price update:', { selectedColor, selectedSize, colorKey, priceCents, variantKey });
-      onPriceChange(priceCents);
-      onConfigChange({
-        color: selectedColor,
-        size: selectedSize,
-      });
+      console.log('[ScalablePressConfigurator] Price update:', { selectedColor, selectedSize, colorKey, defaultPriceCents, variantKey });
       
-      // Notify parent of variant key for custom pricing
-      if (onVariantKeyChange) {
-        onVariantKeyChange(variantKey);
-      }
+      // Check for custom price in database first
+      const checkCustomPrice = async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: customPrice, error } = await supabase
+            .from('product_configuration_prices')
+            .select('custom_price_cents')
+            .eq('product_id', productId)
+            .eq('variant_key', variantKey)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('[ScalablePressConfigurator] Error checking custom price:', error);
+          } else if (customPrice && customPrice.custom_price_cents > 0) {
+            console.log('[ScalablePressConfigurator] Using custom price:', customPrice.custom_price_cents);
+            onPriceChange(customPrice.custom_price_cents);
+            onConfigChange({
+              color: selectedColor,
+              size: selectedSize,
+            });
+            
+            if (onVariantKeyChange) {
+              onVariantKeyChange(variantKey);
+            }
+            return;
+          }
+        } catch (err) {
+          console.error('[ScalablePressConfigurator] Exception checking custom price:', err);
+        }
+        
+        // Use default API price if no custom price found
+        onPriceChange(defaultPriceCents);
+        onConfigChange({
+          color: selectedColor,
+          size: selectedSize,
+        });
+        
+        if (onVariantKeyChange) {
+          onVariantKeyChange(variantKey);
+        }
+      };
+      
+      checkCustomPrice();
     } else {
       // Clear variant key when selection is incomplete
       if (onVariantKeyChange) {
@@ -103,7 +137,7 @@ export default function ScalablePressConfigurator({
     
     // Notify parent about selection completion status
     onSelectionComplete?.(isComplete);
-  }, [selectedColor, selectedSize, items, onPriceChange, onConfigChange, onSelectionComplete, onVariantKeyChange]);
+  }, [selectedColor, selectedSize, items, productId, onPriceChange, onConfigChange, onSelectionComplete, onVariantKeyChange]);
 
   const handleColorChange = (colorName: string) => {
     setSelectedColor(colorName);

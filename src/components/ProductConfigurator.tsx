@@ -267,7 +267,30 @@ export function ProductConfigurator({
         onVariantKeyChange(variantKey);
       }
       
-      // Check global cache first
+      // PRIORITY 1: Check for custom price in database
+      console.log('[ProductConfigurator] Checking for custom price:', { productId, variantKey });
+      try {
+        const { data: customPrice, error: customPriceError } = await supabase
+          .from('product_configuration_prices')
+          .select('custom_price_cents')
+          .eq('product_id', productId)
+          .eq('variant_key', variantKey)
+          .maybeSingle();
+        
+        if (customPriceError) {
+          console.error('[ProductConfigurator] Error checking custom price:', customPriceError);
+        } else if (customPrice && customPrice.custom_price_cents > 0) {
+          console.log('[ProductConfigurator] Using custom price from database:', customPrice.custom_price_cents);
+          setPriceError(null);
+          setFetchingPrice(false);
+          onPriceChange(customPrice.custom_price_cents);
+          return;
+        }
+      } catch (err) {
+        console.error('[ProductConfigurator] Exception checking custom price:', err);
+      }
+      
+      // PRIORITY 2: Check global cache
       const cache = getPriceCache();
       if (cache[variantKey]) {
         console.log('[ProductConfigurator] Using cached price for:', variantKey);
@@ -277,6 +300,7 @@ export function ProductConfigurator({
         return;
       }
       
+      // PRIORITY 3: Fetch from API
       setFetchingPrice(true);
       setPriceError(null);
       console.log('[ProductConfigurator] Calling sinalite-price edge function...');
