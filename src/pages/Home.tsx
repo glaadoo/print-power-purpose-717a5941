@@ -351,9 +351,9 @@ function FooterStrip() {
 
 function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
   return (
-    <div>
+    <div className="text-white">
       <h4 className="font-semibold text-white mb-2 pb-1 border-b-2 border-blue-600">{title}</h4>
-      <ul className="mt-3 space-y-2 text-sm">
+      <ul className="mt-3 space-y-2 text-sm text-white">
         {links.map(([t, href]) => (
           <li key={href}>
             <Link to={href} className="text-white hover:text-blue-300 transition-colors">
