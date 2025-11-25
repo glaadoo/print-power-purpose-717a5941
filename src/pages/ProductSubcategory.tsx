@@ -168,6 +168,11 @@ export default function ProductSubcategory() {
     setCurrentPage(1);
   }, [searchTerm, sortBy, subcategory]);
 
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <VistaprintNav />
