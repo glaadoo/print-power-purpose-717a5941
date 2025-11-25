@@ -119,9 +119,36 @@ input, textarea, select {
 }
 
 /* Admin page always uses dark theme regardless of global theme */
-.admin-dark-theme,
-.admin-dark-theme * {
+.admin-dark-theme {
   background-color: transparent !important;
+}
+
+.admin-dark-theme * {
+  color: white !important;
+}
+
+/* Force dark backgrounds for admin cards and containers */
+.admin-dark-theme .glass,
+.admin-dark-theme [class*="bg-white"],
+.admin-dark-theme [class*="bg-card"],
+.admin-dark-theme [class*="bg-background"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Admin dialogs and dropdowns */
+.admin-dark-theme [role="dialog"],
+.admin-dark-theme [role="menu"],
+.admin-dark-theme [data-radix-popper-content-wrapper] {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Admin input fields */
+.admin-dark-theme input,
+.admin-dark-theme textarea,
+.admin-dark-theme select {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
   color: white !important;
 }
 
@@ -134,7 +161,6 @@ input, textarea, select {
 .admin-dark-theme p,
 .admin-dark-theme span,
 .admin-dark-theme label,
-.admin-dark-theme button,
 .admin-dark-theme a {
   color: white !important;
 }
