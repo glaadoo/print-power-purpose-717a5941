@@ -75,11 +75,13 @@ export default function ProductSubcategory() {
         }
 
         // Fetch products matching the subcategory
+        // Convert slug (pull-up-banners) to match category format (Pull Up Banners)
+        const categorySearch = subcategory.replace(/-/g, ' ');
         const { data, error: productsError } = await supabase
           .from("products")
           .select("*")
           .eq("is_active", true)
-          .ilike("category", `%${subcategory}%`);
+          .ilike("category", `%${categorySearch}%`);
         
         if (productsError) throw productsError;
         
