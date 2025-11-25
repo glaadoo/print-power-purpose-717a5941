@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, Heart, User, Search, Menu, ChevronDown } from "lucide-react";
+import { ShoppingCart, Heart, User, Search, Menu, ChevronDown, Package } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,9 @@ export default function VistaprintNav() {
   const { count: favoritesCount } = useFavorites();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [productsMenuOpen, setProductsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const productsMenuRef = useRef<HTMLDivElement>(null);
   
   const isHomePage = location.pathname === "/";
 
@@ -33,6 +35,9 @@ export default function VistaprintNav() {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
+      }
+      if (productsMenuRef.current && !productsMenuRef.current.contains(event.target as Node)) {
+        setProductsMenuOpen(false);
       }
     };
 
@@ -68,6 +73,87 @@ export default function VistaprintNav() {
               >
                 Home
               </Link>
+              
+              {/* Products Dropdown */}
+              <div className="relative" ref={productsMenuRef}>
+                <button 
+                  onClick={() => setProductsMenuOpen(!productsMenuOpen)}
+                  className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                    isActive("/products") || location.pathname.startsWith("/product/")
+                      ? "text-blue-600" 
+                      : "text-gray-700 hover:text-blue-600"
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  Products
+                  <ChevronDown className={`w-4 h-4 transition-transform ${productsMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {/* Products Dropdown Menu */}
+                {productsMenuOpen && (
+                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        navigate("/products");
+                        setProductsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                    >
+                      All Products
+                    </button>
+                    <div className="border-t border-gray-200 my-2"></div>
+                    <div className="px-4 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                      Categories
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigate("/products");
+                        setProductsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Business Cards
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/products");
+                        setProductsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Flyers & Brochures
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/products");
+                        setProductsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Signs & Banners
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/products");
+                        setProductsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Apparel
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/products");
+                        setProductsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Promotional Items
+                    </button>
+                  </div>
+                )}
+              </div>
+              
               <Link 
                 to="/select/nonprofit" 
                 className={`text-sm font-medium transition-colors ${
