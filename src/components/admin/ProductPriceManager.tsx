@@ -295,6 +295,7 @@ export default function ProductPriceManager() {
                 Select values for all configuration options below to enable custom pricing
               </p>
               <ProductConfiguratorLoader
+                key={selectedProduct.id} // Force remount when product changes
                 productId={selectedProduct.id}
                 onPriceChange={(price) => setCurrentPrice(price)}
                 onConfigChange={(config) => setCurrentConfig(config)}

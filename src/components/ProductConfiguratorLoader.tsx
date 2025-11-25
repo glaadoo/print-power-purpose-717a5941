@@ -339,14 +339,21 @@ export default function ProductConfiguratorLoader({
     }
   };
 
-  // Mount component and fetch immediately
+  // Reset all state when productId changes
   useEffect(() => {
-    console.log('[ProductConfiguratorLoader] Component mounted for product:', productId);
+    console.log('[ProductConfiguratorLoader] Product changed, resetting state:', productId);
+    setPricingOptions(null);
+    setProductData(null);
+    setError(null);
+    setLoading(false);
+    setFetchingRef(false);
     setIsMounted(true);
-    // Fetch pricing options immediately on mount
-    if (!pricingOptions && !fetchingRef) {
-      fetchPricingOptions();
-    }
+    
+    // Clear sessionStorage cache for previous product
+    sessionStorage.removeItem(`product-options-${productId}`);
+    
+    // Fetch pricing options for new product
+    fetchPricingOptions();
   }, [productId]);
 
 
