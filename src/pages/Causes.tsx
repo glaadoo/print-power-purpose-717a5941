@@ -3,12 +3,11 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import DonationBarometer from "../components/DonationBarometer";
 import { useCause } from "../context/CauseContext";
 import { supabase } from "@/integrations/supabase/client";
-import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { ArrowLeft, Search } from "lucide-react";
-import { Link } from "react-router-dom";
-import GlassCard from "@/components/GlassCard";
+import VistaprintNav from "@/components/VistaprintNav";
 
 const LS_CAUSE = "ppp:cause";
 
@@ -46,12 +45,22 @@ export default function Causes() {
   const [searchParams] = useSearchParams();
   const flow = searchParams.get("flow");
 
-  const [causes, setCauses] = useState<Cause[]>([]);
+  const [allCauses, setAllCauses] = useState<Cause[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [selectedCause, setSelectedCause] = useState<Cause | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
+
+  // Display causes: first 10 if no search, filtered results if searching
+  const displayedCauses = searchQuery.trim() 
+    ? allCauses.filter((c) => {
+        const query = searchQuery.toLowerCase();
+        const name = c.name?.toLowerCase() || "";
+        const description = pickBlurb(c)?.toLowerCase() || "";
+        return name.includes(query) || description.includes(query);
+      })
+    : allCauses.slice(0, 10);
 
   useEffect(() => {
     let alive = true;
@@ -64,7 +73,7 @@ export default function Causes() {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-        if (alive) setCauses(data || []);
+        if (alive) setAllCauses(data || []);
       } catch (e: any) {
         if (alive) setErr(e?.message || "Failed to load causes");
       } finally {
@@ -85,7 +94,7 @@ export default function Causes() {
         (payload) => {
           console.log('Cause updated:', payload);
           // Update the specific cause in the list
-          setCauses(prev => 
+          setAllCauses(prev => 
             prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c)
           );
         }
@@ -98,55 +107,7 @@ export default function Causes() {
     };
   }, []);
 
-  // Debounced server-side search for causes
-  useEffect(() => {
-    let active = true;
-    const q = searchQuery.trim();
-
-    // Helper to load all causes when query is empty
-    const loadAll = async () => {
-      setSearching(true);
-      const { data, error } = await supabase
-        .from("causes")
-        .select("id,name,goal_cents,raised_cents,summary,created_at")
-        .order("created_at", { ascending: false });
-      if (!active) return;
-      if (!error) setCauses(data || []);
-      setSearching(false);
-    };
-
-    // If no query, load all (or rely on initial load if already present)
-    if (!q) {
-      // If we already have items, avoid extra fetch
-      if (causes.length === 0) loadAll();
-      return () => {
-        active = false;
-      };
-    }
-
-    const handle = setTimeout(async () => {
-      setSearching(true);
-      const wildcard = `%${q}%`;
-      const { data, error } = await supabase
-        .from("causes")
-        .select("id,name,goal_cents,raised_cents,summary,created_at")
-        .or(`name.ilike.${wildcard},summary.ilike.${wildcard}`)
-        .order("created_at", { ascending: false });
-
-      if (!active) return;
-      if (error) {
-        console.error("Cause search error:", error.message);
-      } else {
-        setCauses(data || []);
-      }
-      setSearching(false);
-    }, 250);
-
-    return () => {
-      active = false;
-      clearTimeout(handle);
-    };
-  }, [searchQuery]);
+  // Client-side search filtering (all causes already loaded)
 
   const handleCauseClick = (c: Cause) => {
     const description = pickBlurb(c) || "";
@@ -192,87 +153,98 @@ export default function Causes() {
 
   const body =
     loading ? (
-      <div className="text-center text-white/80 py-8">
+      <div className="text-center text-muted-foreground py-8">
         <p>Loading causes…</p>
       </div>
     ) : err ? (
-      <div className="text-center text-red-400 py-8">
+      <div className="text-center text-destructive py-8">
         <p>{err}</p>
       </div>
     ) : (
       <>
-        {/* Causes Grid */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Or Select a Featured Cause</h2>
-          {/* Search bar for causes */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
+        {/* Search bar */}
+        <div className="mb-8">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search causes by name or description..."
+              placeholder="Search for a Cause..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:bg-white/15"
+              className="pl-12 h-12 text-base"
             />
           </div>
+          {!searchQuery.trim() && (
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              Showing first 10 causes. Use search to find more.
+            </p>
+          )}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {causes.filter((c) => {
-            if (!searchQuery.trim()) return true;
-            const query = searchQuery.toLowerCase();
-            const name = c.name?.toLowerCase() || "";
-            const description = pickBlurb(c)?.toLowerCase() || "";
-            return name.includes(query) || description.includes(query);
-          }).map((c) => {
+
+        {/* Causes Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {displayedCauses.map((c) => {
             const description = pickBlurb(c) || "";
             const isSelected = selectedCause?.id === c.id;
 
             return (
-              <button
+              <Card
                 key={c.id}
                 onClick={() => handleCauseClick(c)}
                 className={`
-                  aspect-square rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center transition-all
+                  cursor-pointer p-6 flex flex-col transition-all hover:shadow-lg
                   ${
                     isSelected
-                      ? "border-white/70 bg-white/25 scale-105"
-                      : "border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/15 hover:scale-105"
+                      ? "border-primary ring-2 ring-primary"
+                      : "border-border hover:border-primary/50"
                   }
                 `}
               >
-                <h3 className="text-base md:text-lg font-bold mb-2">{c.name}</h3>
+                <h3 className="text-lg font-semibold text-primary mb-2">{c.name}</h3>
                 
                 {description && (
-                  <p className="text-xs md:text-sm opacity-80 mb-3 line-clamp-3">{description}</p>
+                  <p className="text-sm text-foreground mb-4 line-clamp-3 flex-grow">{description}</p>
                 )}
 
                 {/* Barometer */}
-                <div className="w-full max-w-[120px]">
+                <div className="mt-auto">
                   <DonationBarometer
                     raised_cents={c.raised_cents || 0}
                     goal_cents={c.goal_cents || 1}
                   />
                 </div>
-              </button>
+
+                {/* Select Button */}
+                <Button
+                  variant={isSelected ? "default" : "outline"}
+                  className="w-full mt-4 rounded-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCauseClick(c);
+                  }}
+                >
+                  {isSelected ? "Selected" : "Select Cause"}
+                </Button>
+              </Card>
             );
           })}
-          {causes.length === 0 && searchQuery.trim() && (
+          {displayedCauses.length === 0 && searchQuery.trim() && (
             <div className="col-span-full text-center py-12">
-              <p className="text-lg text-white/80">No causes found for "{searchQuery}"</p>
-              <p className="text-sm text-white/60 mt-2">Try a different search term</p>
+              <p className="text-lg text-foreground">No causes found for "{searchQuery}"</p>
+              <p className="text-sm text-muted-foreground mt-2">Try a different search term</p>
             </div>
           )}
-
         </div>
 
         {selectedCause && (
-          <div className="flex justify-center mt-8">
-            <button
+          <div className="flex justify-center mt-12">
+            <Button
               onClick={handleContinue}
-              className="px-8 py-4 rounded-full bg-white/20 text-white font-semibold hover:bg-white/30 border border-white/50 shadow-lg backdrop-blur-sm text-base"
+              size="lg"
+              className="px-8 rounded-full"
             >
               Continue with {selectedCause.name}
-            </button>
+            </Button>
           </div>
         )}
       </>
@@ -283,42 +255,27 @@ export default function Causes() {
   }, []);
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
-      {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10 relative">
-        <Button
-          onClick={() => nav(-1)}
-          variant="outline"
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-          size="sm"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        
-        <div className="absolute left-1/2 -translate-x-1/2 tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
-          SELECT&nbsp;CAUSE
+    <div className="min-h-screen bg-background">
+      <VistaprintNav />
+
+      <main className="container mx-auto px-4 py-12 max-w-7xl">
+        {/* Page Header */}
+        <div className="mb-12 text-center">
+          <Button
+            onClick={() => nav(-1)}
+            variant="ghost"
+            className="mb-4"
+            size="sm"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-4xl font-bold text-primary mb-2">Select a Cause</h1>
+          <p className="text-muted-foreground">Choose a cause to support with your purchase</p>
         </div>
-        
-        <div className="w-20" /> {/* Spacer for centering */}
-      </header>
 
-      {/* Fullscreen content */}
-      <div className="h-full w-full pt-16 overflow-y-auto">
-        <VideoBackground
-          srcMp4="/media/hero.mp4"
-          srcWebm="/media/hero.webm"
-          poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/50" />}
-        />
-
-        <div className="relative w-full min-h-full pt-4 pb-32 px-4">
-          <div className="w-full max-w-6xl mx-auto">
-            {body}
-          </div>
-        </div>
-      </div>
-
+        {body}
+      </main>
     </div>
   );
 }
