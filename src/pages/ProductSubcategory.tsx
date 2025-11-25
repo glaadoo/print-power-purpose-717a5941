@@ -76,12 +76,17 @@ export default function ProductSubcategory() {
 
         // Fetch products matching the subcategory
         // Convert slug (pull-up-banners) to match category format (Pull Up Banners)
-        const categorySearch = subcategory.replace(/-/g, ' ');
+        // Handle various category formats in database
+        const categorySearch = subcategory
+          .replace(/-/g, ' ')  // Replace hyphens with spaces
+          .replace(/\s+/g, ' ') // Normalize multiple spaces
+          .trim();
+        
         const { data, error: productsError } = await supabase
           .from("products")
           .select("*")
           .eq("is_active", true)
-          .ilike("category", `%${categorySearch}%`);
+          .or(`category.ilike.%${categorySearch}%,category.ilike.%${categorySearch}-%`);
         
         if (productsError) throw productsError;
         
@@ -228,7 +233,12 @@ export default function ProductSubcategory() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard 
+                key={product.id} 
+                product={product}
+                categorySlug={category}
+                subcategorySlug={subcategory}
+              />
             ))}
           </div>
         )}

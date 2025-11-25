@@ -20,9 +20,11 @@ type ProductCardProps = {
     base_cost_cents: number;
     category?: string | null;
   };
+  categorySlug?: string;
+  subcategorySlug?: string;
 };
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, categorySlug, subcategorySlug }: ProductCardProps) {
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -113,15 +115,20 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   const handleCardClick = () => {
-    // Extract category and subcategory from product.category
-    // Category format might be "parent-category/subcategory" or just "category"
-    const categoryParts = (product.category || 'uncategorized').toLowerCase().split('/');
-    const categorySlug = categoryParts[0].replace(/\s+/g, '-');
-    const subcategorySlug = categoryParts.length > 1 
-      ? categoryParts[1].replace(/\s+/g, '-')
-      : 'all';
     const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    navigate(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: { productId: product.id } });
+    
+    // Use provided categorySlug and subcategorySlug if available (from subcategory page)
+    if (categorySlug && subcategorySlug) {
+      navigate(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: { productId: product.id } });
+    } else {
+      // Fallback: extract from product.category (legacy behavior)
+      const categoryParts = (product.category || 'uncategorized').toLowerCase().split('/');
+      const fallbackCategorySlug = categoryParts[0].replace(/\s+/g, '-');
+      const fallbackSubcategorySlug = categoryParts.length > 1 
+        ? categoryParts[1].replace(/\s+/g, '-')
+        : 'all';
+      navigate(`/products/${fallbackCategorySlug}/${fallbackSubcategorySlug}/${productSlug}`, { state: { productId: product.id } });
+    }
   };
 
   return (
