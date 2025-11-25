@@ -316,7 +316,7 @@ function Field({
 function FooterStrip() {
   return (
     <div className="w-full px-6 pb-8">
-      <div className="mx-auto max-w-6xl text-white/90 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
         <FooterCol title="About" links={[
           ["Our mission", "/about"], ["Team", "/team"], ["Press", "/press"],
         ]}/>
@@ -342,7 +342,7 @@ function FooterStrip() {
         <SocialLink href="https://www.youtube.com/@printpowerpurpose" label="YouTube" icon="youtube" />
       </div>
       
-      <p className="mt-6 text-center text-xs text-white/60">
+      <p className="mt-6 text-center text-xs text-white">
         © {new Date().getFullYear()} Print Power Purpose. Some figures shown are examples; replace with live data when available.
       </p>
     </div>
@@ -356,7 +356,7 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
       <ul className="mt-3 space-y-2 text-sm">
         {links.map(([t, href]) => (
           <li key={href}>
-            <Link to={href} className="text-white hover:text-blue-400 hover:underline transition-colors">
+            <Link to={href} className="text-white hover:text-blue-300 transition-colors">
               {t}
             </Link>
           </li>
