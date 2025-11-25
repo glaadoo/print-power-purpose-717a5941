@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { Palette } from 'lucide-react';
 
 const COLOR_OPTIONS = [
-  { id: 'cream', value: '#FDF4E3', name: 'Light Cream', textColor: '#222222' },
-  { id: 'dark', value: '#1A1A1A', name: 'Dark', textColor: '#FDF4E3' },
-  { id: 'brown', value: '#5C3B1E', name: 'Brown', textColor: '#FDF4E3' },
+  { id: 'light', value: '#F5F7FF', name: 'Light Mode', textColor: '#111827', accentColor: '#2563EB' },
+  { id: 'dark', value: '#0B1120', name: 'Dark Mode', textColor: '#FFFFFF', accentColor: '#2563EB' },
 ];
 
 export default function ColorSelector() {
@@ -22,11 +21,13 @@ export default function ColorSelector() {
 
   const applyColor = (color: string) => {
     const option = COLOR_OPTIONS.find(opt => opt.value === color);
-    const textColor = option?.textColor || '#222222';
+    const textColor = option?.textColor || '#111827';
+    const accentColor = option?.accentColor || '#2563EB';
     
     // Apply to CSS variables for global theming
     document.documentElement.style.setProperty('--app-bg', color);
     document.documentElement.style.setProperty('--app-text', textColor);
+    document.documentElement.style.setProperty('--app-accent', accentColor);
     
     // Apply to root and body with smooth transition
     document.documentElement.style.setProperty('background-color', color);

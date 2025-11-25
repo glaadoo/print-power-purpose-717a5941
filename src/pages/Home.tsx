@@ -168,7 +168,7 @@ export default function Home() {
 
             {/* Hero Headline */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              E-commerce printing, centered around <span className="text-blue-600">your cause</span>
+              E-commerce printing, centered around <span className="section-title">your cause</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
               One platform for professional print orders and optional donations—connecting
@@ -215,7 +215,7 @@ export default function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">
+              <div className="text-4xl md:text-5xl font-bold section-title mb-2">
                 ${(stats.totalRaised / 100).toLocaleString('en-US', { 
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0 
@@ -224,15 +224,15 @@ export default function Home() {
               <div className="text-sm text-gray-600 uppercase tracking-wide">Raised for nonprofits</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">{stats.organizationCount}+</div>
+              <div className="text-4xl md:text-5xl font-bold section-title mb-2">{stats.organizationCount}+</div>
               <div className="text-sm text-gray-600 uppercase tracking-wide">Partner organizations</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">99.95%</div>
+              <div className="text-4xl md:text-5xl font-bold section-title mb-2">99.95%</div>
               <div className="text-sm text-gray-600 uppercase tracking-wide">Platform uptime</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">{stats.orderCount.toLocaleString()}+</div>
+              <div className="text-4xl md:text-5xl font-bold section-title mb-2">{stats.orderCount.toLocaleString()}+</div>
               <div className="text-sm text-gray-600 uppercase tracking-wide">Orders fulfilled</div>
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function Home() {
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="text-center">
-      <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">{value}</div>
+      <div className="text-4xl md:text-5xl font-bold section-title mb-2">{value}</div>
       <div className="text-sm text-gray-600 uppercase tracking-wide">{label}</div>
     </div>
   );

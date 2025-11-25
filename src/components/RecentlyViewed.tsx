@@ -184,8 +184,8 @@ export default function RecentlyViewed() {
     <div className="w-full py-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-[#0057FF]" />
-          <h2 className="text-xl font-bold text-[#0057FF]">Recently Viewed</h2>
+          <Clock className="w-5 h-5 section-title" />
+          <h2 className="text-xl font-bold section-title">Recently Viewed</h2>
           <span className="text-sm text-gray-600">({products.length})</span>
         </div>
         
