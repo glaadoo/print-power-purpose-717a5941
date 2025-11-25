@@ -501,76 +501,6 @@ export default function Products() {
           </div>
         </div>
       </nav>
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-wrap items-center gap-2 py-3 justify-center">
-            {loading ? (
-              // Show skeleton loaders while categories are loading
-              Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="w-24 h-9 bg-muted/50 animate-pulse rounded-full" />
-              ))
-            ) : categories.map(cat => {
-              const categoryProducts = rows.filter(p => p.category === cat && !p.name.toLowerCase().includes('canada'));
-              return (
-                <div 
-                  key={cat}
-                  className="relative group"
-                >
-                  <button
-                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-                    onMouseEnter={() => setSelectedCategory(cat)}
-                    className={cn(
-                      "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                      selectedCategory === cat
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    )}
-                  >
-                    {cat}
-                  </button>
-                  
-                  {/* Hover Dropdown */}
-                  {!loading && selectedCategory === cat && categoryProducts.length > 0 && (
-                    <div 
-                      className="absolute top-full left-0 mt-2 w-64 max-h-96 overflow-y-auto bg-background/95 backdrop-blur border border-border rounded-xl shadow-2xl z-[60]"
-                    >
-                      {categoryProducts.slice(0, 10).map(product => {
-                         const categorySlug = cat.toLowerCase().replace(/\s+/g, '-');
-                        const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                        
-                        const handleProductClick = (e: React.MouseEvent) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedCategory(null);
-                          navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } });
-                        };
-                        
-                        return (
-                          <button
-                            key={product.id}
-                            onClick={handleProductClick}
-                            onMouseDown={handleProductClick}
-                            className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border/50 last:border-b-0 flex items-center gap-3 cursor-pointer"
-                          >
-                            {product.image_url && (
-                              <img src={product.image_url} alt="" className="w-10 h-10 object-cover rounded" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium truncate text-foreground">{product.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                ${((defaultPrices[product.id] || product.base_cost_cents) / 100).toFixed(2)}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                  </div>
-                )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </nav>
 
       {/* Top bar with search and filters */}
       <header className="fixed top-28 inset-x-0 z-40 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
@@ -628,15 +558,8 @@ export default function Products() {
 
       {/* Scrollable content */}
       <div className="h-full overflow-y-auto scroll-smooth pt-44 pb-24">
-        <section className="relative min-h-screen py-12">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            overlay={<div className="absolute inset-0 bg-black/50" />}
-          />
-
-          <div className="relative w-full max-w-7xl mx-auto px-6 pt-6">
+        <section className="min-h-screen py-16 bg-gray-50">
+          <div className="w-full max-w-7xl mx-auto px-6">
             {/* Recently Viewed Section */}
             <RecentlyViewed />
 
