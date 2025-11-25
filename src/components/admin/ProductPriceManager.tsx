@@ -280,6 +280,9 @@ export default function ProductPriceManager() {
           {selectedProduct && (
             <div className="space-y-4 p-4 border rounded-md bg-muted/50">
               <h3 className="font-semibold">Configure Product</h3>
+              <p className="text-sm text-muted-foreground">
+                Select values for all configuration options below to enable custom pricing
+              </p>
               <ProductConfiguratorLoader
                 productId={selectedProduct.id}
                 onPriceChange={(price) => setCurrentPrice(price)}
@@ -296,6 +299,14 @@ export default function ProductPriceManager() {
           )}
 
           {/* Custom Price Input */}
+          {selectedProduct && !currentVariantKey && (
+            <div className="p-4 border rounded-md bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                ℹ️ Complete all configuration selections above to set a custom price for this product variant
+              </p>
+            </div>
+          )}
+          
           {selectedProduct && currentVariantKey && (
             <div className="space-y-4 p-4 border rounded-md bg-primary/5">
               <h3 className="font-semibold">Set Custom Price</h3>
@@ -319,6 +330,9 @@ export default function ProductPriceManager() {
                     Save
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Configuration: {Object.entries(currentConfig).map(([k, v]) => `${k}: ${v}`).join(", ")}
+                </p>
               </div>
             </div>
           )}
