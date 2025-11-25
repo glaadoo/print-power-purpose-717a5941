@@ -14,6 +14,7 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
   const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAdminAccess = async () => {
@@ -34,7 +35,8 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
       });
 
       if (!passcodeToVerify) {
-        console.log("[AdminProtectedRoute] No passcode found - redirecting to home");
+        console.log("[AdminProtectedRoute] No passcode found");
+        setErrorMessage("No admin passcode provided. Please use /admin?key=YOUR_PASSCODE");
         setIsChecking(false);
         return;
       }
@@ -65,15 +67,22 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
           console.log("[AdminProtectedRoute] Access granted");
           sessionStorage.setItem("admin_passcode", passcodeToVerify);
           setIsAuthorized(true);
+          setErrorMessage(null);
         } else {
           console.log("[AdminProtectedRoute] Access denied:", result);
           sessionStorage.removeItem("admin_passcode");
+          setErrorMessage(result.error?.message || "Invalid admin passcode");
         }
       } catch (err: any) {
         console.error("[AdminProtectedRoute] Verification error:", err);
         
         if (err.message === 'Timeout') {
           console.error("[AdminProtectedRoute] Request timed out - edge function not responding");
+          setErrorMessage("Admin verification timed out. The backend may be experiencing issues. Please try again in a moment.");
+        } else if (err.message === 'Failed to fetch') {
+          setErrorMessage("Cannot connect to admin verification service. The backend appears to be offline. Please check your connection or try again later.");
+        } else {
+          setErrorMessage(`Verification failed: ${err.message}`);
         }
         
         sessionStorage.removeItem("admin_passcode");
@@ -97,9 +106,27 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
     );
   }
 
-  // Redirect if not authorized
+  // Show error message if not authorized
   if (!isAuthorized) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="text-center max-w-md px-6">
+          <div className="mb-6">
+            <svg className="w-16 h-16 mx-auto text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold mb-4">Admin Access Denied</h1>
+          <p className="text-white/70 mb-6">{errorMessage || "You don't have permission to access this page."}</p>
+          <button
+            onClick={() => window.location.href = "/"}
+            className="px-6 py-3 bg-white text-black rounded-full hover:bg-white/90 transition"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Render admin page if authorized
