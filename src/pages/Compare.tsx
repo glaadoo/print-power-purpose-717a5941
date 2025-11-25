@@ -7,9 +7,12 @@ import { toast } from "sonner";
 import VideoBackground from "@/components/VideoBackground";
 
 export default function Compare() {
-  const { products, remove, clear } = useComparison();
+  const { products: allProducts, remove, clear } = useComparison();
   const { add: addToCart } = useCart();
   const navigate = useNavigate();
+
+  // Filter out Canada products
+  const products = allProducts.filter(product => !product.name.toLowerCase().includes('canada'));
 
   const handleAddToCart = (product: any) => {
     addToCart(

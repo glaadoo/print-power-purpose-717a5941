@@ -163,7 +163,8 @@ export default function ProductSubcategory() {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let filtered = [...products];
+    // Exclude Canada products first
+    let filtered = products.filter(product => !product.name.toLowerCase().includes('canada'));
     
     // Search filter
     if (searchTerm.trim()) {
