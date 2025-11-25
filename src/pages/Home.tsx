@@ -315,8 +315,8 @@ function Field({
 
 function FooterStrip() {
   return (
-    <div className="w-full px-6 pb-8">
-      <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+    <div className="w-full px-6 pb-8 text-white">
+      <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 text-white">
         <FooterCol title="About" links={[
           ["Our mission", "/about"], ["Team", "/team"], ["Press", "/press"],
         ]}/>
@@ -335,14 +335,14 @@ function FooterStrip() {
       </div>
       
       {/* Social Media Links */}
-      <div className="mt-8 flex justify-center gap-6">
+      <div className="mt-8 flex justify-center gap-6 text-white">
         <SocialLink href="https://www.tiktok.com/@printpowerpurpose" label="TikTok" icon="tiktok" />
         <SocialLink href="https://www.instagram.com/printpowerpurpose" label="Instagram" icon="instagram" />
         <SocialLink href="https://www.linkedin.com/company/printpowerpurpose" label="LinkedIn" icon="linkedin" />
         <SocialLink href="https://www.youtube.com/@printpowerpurpose" label="YouTube" icon="youtube" />
       </div>
       
-      <p className="mt-6 text-center text-xs text-white">
+      <p className="mt-6 text-center text-xs text-white font-normal">
         © {new Date().getFullYear()} Print Power Purpose. Some figures shown are examples; replace with live data when available.
       </p>
     </div>
