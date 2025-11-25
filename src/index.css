@@ -110,6 +110,27 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--app-text);
 }
 
+/* Admin page always uses dark theme regardless of global theme */
+.admin-dark-theme,
+.admin-dark-theme * {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+.admin-dark-theme h1,
+.admin-dark-theme h2,
+.admin-dark-theme h3,
+.admin-dark-theme h4,
+.admin-dark-theme h5,
+.admin-dark-theme h6,
+.admin-dark-theme p,
+.admin-dark-theme span,
+.admin-dark-theme label,
+.admin-dark-theme button,
+.admin-dark-theme a {
+  color: white !important;
+}
+
 /* Product names, titles, and important links use accent color (blue) */
 .product-name,
 .text-blue-600,
