@@ -110,9 +110,20 @@ serve(async (req) => {
 
       // Check passcode
       if (passcode === adminPasscode) {
+        // Create session token for subsequent API calls
+        const token = crypto.randomUUID();
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        await supabase
+          .from('admin_sessions')
+          .insert({
+            token,
+            expires_at: expiresAt.toISOString(),
+          });
+
         await logAccess(supabase, path || '/admin', clientIp, userAgent, true, 'valid_passcode');
         return new Response(
-          JSON.stringify({ valid: true, mode: 'passcode' }),
+          JSON.stringify({ valid: true, mode: 'passcode', sessionToken: token }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -144,8 +155,8 @@ serve(async (req) => {
     }
 
     // Get user from auth header
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const jwtToken = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwtToken);
 
     if (userError || !user) {
       await logAccess(supabase, path || '/admin', clientIp, userAgent, false, 'invalid_auth', passcode);
@@ -172,9 +183,20 @@ serve(async (req) => {
     }
 
     // Success - both passcode and role verified
+    // Create session token for subsequent API calls
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await supabase
+      .from('admin_sessions')
+      .insert({
+        token,
+        expires_at: expiresAt.toISOString(),
+      });
+
     await logAccess(supabase, path || '/admin', clientIp, userAgent, true, 'valid_passcode_and_role', undefined, user.id, user.email);
     return new Response(
-      JSON.stringify({ valid: true, mode: 'role', user: { id: user.id, email: user.email } }),
+      JSON.stringify({ valid: true, mode: 'role', sessionToken: token, user: { id: user.id, email: user.email } }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
