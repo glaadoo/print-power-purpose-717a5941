@@ -45,9 +45,9 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
         // Verify passcode with timeout
         console.log("[AdminProtectedRoute] Calling verify-admin-passcode edge function");
         
-        // Create timeout promise
+        // Create timeout promise (30 seconds to handle DB connectivity issues)
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 10000)
+          setTimeout(() => reject(new Error('Timeout')), 30000)
         );
         
         // Race between function call and timeout
@@ -82,12 +82,12 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
         console.error("[AdminProtectedRoute] Verification error:", err);
         
         if (err.message === 'Timeout') {
-          console.error("[AdminProtectedRoute] Request timed out - edge function not responding");
-          setErrorMessage("Admin verification timed out. The backend may be experiencing issues. Please try again in a moment.");
+          console.error("[AdminProtectedRoute] Request timed out after 30 seconds");
+          setErrorMessage("Admin verification is taking longer than expected. The database may be experiencing connectivity issues. Please wait a moment and refresh the page.");
         } else if (err.message === 'Failed to fetch') {
-          setErrorMessage("Cannot connect to admin verification service. The backend appears to be offline. Please check your connection or try again later.");
+          setErrorMessage("Cannot connect to admin verification service. Please check your internet connection and try again.");
         } else {
-          setErrorMessage(`Verification failed: ${err.message}`);
+          setErrorMessage(`Verification failed: ${err.message}. Please try refreshing the page.`);
         }
         
         sessionStorage.removeItem("admin_passcode");
