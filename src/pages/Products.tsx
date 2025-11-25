@@ -471,93 +471,81 @@ export default function Products() {
     <div className="min-h-screen bg-background">
       <VistaprintNav />
       
-      {/* Category Navigation Menu */}
+      {/* Category Navigation Menu with Dropdown */}
       <nav className="bg-white border-b border-gray-200 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 py-4 overflow-x-auto">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !selectedCategory 
-                  ? "bg-blue-600 text-white" 
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              All Products
-            </button>
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedCategory === cat 
-                    ? "bg-blue-600 text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2 py-3 justify-center">
+            {loading ? (
+              // Show skeleton loaders while categories are loading
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="w-24 h-9 bg-muted/50 animate-pulse rounded-full" />
+              ))
+            ) : categories.map(cat => {
+              const categoryProducts = rows.filter(p => p.category === cat && !p.name.toLowerCase().includes('canada'));
+              return (
+                <div 
+                  key={cat}
+                  className="relative group"
+                >
+                  <button
+                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                    onMouseEnter={() => setSelectedCategory(cat)}
+                    className={cn(
+                      "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                      selectedCategory === cat
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    )}
+                  >
+                    {cat}
+                  </button>
+                  
+                  {/* Hover Dropdown */}
+                  {!loading && selectedCategory === cat && categoryProducts.length > 0 && (
+                    <div 
+                      className="absolute top-full left-0 mt-2 w-64 max-h-96 overflow-y-auto bg-white dark:bg-gray-900 backdrop-blur border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-[60]"
+                    >
+                      {categoryProducts.slice(0, 10).map(product => {
+                         const categorySlug = cat.toLowerCase().replace(/\s+/g, '-');
+                        const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        
+                        const handleProductClick = (e: React.MouseEvent) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedCategory(null);
+                          navigate(`/product/${categorySlug}/${productSlug}`, { state: { productId: product.id } });
+                        };
+                        
+                        return (
+                          <button
+                            key={product.id}
+                            onClick={handleProductClick}
+                            onMouseDown={handleProductClick}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-b-0 flex items-center gap-3 cursor-pointer"
+                          >
+                            {product.image_url && (
+                              <img src={product.image_url} alt="" className="w-10 h-10 object-cover rounded" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium truncate text-gray-900 dark:text-white">{product.name}</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
+                                ${((defaultPrices[product.id] || product.base_cost_cents) / 100).toFixed(2)}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                  </div>
+                )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </nav>
 
-      {/* Top bar with search and filters */}
-      <header className="fixed top-28 inset-x-0 z-40 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        {/* Left: Back button */}
-        <Button
-          onClick={() => navigate(-1)}
-          variant="outline"
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-          size="sm"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
-        {/* Right: Wishlist and Cart buttons */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/favorites")}
-            className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative"
-          >
-            <Heart className="w-4 h-4" />
-            {favoritesCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {favoritesCount}
-              </span>
-            )}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              console.log('[Products] Header cart button clicked - navigating to /cart');
-              navigate("/cart");
-            }}
-            className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative flex items-center gap-2 pr-4"
-          >
-            <div className="relative">
-              <ShoppingCart className="w-4 h-4" />
-              {count > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {count}
-                </span>
-              )}
-            </div>
-            <div className="hidden sm:flex flex-col items-start">
-              <span className="text-xs font-semibold">{count} items</span>
-              <span className="text-[10px] opacity-90">${(totalCents / 100).toFixed(2)}</span>
-            </div>
-          </Button>
-        </div>
-      </header>
-
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-44 pb-24">
+      <div className="h-full overflow-y-auto scroll-smooth pb-24">
         <section className="min-h-screen py-16 bg-gray-50">
           <div className="w-full max-w-7xl mx-auto px-6">
             {/* Recently Viewed Section */}
