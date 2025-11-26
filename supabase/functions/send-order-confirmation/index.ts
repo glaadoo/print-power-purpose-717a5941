@@ -292,7 +292,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Print Power Purpose <orders@printpowerpurpose.org>",
+        from: "Print Power Purpose <onboarding@resend.dev>",
         to: [customerEmail],
         subject: `Order Confirmation #${orderNumber} - Thank You!`,
         html: emailHtml,
