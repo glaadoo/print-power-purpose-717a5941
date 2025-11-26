@@ -59,23 +59,24 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
         .eq("approved", true);
 
       if (normalizedQuery === "") {
-        // Empty query - show default curated nonprofits
-        queryBuilder = queryBuilder
+        // Empty query - show 10 random curated nonprofits
+        const { data } = await queryBuilder
           .eq("source", "curated")
-          .order("name")
-          .limit(25);
+          .limit(50);
+        
+        // Shuffle results for randomness
+        const shuffled = (data || []).sort(() => Math.random() - 0.5).slice(0, 10);
+        setResults(shuffled);
       } else {
-        // Prefix search using the search_name field
-        queryBuilder = queryBuilder
-          .ilike("search_name", `${normalizedQuery}%`)
+        // Search across multiple fields using OR conditions
+        const { data, error } = await queryBuilder
+          .or(`name.ilike.%${normalizedQuery}%,ein.ilike.%${normalizedQuery}%,city.ilike.%${normalizedQuery}%,state.ilike.%${normalizedQuery}%`)
           .order("name")
           .limit(25);
+
+        if (error) throw error;
+        setResults(data || []);
       }
-
-      const { data, error } = await queryBuilder;
-
-      if (error) throw error;
-      setResults(data || []);
     } catch (error) {
       console.error("Nonprofit search error:", error);
       setResults([]);
