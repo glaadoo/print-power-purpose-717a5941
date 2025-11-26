@@ -3,6 +3,15 @@
 @tailwind utilities;
 
 @layer base {
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
   :root {
     /* Vistaprint-style color system with auto-contrast */
     --background: 0 0% 100%;
