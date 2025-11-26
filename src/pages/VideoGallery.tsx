@@ -4,14 +4,22 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Upload, Trash2, Loader2 } from "lucide-react";
+import { Upload, Trash2, Loader2, Edit } from "lucide-react";
 import Footer from "@/components/Footer";
+import VideoMetadataEditor from "@/components/VideoMetadataEditor";
 
 interface Video {
   name: string;
   url: string;
   size: number;
   createdAt: string;
+  metadata?: {
+    id: string;
+    title: string | null;
+    description: string | null;
+    thumbnail_url: string | null;
+    display_order: number;
+  };
 }
 
 export default function VideoGallery() {
@@ -19,6 +27,7 @@ export default function VideoGallery() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingVideo, setEditingVideo] = useState<Video | null>(null);
 
   useEffect(() => {
     loadVideos();
@@ -26,16 +35,36 @@ export default function VideoGallery() {
 
   const loadVideos = async () => {
     try {
+      // Get videos from storage
       const { data, error } = await supabase.storage.from('videos').list();
       
       if (error) throw error;
       
-      const videosWithUrls = data?.map(file => ({
-        name: file.name,
-        url: supabase.storage.from('videos').getPublicUrl(file.name).data.publicUrl,
-        size: file.metadata?.size || 0,
-        createdAt: file.created_at
-      })) || [];
+      // Get metadata from database
+      const { data: metadata } = await supabase
+        .from('video_metadata')
+        .select('*');
+      
+      const videosWithUrls = data?.map(file => {
+        const meta = metadata?.find(m => m.video_name === file.name);
+        return {
+          name: file.name,
+          url: supabase.storage.from('videos').getPublicUrl(file.name).data.publicUrl,
+          size: file.metadata?.size || 0,
+          createdAt: file.created_at,
+          metadata: meta ? {
+            id: meta.id,
+            title: meta.title,
+            description: meta.description,
+            thumbnail_url: meta.thumbnail_url,
+            display_order: meta.display_order,
+          } : undefined
+        };
+      }).sort((a, b) => {
+        const aOrder = a.metadata?.display_order ?? 999;
+        const bOrder = b.metadata?.display_order ?? 999;
+        return aOrder - bOrder;
+      }) || [];
       
       setVideos(videosWithUrls);
     } catch (error) {
@@ -76,18 +105,27 @@ export default function VideoGallery() {
   };
 
   const handleDelete = async (videoName: string) => {
-    if (!confirm('Are you sure you want to delete this video?')) return;
+    if (!confirm('Are you sure you want to delete this video? This will also delete its metadata and thumbnail.')) return;
 
     setDeleting(videoName);
     try {
-      const { error } = await supabase.storage
+      // Delete video from storage
+      const { error: videoError } = await supabase.storage
         .from('videos')
         .remove([videoName]);
 
-      if (error) throw error;
+      if (videoError) throw videoError;
+
+      // Delete metadata from database
+      const { error: metadataError } = await supabase
+        .from('video_metadata')
+        .delete()
+        .eq('video_name', videoName);
+
+      if (metadataError) console.error('Error deleting metadata:', metadataError);
 
       toast.success('Video deleted successfully');
-      loadVideos(); // Reload videos
+      loadVideos();
     } catch (error) {
       console.error('Error deleting video:', error);
       toast.error('Failed to delete video');
@@ -163,32 +201,61 @@ export default function VideoGallery() {
                   className="bg-white border border-gray-200 p-4 overflow-hidden group hover:shadow-lg transition-shadow"
                 >
                   <div className="relative">
-                    <video
-                      src={video.url}
-                      className="w-full rounded-lg mb-4 aspect-video object-cover"
-                      controls
-                      preload="metadata"
-                    />
-                    <Button
-                      onClick={() => handleDelete(video.name)}
-                      disabled={deleting === video.name}
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      {deleting === video.name ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </Button>
+                    {video.metadata?.thumbnail_url ? (
+                      <div className="relative aspect-video rounded-lg mb-4 overflow-hidden">
+                        <img
+                          src={supabase.storage.from('video-thumbnails').getPublicUrl(video.metadata.thumbnail_url).data.publicUrl}
+                          alt="Thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <video
+                        src={video.url}
+                        className="w-full rounded-lg mb-4 aspect-video object-cover"
+                        preload="metadata"
+                      />
+                    )}
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        onClick={() => setEditingVideo(video)}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(video.name)}
+                        disabled={deleting === video.name}
+                        variant="destructive"
+                        size="sm"
+                      >
+                        {deleting === video.name ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   <h3 className="text-gray-900 font-semibold text-lg truncate">
-                    {video.name.replace(/\.[^/.]+$/, "")}
+                    {video.metadata?.title || video.name.replace(/\.[^/.]+$/, "")}
                   </h3>
-                  <p className="text-gray-500 text-sm mt-1">
-                    {new Date(video.createdAt).toLocaleDateString()}
-                  </p>
+                  {video.metadata?.description && (
+                    <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                      {video.metadata.description}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-gray-500 text-xs">
+                      {new Date(video.createdAt).toLocaleDateString()}
+                    </p>
+                    {video.metadata && (
+                      <p className="text-gray-500 text-xs">
+                        Order: {video.metadata.display_order}
+                      </p>
+                    )}
+                  </div>
                 </Card>
               ))}
             </div>
@@ -196,6 +263,24 @@ export default function VideoGallery() {
         </div>
       </div>
       <Footer />
+
+      {editingVideo && (
+        <VideoMetadataEditor
+          open={!!editingVideo}
+          onClose={() => setEditingVideo(null)}
+          videoName={editingVideo.name}
+          videoUrl={editingVideo.url}
+          metadata={editingVideo.metadata ? {
+            id: editingVideo.metadata.id,
+            video_name: editingVideo.name,
+            title: editingVideo.metadata.title,
+            description: editingVideo.metadata.description,
+            thumbnail_url: editingVideo.metadata.thumbnail_url,
+            display_order: editingVideo.metadata.display_order,
+          } : null}
+          onSave={loadVideos}
+        />
+      )}
     </div>
   );
 }
