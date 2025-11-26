@@ -135,11 +135,11 @@ export default function ArtworkUpload({
   return (
     <div className="w-full space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-white">
-          Upload Your Artwork <span className="text-red-400">*</span>
+        <label className="text-sm font-medium text-gray-700">
+          Your Design File <span className="text-red-600">*</span>
         </label>
         {uploadedFile && (
-          <div className="flex items-center gap-1 text-xs text-green-400">
+          <div className="flex items-center gap-1 text-xs text-green-600">
             <CheckCircle2 className="w-4 h-4" />
             <span>Uploaded</span>
           </div>
@@ -159,60 +159,60 @@ export default function ArtworkUpload({
         <button
           onClick={triggerFileInput}
           disabled={uploading}
-          className="w-full p-6 border-2 border-dashed border-white/30 rounded-xl bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full p-6 border-2 border-dashed border-blue-300 rounded-xl bg-white hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
               {uploading ? (
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
               ) : (
-                <Upload className="w-6 h-6 text-white" />
+                <Upload className="w-6 h-6 text-blue-600" />
               )}
             </div>
             <div className="text-center">
-              <p className="text-white font-medium mb-1">
+              <p className="text-gray-900 font-medium mb-1">
                 {uploading ? "Uploading..." : "Click to upload your design"}
               </p>
-              <p className="text-xs text-white/60">
+              <p className="text-xs text-gray-600">
                 PNG, JPG, PDF, AI, or SVG (Max 50MB)
               </p>
             </div>
           </div>
         </button>
       ) : (
-        <div className="p-4 bg-white/10 rounded-xl border border-white/20">
+        <div className="p-4 bg-white rounded-xl border-2 border-green-200">
           <div className="flex items-start gap-4">
             {previewUrl ? (
               <img
                 src={previewUrl}
                 alt="Artwork preview"
-                className="w-20 h-20 object-cover rounded-lg border border-white/20"
+                className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200"
               />
             ) : (
-              <div className="w-20 h-20 bg-white/5 rounded-lg border border-white/20 flex items-center justify-center">
-                <FileImage className="w-8 h-8 text-white/40" />
+              <div className="w-20 h-20 bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center">
+                <FileImage className="w-8 h-8 text-gray-400" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-sm font-medium text-gray-900 truncate">
                 {uploadedFile.name}
               </p>
-              <p className="text-xs text-white/60 mt-1">
+              <p className="text-xs text-green-600 mt-1">
                 Artwork uploaded successfully
               </p>
             </div>
             <button
               onClick={handleRemove}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Remove artwork"
             >
-              <X className="w-4 h-4 text-white/60 hover:text-white" />
+              <X className="w-4 h-4 text-gray-600 hover:text-gray-900" />
             </button>
           </div>
         </div>
       )}
 
-      <p className="text-xs text-white/60">
+      <p className="text-xs text-gray-600">
         Your artwork will be printed exactly as uploaded. Please ensure your file meets the vendor's specifications.
       </p>
     </div>
