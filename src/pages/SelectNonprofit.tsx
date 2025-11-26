@@ -26,12 +26,13 @@ export default function SelectNonprofit() {
   const flow = searchParams.get("flow");
 
   const [allNonprofits, setAllNonprofits] = useState<Nonprofit[]>([]);
+  const [randomNonprofits, setRandomNonprofits] = useState<Nonprofit[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [selectedNonprofit, setSelectedNonprofit] = useState<Nonprofit | null>(nonprofit);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Display nonprofits: first 10 if no search, filtered results if searching
+  // Display nonprofits: random 10 if no search, filtered results if searching
   const displayedNonprofits = searchQuery.trim()
     ? allNonprofits.filter((np) => {
         const query = searchQuery.toLowerCase();
@@ -39,9 +40,10 @@ export default function SelectNonprofit() {
         const ein = np.ein?.toLowerCase() || "";
         const city = np.city?.toLowerCase() || "";
         const state = np.state?.toLowerCase() || "";
-        return name.includes(query) || ein.includes(query) || city.includes(query) || state.includes(query);
+        const description = np.description?.toLowerCase() || "";
+        return name.includes(query) || ein.includes(query) || city.includes(query) || state.includes(query) || description.includes(query);
       })
-    : allNonprofits.slice(0, 10);
+    : randomNonprofits;
 
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
@@ -49,14 +51,29 @@ export default function SelectNonprofit() {
     let alive = true;
     (async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch all nonprofits for search
+        const { data: allData, error: allError } = await supabase
           .from("nonprofits")
           .select("id, name, ein, city, state, description, source, irs_status")
           .eq("approved", true)
           .order("name", { ascending: true });
 
-        if (error) throw error;
-        if (alive) setAllNonprofits(data || []);
+        if (allError) throw allError;
+        if (alive) setAllNonprofits(allData || []);
+
+        // Fetch 10 random nonprofits for initial display
+        const { data: randomData, error: randomError } = await supabase
+          .from("nonprofits")
+          .select("id, name, ein, city, state, description, source, irs_status")
+          .eq("approved", true)
+          .limit(10);
+
+        if (randomError) throw randomError;
+        
+        // Shuffle the results client-side for randomness
+        const shuffled = (randomData || []).sort(() => Math.random() - 0.5);
+        if (alive) setRandomNonprofits(shuffled);
+        
       } catch (e: any) {
         if (alive) setErr(e?.message || "Failed to load nonprofits");
       } finally {
@@ -108,7 +125,7 @@ export default function SelectNonprofit() {
         </div>
         {!searchQuery.trim() && (
           <p className="text-sm text-muted-foreground text-center mt-2">
-            Showing first 10 nonprofits. Use search to find more.
+            Showing 10 random nonprofits. Use search to find more.
           </p>
         )}
       </div>
