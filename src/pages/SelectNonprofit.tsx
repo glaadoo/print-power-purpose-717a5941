@@ -253,6 +253,11 @@ export default function SelectNonprofit() {
         // Get 10 random for initial display
         const shuffled = [...nonprofitsWithMetrics].sort(() => Math.random() - 0.5).slice(0, 10);
         if (alive) setRandomNonprofits(shuffled);
+
+        // Sync local state with context nonprofit (for page refresh persistence)
+        if (nonprofit && alive) {
+          setSelectedNonprofit(nonprofit);
+        }
         
       } catch (e: any) {
         if (alive) setErr(e?.message || "Failed to load nonprofits");
@@ -264,7 +269,7 @@ export default function SelectNonprofit() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [nonprofit]);
 
   // Maintain scroll position when sorting changes
   useEffect(() => {
@@ -280,6 +285,15 @@ export default function SelectNonprofit() {
   function handleNonprofitSelect(np: Nonprofit) {
     setSelectedNonprofit(np);
     setNonprofit(np);
+  }
+
+  function handleClearSelection() {
+    setSelectedNonprofit(null);
+    setNonprofit(null);
+    toast({
+      title: "Selection cleared",
+      description: "You can now select a different nonprofit",
+    });
   }
 
   function handleContinue() {
@@ -839,7 +853,16 @@ export default function SelectNonprofit() {
       )}
 
       {selectedNonprofit && (
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center gap-4 mt-12">
+          <Button 
+            onClick={handleClearSelection} 
+            size="lg" 
+            variant="outline"
+            className="px-8 rounded-full"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Clear Selection
+          </Button>
           <Button onClick={handleContinue} size="lg" className="px-8 rounded-full">
             Continue with {selectedNonprofit.name}
           </Button>
