@@ -248,6 +248,13 @@ export default function SelectNonprofit() {
     };
   }, []);
 
+  // Prevent auto-scroll when sorting changes
+  useEffect(() => {
+    if (sortBy !== "default") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [sortBy]);
+
   function handleNonprofitSelect(np: Nonprofit) {
     setSelectedNonprofit(np);
     setNonprofit(np);
