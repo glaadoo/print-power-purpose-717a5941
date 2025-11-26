@@ -497,29 +497,29 @@ export default function SelectNonprofit() {
               `}
             >
               {/* Featured Badges */}
-              <div className="absolute top-3 right-3 flex flex-col gap-2">
+              <div className="absolute top-3 right-3 flex flex-col gap-2 max-w-[140px]">
                 {isTopFundraiser(np.id) && (
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-md flex items-center gap-1">
+                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
                     <TrendingUp className="w-3 h-3" />
                     Top Fundraiser
                   </Badge>
                 )}
                 {isTopRisingFundraiser(np.id) && (
-                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-md flex items-center gap-1">
+                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
                     <TrendingUp className="w-3 h-3" />
                     Top Rising
                   </Badge>
                 )}
                 {np.created_at && isNewlyAdded(np.created_at) && (
-                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-md flex items-center gap-1">
+                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
                     <Sparkles className="w-3 h-3" />
                     New
                   </Badge>
                 )}
               </div>
 
-              {/* Logo */}
-              <div className="flex items-center gap-3 mb-3">
+              {/* Logo and Title - with padding to avoid badge overlap */}
+              <div className="flex items-center gap-3 mb-3 pr-36">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary/20">
                   {np.logo_url ? (
                     <img 
