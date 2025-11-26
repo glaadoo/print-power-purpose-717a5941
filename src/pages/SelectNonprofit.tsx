@@ -179,10 +179,11 @@ export default function SelectNonprofit() {
         }
 
         // Merge metrics with nonprofits
+        // Convert UUID to string for map lookup since orders.nonprofit_id is text
         const nonprofitsWithMetrics = (nonprofitsData || []).map(np => ({
           ...np,
-          total_raised_cents: metricsMap.get(np.id)?.total_raised_cents || 0,
-          supporter_count: metricsMap.get(np.id)?.supporter_count || 0,
+          total_raised_cents: metricsMap.get(String(np.id))?.total_raised_cents || 0,
+          supporter_count: metricsMap.get(String(np.id))?.supporter_count || 0,
         }));
 
         if (alive) setAllNonprofits(nonprofitsWithMetrics);
