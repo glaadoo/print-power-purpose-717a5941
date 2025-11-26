@@ -93,7 +93,9 @@ export default function Favorites() {
 
       if (prodError) throw prodError;
 
-      setFavorites(products || []);
+      // Filter out Canada products
+      const filteredProducts = (products || []).filter(product => !product.name.toLowerCase().includes('canada'));
+      setFavorites(filteredProducts);
     } catch (error: any) {
       console.error("Error fetching favorites:", error);
       toast.error("Failed to load favorites");
