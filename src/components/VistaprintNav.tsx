@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, Heart, User, Search, Menu, ChevronDown, Package, MessageCircle } from "lucide-react";
+import { ShoppingCart, Heart, User, Search, Menu, ChevronDown, Package, MessageCircle, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -266,7 +266,12 @@ export default function VistaprintNav() {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors rounded-lg hover:bg-gray-50"
                 aria-label="Account menu"
               >
-                <User className="w-5 h-5" />
+                <div className="relative">
+                  <User className="w-5 h-5" />
+                  {loadingUserName && (
+                    <Loader2 className="w-3 h-3 absolute -top-1 -right-1 text-blue-600 animate-spin" />
+                  )}
+                </div>
                 <span className="hidden sm:inline">
                   {loadingUserName ? (
                     <span className="inline-block h-4 w-20 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse bg-[length:200%_100%]" style={{ animation: 'shimmer 1.5s infinite' }} />
