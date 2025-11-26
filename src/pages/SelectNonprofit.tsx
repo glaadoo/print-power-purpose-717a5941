@@ -282,21 +282,16 @@ export default function SelectNonprofit() {
           </Button>
 
           {!searchQuery.trim() && !hasActiveFilters && (
-            <>
-              <span className="text-sm text-muted-foreground">
-                Showing 10 random nonprofits
-              </span>
-              <Button
-                onClick={handleShuffle}
-                disabled={shuffling}
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-full"
-              >
-                <Shuffle className={`h-4 w-4 ${shuffling ? 'animate-spin' : ''}`} />
-                {shuffling ? 'Shuffling...' : 'Shuffle'}
-              </Button>
-            </>
+            <Button
+              onClick={handleShuffle}
+              disabled={shuffling}
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-full"
+            >
+              <Shuffle className={`h-4 w-4 ${shuffling ? 'animate-spin' : ''}`} />
+              {shuffling ? 'Shuffling...' : 'Shuffle'}
+            </Button>
           )}
 
           {hasActiveFilters && (
