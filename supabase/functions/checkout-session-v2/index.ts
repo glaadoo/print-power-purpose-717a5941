@@ -46,6 +46,22 @@ serve(async (req) => {
       throw new Error("Cart is empty");
     }
 
+    // Fetch nonprofit details if nonprofitId is provided
+    let nonprofitName = null;
+    let nonprofitEin = null;
+    if (nonprofitId) {
+      const { data: nonprofit } = await supabase
+        .from("nonprofits")
+        .select("name, ein")
+        .eq("id", nonprofitId)
+        .single();
+      
+      if (nonprofit) {
+        nonprofitName = nonprofit.name;
+        nonprofitEin = nonprofit.ein;
+      }
+    }
+
     // Load global SinaLite pricing settings
     console.log("[PPP:PRICING:CHECKOUT] Loading global pricing settings");
     const { data: pricingSettings, error: pricingError } = await supabase
@@ -174,6 +190,8 @@ serve(async (req) => {
         amount_total_cents: totalAmountCents,
         currency: "usd",
         nonprofit_id: nonprofitId,
+        nonprofit_name: nonprofitName,
+        nonprofit_ein: nonprofitEin,
         payment_mode: stripeMode,
       })
       .select("id")
@@ -229,6 +247,8 @@ serve(async (req) => {
         order_id: orderId,
         order_number: orderNumber,
         nonprofit_id: nonprofitId || "",
+        nonprofit_name: nonprofitName || "",
+        nonprofit_ein: nonprofitEin || "",
         donation_cents: String(donationAmount),
       },
     });
