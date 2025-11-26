@@ -157,10 +157,11 @@ export default function SelectNonprofit() {
         if (nonprofitsError) throw nonprofitsError;
 
         // Fetch completed orders where nonprofit was selected
+        // Include both "paid" (historical) and "completed" (new) statuses
         const { data: ordersData, error: ordersError } = await supabase
           .from("orders")
           .select("nonprofit_id, donation_cents, id")
-          .eq("status", "completed")
+          .in("status", ["paid", "completed"])
           .not("nonprofit_id", "is", null);
 
         if (ordersError) throw ordersError;
