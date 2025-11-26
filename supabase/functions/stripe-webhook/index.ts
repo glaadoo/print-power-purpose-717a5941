@@ -170,11 +170,17 @@ serve(async (req) => {
         const updateResult = await supabase
           .from('orders')
           .update({
-            status: 'paid',
+            status: 'completed',
             paid_at: new Date().toISOString(),
             customer_email: session.customer_details?.email || null,
             stripe_payment_intent_id: (session as any).payment_intent || null,
             receipt_url: (session as any).receipt_url || null,
+            donation_cents: donationCents,
+            cause_id: causeId,
+            cause_name: causeName,
+            nonprofit_id: nonprofitId,
+            nonprofit_name: session.metadata?.nonprofit_name || null,
+            nonprofit_ein: session.metadata?.nonprofit_ein || null,
           })
           .eq('id', orderId)
           .select()
@@ -190,7 +196,7 @@ serve(async (req) => {
           .insert({
             order_number: orderNumber,
             session_id: session.id,
-            status: 'paid',
+            status: 'completed',
             paid_at: new Date().toISOString(),
             customer_email: session.customer_details?.email || null,
             currency: session.currency || 'usd',
@@ -201,6 +207,8 @@ serve(async (req) => {
             cause_id: causeId,
             cause_name: causeName,
             nonprofit_id: nonprofitId,
+            nonprofit_name: session.metadata?.nonprofit_name || null,
+            nonprofit_ein: session.metadata?.nonprofit_ein || null,
             receipt_url: (session as any).receipt_url || null,
             payment_mode: stripeMode,
             stripe_payment_intent_id: (session as any).payment_intent || null,
