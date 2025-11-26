@@ -123,11 +123,15 @@ export default function ProductDetailNew() {
           }
 
           if (relatedResult.data) {
-            setRelatedProducts(relatedResult.data as ProductRow[]);
+            // Filter out Canada products
+            const filteredRelated = (relatedResult.data as ProductRow[]).filter(product => !product.name.toLowerCase().includes('canada'));
+            setRelatedProducts(filteredRelated);
           }
 
           if (frequentResult.data) {
-            setFrequentlyBought(frequentResult.data as ProductRow[]);
+            // Filter out Canada products
+            const filteredFrequent = (frequentResult.data as ProductRow[]).filter(product => !product.name.toLowerCase().includes('canada'));
+            setFrequentlyBought(filteredFrequent);
           }
         }).catch(err => {
           console.error('[ProductDetailNew] Background data fetch error:', err);
