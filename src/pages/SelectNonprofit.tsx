@@ -376,6 +376,12 @@ export default function SelectNonprofit() {
             Found {displayedNonprofits.length} nonprofit{displayedNonprofits.length !== 1 ? 's' : ''}
           </p>
         )}
+        
+        {/* Nonprofit count display */}
+        <div className="text-sm text-gray-600 text-center">
+          Showing <span className="font-semibold text-gray-900">{displayedNonprofits.length}</span> out of{" "}
+          <span className="font-semibold text-gray-900">{allNonprofits.length}</span> nonprofits
+        </div>
       </div>
 
       {/* Nonprofits Grid */}
