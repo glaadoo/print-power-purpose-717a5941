@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
-import { ArrowLeft, Search, Shuffle, Filter, X, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowLeft, Search, Shuffle, Filter, X, TrendingUp, Sparkles, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -49,10 +49,11 @@ export default function SelectNonprofit() {
   const [searchQuery, setSearchQuery] = useState("");
   
   // Filter states
-  const [selectedState, setSelectedState] = useState<string>("");
-  const [selectedCity, setSelectedCity] = useState<string>("");
-  const [selectedTag, setSelectedTag] = useState<string>("");
+  const [selectedState, setSelectedState] = useState<string>("all_states");
+  const [selectedCity, setSelectedCity] = useState<string>("all_cities");
+  const [selectedTag, setSelectedTag] = useState<string>("all_categories");
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("default");
 
   // Extract unique values for filters
   const uniqueStates = useMemo(() => {
@@ -66,7 +67,7 @@ export default function SelectNonprofit() {
 
   const uniqueCities = useMemo(() => {
     const cities = allNonprofits
-      .filter(np => !selectedState || np.state === selectedState)
+      .filter(np => !selectedState || selectedState === "all_states" || np.state === selectedState)
       .map(np => np.city)
       .filter((city): city is string => Boolean(city))
       .filter((city, index, self) => self.indexOf(city) === index)
@@ -116,7 +117,7 @@ export default function SelectNonprofit() {
     return topRisingFundraisers.includes(nonprofitId);
   };
 
-  // Apply filters
+  // Apply filters and sorting
   const displayedNonprofits = useMemo(() => {
     let filtered = searchQuery.trim()
       ? allNonprofits.filter((np) => {
@@ -130,30 +131,57 @@ export default function SelectNonprofit() {
         })
       : randomNonprofits;
 
-    // Apply state filter
-    if (selectedState) {
+    // Apply state filter (ignore "all_states" value)
+    if (selectedState && selectedState !== "all_states") {
       filtered = filtered.filter(np => np.state === selectedState);
     }
 
-    // Apply city filter
-    if (selectedCity) {
+    // Apply city filter (ignore "all_cities" value)
+    if (selectedCity && selectedCity !== "all_cities") {
       filtered = filtered.filter(np => np.city === selectedCity);
     }
 
-    // Apply tag filter
-    if (selectedTag) {
+    // Apply tag filter (ignore "all_categories" value)
+    if (selectedTag && selectedTag !== "all_categories") {
       filtered = filtered.filter(np => np.tags?.includes(selectedTag));
     }
 
-    return filtered;
-  }, [searchQuery, allNonprofits, randomNonprofits, selectedState, selectedCity, selectedTag]);
+    // Apply sorting
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case "top_fundraisers":
+        sorted.sort((a, b) => (b.total_raised_cents || 0) - (a.total_raised_cents || 0));
+        break;
+      case "new_fundraisers":
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.created_at || 0).getTime();
+          const dateB = new Date(b.created_at || 0).getTime();
+          return dateB - dateA; // newest first
+        });
+        break;
+      case "rising_fundraisers":
+        sorted = sorted
+          .filter(np => (np.supporter_count || 0) > 0)
+          .sort((a, b) => (b.supporter_count || 0) - (a.supporter_count || 0));
+        break;
+      default:
+        // Keep default order
+        break;
+    }
 
-  const hasActiveFilters = selectedState || selectedCity || selectedTag;
+    return sorted;
+  }, [searchQuery, allNonprofits, randomNonprofits, selectedState, selectedCity, selectedTag, sortBy]);
+
+  const hasActiveFilters = (selectedState && selectedState !== "all_states") || 
+                          (selectedCity && selectedCity !== "all_cities") || 
+                          (selectedTag && selectedTag !== "all_categories") || 
+                          sortBy !== "default";
 
   function clearFilters() {
-    setSelectedState("");
-    setSelectedCity("");
-    setSelectedTag("");
+    setSelectedState("all_states");
+    setSelectedCity("all_cities");
+    setSelectedTag("all_categories");
+    setSortBy("default");
   }
 
   useEffect(() => {
@@ -373,6 +401,20 @@ export default function SelectNonprofit() {
 
         {/* Filter Toggle and Controls */}
         <div className="flex items-center justify-center gap-4 flex-wrap">
+          {/* Sort Dropdown */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[200px] rounded-full">
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="top_fundraisers">Top Fundraisers</SelectItem>
+              <SelectItem value="new_fundraisers">New Fundraisers</SelectItem>
+              <SelectItem value="rising_fundraisers">Rising Fundraisers</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Button
             onClick={() => setShowFilters(!showFilters)}
             variant="outline"
@@ -388,7 +430,7 @@ export default function SelectNonprofit() {
             )}
           </Button>
 
-          {!searchQuery.trim() && !hasActiveFilters && (
+          {!searchQuery.trim() && !hasActiveFilters && sortBy === "default" && (
             <Button
               onClick={handleShuffle}
               disabled={shuffling}
@@ -401,7 +443,7 @@ export default function SelectNonprofit() {
             </Button>
           )}
 
-          {hasActiveFilters && (
+          {(hasActiveFilters || sortBy !== "default") && (
             <Button
               onClick={clearFilters}
               variant="ghost"
@@ -409,7 +451,7 @@ export default function SelectNonprofit() {
               className="gap-2 rounded-full text-destructive hover:text-destructive"
             >
               <X className="h-4 w-4" />
-              Clear Filters
+              Clear All
             </Button>
           )}
         </div>
@@ -424,7 +466,7 @@ export default function SelectNonprofit() {
                   <SelectValue placeholder="All States" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All States</SelectItem>
+                  <SelectItem value="all_states">All States</SelectItem>
                   {uniqueStates.map(state => (
                     <SelectItem key={state} value={state}>{state}</SelectItem>
                   ))}
@@ -434,12 +476,12 @@ export default function SelectNonprofit() {
 
             <div>
               <label className="text-sm font-medium mb-2 block">City</label>
-              <Select value={selectedCity} onValueChange={setSelectedCity} disabled={!selectedState && uniqueCities.length === 0}>
+              <Select value={selectedCity} onValueChange={setSelectedCity} disabled={selectedState === "all_states" && uniqueCities.length === 0}>
                 <SelectTrigger>
-                  <SelectValue placeholder={selectedState ? "All Cities" : "Select state first"} />
+                  <SelectValue placeholder={selectedState !== "all_states" ? "All Cities" : "Select state first"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Cities</SelectItem>
+                  <SelectItem value="all_cities">All Cities</SelectItem>
                   {uniqueCities.map(city => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
@@ -454,7 +496,7 @@ export default function SelectNonprofit() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all_categories">All Categories</SelectItem>
                   {uniqueTags.map(tag => (
                     <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                   ))}
@@ -533,7 +575,7 @@ export default function SelectNonprofit() {
                     </span>
                   )}
                 </div>
-                <h3 className="text-lg font-semibold text-primary line-clamp-2 flex-1">
+                <h3 className="text-lg font-semibold text-primary flex-1 break-words">
                   {np.name}
                 </h3>
               </div>
