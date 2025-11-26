@@ -147,8 +147,8 @@ export default function ProductDetail() {
     product.pricing_data.length > 0;
   
   const isConfigured = configuredPriceCents !== null;
-  const hasArtwork = artworkFileUrl && artworkFileName;
-  const canAddToCart = (!requiresConfiguration || isConfigured) && hasArtwork;
+  const hasArtwork = Boolean(artworkFileUrl && artworkFileName);
+  const canAddToCart: boolean = (!requiresConfiguration || isConfigured) && hasArtwork;
 
   let unitCents: number;
   if (configuredPriceCents !== null) {
