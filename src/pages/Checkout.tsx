@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { normalizeDonationCents } from "@/lib/donation-utils";
 import { withRetry } from "@/lib/api-retry";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import ArtworkUpload from "@/components/ArtworkUpload";
 
 type ProductRow = {
   id: string;
@@ -99,6 +107,10 @@ export default function Checkout() {
   const [legalConsent, setLegalConsent] = useState(false);
   // Detect when the page is stuck in a loading state and surface an actionable error
   const [stalled, setStalled] = useState(false);
+  
+  // Artwork upload dialog state
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadingForItemId, setUploadingForItemId] = useState<string | null>(null);
 
 
   // Fetch product & persist merged selection (refresh-proof)
@@ -451,15 +463,26 @@ export default function Checkout() {
                               Artwork: {item.artworkFileName || 'Uploaded'}
                             </span>
                           </div>
-                          <button
-                            onClick={() => {
-                              // Open artwork in new tab for preview
-                              window.open(item.artworkUrl!, '_blank');
-                            }}
-                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            View
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                // Open artwork in new tab for preview
+                                window.open(item.artworkUrl!, '_blank');
+                              }}
+                              className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 hover:bg-blue-50 rounded transition-colors"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => {
+                                setUploadingForItemId(item.id);
+                                setUploadDialogOpen(true);
+                              }}
+                              className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 hover:bg-blue-50 rounded transition-colors"
+                            >
+                              Upload New
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -567,6 +590,45 @@ export default function Checkout() {
           </button>
         </div>
       </div>
+
+      {/* Artwork Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Upload New Artwork</DialogTitle>
+            <DialogDescription>
+              Replace the artwork for this product. The new file will be used for production.
+            </DialogDescription>
+          </DialogHeader>
+          {uploadingForItemId && (
+            <ArtworkUpload
+              productId={uploadingForItemId}
+              productName={cartItems.find(i => i.id === uploadingForItemId)?.name || "Product"}
+              onUploadComplete={(fileUrl, fileName) => {
+                // Update cart item with new artwork
+                const updatedItems = cartItems.map(item => 
+                  item.id === uploadingForItemId 
+                    ? { ...item, artworkUrl: fileUrl, artworkFileName: fileName }
+                    : item
+                );
+                
+                // Update localStorage cart
+                try {
+                  localStorage.setItem("ppp:cart", JSON.stringify({ items: updatedItems }));
+                } catch (e) {
+                  console.error("Failed to update cart:", e);
+                }
+                
+                // Force refresh by triggering a state update
+                window.location.reload();
+                
+                setUploadDialogOpen(false);
+                setUploadingForItemId(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
