@@ -8,6 +8,9 @@ export type CartItem = {
   quantity: number;
   imageUrl?: string | null;
   currency?: string | null; // 'USD' etc.
+  configuration?: Record<string, any>; // Product configuration (size, color, etc.)
+  artworkUrl?: string | null; // Uploaded artwork file URL
+  artworkFileName?: string | null; // Uploaded artwork file name
 };
 
 type CartState = {

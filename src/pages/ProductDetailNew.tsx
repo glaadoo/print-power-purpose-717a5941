@@ -182,9 +182,17 @@ export default function ProductDetailNew() {
         priceCents: unitCents,
         imageUrl: product.image_url,
         currency: product.currency || "USD",
+        configuration: productConfig,
+        artworkUrl: artworkFileUrl,
+        artworkFileName: artworkFileName,
       },
       Math.max(1, Number(qty))
     );
+    
+    // Show success toast
+    toast.success("Product added to cart!", {
+      description: "You can continue shopping or go to cart to checkout.",
+    });
   }
 
   if (loading) {
