@@ -5,6 +5,7 @@ import GlassCard from "@/components/GlassCard";
 import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { Button } from "@/components/ui/button";
+import Footer from "@/components/Footer";
 
 export default function About() {
   const menu = useToggle();
@@ -407,6 +408,8 @@ export default function About() {
           </GlassCard>
         </div>
       </main>
+
+      <Footer />
 
       <MenuOverlay open={menu.open} onClose={menu.off} />
     </div>

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home } from "lucide-react";
+import Footer from "@/components/Footer";
 
 interface OrderDetails {
   order_number: string;
@@ -249,6 +250,7 @@ export default function Success() {
           </p>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

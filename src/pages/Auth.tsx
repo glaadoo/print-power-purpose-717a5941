@@ -9,6 +9,7 @@ import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import VideoBackground from "@/components/VideoBackground";
 import { Session } from "@supabase/supabase-js";
 import { z } from "zod";
+import Footer from "@/components/Footer";
 
 // Password validation schema with strong security requirements
 const passwordSchema = z.string()
@@ -461,6 +462,7 @@ export default function Auth() {
           </div>
         </section>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import GlassCard from "@/components/GlassCard";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
+import Footer from "@/components/Footer";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -293,6 +294,7 @@ export default function Contact() {
           </div>
         </GlassCard>
       </div>
+      <Footer />
     </div>
   );
 }
