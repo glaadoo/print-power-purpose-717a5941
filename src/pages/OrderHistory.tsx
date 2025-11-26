@@ -104,10 +104,10 @@ export default function OrderHistory() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your orders...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your orders...</p>
         </div>
       </div>
     );
@@ -115,14 +115,14 @@ export default function OrderHistory() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-destructive text-2xl">⚠️</span>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8 text-center bg-white border-gray-200">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-600 text-2xl">⚠️</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Error</h1>
-          <p className="text-muted-foreground mb-6">{error}</p>
-          <Button onClick={() => navigate("/")} variant="outline">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button onClick={() => navigate("/")} variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Go Home
           </Button>
@@ -132,25 +132,25 @@ export default function OrderHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="mb-4"
+            className="mb-4 text-gray-700 hover:text-gray-900 hover:bg-gray-100"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-              <ShoppingBag className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+              <ShoppingBag className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Order History</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-3xl font-bold text-blue-600">Order History</h1>
+              <p className="text-gray-600">
                 {orders.length === 0
                   ? "No orders yet"
                   : `${orders.length} order${orders.length === 1 ? "" : "s"}`}
@@ -163,17 +163,17 @@ export default function OrderHistory() {
       {/* Orders List */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         {orders.length === 0 ? (
-          <Card className="p-12 text-center">
-            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Package className="w-10 h-10 text-muted-foreground" />
+          <Card className="p-12 text-center bg-white border-gray-200">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-10 h-10 text-gray-400" />
             </div>
-            <h2 className="text-2xl font-semibold text-foreground mb-2">
+            <h2 className="text-2xl font-semibold text-blue-600 mb-2">
               No Orders Yet
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-gray-600 mb-6">
               Start shopping to see your order history here
             </p>
-            <Button onClick={() => navigate("/products")}>
+            <Button onClick={() => navigate("/products")} className="bg-blue-600 text-white hover:bg-blue-700">
               Browse Products
             </Button>
           </Card>
@@ -184,16 +184,16 @@ export default function OrderHistory() {
               const orderDate = new Date(order.created_at);
 
               return (
-                <Card key={order.id} className="overflow-hidden">
+                <Card key={order.id} className="overflow-hidden bg-white border-gray-200">
                   {/* Order Header */}
                   <div
-                    className="p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => toggleOrderExpanded(order.id)}
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex-1 space-y-2">
                         <div className="flex flex-wrap items-center gap-3">
-                          <h3 className="text-lg font-semibold text-foreground">
+                          <h3 className="text-lg font-semibold text-blue-600">
                             {order.order_number}
                           </h3>
                           <Badge variant="outline" className={getStatusColor(order.status)}>
@@ -201,7 +201,7 @@ export default function OrderHistory() {
                           </Badge>
                         </div>
                         
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
                             {format(orderDate, "MMM d, yyyy 'at' h:mm a")}
@@ -221,12 +221,12 @@ export default function OrderHistory() {
 
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <div className="text-sm text-muted-foreground mb-1">Total</div>
-                          <div className="text-2xl font-bold text-foreground">
+                          <div className="text-sm text-gray-600 mb-1">Total</div>
+                          <div className="text-2xl font-bold text-gray-900">
                             ${(order.amount_total_cents / 100).toFixed(2)}
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
                           {isExpanded ? (
                             <ChevronUp className="w-5 h-5" />
                           ) : (
@@ -240,12 +240,12 @@ export default function OrderHistory() {
                   {/* Expanded Order Details */}
                   {isExpanded && (
                     <>
-                      <Separator />
-                      <div className="p-6 bg-muted/20">
+                      <Separator className="bg-gray-200" />
+                      <div className="p-6 bg-gray-50">
                         {/* Items List */}
                         {order.items && order.items.length > 0 && (
                           <div className="mb-6">
-                            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <h4 className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
                               <Package className="w-4 h-4" />
                               Order Items
                             </h4>
@@ -253,24 +253,24 @@ export default function OrderHistory() {
                               {order.items.map((item: OrderItem, idx: number) => (
                                 <div
                                   key={idx}
-                                  className="flex justify-between items-start p-3 bg-background rounded-lg border border-border"
+                                  className="flex justify-between items-start p-3 bg-white rounded-lg border border-gray-200"
                                 >
                                   <div className="flex gap-3 flex-1">
                                     {item.imageUrl && (
                                       <img
                                         src={item.imageUrl}
                                         alt={item.name}
-                                        className="w-16 h-16 object-cover rounded-md border border-border"
+                                        className="w-16 h-16 object-cover rounded-md border border-gray-200"
                                       />
                                     )}
                                     <div>
-                                      <p className="font-medium text-foreground">{item.name}</p>
-                                      <p className="text-sm text-muted-foreground">
+                                      <p className="font-medium text-gray-900">{item.name}</p>
+                                      <p className="text-sm text-gray-600">
                                         Quantity: {item.quantity}
                                       </p>
                                     </div>
                                   </div>
-                                  <p className="font-semibold text-foreground">
+                                  <p className="font-semibold text-gray-900">
                                     ${((item.priceCents || 0) / 100).toFixed(2)}
                                   </p>
                                 </div>
@@ -280,19 +280,19 @@ export default function OrderHistory() {
                         )}
 
                         {/* Order Totals */}
-                        <div className="bg-background rounded-lg border border-border p-4">
-                          <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <div className="bg-white rounded-lg border border-gray-200 p-4">
+                          <h4 className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
                             <DollarSign className="w-4 h-4" />
                             Order Summary
                           </h4>
                           <div className="space-y-2">
-                            <div className="flex justify-between text-muted-foreground">
+                            <div className="flex justify-between text-gray-600">
                               <span>Subtotal</span>
                               <span>${((order.subtotal_cents || 0) / 100).toFixed(2)}</span>
                             </div>
                             
                             {order.donation_cents > 0 && (
-                              <div className="flex justify-between text-muted-foreground">
+                              <div className="flex justify-between text-gray-600">
                                 <span className="flex items-center gap-1">
                                   <Heart className="w-4 h-4" />
                                   Donation
@@ -301,9 +301,9 @@ export default function OrderHistory() {
                               </div>
                             )}
 
-                            <Separator />
+                            <Separator className="bg-gray-200" />
                             
-                            <div className="flex justify-between text-lg font-bold text-foreground">
+                            <div className="flex justify-between text-lg font-bold text-gray-900">
                               <span>Total</span>
                               <span>${(order.amount_total_cents / 100).toFixed(2)}</span>
                             </div>
