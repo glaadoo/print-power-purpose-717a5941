@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export default function Home() {
   console.log('[Home] Component rendering');
@@ -25,8 +26,14 @@ export default function Home() {
     orderCount: 0,
   });
 
-  // Featured videos state from storage bucket
-  const [featuredVideos, setFeaturedVideos] = useState<Array<{ name: string; url: string }>>([]);
+  // Featured videos state with metadata from database
+  const [featuredVideos, setFeaturedVideos] = useState<Array<{ 
+    name: string; 
+    url: string; 
+    title: string | null;
+    description: string | null;
+    thumbnail_url: string | null;
+  }>>([]);
 
   // Set document title
   useEffect(() => {
@@ -82,23 +89,46 @@ export default function Home() {
 
     loadStats();
 
-    // Load all featured videos from storage bucket
+    // Load featured videos with metadata from database
     async function loadFeaturedVideos() {
       try {
-        const { data, error } = await supabase.storage.from('videos').list();
+        // Get video metadata from database
+        const { data: metadata, error: metadataError } = await supabase
+          .from('video_metadata')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        if (metadataError) throw metadataError;
+
+        // Get videos from storage and merge with metadata
+        const { data: storageFiles, error: storageError } = await supabase.storage
+          .from('videos')
+          .list();
         
-        if (error) throw error;
+        if (storageError) throw storageError;
         
-        // Get all videos sorted by most recent first
-        if (data && data.length > 0) {
-          const sortedVideos = data.sort((a, b) => 
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-          const videosWithUrls = sortedVideos.map(video => ({
-            name: video.name.replace(/\.[^/.]+$/, ""), // Remove file extension
-            url: supabase.storage.from('videos').getPublicUrl(video.name).data.publicUrl
-          }));
-          setFeaturedVideos(videosWithUrls);
+        if (storageFiles && storageFiles.length > 0) {
+          const videosWithMetadata = storageFiles
+            .map(file => {
+              const meta = metadata?.find(m => m.video_name === file.name);
+              return {
+                name: file.name,
+                url: supabase.storage.from('videos').getPublicUrl(file.name).data.publicUrl,
+                title: meta?.title || file.name.replace(/\.[^/.]+$/, ""),
+                description: meta?.description || null,
+                thumbnail_url: meta?.thumbnail_url 
+                  ? supabase.storage.from('video-thumbnails').getPublicUrl(meta.thumbnail_url).data.publicUrl
+                  : null
+              };
+            })
+            .sort((a, b) => {
+              const aOrder = metadata?.find(m => m.video_name === a.name)?.display_order || 999;
+              const bOrder = metadata?.find(m => m.video_name === b.name)?.display_order || 999;
+              return aOrder - bOrder;
+            });
+          
+          setFeaturedVideos(videosWithMetadata);
         }
       } catch (error) {
         console.error("Error loading featured videos:", error);
@@ -248,22 +278,41 @@ export default function Home() {
                     align: "start",
                     loop: true,
                   }}
+                  plugins={[
+                    Autoplay({
+                      delay: 8000,
+                      stopOnInteraction: true,
+                    }),
+                  ]}
                   className="w-full"
                 >
                   <CarouselContent>
                     {featuredVideos.map((video, index) => (
                       <CarouselItem key={index} className="md:basis-1/1 lg:basis-1/1">
                         <div className="p-1">
-                          <div className="rounded-lg overflow-hidden shadow-xl bg-gray-900 aspect-video">
+                          <div className="rounded-lg overflow-hidden shadow-xl bg-gray-900 aspect-video relative group">
+                            {video.thumbnail_url && (
+                              <img
+                                src={video.thumbnail_url}
+                                alt={video.title || "Video thumbnail"}
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-100 group-hover:opacity-0 transition-opacity duration-300"
+                              />
+                            )}
                             <video
                               className="w-full h-full object-contain"
                               src={video.url}
                               controls
                               muted
                               playsInline
+                              poster={video.thumbnail_url || undefined}
                             />
                           </div>
-                          <p className="text-center mt-3 text-sm text-gray-600 font-medium">{video.name}</p>
+                          <div className="mt-3 text-center">
+                            <p className="text-lg font-semibold text-gray-900">{video.title}</p>
+                            {video.description && (
+                              <p className="text-sm text-gray-600 mt-1">{video.description}</p>
+                            )}
+                          </div>
                         </div>
                       </CarouselItem>
                     ))}
@@ -271,6 +320,9 @@ export default function Home() {
                   <CarouselPrevious className="bg-white hover:bg-gray-100 border-gray-300" />
                   <CarouselNext className="bg-white hover:bg-gray-100 border-gray-300" />
                 </Carousel>
+                <p className="text-center text-xs text-gray-500 mt-4">
+                  Auto-plays every 8 seconds • Click video to pause
+                </p>
               </div>
             </div>
           )}
