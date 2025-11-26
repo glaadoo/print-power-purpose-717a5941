@@ -27,6 +27,8 @@ type Nonprofit = {
   source?: string | null;
   irs_status?: string | null;
   tags?: string[] | null;
+  total_raised_cents?: number;
+  supporter_count?: number;
 };
 
 export default function SelectNonprofit() {
@@ -124,27 +126,61 @@ export default function SelectNonprofit() {
     let alive = true;
     (async () => {
       try {
-        // Fetch all nonprofits for search
-        const { data: allData, error: allError } = await supabase
+        // Fetch all nonprofits with impact metrics
+        const { data: nonprofitsData, error: nonprofitsError } = await supabase
           .from("nonprofits")
           .select("id, name, ein, city, state, description, source, irs_status, tags")
           .eq("approved", true)
           .order("name", { ascending: true });
 
-        if (allError) throw allError;
-        if (alive) setAllNonprofits(allData || []);
+        if (nonprofitsError) throw nonprofitsError;
 
-        // Fetch 10 random nonprofits for initial display
-        const { data: randomData, error: randomError } = await supabase
-          .from("nonprofits")
-          .select("id, name, ein, city, state, description, source, irs_status, tags")
-          .eq("approved", true)
-          .limit(10);
+        // Fetch donation metrics for all nonprofits
+        const { data: donationsData, error: donationsError } = await supabase
+          .from("donations")
+          .select("nonprofit_id, amount_cents, customer_email");
 
-        if (randomError) throw randomError;
+        if (donationsError) throw donationsError;
+
+        // Aggregate metrics by nonprofit
+        const metricsMap = new Map<string, { total_raised_cents: number; supporter_count: number }>();
         
-        // Shuffle the results client-side for randomness
-        const shuffled = (randomData || []).sort(() => Math.random() - 0.5);
+        if (donationsData) {
+          donationsData.forEach(donation => {
+            if (!donation.nonprofit_id) return;
+            
+            const existing = metricsMap.get(donation.nonprofit_id) || { 
+              total_raised_cents: 0, 
+              supporter_count: 0,
+              supporters: new Set<string>()
+            };
+            
+            existing.total_raised_cents += donation.amount_cents || 0;
+            if (donation.customer_email) {
+              (existing as any).supporters.add(donation.customer_email);
+            }
+            
+            metricsMap.set(donation.nonprofit_id, existing);
+          });
+
+          // Convert Set to count
+          metricsMap.forEach((value, key) => {
+            value.supporter_count = (value as any).supporters.size;
+            delete (value as any).supporters;
+          });
+        }
+
+        // Merge metrics with nonprofits
+        const nonprofitsWithMetrics = (nonprofitsData || []).map(np => ({
+          ...np,
+          total_raised_cents: metricsMap.get(np.id)?.total_raised_cents || 0,
+          supporter_count: metricsMap.get(np.id)?.supporter_count || 0,
+        }));
+
+        if (alive) setAllNonprofits(nonprofitsWithMetrics);
+
+        // Get 10 random for initial display
+        const shuffled = [...nonprofitsWithMetrics].sort(() => Math.random() - 0.5).slice(0, 10);
         if (alive) setRandomNonprofits(shuffled);
         
       } catch (e: any) {
@@ -177,17 +213,8 @@ export default function SelectNonprofit() {
   async function handleShuffle() {
     setShuffling(true);
     try {
-      // Fetch more nonprofits to shuffle from
-      const { data, error } = await supabase
-        .from("nonprofits")
-        .select("id, name, ein, city, state, description, source, irs_status, tags")
-        .eq("approved", true)
-        .limit(50);
-
-      if (error) throw error;
-
-      // Shuffle and take 10
-      const shuffled = (data || []).sort(() => Math.random() - 0.5).slice(0, 10);
+      // Use existing allNonprofits data (which already has metrics)
+      const shuffled = [...allNonprofits].sort(() => Math.random() - 0.5).slice(0, 10);
       setRandomNonprofits(shuffled);
       
       toast({
@@ -374,6 +401,24 @@ export default function SelectNonprofit() {
                   {np.description}
                 </p>
               )}
+
+              {/* Impact Metrics */}
+              <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Total Raised</p>
+                    <p className="text-lg font-bold text-primary">
+                      ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Supporters</p>
+                    <p className="text-lg font-bold text-primary">
+                      {(np.supporter_count || 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* Select Button */}
               <Button
