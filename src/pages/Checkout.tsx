@@ -668,12 +668,25 @@ export default function Checkout() {
                 // Update localStorage cart
                 try {
                   localStorage.setItem("ppp:cart", JSON.stringify({ items: updatedItems }));
+                  
+                  // Show success toast
+                  toast.push({
+                    title: "Artwork uploaded successfully!",
+                    body: `${fileName} has been added to your order.`,
+                  });
+                  
+                  // Force refresh by triggering a state update
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 1500); // Delay reload to show toast
+                  
                 } catch (e) {
                   console.error("Failed to update cart:", e);
+                  toast.push({
+                    title: "Upload failed",
+                    body: "Could not save artwork to your order. Please try again.",
+                  });
                 }
-                
-                // Force refresh by triggering a state update
-                window.location.reload();
                 
                 setUploadDialogOpen(false);
                 setUploadingForItemId(null);
