@@ -45,7 +45,7 @@ export default function SelectNonprofit() {
   const [loading, setLoading] = useState(true);
   const [shuffling, setShuffling] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [selectedNonprofit, setSelectedNonprofit] = useState<Nonprofit | null>(nonprofit);
+  const [selectedNonprofit, setSelectedNonprofit] = useState<Nonprofit | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Filter states
@@ -267,9 +267,11 @@ export default function SelectNonprofit() {
     };
   }, []);
 
-  // Separate effect to sync with context nonprofit (for persistence)
+  // Initialize and sync with context nonprofit (for persistence)
   useEffect(() => {
+    // On mount, restore selection from context if exists
     if (nonprofit) {
+      console.log("[SelectNonprofit] Restoring selection from context:", nonprofit);
       setSelectedNonprofit(nonprofit);
     }
   }, [nonprofit]);
