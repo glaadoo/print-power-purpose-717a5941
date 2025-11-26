@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { ArrowLeft, Search, Shuffle, Filter, X, TrendingUp, Sparkles, ArrowUpDown, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,9 @@ export default function SelectNonprofit() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<string>("default");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Ref to track scroll position during sorting
+  const scrollPositionRef = useRef<number>(0);
 
   // Extract unique values for filters
   const uniqueStates = useMemo(() => {
@@ -247,6 +250,17 @@ export default function SelectNonprofit() {
       alive = false;
     };
   }, []);
+
+  // Maintain scroll position when sorting changes
+  useEffect(() => {
+    // Save current scroll position before sort
+    scrollPositionRef.current = window.scrollY;
+    
+    // Restore scroll position after sort completes
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollPositionRef.current);
+    });
+  }, [displayedNonprofits]);
 
   function handleNonprofitSelect(np: Nonprofit) {
     setSelectedNonprofit(np);
