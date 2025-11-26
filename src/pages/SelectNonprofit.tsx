@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
-import { ArrowLeft, Search, Shuffle, Filter, X } from "lucide-react";
+import { ArrowLeft, Search, Shuffle, Filter, X, TrendingUp, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -30,6 +30,7 @@ type Nonprofit = {
   logo_url?: string | null;
   total_raised_cents?: number;
   supporter_count?: number;
+  created_at?: string;
 };
 
 export default function SelectNonprofit() {
@@ -88,6 +89,18 @@ export default function SelectNonprofit() {
       .slice(0, 4);
   }, [allNonprofits]);
 
+  // Check if nonprofit is newly added (last 30 days)
+  const isNewlyAdded = (createdAt: string) => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return new Date(createdAt) > thirtyDaysAgo;
+  };
+
+  // Check if nonprofit is a top fundraiser
+  const isTopFundraiser = (nonprofitId: string) => {
+    return topFundraisers.some(nf => nf.id === nonprofitId);
+  };
+
   // Apply filters
   const displayedNonprofits = useMemo(() => {
     let filtered = searchQuery.trim()
@@ -137,7 +150,7 @@ export default function SelectNonprofit() {
         // Fetch all nonprofits with impact metrics
         const { data: nonprofitsData, error: nonprofitsError } = await supabase
           .from("nonprofits")
-          .select("id, name, ein, city, state, description, source, irs_status, tags, logo_url")
+          .select("id, name, ein, city, state, description, source, irs_status, tags, logo_url, created_at")
           .eq("approved", true)
           .order("name", { ascending: true });
 
@@ -375,7 +388,7 @@ export default function SelectNonprofit() {
               key={np.id}
               onClick={() => handleNonprofitSelect(np)}
               className={`
-                cursor-pointer p-6 flex flex-col transition-all hover:shadow-lg
+                cursor-pointer p-6 flex flex-col transition-all hover:shadow-lg relative
                 ${
                   isSelected
                     ? "border-primary ring-2 ring-primary"
@@ -383,6 +396,22 @@ export default function SelectNonprofit() {
                 }
               `}
             >
+              {/* Featured Badges */}
+              <div className="absolute top-3 right-3 flex flex-col gap-2">
+                {isTopFundraiser(np.id) && (
+                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-md flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    Top Fundraiser
+                  </Badge>
+                )}
+                {np.created_at && isNewlyAdded(np.created_at) && (
+                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-md flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    New
+                  </Badge>
+                )}
+              </div>
+
               {/* Logo */}
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary/20">
