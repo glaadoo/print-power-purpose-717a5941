@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ArtworkUpload from "@/components/ArtworkUpload";
+import Footer from "@/components/Footer";
 
 type ProductRow = {
   id: string;
@@ -696,6 +697,7 @@ export default function Checkout() {
           )}
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   console.log('[Home] Component rendering');
@@ -260,11 +261,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FooterStrip />
-        </div>
-      </footer>
+      <Footer />
 
       {/* Menu Overlay */}
       {menu.open && (

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Lock } from "lucide-react";
 import { invokeWithRetry } from "@/lib/api-retry";
 import { useCause } from "@/context/CauseContext";
+import Footer from "@/components/Footer";
 
 const PRESET_AMOUNTS = [140, 70, 40, 25, 15, 8];
 
@@ -497,10 +498,11 @@ export default function Donate() {
                   Secure payment · Tax-deductible · Cancel anytime
                 </p>
               </form>
-            </div>
           </div>
         </div>
       </div>
+      <Footer />
+    </div>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Search } from "lucide-react";
 import VistaprintNav from "@/components/VistaprintNav";
+import Footer from "@/components/Footer";
 
 const LS_CAUSE = "ppp:cause";
 
@@ -276,6 +277,7 @@ export default function Causes() {
 
         {body}
       </main>
+      <Footer />
     </div>
   );
 }

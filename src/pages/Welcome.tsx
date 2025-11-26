@@ -6,6 +6,7 @@ import VideoBackground from "@/components/VideoBackground";
 import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { Menu } from "lucide-react";
+import Footer from "@/components/Footer";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -256,11 +257,12 @@ export default function Welcome() {
                     )}
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
+      <Footer />
+    </div>
     </div>
   );
 }

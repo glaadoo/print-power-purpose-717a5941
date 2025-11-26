@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ArtworkUpload from "@/components/ArtworkUpload";
+import Footer from "@/components/Footer";
 
 export default function Cart() {
   const { items, count, totalCents, setQty, remove, clear } = useCart();
@@ -370,6 +371,7 @@ export default function Cart() {
           )}
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 }

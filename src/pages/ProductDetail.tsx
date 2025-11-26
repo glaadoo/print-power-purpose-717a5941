@@ -12,6 +12,7 @@ import FrequentlyBoughtCarousel from "@/components/product-detail/FrequentlyBoug
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { toast } from "sonner";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
+import Footer from "@/components/Footer";
 
 type ProductRow = {
   id: string;
@@ -321,6 +322,7 @@ export default function ProductDetail() {
           </>
         ) : null}
       </div>
+      <Footer />
     </div>
   );
 }
