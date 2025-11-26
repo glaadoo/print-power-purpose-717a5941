@@ -9,6 +9,7 @@ import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
 import Footer from "@/components/Footer";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 
 export default function Home() {
   console.log('[Home] Component rendering');
@@ -24,8 +25,8 @@ export default function Home() {
     orderCount: 0,
   });
 
-  // Featured video state from storage bucket
-  const [featuredVideo, setFeaturedVideo] = useState<string | null>(null);
+  // Featured videos state from storage bucket
+  const [featuredVideos, setFeaturedVideos] = useState<Array<{ name: string; url: string }>>([]);
 
   // Set document title
   useEffect(() => {
@@ -81,28 +82,30 @@ export default function Home() {
 
     loadStats();
 
-    // Load featured video from storage bucket
-    async function loadFeaturedVideo() {
+    // Load all featured videos from storage bucket
+    async function loadFeaturedVideos() {
       try {
         const { data, error } = await supabase.storage.from('videos').list();
         
         if (error) throw error;
         
-        // Get the most recent video
+        // Get all videos sorted by most recent first
         if (data && data.length > 0) {
           const sortedVideos = data.sort((a, b) => 
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           );
-          const latestVideo = sortedVideos[0];
-          const videoUrl = supabase.storage.from('videos').getPublicUrl(latestVideo.name).data.publicUrl;
-          setFeaturedVideo(videoUrl);
+          const videosWithUrls = sortedVideos.map(video => ({
+            name: video.name.replace(/\.[^/.]+$/, ""), // Remove file extension
+            url: supabase.storage.from('videos').getPublicUrl(video.name).data.publicUrl
+          }));
+          setFeaturedVideos(videosWithUrls);
         }
       } catch (error) {
-        console.error("Error loading featured video:", error);
+        console.error("Error loading featured videos:", error);
       }
     }
 
-    loadFeaturedVideo();
+    loadFeaturedVideos();
 
     // Subscribe to realtime updates
     const donationsChannel = supabase
@@ -236,17 +239,38 @@ export default function Home() {
             </div>
           </div>
 
-          {featuredVideo && (
-            <div className="mt-16 max-w-4xl mx-auto">
+          {featuredVideos.length > 0 && (
+            <div className="mt-16">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Milestone Donor Stories</h3>
-              <div className="rounded-lg overflow-hidden shadow-xl bg-gray-900 aspect-video">
-                <video
-                  className="w-full h-full object-contain"
-                  src={featuredVideo}
-                  controls
-                  muted
-                  playsInline
-                />
+              <div className="relative max-w-5xl mx-auto px-12">
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent>
+                    {featuredVideos.map((video, index) => (
+                      <CarouselItem key={index} className="md:basis-1/1 lg:basis-1/1">
+                        <div className="p-1">
+                          <div className="rounded-lg overflow-hidden shadow-xl bg-gray-900 aspect-video">
+                            <video
+                              className="w-full h-full object-contain"
+                              src={video.url}
+                              controls
+                              muted
+                              playsInline
+                            />
+                          </div>
+                          <p className="text-center mt-3 text-sm text-gray-600 font-medium">{video.name}</p>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="bg-white hover:bg-gray-100 border-gray-300" />
+                  <CarouselNext className="bg-white hover:bg-gray-100 border-gray-300" />
+                </Carousel>
               </div>
             </div>
           )}
