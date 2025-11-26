@@ -1379,6 +1379,14 @@ export type Database = {
       cleanup_expired_admin_sessions: { Args: never; Returns: undefined }
       cleanup_old_system_logs: { Args: never; Returns: undefined }
       generate_order_number: { Args: never; Returns: string }
+      get_nonprofit_metrics: {
+        Args: never
+        Returns: {
+          nonprofit_id: string
+          supporter_count: number
+          total_raised_cents: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

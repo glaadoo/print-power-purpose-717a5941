@@ -156,39 +156,25 @@ export default function SelectNonprofit() {
 
         if (nonprofitsError) throw nonprofitsError;
 
-        // Fetch completed orders where nonprofit was selected
-        // Include both "paid" (historical) and "completed" (new) statuses
-        const { data: ordersData, error: ordersError } = await supabase
-          .from("orders")
-          .select("nonprofit_id, donation_cents, id")
-          .in("status", ["paid", "completed"])
-          .not("nonprofit_id", "is", null);
+        // Fetch nonprofit metrics using database function (bypasses RLS)
+        const { data: metricsData, error: metricsError } = await supabase
+          .rpc("get_nonprofit_metrics");
 
-        console.log("[SelectNonprofit] Orders query result:", { ordersData, ordersError });
+        console.log("[SelectNonprofit] Metrics result:", { metricsData, metricsError });
 
-        if (ordersError) {
-          console.error("[SelectNonprofit] Orders query failed:", ordersError);
-          // Don't throw - continue with empty metrics if orders query fails due to RLS
+        if (metricsError) {
+          console.error("[SelectNonprofit] Metrics query failed:", metricsError);
         }
 
-        // Aggregate metrics by nonprofit
+        // Build metrics map from function results
         const metricsMap = new Map<string, { total_raised_cents: number; supporter_count: number }>();
         
-        if (ordersData) {
-          ordersData.forEach(order => {
-            if (!order.nonprofit_id) return;
-            
-            const existing = metricsMap.get(order.nonprofit_id) || { 
-              total_raised_cents: 0, 
-              supporter_count: 0
-            };
-            
-            // Add donation amount from this order
-            existing.total_raised_cents += order.donation_cents || 0;
-            // Increment supporter count (each order = 1 supporter)
-            existing.supporter_count += 1;
-            
-            metricsMap.set(order.nonprofit_id, existing);
+        if (metricsData) {
+          metricsData.forEach((metric: any) => {
+            metricsMap.set(metric.nonprofit_id, {
+              total_raised_cents: Number(metric.total_raised_cents) || 0,
+              supporter_count: Number(metric.supporter_count) || 0,
+            });
           });
         }
 
