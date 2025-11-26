@@ -246,17 +246,17 @@ export default function Auth() {
   console.log('[Auth] Rendering return JSX');
   
   return (
-    <div className="min-h-screen text-white relative z-10">
-      <header className="sticky top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+    <div className="min-h-screen bg-gray-50 relative z-10">
+      <header className="sticky top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between bg-white border-b border-gray-200 shadow-sm">
         <button
           onClick={() => navigate("/")}
-          className="size-9 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 grid place-items-center transition-colors"
+          className="size-9 rounded-full border border-gray-300 bg-white hover:bg-gray-50 grid place-items-center transition-colors"
           aria-label="Back to home"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5 text-gray-700" />
         </button>
         
-        <span className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
+        <span className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase text-blue-600">
           Sign In
         </span>
         
@@ -264,23 +264,16 @@ export default function Auth() {
       </header>
 
       <div className="scroll-smooth">
-        <section className="relative min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            overlay={<div className="absolute inset-0 bg-black/50 -z-10" />}
-          />
-
-          <div className="relative w-full max-w-md mx-auto z-20">
+        <section className="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4">
+          <div className="w-full max-w-md mx-auto z-20">
             <div className="flex justify-center mb-8">
-              <div className="inline-flex rounded-full border border-white/30 bg-white/10 backdrop-blur p-1">
+              <div className="inline-flex rounded-full border border-gray-300 bg-white shadow-sm p-1">
                 <button
                   onClick={() => setMode("signin")}
                   className={`px-6 py-2 rounded-full font-semibold transition-all ${
                     mode === "signin"
-                      ? "bg-white text-black"
-                      : "text-white hover:bg-white/10"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   Sign In
@@ -289,8 +282,8 @@ export default function Auth() {
                   onClick={() => setMode("signup")}
                   className={`px-6 py-2 rounded-full font-semibold transition-all ${
                     mode === "signup"
-                      ? "bg-white text-black"
-                      : "text-white hover:bg-white/10"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   Sign Up
@@ -298,22 +291,22 @@ export default function Auth() {
               </div>
             </div>
 
-            <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl p-8">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8">
               {mode === "signin" ? (
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email" className="text-white">Email</Label>
+                    <Label htmlFor="signin-email" className="text-gray-700">Email</Label>
                     <Input
                       id="signin-email"
                       type="email"
                       value={signInEmail}
                       onChange={(e) => setSignInEmail(e.target.value)}
                       required
-                      className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password" className="text-white">Password</Label>
+                    <Label htmlFor="signin-password" className="text-gray-700">Password</Label>
                     <div className="relative">
                       <Input
                         id="signin-password"
@@ -321,12 +314,12 @@ export default function Auth() {
                         value={signInPassword}
                         onChange={(e) => setSignInPassword(e.target.value)}
                         required
-                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50 pr-10"
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -335,14 +328,14 @@ export default function Auth() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-white text-black hover:bg-white/90"
+                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
                   >
                     {loading ? "Signing In..." : "Sign In"}
                   </Button>
                   <div className="text-center">
                     <a
                       href="/forgot-password"
-                      className="text-white/80 hover:text-white text-sm underline"
+                      className="text-blue-600 hover:text-blue-700 text-sm underline"
                     >
                       Forgot Password?
                     </a>
@@ -352,39 +345,39 @@ export default function Auth() {
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName" className="text-white">First Name</Label>
+                      <Label htmlFor="firstName" className="text-gray-700">First Name</Label>
                       <Input
                         id="firstName"
                         value={signUpData.firstName}
                         onChange={(e) => setSignUpData({ ...signUpData, firstName: e.target.value })}
                         required
-                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-white">Last Name</Label>
+                      <Label htmlFor="lastName" className="text-gray-700">Last Name</Label>
                       <Input
                         id="lastName"
                         value={signUpData.lastName}
                         onChange={(e) => setSignUpData({ ...signUpData, lastName: e.target.value })}
                         required
-                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-white">Email</Label>
+                    <Label htmlFor="signup-email" className="text-gray-700">Email</Label>
                     <Input
                       id="signup-email"
                       type="email"
                       value={signUpData.email}
                       onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
                       required
-                      className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-white">Password</Label>
+                    <Label htmlFor="signup-password" className="text-gray-700">Password</Label>
                     <div className="relative">
                       <Input
                         id="signup-password"
@@ -392,73 +385,73 @@ export default function Auth() {
                         value={signUpData.password}
                         onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
                         required
-                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50 pr-10"
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-white">Phone</Label>
+                    <Label htmlFor="phone" className="text-gray-700">Phone</Label>
                     <Input
                       id="phone"
                       type="tel"
                       value={signUpData.phone}
                       onChange={(e) => setSignUpData({ ...signUpData, phone: e.target.value })}
-                      className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="streetAddress" className="text-white">Street Address</Label>
+                    <Label htmlFor="streetAddress" className="text-gray-700">Street Address</Label>
                     <Input
                       id="streetAddress"
                       value={signUpData.streetAddress}
                       onChange={(e) => setSignUpData({ ...signUpData, streetAddress: e.target.value })}
                       required
-                      className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="city" className="text-white">City</Label>
+                      <Label htmlFor="city" className="text-gray-700">City</Label>
                       <Input
                         id="city"
                         value={signUpData.city}
                         onChange={(e) => setSignUpData({ ...signUpData, city: e.target.value })}
                         required
-                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="state" className="text-white">State</Label>
+                      <Label htmlFor="state" className="text-gray-700">State</Label>
                       <Input
                         id="state"
                         value={signUpData.state}
                         onChange={(e) => setSignUpData({ ...signUpData, state: e.target.value })}
                         required
-                        className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="zipCode" className="text-white">Zip Code</Label>
+                    <Label htmlFor="zipCode" className="text-gray-700">Zip Code</Label>
                     <Input
                       id="zipCode"
                       value={signUpData.zipCode}
                       onChange={(e) => setSignUpData({ ...signUpData, zipCode: e.target.value })}
                       required
-                      className="bg-white/10 border-white/30 text-white placeholder:text-white/50"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-white text-black hover:bg-white/90"
+                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
                   >
                     {loading ? "Creating Account..." : "Sign Up"}
                   </Button>
