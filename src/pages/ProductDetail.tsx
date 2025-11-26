@@ -168,14 +168,14 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="fixed inset-0 text-white">
+    <div className="min-h-screen bg-white">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10 relative">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between bg-white border-b border-gray-200 shadow-sm relative">
         {/* Left: Back button */}
         <Button
           onClick={() => nav(-1)}
           variant="outline"
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
           size="sm"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -186,7 +186,7 @@ export default function ProductDetail() {
         <div className="absolute left-1/2 -translate-x-1/2">
           <a
             href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase text-blue-600 hover:text-blue-700"
             aria-label="Print Power Purpose Home"
           >
             PRINT&nbsp;POWER&nbsp;PURPOSE
@@ -199,7 +199,7 @@ export default function ProductDetail() {
             variant="outline"
             size="sm"
             onClick={() => nav("/favorites")}
-            className="rounded-full border-white/50 bg-white/10 text-white hover:bg-white/20 relative"
+            className="rounded-full border-gray-300 bg-white text-gray-900 hover:bg-gray-50 relative"
           >
             <Heart className="w-4 h-4" />
             {favoritesCount > 0 && (
@@ -211,12 +211,12 @@ export default function ProductDetail() {
           
           <button
             onClick={() => nav("/cart")}
-            className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30 relative"
+            className="flex items-center gap-2 rounded-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white relative transition-colors"
             aria-label="View cart"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M9 2L7.17 4H3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4.17L15 2H9z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M5 7v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 2L7.17 4H3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4.17L15 2H9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 7v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <span className="hidden sm:inline">Cart</span>
             {items.length > 0 && (
@@ -229,27 +229,20 @@ export default function ProductDetail() {
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            overlay={<div className="absolute inset-0 bg-black/50" />}
-          />
-
-          <div className="relative w-full max-w-2xl mx-auto">
-            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-              {loading && <p className="text-center">Loading product…</p>}
+      <div className="pt-16 min-h-screen bg-gray-50">
+        <section className="py-12 px-4">
+          <div className="w-full max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+              {loading && <p className="text-center text-gray-600">Loading product…</p>}
               
               {err && (
-                <p className="text-center text-red-400">{err || "Product not found"}</p>
+                <p className="text-center text-red-600">{err || "Product not found"}</p>
               )}
 
               {!loading && !err && product && (
                 <>
                   {/* Product Image */}
-                  <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-6">
+                  <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 border border-gray-200 mb-6">
                     {product.image_url && !imageError ? (
                       <img 
                         src={product.image_url} 
@@ -261,31 +254,31 @@ export default function ProductDetail() {
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-white/5">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
                         <div className="text-center p-6">
-                          <svg className="w-20 h-20 mx-auto text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-20 h-20 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <p className="text-white/40 text-sm mt-3">No image available</p>
+                          <p className="text-gray-400 text-sm mt-3">No image available</p>
                         </div>
                       </div>
                     )}
                   </div>
 
-                   <h1 className="text-3xl font-serif font-semibold text-center mb-4">
+                   <h1 className="text-3xl font-bold text-center text-blue-600 mb-4">
                     {product.name}
                   </h1>
                   {unitPrice > 0 ? (
-                    <p className="text-center text-xl font-bold mb-2">
+                    <p className="text-center text-xl font-bold text-gray-900 mb-2">
                       Price: ${unitPrice.toFixed(2)}
                     </p>
                   ) : (
-                    <p className="text-center text-sm text-yellow-300 mb-2">
+                    <p className="text-center text-sm text-amber-600 mb-2">
                       Configure product to see pricing
                     </p>
                   )}
                   {product.description && (
-                    <p className="text-center opacity-90 mb-6">{product.description}</p>
+                    <p className="text-center text-gray-600 mb-6">{product.description}</p>
                   )}
 
                   <div className="flex flex-col gap-6 items-center">
@@ -331,7 +324,8 @@ export default function ProductDetail() {
                     )}
 
                     {/* Artwork Upload - Required */}
-                    <div className="w-full mt-6">
+                    <div className="w-full mt-6 p-6 bg-blue-50 rounded-xl border-2 border-blue-200">
+                      <h3 className="text-lg font-semibold text-blue-600 mb-4">Upload Your Artwork</h3>
                       <ArtworkUpload
                         productId={product.id}
                         productName={product.name}
@@ -345,24 +339,24 @@ export default function ProductDetail() {
                     </div>
 
                     <div className="w-full max-w-xs">
-                      <label className="block text-sm font-medium mb-2 text-center">Quantity</label>
+                      <label className="block text-sm font-medium mb-2 text-center text-gray-700">Quantity</label>
                       <input
                         type="number"
                         min="1"
                         value={qty}
                         onChange={(e) => setQty(Math.max(1, Number(e.target.value || 1)))}
-                        className="w-full rounded-xl bg-white/90 text-black px-4 py-2 text-center outline-none"
+                        className="w-full rounded-xl bg-white border border-gray-300 text-gray-900 px-4 py-2 text-center outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       />
                     </div>
 
                     {requiresConfiguration && !isConfigured && (
-                      <p className="text-sm text-yellow-300 mb-3">
+                      <p className="text-sm text-amber-600 mb-3">
                         Please select product options above before adding to cart
                       </p>
                     )}
                     
                     {!hasArtwork && (
-                      <p className="text-sm text-yellow-300 mb-3">
+                      <p className="text-sm text-amber-600 mb-3">
                         Please upload your artwork before adding to cart
                       </p>
                     )}
@@ -371,7 +365,7 @@ export default function ProductDetail() {
                       <Button
                         onClick={handleAddToCart}
                         disabled={!canAddToCart}
-                        className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 rounded-full px-6 py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Add to Cart
                       </Button>
@@ -381,7 +375,7 @@ export default function ProductDetail() {
                           nav("/checkout", { state: { productId: product.id, qty } })
                         }
                         disabled={!canAddToCart}
-                        className="flex-1 rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 rounded-full px-6 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Checkout
                       </Button>
@@ -389,7 +383,7 @@ export default function ProductDetail() {
 
                     <button
                       onClick={() => nav("/products")}
-                      className="mt-2 text-sm opacity-80 hover:opacity-100 underline"
+                      className="mt-2 text-sm text-blue-600 hover:text-blue-700 underline"
                     >
                       ← Back to products
                     </button>
