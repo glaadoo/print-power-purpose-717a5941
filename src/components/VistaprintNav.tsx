@@ -13,6 +13,7 @@ export default function VistaprintNav() {
   const { count: favoritesCount } = useFavorites();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+  const [loadingUserName, setLoadingUserName] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [productsMenuOpen, setProductsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -26,12 +27,14 @@ export default function VistaprintNav() {
       
       // Fetch user profile if authenticated
       if (session?.user) {
+        setLoadingUserName(true);
         supabase
           .from('profiles')
           .select('first_name')
           .eq('id', session.user.id)
           .maybeSingle()
           .then(({ data }) => {
+            setLoadingUserName(false);
             if (data?.first_name) {
               setUserName(data.first_name);
             }
@@ -46,6 +49,7 @@ export default function VistaprintNav() {
       
       // Fetch user profile on auth state change
       if (session?.user) {
+        setLoadingUserName(true);
         setTimeout(() => {
           supabase
             .from('profiles')
@@ -53,6 +57,7 @@ export default function VistaprintNav() {
             .eq('id', session.user.id)
             .maybeSingle()
             .then(({ data }) => {
+              setLoadingUserName(false);
               if (data?.first_name) {
                 setUserName(data.first_name);
               }
@@ -263,7 +268,11 @@ export default function VistaprintNav() {
               >
                 <User className="w-5 h-5" />
                 <span className="hidden sm:inline">
-                  {isAuthenticated && userName ? `Hi, ${userName}` : isAuthenticated ? "Account" : "Sign In"}
+                  {loadingUserName ? (
+                    <span className="inline-block h-4 w-20 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse bg-[length:200%_100%]" style={{ animation: 'shimmer 1.5s infinite' }} />
+                  ) : (
+                    isAuthenticated && userName ? `Hi, ${userName}` : isAuthenticated ? "Account" : "Sign In"
+                  )}
                 </span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
               </button>
