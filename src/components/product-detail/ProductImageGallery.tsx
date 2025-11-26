@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type ProductImageGalleryProps = {
@@ -45,6 +45,12 @@ export default function ProductImageGallery({ images, productName }: ProductImag
             className="w-full h-full object-cover cursor-zoom-in"
             onClick={() => setIsFullscreen(true)}
           />
+          
+          {/* Zoom Indicator */}
+          <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-2 rounded-full flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <ZoomIn className="w-4 h-4" />
+            <span className="text-sm font-medium">Click to zoom</span>
+          </div>
         </div>
 
         {/* Navigation Arrows */}
