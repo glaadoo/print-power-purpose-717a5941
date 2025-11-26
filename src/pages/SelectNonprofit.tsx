@@ -164,9 +164,8 @@ export default function SelectNonprofit() {
         });
         break;
       case "rising_fundraisers":
-        sorted = sorted
-          .filter(np => (np.supporter_count || 0) > 0)
-          .sort((a, b) => (b.supporter_count || 0) - (a.supporter_count || 0));
+        // Sort by supporter count (highest first), show all nonprofits even with 0 supporters
+        sorted.sort((a, b) => (b.supporter_count || 0) - (a.supporter_count || 0));
         break;
       default:
         // Keep default order
