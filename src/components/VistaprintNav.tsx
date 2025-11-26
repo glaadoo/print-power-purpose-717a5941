@@ -245,16 +245,37 @@ export default function VistaprintNav() {
                       Sign In
                     </button>
                   ) : (
-                    <button
-                      onClick={async () => {
-                        await supabase.auth.signOut();
-                        setMenuOpen(false);
-                        navigate("/");
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      Sign Out
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          navigate("/order-history");
+                          setMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        My Orders
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/favorites");
+                          setMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        My Favorites
+                      </button>
+                      <div className="border-t border-gray-200 my-2"></div>
+                      <button
+                        onClick={async () => {
+                          await supabase.auth.signOut();
+                          setMenuOpen(false);
+                          navigate("/");
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </>
                   )}
                 </div>
               )}
