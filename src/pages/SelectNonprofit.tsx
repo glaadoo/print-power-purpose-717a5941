@@ -87,6 +87,13 @@ export default function SelectNonprofit() {
     return allTags;
   }, [allNonprofits]);
 
+  // Check if nonprofit is newly added (last 30 days)
+  const isNewlyAdded = (createdAt: string) => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return new Date(createdAt) > thirtyDaysAgo;
+  };
+
   // Get top fundraisers (top 3 with actual funds raised)
   const topFundraisers = useMemo(() => {
     return [...allNonprofits]
@@ -113,13 +120,6 @@ export default function SelectNonprofit() {
       rising_fundraisers: allNonprofits.length, // All nonprofits sorted by supporter count
     };
   }, [allNonprofits]);
-
-  // Check if nonprofit is newly added (last 30 days)
-  const isNewlyAdded = (createdAt: string) => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return new Date(createdAt) > thirtyDaysAgo;
-  };
 
   // Check if nonprofit is a top fundraiser
   const isTopFundraiser = (nonprofitId: string) => {
