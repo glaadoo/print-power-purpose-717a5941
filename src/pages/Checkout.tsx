@@ -111,6 +111,7 @@ export default function Checkout() {
   // Artwork upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadingForItemId, setUploadingForItemId] = useState<string | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
 
   // Fetch product & persist merged selection (refresh-proof)
@@ -476,7 +477,7 @@ export default function Checkout() {
                             <button
                               onClick={() => {
                                 setUploadingForItemId(item.id);
-                                setUploadDialogOpen(true);
+                                setConfirmDialogOpen(true);
                               }}
                               className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 hover:bg-blue-50 rounded transition-colors"
                             >
@@ -590,6 +591,37 @@ export default function Checkout() {
           </button>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Replace Artwork?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to replace the current artwork? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setConfirmDialogOpen(false);
+                setUploadingForItemId(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setConfirmDialogOpen(false);
+                setUploadDialogOpen(true);
+              }}
+            >
+              Yes, Replace
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Artwork Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
