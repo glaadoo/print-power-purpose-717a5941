@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export default function Home() {
   console.log('[Home] Component rendering');
@@ -271,18 +272,23 @@ export default function Home() {
           {featuredVideos.length > 0 && (
             <div className="mt-16">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Milestone Donor Stories</h3>
-              <div className="relative max-w-7xl mx-auto px-12">
+              <div className="relative max-w-5xl mx-auto px-12">
                 <Carousel
                   opts={{
                     align: "start",
-                    loop: false,
-                    dragFree: true,
+                    loop: true,
                   }}
+                  plugins={[
+                    Autoplay({
+                      delay: 8000,
+                      stopOnInteraction: true,
+                    }),
+                  ]}
                   className="w-full"
                 >
-                  <CarouselContent className="-ml-2 md:-ml-4">
+                  <CarouselContent>
                     {featuredVideos.map((video, index) => (
-                      <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                      <CarouselItem key={index} className="md:basis-1/1 lg:basis-1/1">
                         <div className="p-1">
                           <div className="rounded-lg overflow-hidden shadow-xl bg-gray-900 aspect-video relative group">
                             {video.thumbnail_url && (
@@ -305,11 +311,11 @@ export default function Home() {
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <CarouselPrevious className="bg-white hover:bg-gray-100 border-gray-300 -left-4" />
-                  <CarouselNext className="bg-white hover:bg-gray-100 border-gray-300 -right-4" />
+                  <CarouselPrevious className="bg-white hover:bg-gray-100 border-gray-300" />
+                  <CarouselNext className="bg-white hover:bg-gray-100 border-gray-300" />
                 </Carousel>
                 <p className="text-center text-xs text-gray-500 mt-4">
-                  Swipe or use arrows to browse videos
+                  Auto-plays every 8 seconds • Click video to pause
                 </p>
               </div>
             </div>
