@@ -55,6 +55,7 @@ export default function SelectNonprofit() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<string>("default");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showAll, setShowAll] = useState(false);
   
   // Ref to track scroll position during sorting
   const scrollPositionRef = useRef<number>(0);
@@ -133,8 +134,8 @@ export default function SelectNonprofit() {
 
   // Apply filters and sorting
   const displayedNonprofits = useMemo(() => {
-    // Use allNonprofits when sorting/filtering is active, otherwise use random subset
-    const baseList = (searchQuery.trim() || sortBy !== "default" || selectedState !== "all_states" || selectedCity !== "all_cities" || selectedTag !== "all_categories")
+    // Use allNonprofits when sorting/filtering is active or showAll is true, otherwise use random subset
+    const baseList = (showAll || searchQuery.trim() || sortBy !== "default" || selectedState !== "all_states" || selectedCity !== "all_cities" || selectedTag !== "all_categories")
       ? allNonprofits
       : randomNonprofits;
 
@@ -188,7 +189,7 @@ export default function SelectNonprofit() {
     }
 
     return sorted;
-  }, [searchQuery, allNonprofits, randomNonprofits, selectedState, selectedCity, selectedTag, sortBy]);
+  }, [searchQuery, allNonprofits, randomNonprofits, selectedState, selectedCity, selectedTag, sortBy, showAll]);
 
   const hasActiveFilters = (selectedState && selectedState !== "all_states") || 
                           (selectedCity && selectedCity !== "all_cities") || 
@@ -572,6 +573,19 @@ export default function SelectNonprofit() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+        )}
+
+        {/* Show All Button - appears when viewing random 10 */}
+        {!showAll && sortBy === "default" && !searchQuery.trim() && selectedState === "all_states" && selectedCity === "all_cities" && selectedTag === "all_categories" && (
+          <div className="flex justify-center mb-8">
+            <Button
+              onClick={() => setShowAll(true)}
+              variant="outline"
+              className="px-8 rounded-full"
+            >
+              Show All Nonprofits ({allNonprofits.length})
+            </Button>
           </div>
         )}
 
