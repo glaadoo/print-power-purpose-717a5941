@@ -133,8 +133,13 @@ export default function SelectNonprofit() {
 
   // Apply filters and sorting
   const displayedNonprofits = useMemo(() => {
+    // Use allNonprofits when sorting/filtering is active, otherwise use random subset
+    const baseList = (searchQuery.trim() || sortBy !== "default" || selectedState !== "all_states" || selectedCity !== "all_cities" || selectedTag !== "all_categories")
+      ? allNonprofits
+      : randomNonprofits;
+
     let filtered = searchQuery.trim()
-      ? allNonprofits.filter((np) => {
+      ? baseList.filter((np) => {
           const query = searchQuery.toLowerCase();
           const name = np.name?.toLowerCase() || "";
           const ein = np.ein?.toLowerCase() || "";
@@ -143,7 +148,7 @@ export default function SelectNonprofit() {
           const description = np.description?.toLowerCase() || "";
           return name.includes(query) || ein.includes(query) || city.includes(query) || state.includes(query) || description.includes(query);
         })
-      : randomNonprofits;
+      : baseList;
 
     // Apply state filter (ignore "all_states" value)
     if (selectedState && selectedState !== "all_states") {
