@@ -1,12 +1,13 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useCause } from "@/context/CauseContext";
 import { supabase } from "@/integrations/supabase/client";
 import VistaprintNav from "@/components/VistaprintNav";
+import { useToast } from "@/hooks/use-toast";
 
 type Nonprofit = {
   id: string;
@@ -24,10 +25,12 @@ export default function SelectNonprofit() {
   const { setNonprofit, nonprofit } = useCause();
   const [searchParams] = useSearchParams();
   const flow = searchParams.get("flow");
+  const { toast } = useToast();
 
   const [allNonprofits, setAllNonprofits] = useState<Nonprofit[]>([]);
   const [randomNonprofits, setRandomNonprofits] = useState<Nonprofit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shuffling, setShuffling] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [selectedNonprofit, setSelectedNonprofit] = useState<Nonprofit | null>(nonprofit);
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,6 +104,38 @@ export default function SelectNonprofit() {
     }
   }
 
+  async function handleShuffle() {
+    setShuffling(true);
+    try {
+      // Fetch more nonprofits to shuffle from
+      const { data, error } = await supabase
+        .from("nonprofits")
+        .select("id, name, ein, city, state, description, source, irs_status")
+        .eq("approved", true)
+        .limit(50);
+
+      if (error) throw error;
+
+      // Shuffle and take 10
+      const shuffled = (data || []).sort(() => Math.random() - 0.5).slice(0, 10);
+      setRandomNonprofits(shuffled);
+      
+      toast({
+        title: "Nonprofits shuffled!",
+        description: "Showing 10 new random nonprofits",
+      });
+    } catch (error) {
+      console.error("Shuffle error:", error);
+      toast({
+        title: "Shuffle failed",
+        description: "Could not load new nonprofits. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setShuffling(false);
+    }
+  }
+
   const body = loading ? (
     <div className="text-center text-muted-foreground py-8">
       <p>Loading nonprofits…</p>
@@ -123,11 +158,25 @@ export default function SelectNonprofit() {
             className="pl-12 h-12 text-base"
           />
         </div>
-        {!searchQuery.trim() && (
-          <p className="text-sm text-muted-foreground text-center mt-2">
-            Showing 10 random nonprofits. Use search to find more.
-          </p>
-        )}
+        <div className="flex items-center justify-center gap-4 mt-4">
+          {!searchQuery.trim() && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Showing 10 random nonprofits. Use search to find more.
+              </p>
+              <Button
+                onClick={handleShuffle}
+                disabled={shuffling}
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-full"
+              >
+                <Shuffle className={`h-4 w-4 ${shuffling ? 'animate-spin' : ''}`} />
+                {shuffling ? 'Shuffling...' : 'Shuffle'}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Nonprofits Grid */}
