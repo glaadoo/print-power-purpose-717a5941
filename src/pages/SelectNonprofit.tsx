@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useMemo, useRef } from "react";
-import { ArrowLeft, Search, Shuffle, Filter, X, TrendingUp, Sparkles, ArrowUpDown, LayoutGrid, List } from "lucide-react";
+import { ArrowLeft, Search, Shuffle, Filter, X, TrendingUp, Sparkles, ArrowUpDown, LayoutGrid, List, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -57,6 +57,7 @@ export default function SelectNonprofit() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showAll, setShowAll] = useState(false);
   const [isRestoringSelection, setIsRestoringSelection] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   
   // Ref to track scroll position during sorting
   const scrollPositionRef = useRef<number>(0);
@@ -333,6 +334,25 @@ export default function SelectNonprofit() {
       window.scrollTo(0, scrollPositionRef.current);
     });
   }, [displayedNonprofits]);
+
+  // Track scroll position to show/hide back to top button
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show button after scrolling down 400px
+      setShowBackToTop(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   function handleNonprofitSelect(np: Nonprofit) {
     setSelectedNonprofit(np);
@@ -952,6 +972,18 @@ export default function SelectNonprofit() {
 
         {body}
       </main>
+
+      {/* Floating Back to Top Button */}
+      {showBackToTop && (
+        <Button
+          onClick={scrollToTop}
+          size="icon"
+          className="fixed bottom-8 right-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50 w-12 h-12 animate-fade-in"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </Button>
+      )}
     </div>
   );
 }
