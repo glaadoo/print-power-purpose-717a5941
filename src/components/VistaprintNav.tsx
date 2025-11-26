@@ -12,6 +12,7 @@ export default function VistaprintNav() {
   const { count: cartCount } = useCart();
   const { count: favoritesCount } = useFavorites();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [productsMenuOpen, setProductsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -22,10 +23,44 @@ export default function VistaprintNav() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      
+      // Fetch user profile if authenticated
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.first_name) {
+              setUserName(data.first_name);
+            }
+          });
+      } else {
+        setUserName(null);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+      
+      // Fetch user profile on auth state change
+      if (session?.user) {
+        setTimeout(() => {
+          supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', session.user.id)
+            .maybeSingle()
+            .then(({ data }) => {
+              if (data?.first_name) {
+                setUserName(data.first_name);
+              }
+            });
+        }, 0);
+      } else {
+        setUserName(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -227,7 +262,9 @@ export default function VistaprintNav() {
                 aria-label="Account menu"
               >
                 <User className="w-5 h-5" />
-                <span className="hidden sm:inline">{isAuthenticated ? "Account" : "Sign In"}</span>
+                <span className="hidden sm:inline">
+                  {isAuthenticated && userName ? `Hi, ${userName}` : isAuthenticated ? "Account" : "Sign In"}
+                </span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
               </button>
 
