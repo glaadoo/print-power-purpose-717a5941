@@ -613,6 +613,33 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscriptions: {
+        Row: {
+          email: string
+          id: string
+          is_active: boolean
+          source: string | null
+          subscribed_at: string
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          is_active?: boolean
+          source?: string | null
+          subscribed_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          is_active?: boolean
+          source?: string | null
+          subscribed_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       nonprofits: {
         Row: {
           approved: boolean | null

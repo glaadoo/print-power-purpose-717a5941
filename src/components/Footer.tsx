@@ -1,6 +1,69 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Mail, Loader2 } from "lucide-react";
 
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Client-side validation
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$/;
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    if (!trimmedEmail) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    
+    if (!emailRegex.test(trimmedEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
+    if (trimmedEmail.length > 255) {
+      toast.error("Email address is too long");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase
+        .from("newsletter_subscriptions")
+        .insert([
+          {
+            email: trimmedEmail,
+            source: "footer",
+          }
+        ]);
+      
+      if (error) {
+        // Check for duplicate email error
+        if (error.code === "23505") {
+          toast.info("You're already subscribed to our newsletter!");
+        } else {
+          console.error("Newsletter subscription error:", error);
+          toast.error("Failed to subscribe. Please try again.");
+        }
+      } else {
+        toast.success("Thanks for subscribing!");
+        setEmail("");
+      }
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
+      toast.error("Failed to subscribe. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-gray-900 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -44,6 +107,42 @@ export default function Footer() {
                 ["Terms of Use", "/policies/terms"],
               ]}
             />
+          </div>
+
+          {/* Newsletter Subscription */}
+          <div className="mt-12 max-w-md mx-auto">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold mb-2 flex items-center justify-center gap-2">
+                <Mail className="w-5 h-5" />
+                Subscribe to Our Newsletter
+              </h3>
+              <p className="text-sm text-gray-400">
+                Get updates on new products and fundraising tips
+              </p>
+            </div>
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="flex-1 bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                maxLength={255}
+                required
+              />
+              <Button
+                type="submit"
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Subscribe"
+                )}
+              </Button>
+            </form>
           </div>
 
           {/* Social Media Links */}
