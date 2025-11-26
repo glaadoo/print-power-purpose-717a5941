@@ -601,6 +601,27 @@ export default function Checkout() {
               Are you sure you want to replace the current artwork? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Current Artwork Preview */}
+          {uploadingForItemId && (() => {
+            const currentItem = cartItems.find(i => i.id === uploadingForItemId);
+            return currentItem?.artworkUrl ? (
+              <div className="my-4 space-y-2">
+                <p className="text-sm font-medium text-gray-700">Current Artwork:</p>
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  <img 
+                    src={currentItem.artworkUrl} 
+                    alt="Current artwork"
+                    className="w-full h-40 object-contain rounded"
+                  />
+                  <p className="text-xs text-gray-600 mt-2 text-center">
+                    {currentItem.artworkFileName || 'Uploaded artwork'}
+                  </p>
+                </div>
+              </div>
+            ) : null;
+          })()}
+          
           <div className="flex justify-end gap-3 mt-4">
             <Button
               variant="outline"
