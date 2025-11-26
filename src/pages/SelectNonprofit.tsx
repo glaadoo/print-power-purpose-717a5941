@@ -80,6 +80,13 @@ export default function SelectNonprofit() {
     return allTags;
   }, [allNonprofits]);
 
+  // Get top fundraisers
+  const topFundraisers = useMemo(() => {
+    return [...allNonprofits]
+      .sort((a, b) => (b.total_raised_cents || 0) - (a.total_raised_cents || 0))
+      .slice(0, 4);
+  }, [allNonprofits]);
+
   // Apply filters
   const displayedNonprofits = useMemo(() => {
     let filtered = searchQuery.trim()
@@ -474,6 +481,75 @@ export default function SelectNonprofit() {
             Choose a nonprofit organization to support with your purchase
           </p>
         </div>
+
+        {/* Featured Nonprofits Section */}
+        {!loading && !err && topFundraisers.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-2xl font-bold text-primary">Top Fundraisers</h2>
+              <Badge variant="secondary" className="text-xs">Featured</Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {topFundraisers.map((np) => {
+                const isSelected = selectedNonprofit?.id === np.id;
+                return (
+                  <Card
+                    key={np.id}
+                    onClick={() => handleNonprofitSelect(np)}
+                    className={`
+                      cursor-pointer p-6 flex flex-col transition-all hover:shadow-lg border-2
+                      ${
+                        isSelected
+                          ? "border-primary ring-2 ring-primary bg-primary/5"
+                          : "border-primary/30 hover:border-primary/50"
+                      }
+                    `}
+                  >
+                    <h3 className="text-lg font-semibold text-primary mb-2 line-clamp-2">
+                      {np.name}
+                    </h3>
+
+                    {(np.city || np.state) && (
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {[np.city, np.state].filter(Boolean).join(", ")}
+                      </p>
+                    )}
+
+                    {/* Impact Metrics - Highlighted for Featured */}
+                    <div className="mb-4 p-3 bg-primary/10 rounded-lg border-2 border-primary/20">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Total Raised</p>
+                          <p className="text-xl font-bold text-primary">
+                            ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Supporters</p>
+                          <p className="text-xl font-bold text-primary">
+                            {(np.supporter_count || 0).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Select Button */}
+                    <Button
+                      variant={isSelected ? "default" : "outline"}
+                      className="w-full mt-auto rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNonprofitSelect(np);
+                      }}
+                    >
+                      {isSelected ? "Selected" : "Select Nonprofit"}
+                    </Button>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {body}
       </main>
