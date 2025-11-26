@@ -288,7 +288,7 @@ export default function Home() {
                 >
                   <CarouselContent>
                     {featuredVideos.map((video, index) => (
-                      <CarouselItem key={index} className="md:basis-1/1 lg:basis-1/1">
+                      <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
                         <div className="p-1">
                           <div className="rounded-lg overflow-hidden shadow-xl bg-gray-900 aspect-video relative group">
                             {video.thumbnail_url && (
