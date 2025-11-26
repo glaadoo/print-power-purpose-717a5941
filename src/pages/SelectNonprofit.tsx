@@ -203,6 +203,7 @@ export default function SelectNonprofit() {
     setSortBy("default");
   }
 
+  // Fetch nonprofits data on mount
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
     
@@ -253,11 +254,6 @@ export default function SelectNonprofit() {
         // Get 10 random for initial display
         const shuffled = [...nonprofitsWithMetrics].sort(() => Math.random() - 0.5).slice(0, 10);
         if (alive) setRandomNonprofits(shuffled);
-
-        // Sync local state with context nonprofit (for page refresh persistence)
-        if (nonprofit && alive) {
-          setSelectedNonprofit(nonprofit);
-        }
         
       } catch (e: any) {
         if (alive) setErr(e?.message || "Failed to load nonprofits");
@@ -269,6 +265,13 @@ export default function SelectNonprofit() {
     return () => {
       alive = false;
     };
+  }, []);
+
+  // Separate effect to sync with context nonprofit (for persistence)
+  useEffect(() => {
+    if (nonprofit) {
+      setSelectedNonprofit(nonprofit);
+    }
   }, [nonprofit]);
 
   // Maintain scroll position when sorting changes
