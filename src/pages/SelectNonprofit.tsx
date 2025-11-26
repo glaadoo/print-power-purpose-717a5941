@@ -27,6 +27,7 @@ type Nonprofit = {
   source?: string | null;
   irs_status?: string | null;
   tags?: string[] | null;
+  logo_url?: string | null;
   total_raised_cents?: number;
   supporter_count?: number;
 };
@@ -136,7 +137,7 @@ export default function SelectNonprofit() {
         // Fetch all nonprofits with impact metrics
         const { data: nonprofitsData, error: nonprofitsError } = await supabase
           .from("nonprofits")
-          .select("id, name, ein, city, state, description, source, irs_status, tags")
+          .select("id, name, ein, city, state, description, source, irs_status, tags, logo_url")
           .eq("approved", true)
           .order("name", { ascending: true });
 
@@ -387,9 +388,25 @@ export default function SelectNonprofit() {
                 }
               `}
             >
-              <h3 className="text-lg font-semibold text-primary mb-2 line-clamp-2">
-                {np.name}
-              </h3>
+              {/* Logo */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary/20">
+                  {np.logo_url ? (
+                    <img 
+                      src={np.logo_url} 
+                      alt={`${np.name} logo`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-primary font-bold text-lg">
+                      {np.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-lg font-semibold text-primary line-clamp-2 flex-1">
+                  {np.name}
+                </h3>
+              </div>
 
               {np.ein && (
                 <p className="text-sm text-muted-foreground mb-1">
@@ -505,9 +522,25 @@ export default function SelectNonprofit() {
                       }
                     `}
                   >
-                    <h3 className="text-lg font-semibold text-primary mb-2 line-clamp-2">
-                      {np.name}
-                    </h3>
+                    {/* Logo */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary/20">
+                        {np.logo_url ? (
+                          <img 
+                            src={np.logo_url} 
+                            alt={`${np.name} logo`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-primary font-bold text-lg">
+                            {np.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-lg font-semibold text-primary line-clamp-2 flex-1">
+                        {np.name}
+                      </h3>
+                    </div>
 
                     {(np.city || np.state) && (
                       <p className="text-sm text-muted-foreground mb-3">
