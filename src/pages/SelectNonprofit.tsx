@@ -58,6 +58,7 @@ export default function SelectNonprofit() {
   const [showAll, setShowAll] = useState(false);
   const [isRestoringSelection, setIsRestoringSelection] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   
   // Ref to track scroll position during sorting
   const scrollPositionRef = useRef<number>(0);
@@ -335,14 +336,23 @@ export default function SelectNonprofit() {
     });
   }, [displayedNonprofits]);
 
-  // Track scroll position to show/hide back to top button
+  // Track scroll position to show/hide back to top button and calculate progress
   useEffect(() => {
     const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+      
       // Show button after scrolling down 400px
-      setShowBackToTop(window.scrollY > 400);
+      setShowBackToTop(scrollTop > 400);
+      // Update scroll progress (0-100)
+      setScrollProgress(Math.min(scrollPercent, 100));
     };
 
     window.addEventListener('scroll', handleScroll);
+    // Initial calculation
+    handleScroll();
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -973,16 +983,51 @@ export default function SelectNonprofit() {
         {body}
       </main>
 
-      {/* Floating Back to Top Button */}
+      {/* Floating Back to Top Button with Progress Indicator */}
       {showBackToTop && (
-        <Button
-          onClick={scrollToTop}
-          size="icon"
-          className="fixed bottom-8 right-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50 w-12 h-12 animate-fade-in"
-          aria-label="Back to top"
-        >
-          <ArrowUp className="h-5 w-5" />
-        </Button>
+        <div className="fixed bottom-8 right-8 z-50 animate-fade-in">
+          <div className="relative">
+            {/* Circular Progress Ring */}
+            <svg
+              className="absolute inset-0 w-12 h-12 -rotate-90"
+              viewBox="0 0 48 48"
+            >
+              {/* Background circle */}
+              <circle
+                cx="24"
+                cy="24"
+                r="20"
+                fill="none"
+                stroke="hsl(var(--muted))"
+                strokeWidth="3"
+                opacity="0.3"
+              />
+              {/* Progress circle */}
+              <circle
+                cx="24"
+                cy="24"
+                r="20"
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="3"
+                strokeDasharray={`${2 * Math.PI * 20}`}
+                strokeDashoffset={`${2 * Math.PI * 20 * (1 - scrollProgress / 100)}`}
+                strokeLinecap="round"
+                className="transition-all duration-150"
+              />
+            </svg>
+            
+            {/* Button */}
+            <Button
+              onClick={scrollToTop}
+              size="icon"
+              className="rounded-full shadow-lg hover:shadow-xl transition-all duration-300 w-12 h-12 relative"
+              aria-label={`Back to top (${Math.round(scrollProgress)}% scrolled)`}
+            >
+              <ArrowUp className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
