@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { ArrowLeft, Search, Shuffle } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { ArrowLeft, Search, Shuffle, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -8,6 +8,14 @@ import { useCause } from "@/context/CauseContext";
 import { supabase } from "@/integrations/supabase/client";
 import VistaprintNav from "@/components/VistaprintNav";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 type Nonprofit = {
   id: string;
@@ -18,6 +26,7 @@ type Nonprofit = {
   description?: string | null;
   source?: string | null;
   irs_status?: string | null;
+  tags?: string[] | null;
 };
 
 export default function SelectNonprofit() {
@@ -34,19 +43,80 @@ export default function SelectNonprofit() {
   const [err, setErr] = useState<string | null>(null);
   const [selectedNonprofit, setSelectedNonprofit] = useState<Nonprofit | null>(nonprofit);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Filter states
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [selectedTag, setSelectedTag] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Display nonprofits: random 10 if no search, filtered results if searching
-  const displayedNonprofits = searchQuery.trim()
-    ? allNonprofits.filter((np) => {
-        const query = searchQuery.toLowerCase();
-        const name = np.name?.toLowerCase() || "";
-        const ein = np.ein?.toLowerCase() || "";
-        const city = np.city?.toLowerCase() || "";
-        const state = np.state?.toLowerCase() || "";
-        const description = np.description?.toLowerCase() || "";
-        return name.includes(query) || ein.includes(query) || city.includes(query) || state.includes(query) || description.includes(query);
-      })
-    : randomNonprofits;
+  // Extract unique values for filters
+  const uniqueStates = useMemo(() => {
+    const states = allNonprofits
+      .map(np => np.state)
+      .filter((state): state is string => Boolean(state))
+      .filter((state, index, self) => self.indexOf(state) === index)
+      .sort();
+    return states;
+  }, [allNonprofits]);
+
+  const uniqueCities = useMemo(() => {
+    const cities = allNonprofits
+      .filter(np => !selectedState || np.state === selectedState)
+      .map(np => np.city)
+      .filter((city): city is string => Boolean(city))
+      .filter((city, index, self) => self.indexOf(city) === index)
+      .sort();
+    return cities;
+  }, [allNonprofits, selectedState]);
+
+  const uniqueTags = useMemo(() => {
+    const allTags = allNonprofits
+      .flatMap(np => np.tags || [])
+      .filter((tag, index, self) => self.indexOf(tag) === index)
+      .sort();
+    return allTags;
+  }, [allNonprofits]);
+
+  // Apply filters
+  const displayedNonprofits = useMemo(() => {
+    let filtered = searchQuery.trim()
+      ? allNonprofits.filter((np) => {
+          const query = searchQuery.toLowerCase();
+          const name = np.name?.toLowerCase() || "";
+          const ein = np.ein?.toLowerCase() || "";
+          const city = np.city?.toLowerCase() || "";
+          const state = np.state?.toLowerCase() || "";
+          const description = np.description?.toLowerCase() || "";
+          return name.includes(query) || ein.includes(query) || city.includes(query) || state.includes(query) || description.includes(query);
+        })
+      : randomNonprofits;
+
+    // Apply state filter
+    if (selectedState) {
+      filtered = filtered.filter(np => np.state === selectedState);
+    }
+
+    // Apply city filter
+    if (selectedCity) {
+      filtered = filtered.filter(np => np.city === selectedCity);
+    }
+
+    // Apply tag filter
+    if (selectedTag) {
+      filtered = filtered.filter(np => np.tags?.includes(selectedTag));
+    }
+
+    return filtered;
+  }, [searchQuery, allNonprofits, randomNonprofits, selectedState, selectedCity, selectedTag]);
+
+  const hasActiveFilters = selectedState || selectedCity || selectedTag;
+
+  function clearFilters() {
+    setSelectedState("");
+    setSelectedCity("");
+    setSelectedTag("");
+  }
 
   useEffect(() => {
     document.title = "Choose Your Nonprofit - Print Power Purpose";
@@ -57,7 +127,7 @@ export default function SelectNonprofit() {
         // Fetch all nonprofits for search
         const { data: allData, error: allError } = await supabase
           .from("nonprofits")
-          .select("id, name, ein, city, state, description, source, irs_status")
+          .select("id, name, ein, city, state, description, source, irs_status, tags")
           .eq("approved", true)
           .order("name", { ascending: true });
 
@@ -67,7 +137,7 @@ export default function SelectNonprofit() {
         // Fetch 10 random nonprofits for initial display
         const { data: randomData, error: randomError } = await supabase
           .from("nonprofits")
-          .select("id, name, ein, city, state, description, source, irs_status")
+          .select("id, name, ein, city, state, description, source, irs_status, tags")
           .eq("approved", true)
           .limit(10);
 
@@ -110,7 +180,7 @@ export default function SelectNonprofit() {
       // Fetch more nonprofits to shuffle from
       const { data, error } = await supabase
         .from("nonprofits")
-        .select("id, name, ein, city, state, description, source, irs_status")
+        .select("id, name, ein, city, state, description, source, irs_status, tags")
         .eq("approved", true)
         .limit(50);
 
@@ -146,8 +216,8 @@ export default function SelectNonprofit() {
     </div>
   ) : (
     <>
-      {/* Search bar */}
-      <div className="mb-8">
+      {/* Search bar and filters */}
+      <div className="mb-8 space-y-4">
         <div className="relative max-w-2xl mx-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -158,12 +228,29 @@ export default function SelectNonprofit() {
             className="pl-12 h-12 text-base"
           />
         </div>
-        <div className="flex items-center justify-center gap-4 mt-4">
-          {!searchQuery.trim() && (
+
+        {/* Filter Toggle and Controls */}
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <Button
+            onClick={() => setShowFilters(!showFilters)}
+            variant="outline"
+            size="sm"
+            className="gap-2 rounded-full"
+          >
+            <Filter className="h-4 w-4" />
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+            {hasActiveFilters && (
+              <Badge variant="secondary" className="ml-1 rounded-full">
+                {[selectedState, selectedCity, selectedTag].filter(Boolean).length}
+              </Badge>
+            )}
+          </Button>
+
+          {!searchQuery.trim() && !hasActiveFilters && (
             <>
-              <p className="text-sm text-muted-foreground">
-                Showing 10 random nonprofits. Use search to find more.
-              </p>
+              <span className="text-sm text-muted-foreground">
+                Showing 10 random nonprofits
+              </span>
               <Button
                 onClick={handleShuffle}
                 disabled={shuffling}
@@ -176,7 +263,76 @@ export default function SelectNonprofit() {
               </Button>
             </>
           )}
+
+          {hasActiveFilters && (
+            <Button
+              onClick={clearFilters}
+              variant="ghost"
+              size="sm"
+              className="gap-2 rounded-full text-destructive hover:text-destructive"
+            >
+              <X className="h-4 w-4" />
+              Clear Filters
+            </Button>
+          )}
         </div>
+
+        {/* Filter Controls */}
+        {showFilters && (
+          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg border">
+            <div>
+              <label className="text-sm font-medium mb-2 block">State</label>
+              <Select value={selectedState} onValueChange={setSelectedState}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All States</SelectItem>
+                  {uniqueStates.map(state => (
+                    <SelectItem key={state} value={state}>{state}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">City</label>
+              <Select value={selectedCity} onValueChange={setSelectedCity} disabled={!selectedState && uniqueCities.length === 0}>
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedState ? "All Cities" : "Select state first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Cities</SelectItem>
+                  {uniqueCities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Category</label>
+              <Select value={selectedTag} onValueChange={setSelectedTag}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  {uniqueTags.map(tag => (
+                    <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
+        {/* Results count */}
+        {(searchQuery.trim() || hasActiveFilters) && (
+          <p className="text-sm text-muted-foreground text-center">
+            Found {displayedNonprofits.length} nonprofit{displayedNonprofits.length !== 1 ? 's' : ''}
+          </p>
+        )}
       </div>
 
       {/* Nonprofits Grid */}
