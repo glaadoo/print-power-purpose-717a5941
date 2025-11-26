@@ -502,12 +502,14 @@ export default function ProductDetailNew() {
               <h2 className="text-2xl font-bold mb-6">Related Products</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {relatedProducts.map((p) => {
-                  const categorySlug = p.category?.toLowerCase().replace(/\s+/g, '-') || 'uncategorized';
-                  const productSlug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                  const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                  const categorySlug = slugify(p.category || 'uncategorized');
+                  const subcategorySlug = 'all'; // Related products don't have subcategory, default to 'all'
+                  const productSlug = slugify(p.name);
                   return (
                     <div
                       key={p.id}
-                      onClick={() => nav(`/product/${categorySlug}/${productSlug}`, { state: { productId: p.id } })}
+                      onClick={() => nav(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: { productId: p.id } })}
                       className="cursor-pointer group"
                     >
                       <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border mb-2">
