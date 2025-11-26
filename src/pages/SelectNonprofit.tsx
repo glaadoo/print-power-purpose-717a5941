@@ -117,7 +117,7 @@ export default function SelectNonprofit() {
       default: allNonprofits.length,
       top_fundraisers: allNonprofits.filter(np => (np.total_raised_cents || 0) > 0).length,
       new_fundraisers: allNonprofits.filter(np => np.created_at && isNewlyAdded(np.created_at)).length,
-      rising_fundraisers: allNonprofits.length, // All nonprofits sorted by supporter count
+      rising_fundraisers: allNonprofits.filter(np => (np.supporter_count || 0) > 0).length, // Nonprofits with at least 1 supporter
     };
   }, [allNonprofits]);
 
