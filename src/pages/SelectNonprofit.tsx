@@ -82,11 +82,12 @@ export default function SelectNonprofit() {
     return allTags;
   }, [allNonprofits]);
 
-  // Get top fundraisers
+  // Get top fundraisers (top 3 with actual funds raised)
   const topFundraisers = useMemo(() => {
     return [...allNonprofits]
+      .filter(np => (np.total_raised_cents || 0) > 0)
       .sort((a, b) => (b.total_raised_cents || 0) - (a.total_raised_cents || 0))
-      .slice(0, 4);
+      .slice(0, 3);
   }, [allNonprofits]);
 
   // Check if nonprofit is newly added (last 30 days)
@@ -371,6 +372,97 @@ export default function SelectNonprofit() {
           <span className="font-semibold text-gray-900">{allNonprofits.length}</span> nonprofits
         </div>
       </div>
+
+      {/* Top Fundraisers Featured Section */}
+      {topFundraisers.length > 0 && !searchQuery.trim() && !hasActiveFilters && (
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-bold text-primary">Top Fundraisers</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">Most funds raised</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {topFundraisers.map((np, index) => {
+              const isSelected = selectedNonprofit?.id === np.id;
+              return (
+                <Card
+                  key={np.id}
+                  onClick={() => handleNonprofitSelect(np)}
+                  className={`
+                    relative cursor-pointer p-6 transition-all hover:shadow-xl
+                    ${isSelected
+                      ? "border-primary ring-2 ring-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                    }
+                  `}
+                >
+                  {/* Ranking Badge */}
+                  <div className="absolute -top-3 left-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
+                    #{index + 1} Top Fundraiser
+                  </div>
+
+                  <div className="flex flex-col items-center text-center mt-3">
+                    {/* Logo */}
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4 overflow-hidden border-2 border-primary/20">
+                      {np.logo_url ? (
+                        <img 
+                          src={np.logo_url} 
+                          alt={`${np.name} logo`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-primary font-bold text-2xl">
+                          {np.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Name */}
+                    <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2">
+                      {np.name}
+                    </h3>
+
+                    {/* Location */}
+                    {(np.city || np.state) && (
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {[np.city, np.state].filter(Boolean).join(", ")}
+                      </p>
+                    )}
+
+                    {/* Raised Amount - Prominent Display */}
+                    <div className="mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20 w-full">
+                      <p className="text-xs text-muted-foreground mb-1">Total Raised</p>
+                      <p className="text-3xl font-bold text-primary">
+                        ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+
+                    {/* Supporter Count */}
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
+                      <span className="font-semibold text-foreground">{(np.supporter_count || 0).toLocaleString()}</span>
+                      <span>supporters</span>
+                    </div>
+
+                    {/* Select Button */}
+                    <Button
+                      variant={isSelected ? "default" : "outline"}
+                      className="w-full rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNonprofitSelect(np);
+                      }}
+                    >
+                      {isSelected ? "Selected" : "Select Nonprofit"}
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Nonprofits Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
