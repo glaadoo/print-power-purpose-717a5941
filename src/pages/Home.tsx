@@ -307,12 +307,6 @@ export default function Home() {
                               poster={video.thumbnail_url || undefined}
                             />
                           </div>
-                          <div className="mt-3 text-center">
-                            <p className="text-lg font-semibold text-gray-900">{video.title}</p>
-                            {video.description && (
-                              <p className="text-sm text-gray-600 mt-1">{video.description}</p>
-                            )}
-                          </div>
                         </div>
                       </CarouselItem>
                     ))}
