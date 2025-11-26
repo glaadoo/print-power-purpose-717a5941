@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Search, ShoppingCart, ArrowUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
+import Footer from "@/components/Footer";
 
 type ProductRow = {
   id: string;
@@ -537,6 +538,9 @@ export default function ProductSubcategory() {
           <ArrowUp className="w-6 h-6" />
         </button>
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

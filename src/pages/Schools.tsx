@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCause } from "@/context/CauseContext";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import Footer from "@/components/Footer";
 
 interface School {
   id: string;
@@ -184,6 +185,9 @@ export default function Schools() {
           { label: "Contact", href: "/contact" },
         ]}
       />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
