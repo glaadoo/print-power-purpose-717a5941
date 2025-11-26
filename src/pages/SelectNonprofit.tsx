@@ -90,6 +90,15 @@ export default function SelectNonprofit() {
       .slice(0, 3);
   }, [allNonprofits]);
 
+  // Get top 5 by supporter count for "Rising Fundraiser" badge
+  const topRisingFundraisers = useMemo(() => {
+    return [...allNonprofits]
+      .filter(np => (np.supporter_count || 0) > 0)
+      .sort((a, b) => (b.supporter_count || 0) - (a.supporter_count || 0))
+      .slice(0, 5)
+      .map(np => np.id);
+  }, [allNonprofits]);
+
   // Check if nonprofit is newly added (last 30 days)
   const isNewlyAdded = (createdAt: string) => {
     const thirtyDaysAgo = new Date();
@@ -100,6 +109,11 @@ export default function SelectNonprofit() {
   // Check if nonprofit is a top fundraiser
   const isTopFundraiser = (nonprofitId: string) => {
     return topFundraisers.some(nf => nf.id === nonprofitId);
+  };
+
+  // Check if nonprofit is a top rising fundraiser (top 5 by supporters)
+  const isTopRisingFundraiser = (nonprofitId: string) => {
+    return topRisingFundraisers.includes(nonprofitId);
   };
 
   // Apply filters
@@ -490,6 +504,12 @@ export default function SelectNonprofit() {
                     Top Fundraiser
                   </Badge>
                 )}
+                {isTopRisingFundraiser(np.id) && (
+                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-md flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    Top Rising
+                  </Badge>
+                )}
                 {np.created_at && isNewlyAdded(np.created_at) && (
                   <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-md flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
@@ -596,17 +616,19 @@ export default function SelectNonprofit() {
 
       <main className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Page Header */}
-        <div className="mb-12 text-center">
-          <Button onClick={() => nav(-1)} variant="ghost" className="mb-4" size="sm">
+        <div className="mb-12">
+          <Button onClick={() => nav(-1)} variant="ghost" className="mb-6" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-4xl font-bold text-primary mb-2">
-            Select a Nonprofit
-          </h1>
-          <p className="text-muted-foreground">
-            Choose a nonprofit organization to support with your purchase
-          </p>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-primary mb-2">
+              Select a Nonprofit
+            </h1>
+            <p className="text-muted-foreground">
+              Choose a nonprofit organization to support with your purchase
+            </p>
+          </div>
         </div>
 
         {body}
