@@ -5,7 +5,6 @@ import { useToast } from "../ui/Toast";
 import { useCause } from "../context/CauseContext";
 import { useCart } from "../context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
-import VideoBackground from "@/components/VideoBackground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { normalizeDonationCents } from "@/lib/donation-utils";
@@ -289,40 +288,31 @@ export default function Checkout() {
   // ---- UI ----
   if (error) {
     return (
-      <div className="fixed inset-0 text-white">
-        <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-          <a
-            href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-center">
+            <a
+              href="/"
+              className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase text-blue-600"
+              aria-label="Print Power Purpose Home"
+            >
+              PRINT&nbsp;POWER&nbsp;PURPOSE
+            </a>
+          </div>
         </header>
 
-        <div className="h-full overflow-y-auto scroll-smooth pt-16">
-          <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-            <VideoBackground
-              srcMp4="/media/hero.mp4"
-              srcWebm="/media/hero.webm"
-              poster="/media/hero-poster.jpg"
-              overlay={<div className="absolute inset-0 bg-black/50" />}
-            />
-
-            <div className="relative w-full max-w-2xl mx-auto">
-              <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 text-center">
-                <p className="text-red-400 mb-4">{error}</p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button 
-                    className="rounded-full px-6 py-3 bg-white text-black font-semibold hover:bg-white/90"
-                    onClick={() => navigate(error?.toLowerCase().includes("product") ? "/products" : "/causes")}
-                  >
-                    {error?.toLowerCase().includes("product") ? "Browse Products" : "Pick a Cause"}
-                  </button>
-                </div>
-              </div>
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6 md:p-8 text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button 
+                className="rounded-full px-6 py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                onClick={() => navigate(error?.toLowerCase().includes("product") ? "/products" : "/causes")}
+              >
+                {error?.toLowerCase().includes("product") ? "Browse Products" : "Pick a Cause"}
+              </button>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     );
@@ -330,32 +320,23 @@ export default function Checkout() {
 
   if ((cartItems.length === 0 && !product) || !(selectedCauseId || merged.causeId)) {
     return (
-      <div className="fixed inset-0 text-white">
-        <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-center text-white backdrop-blur bg-black/20 border-b border-white/10">
-          <a
-            href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-center">
+            <a
+              href="/"
+              className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase text-blue-600"
+              aria-label="Print Power Purpose Home"
+            >
+              PRINT&nbsp;POWER&nbsp;PURPOSE
+            </a>
+          </div>
         </header>
 
-        <div className="h-full overflow-y-auto scroll-smooth pt-16">
-          <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-            <VideoBackground
-              srcMp4="/media/hero.mp4"
-              srcWebm="/media/hero.webm"
-              poster="/media/hero-poster.jpg"
-              overlay={<div className="absolute inset-0 bg-black/50" />}
-            />
-
-            <div className="relative w-full max-w-2xl mx-auto">
-              <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8 text-center">
-                Loading…
-              </div>
-            </div>
-          </section>
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6 md:p-8 text-center">
+            <p className="text-gray-600">Loading…</p>
+          </div>
         </div>
       </div>
     );
@@ -366,199 +347,172 @@ export default function Checkout() {
   const total = subtotal + donation;
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden text-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        {/* Left: Back */}
-        <Button
-          onClick={() => navigate(-1)}
-          variant="outline"
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-          size="sm"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
-        {/* Center: Brand */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <a
-            href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Left: Back */}
+          <Button
+            onClick={() => navigate(-1)}
+            variant="outline"
+            className="border-gray-300 text-gray-700 hover:bg-gray-100"
+            size="sm"
           >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
-        </div>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
 
-        {/* Right: Donate */}
-        <button
-          onClick={continueToCheckout}
-          disabled={loading}
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-label="Donate"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="hidden sm:inline">{loading ? "Processing..." : "Donate"}</span>
-        </button>
+          {/* Center: Brand */}
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <a
+              href="/"
+              className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase text-blue-600"
+              aria-label="Print Power Purpose Home"
+            >
+              PRINT&nbsp;POWER&nbsp;PURPOSE
+            </a>
+          </div>
+
+          {/* Right: Donate */}
+          <button
+            onClick={continueToCheckout}
+            disabled={loading || !legalConsent}
+            className="flex items-center gap-2 rounded-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+            aria-label="Donate"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="hidden sm:inline">{loading ? "Processing..." : "Pay"}</span>
+          </button>
+        </div>
       </header>
 
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto scroll-smooth pt-16">
-        <section className="relative min-h-screen flex items-center justify-center py-12 px-4">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            overlay={<div className="absolute inset-0 bg-black/50" />}
-          />
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6 md:p-8">
+          <h1 className="text-3xl font-bold text-blue-600 text-center mb-8">
+            Review Your Order
+          </h1>
 
-          <div className="relative w-full max-w-2xl mx-auto">
-            <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-              <h1 className="text-3xl font-serif font-semibold text-center mb-8">
-                Review Your Order
-              </h1>
-
-              {/* Order summary */}
-              <div className="space-y-4 mb-6">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="border-b border-white/20 pb-4">
-                    <div className="flex justify-between mb-2">
-                      <span className="opacity-90">Product</span>
-                      <span className="font-semibold">{item.name}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="opacity-90">Quantity</span>
-                      <span className="font-semibold">{item.quantity}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="opacity-90">Total</span>
-                      <span className="font-semibold">
-                        ${((item.priceCents * item.quantity) / 100).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                <div className="border-b border-white/20 pb-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="opacity-90">Supporting Cause</span>
-                    <span className="font-semibold">
-                      {selectedCauseName || causeCtx?.cause?.name || "General Fund"}
-                    </span>
-                  </div>
-                  {causeCtx?.nonprofit && (
-                    <div className="flex justify-between">
-                      <span className="opacity-90">Nonprofit</span>
-                      <span className="font-semibold">
-                        {causeCtx.nonprofit.name}
-                        {causeCtx.nonprofit.ein && (
-                          <span className="text-sm opacity-75 ml-2">(EIN: {causeCtx.nonprofit.ein})</span>
-                        )}
-                      </span>
-                    </div>
-                  )}
+          {/* Order summary */}
+          <div className="space-y-4 mb-6">
+            {cartItems.map((item) => (
+              <div key={item.id} className="border-b border-gray-200 pb-4">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-600">Product</span>
+                  <span className="font-semibold text-gray-900">{item.name}</span>
                 </div>
-              </div>
-
-              {/* Optional donation */}
-              <div className="border-t border-white/20 pt-6 mb-6">
-                <div className="mb-4">
-                  <p className="text-lg font-medium mb-2">
-                    Before completing your payment, would you like to add an additional donation to support your selected cause?
-                  </p>
-                  <p className="text-sm opacity-75 italic">
-                    (Optional - Leave empty to proceed without additional donation)
-                  </p>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-600">Quantity</span>
+                  <span className="font-semibold text-gray-900">{item.quantity}</span>
                 </div>
-
-                <label htmlFor="donation" className="block font-medium mb-2">
-                  Additional Donation Amount (USD) - Optional
-                </label>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-xl">$</span>
-                  <input
-                    id="donation"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={donation === 0 ? "" : (donation / 100).toFixed(2)}
-                    onChange={(e) => {
-                      const value = e.target.value.trim();
-                      setDonation(value === "" ? 0 : Math.max(0, Math.round(parseFloat(value) * 100)));
-                    }}
-                    className="flex-1 rounded-xl bg-white/90 text-black px-4 py-3 outline-none focus:ring-2 focus:ring-white/50"
-                    placeholder="0.00 (optional)"
-                  />
-                </div>
-
-                {/* Total breakdown */}
-                <div className="bg-white/10 rounded-xl p-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="opacity-90">Subtotal</span>
-                    <span className="font-medium">${(subtotal / 100).toFixed(2)}</span>
-                  </div>
-                  {donation > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="opacity-90">Donation</span>
-                      <span className="font-medium text-green-300">${(donation / 100).toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-2 border-t border-white/20 text-lg font-bold">
-                    <span>Total</span>
-                    <span>${(total / 100).toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Legal Consent */}
-              <div className="border-t border-white/20 pt-6 mb-4">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={legalConsent}
-                    onChange={(e) => setLegalConsent(e.target.checked)}
-                    className="mt-1 w-5 h-5 rounded border-white/30 bg-white/10 checked:bg-white checked:border-white focus:ring-2 focus:ring-white/50 cursor-pointer"
-                    required
-                  />
-                  <span className="text-sm text-white/80 group-hover:text-white transition-colors">
-                    I agree to the{" "}
-                    <a
-                      href="/policies/terms"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-white"
-                    >
-                      Terms of Use
-                    </a>{" "}
-                    and{" "}
-                    <a
-                      href="/policies/privacy"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-white"
-                    >
-                      Privacy Policy
-                    </a>
-                    .
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total</span>
+                  <span className="font-semibold text-gray-900">
+                    ${((item.priceCents * item.quantity) / 100).toFixed(2)}
                   </span>
-                </label>
+                </div>
               </div>
-
-              {/* Continue button */}
-              <button
-                onClick={continueToCheckout}
-                disabled={loading || !legalConsent}
-                className="w-full bg-white/20 text-white hover:bg-white/30 border border-white/50 backdrop-blur-sm shadow-lg rounded-2xl px-6 py-4 text-base font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Processing..." : !legalConsent ? "Please Accept Terms to Continue" : "Continue to Payment"}
-              </button>
+            ))}
+            <div className="border-b border-gray-200 pb-4">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">Supporting Cause</span>
+                <span className="font-semibold text-gray-900">
+                  {selectedCauseName || causeCtx?.cause?.name || "General Fund"}
+                </span>
+              </div>
+              {causeCtx?.nonprofit && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Nonprofit</span>
+                  <span className="font-semibold text-gray-900">
+                    {causeCtx.nonprofit.name}
+                    {causeCtx.nonprofit.ein && (
+                      <span className="text-sm text-gray-500 ml-2">(EIN: {causeCtx.nonprofit.ein})</span>
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-        </section>
+
+          {/* Optional donation */}
+          <div className="border-t border-gray-200 pt-6 mb-6">
+            <div className="mb-4">
+              <p className="text-lg font-semibold text-blue-600 mb-2">
+                Add an Optional Donation
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                Help us support more causes with a small donation.
+              </p>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-semibold text-gray-900">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={(donation / 100).toFixed(2)}
+                  onChange={(e) => {
+                    const usd = parseFloat(e.target.value || "0");
+                    setDonation(Math.max(0, Math.round(usd * 100)));
+                  }}
+                  className="w-full p-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Total */}
+          <div className="border-t border-gray-200 pt-6 mb-6">
+            <div className="flex justify-between text-xl font-bold mb-2 text-gray-900">
+              <span>Subtotal</span>
+              <span>${(subtotal / 100).toFixed(2)}</span>
+            </div>
+            {donation > 0 && (
+              <div className="flex justify-between text-lg text-gray-600 mb-2">
+                <span>Donation</span>
+                <span>${(donation / 100).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-2xl font-bold text-blue-600">
+              <span>Total</span>
+              <span>${(total / 100).toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Legal Consent Checkbox */}
+          <div className="mb-6">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={legalConsent}
+                onChange={(e) => setLegalConsent(e.target.checked)}
+                className="mt-1 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">
+                I agree to the{" "}
+                <a href="/policies/terms" className="text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer">
+                  Terms of Use
+                </a>{" "}
+                and{" "}
+                <a href="/policies/privacy" className="text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer">
+                  Privacy Policy
+                </a>
+              </span>
+            </label>
+          </div>
+
+          {/* Pay button */}
+          <button
+            onClick={continueToCheckout}
+            disabled={loading || !legalConsent}
+            className="w-full py-4 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? "Processing..." : "Continue to Payment"}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-
