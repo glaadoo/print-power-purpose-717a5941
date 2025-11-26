@@ -156,38 +156,33 @@ export default function SelectNonprofit() {
 
         if (nonprofitsError) throw nonprofitsError;
 
-        // Fetch donation metrics for all nonprofits
-        const { data: donationsData, error: donationsError } = await supabase
-          .from("donations")
-          .select("nonprofit_id, amount_cents, customer_email");
+        // Fetch completed orders where nonprofit was selected
+        const { data: ordersData, error: ordersError } = await supabase
+          .from("orders")
+          .select("nonprofit_id, donation_cents, id")
+          .eq("status", "completed")
+          .not("nonprofit_id", "is", null);
 
-        if (donationsError) throw donationsError;
+        if (ordersError) throw ordersError;
 
         // Aggregate metrics by nonprofit
         const metricsMap = new Map<string, { total_raised_cents: number; supporter_count: number }>();
         
-        if (donationsData) {
-          donationsData.forEach(donation => {
-            if (!donation.nonprofit_id) return;
+        if (ordersData) {
+          ordersData.forEach(order => {
+            if (!order.nonprofit_id) return;
             
-            const existing = metricsMap.get(donation.nonprofit_id) || { 
+            const existing = metricsMap.get(order.nonprofit_id) || { 
               total_raised_cents: 0, 
-              supporter_count: 0,
-              supporters: new Set<string>()
+              supporter_count: 0
             };
             
-            existing.total_raised_cents += donation.amount_cents || 0;
-            if (donation.customer_email) {
-              (existing as any).supporters.add(donation.customer_email);
-            }
+            // Add donation amount from this order
+            existing.total_raised_cents += order.donation_cents || 0;
+            // Increment supporter count (each order = 1 supporter)
+            existing.supporter_count += 1;
             
-            metricsMap.set(donation.nonprofit_id, existing);
-          });
-
-          // Convert Set to count
-          metricsMap.forEach((value, key) => {
-            value.supporter_count = (value as any).supporters.size;
-            delete (value as any).supporters;
+            metricsMap.set(order.nonprofit_id, existing);
           });
         }
 
