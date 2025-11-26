@@ -451,7 +451,7 @@ export default function App() {
             }
           />
           <Route
-            path="/orders"
+            path="/my-orders"
             element={
               <RouteBoundary name="OrderHistory">
                 <ProtectedRoute>
