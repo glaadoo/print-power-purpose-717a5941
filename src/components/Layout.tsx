@@ -1,15 +1,18 @@
 import { ReactNode, useEffect } from "react";
 import VistaprintNav from "./VistaprintNav";
+import Footer from "./Footer";
 
 export default function Layout({
   children,
   centered = true,
   showHeader = true,
+  showFooter = true,
   title,
 }: {
   children: ReactNode;
   centered?: boolean;
   showHeader?: boolean;
+  showFooter?: boolean;
   title?: string;
 }) {
   // Optional: update document title if provided
@@ -18,16 +21,18 @@ export default function Layout({
   }, [title]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {showHeader && <VistaprintNav />}
 
       <main
-        className={`${centered ? "flex items-center justify-center min-h-[calc(100vh-64px)]" : ""} px-4 py-8`}
+        className={`${centered ? "flex items-center justify-center min-h-[calc(100vh-64px)]" : ""} flex-1 px-4 py-8`}
       >
         <div className={`w-full ${centered ? "max-w-4xl" : "max-w-7xl mx-auto"}`}>
           {children}
         </div>
       </main>
+
+      {showFooter && <Footer />}
     </div>
   );
 }
