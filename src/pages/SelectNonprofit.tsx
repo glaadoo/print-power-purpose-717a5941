@@ -60,6 +60,8 @@ export default function SelectNonprofit() {
   
   // Ref to track scroll position during sorting
   const scrollPositionRef = useRef<number>(0);
+  // Ref to track selected card for auto-scroll
+  const selectedCardRef = useRef<HTMLDivElement>(null);
 
   // Extract unique values for filters
   const uniqueStates = useMemo(() => {
@@ -298,14 +300,28 @@ export default function SelectNonprofit() {
       setIsRestoringSelection(true);
       setSelectedNonprofit(nonprofit);
       
+      // Scroll to selected card after a short delay (after render)
+      const scrollTimer = setTimeout(() => {
+        if (selectedCardRef.current) {
+          selectedCardRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+          console.log("[SelectNonprofit] Scrolled to selected card");
+        }
+      }, 100); // Small delay to ensure DOM is ready
+      
       // Clear restoration flag after animation completes
-      const timer = setTimeout(() => {
+      const animationTimer = setTimeout(() => {
         setIsRestoringSelection(false);
       }, 300); // Match fade-in animation duration
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(scrollTimer);
+        clearTimeout(animationTimer);
+      };
     }
-  }, [nonprofit]);
+  }, [nonprofit, allNonprofits]); // Add allNonprofits as dependency to ensure scroll happens after data loads
 
   // Maintain scroll position when sorting changes
   useEffect(() => {
@@ -391,6 +407,7 @@ export default function SelectNonprofit() {
               return (
                 <Card
                   key={np.id}
+                  ref={isSelected ? selectedCardRef : null}
                   onClick={() => handleNonprofitSelect(np)}
                   className={`
                     relative cursor-pointer p-6 transition-all hover:shadow-xl
@@ -663,6 +680,7 @@ export default function SelectNonprofit() {
             return (
               <Card
                 key={np.id}
+                ref={isSelected ? selectedCardRef : null}
                 onClick={() => handleNonprofitSelect(np)}
                 className={`
                   cursor-pointer p-6 flex flex-col transition-all hover:shadow-lg relative
@@ -785,6 +803,7 @@ export default function SelectNonprofit() {
             return (
               <Card
                 key={np.id}
+                ref={isSelected ? selectedCardRef : null}
                 onClick={() => handleNonprofitSelect(np)}
                 className={`
                   cursor-pointer p-4 transition-all hover:shadow-md
