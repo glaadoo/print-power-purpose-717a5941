@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
@@ -6,10 +6,23 @@ import { X, ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import ArtworkUpload from "@/components/ArtworkUpload";
 
 export default function Cart() {
   const { items, count, totalCents, setQty, remove, clear } = useCart();
   const nav = useNavigate();
+  
+  // Artwork upload dialog state
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadingForItemId, setUploadingForItemId] = useState<string | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
     console.log('[Cart] Component mounted');
@@ -136,10 +149,47 @@ export default function Cart() {
                       )}
 
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-lg text-blue-600">{it.name}</div>
+                       <div className="font-semibold text-lg text-blue-600">{it.name}</div>
                         <div className="text-sm text-gray-600">
                           ${(it.priceCents / 100).toFixed(2)} each
                         </div>
+                        
+                        {/* Artwork Preview */}
+                        {it.artworkUrl && (
+                          <div className="mt-2 pt-2 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                <span className="text-sm text-gray-700">
+                                  Artwork: {it.artworkFileName || 'Uploaded'}
+                                </span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(it.artworkUrl!, '_blank');
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 hover:bg-blue-50 rounded transition-colors"
+                                >
+                                  View
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setUploadingForItemId(it.id);
+                                    setConfirmDialogOpen(true);
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 hover:bg-blue-50 rounded transition-colors"
+                                >
+                                  Upload New
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
@@ -219,6 +269,107 @@ export default function Cart() {
         </section>
       </div>
 
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Replace Artwork?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to replace the current artwork? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Current Artwork Preview */}
+          {uploadingForItemId && (() => {
+            const currentItem = items.find(i => i.id === uploadingForItemId);
+            return currentItem?.artworkUrl ? (
+              <div className="my-4 space-y-2">
+                <p className="text-sm font-medium text-gray-700">Current Artwork:</p>
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  <img 
+                    src={currentItem.artworkUrl} 
+                    alt="Current artwork"
+                    className="w-full h-40 object-contain rounded"
+                  />
+                  <p className="text-xs text-gray-600 mt-2 text-center">
+                    {currentItem.artworkFileName || 'Uploaded artwork'}
+                  </p>
+                </div>
+              </div>
+            ) : null;
+          })()}
+          
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setConfirmDialogOpen(false);
+                setUploadingForItemId(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setConfirmDialogOpen(false);
+                setUploadDialogOpen(true);
+              }}
+            >
+              Yes, Replace
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Artwork Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Upload New Artwork</DialogTitle>
+            <DialogDescription>
+              Replace the artwork for this product. The new file will be used for production.
+            </DialogDescription>
+          </DialogHeader>
+          {uploadingForItemId && (
+            <ArtworkUpload
+              productId={uploadingForItemId}
+              productName={items.find(i => i.id === uploadingForItemId)?.name || "Product"}
+              onUploadComplete={(fileUrl, fileName) => {
+                // Update cart item with new artwork
+                const updatedItems = items.map(item => 
+                  item.id === uploadingForItemId 
+                    ? { ...item, artworkUrl: fileUrl, artworkFileName: fileName }
+                    : item
+                );
+                
+                // Update localStorage cart
+                try {
+                  localStorage.setItem("ppp:cart", JSON.stringify({ items: updatedItems }));
+                  
+                  // Show success toast
+                  toast.success("Artwork uploaded successfully!", {
+                    description: `${fileName} has been added to your order.`,
+                  });
+                  
+                  // Force refresh by triggering a state update
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 1500); // Delay reload to show toast
+                  
+                } catch (e) {
+                  console.error("Failed to update cart:", e);
+                  toast.error("Upload failed", {
+                    description: "Could not save artwork to your order. Please try again.",
+                  });
+                }
+                
+                setUploadDialogOpen(false);
+                setUploadingForItemId(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

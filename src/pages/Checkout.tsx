@@ -386,12 +386,13 @@ export default function Checkout() {
             </a>
           </div>
 
-          {/* Right: Donate */}
+          {/* Right: Pay Button */}
           <button
             onClick={continueToCheckout}
-            disabled={loading || !legalConsent}
-            className="flex items-center gap-2 rounded-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
-            aria-label="Donate"
+            disabled={loading || !legalConsent || cartItems.length === 0}
+            className="flex items-center gap-2 rounded-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Pay"
+            title={!legalConsent ? "Please accept Terms and Privacy Policy to continue" : cartItems.length === 0 ? "Cart is empty" : ""}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
