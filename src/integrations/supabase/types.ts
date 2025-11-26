@@ -1369,6 +1369,42 @@ export type Database = {
         }
         Relationships: []
       }
+      video_metadata: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string | null
+          video_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_name?: string
+        }
+        Relationships: []
+      }
       who_we_serve_pages: {
         Row: {
           content: Json
