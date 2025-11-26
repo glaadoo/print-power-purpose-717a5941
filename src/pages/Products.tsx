@@ -19,6 +19,7 @@ import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing
 import { addRecentlyViewed } from "@/lib/recently-viewed";
 import { cn } from "@/lib/utils";
 import useToggle from "@/hooks/useToggle";
+import Footer from "@/components/Footer";
 
 type ProductRow = {
   id: string;
@@ -773,6 +774,9 @@ export default function Products() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

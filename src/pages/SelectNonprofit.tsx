@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import Footer from "@/components/Footer";
 
 type Nonprofit = {
   id: string;
@@ -1029,6 +1030,9 @@ export default function SelectNonprofit() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
