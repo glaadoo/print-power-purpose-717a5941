@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
-import { ArrowLeft, Search, Shuffle, Filter, X, TrendingUp, Sparkles, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, Search, Shuffle, Filter, X, TrendingUp, Sparkles, ArrowUpDown, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -54,6 +54,7 @@ export default function SelectNonprofit() {
   const [selectedTag, setSelectedTag] = useState<string>("all_categories");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<string>("default");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Extract unique values for filters
   const uniqueStates = useMemo(() => {
@@ -401,6 +402,26 @@ export default function SelectNonprofit() {
 
         {/* Filter Toggle and Controls */}
         <div className="flex items-center justify-center gap-4 flex-wrap">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 border rounded-full p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="rounded-full h-8 px-3"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="rounded-full h-8 px-3"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+
           {/* Sort Dropdown */}
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[200px] rounded-full">
@@ -520,127 +541,240 @@ export default function SelectNonprofit() {
         </div>
       </div>
 
-      {/* Nonprofits Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {displayedNonprofits.map((np) => {
-          const isSelected = selectedNonprofit?.id === np.id;
+      {/* Nonprofits Display */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {displayedNonprofits.map((np) => {
+            const isSelected = selectedNonprofit?.id === np.id;
 
-          return (
-            <Card
-              key={np.id}
-              onClick={() => handleNonprofitSelect(np)}
-              className={`
-                cursor-pointer p-6 flex flex-col transition-all hover:shadow-lg relative
-                ${
-                  isSelected
-                    ? "border-primary ring-2 ring-primary"
-                    : "border-border hover:border-primary/50"
-                }
-              `}
-            >
-              {/* Featured Badges */}
-              <div className="absolute top-3 right-3 flex flex-col gap-2 max-w-[140px]">
-                {isTopFundraiser(np.id) && (
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
-                    <TrendingUp className="w-3 h-3" />
-                    Top Fundraiser
-                  </Badge>
-                )}
-                {isTopRisingFundraiser(np.id) && (
-                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
-                    <TrendingUp className="w-3 h-3" />
-                    Top Rising
-                  </Badge>
-                )}
-                {np.created_at && isNewlyAdded(np.created_at) && (
-                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
-                    <Sparkles className="w-3 h-3" />
-                    New
-                  </Badge>
-                )}
-              </div>
-
-              {/* Logo and Title - with padding to avoid badge overlap */}
-              <div className="flex items-center gap-3 mb-3 pr-36">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary/20">
-                  {np.logo_url ? (
-                    <img 
-                      src={np.logo_url} 
-                      alt={`${np.name} logo`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-primary font-bold text-lg">
-                      {np.name.charAt(0).toUpperCase()}
-                    </span>
+            return (
+              <Card
+                key={np.id}
+                onClick={() => handleNonprofitSelect(np)}
+                className={`
+                  cursor-pointer p-6 flex flex-col transition-all hover:shadow-lg relative
+                  ${
+                    isSelected
+                      ? "border-primary ring-2 ring-primary"
+                      : "border-border hover:border-primary/50"
+                  }
+                `}
+              >
+                {/* Featured Badges */}
+                <div className="absolute top-3 right-3 flex flex-col gap-2 max-w-[140px]">
+                  {isTopFundraiser(np.id) && (
+                    <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
+                      <TrendingUp className="w-3 h-3" />
+                      Top Fundraiser
+                    </Badge>
+                  )}
+                  {isTopRisingFundraiser(np.id) && (
+                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
+                      <TrendingUp className="w-3 h-3" />
+                      Top Rising
+                    </Badge>
+                  )}
+                  {np.created_at && isNewlyAdded(np.created_at) && (
+                    <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
+                      <Sparkles className="w-3 h-3" />
+                      New
+                    </Badge>
                   )}
                 </div>
-                <h3 className="text-lg font-semibold text-primary flex-1 break-words">
-                  {np.name}
-                </h3>
-              </div>
 
-              {np.ein && (
-                <p className="text-sm text-muted-foreground mb-1">
-                  EIN: {np.ein}
-                </p>
-              )}
-
-              {(np.city || np.state) && (
-                <p className="text-sm text-muted-foreground mb-4">
-                  {[np.city, np.state].filter(Boolean).join(", ")}
-                </p>
-              )}
-
-              {np.description && (
-                <p className="text-sm text-foreground mb-4 line-clamp-3 flex-grow">
-                  {np.description}
-                </p>
-              )}
-
-              {/* Impact Metrics */}
-              <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Total Raised</p>
-                    <p className="text-lg font-bold text-primary">
-                      ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                    </p>
+                {/* Logo and Title - with padding to avoid badge overlap */}
+                <div className="flex items-center gap-3 mb-3 pr-36">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary/20">
+                    {np.logo_url ? (
+                      <img 
+                        src={np.logo_url} 
+                        alt={`${np.name} logo`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-primary font-bold text-lg">
+                        {np.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Supporters</p>
-                    <p className="text-lg font-bold text-primary">
-                      {(np.supporter_count || 0).toLocaleString()}
-                    </p>
+                  <h3 className="text-lg font-semibold text-primary flex-1 break-words">
+                    {np.name}
+                  </h3>
+                </div>
+
+                {np.ein && (
+                  <p className="text-sm text-muted-foreground mb-1">
+                    EIN: {np.ein}
+                  </p>
+                )}
+
+                {(np.city || np.state) && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {[np.city, np.state].filter(Boolean).join(", ")}
+                  </p>
+                )}
+
+                {np.description && (
+                  <p className="text-sm text-foreground mb-4 line-clamp-3 flex-grow">
+                    {np.description}
+                  </p>
+                )}
+
+                {/* Impact Metrics */}
+                <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Total Raised</p>
+                      <p className="text-lg font-bold text-primary">
+                        ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Supporters</p>
+                      <p className="text-lg font-bold text-primary">
+                        {(np.supporter_count || 0).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Select Button */}
-              <Button
-                variant={isSelected ? "default" : "outline"}
-                className="w-full mt-auto rounded-full"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNonprofitSelect(np);
-                }}
+                {/* Select Button */}
+                <Button
+                  variant={isSelected ? "default" : "outline"}
+                  className="w-full mt-auto rounded-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNonprofitSelect(np);
+                  }}
+                >
+                  {isSelected ? "Selected" : "Select Nonprofit"}
+                </Button>
+              </Card>
+            );
+          })}
+          {displayedNonprofits.length === 0 && searchQuery.trim() && (
+            <div className="col-span-full text-center py-12">
+              <p className="text-lg text-foreground">
+                No nonprofits found for "{searchQuery}"
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Try a different search term
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {displayedNonprofits.map((np) => {
+            const isSelected = selectedNonprofit?.id === np.id;
+
+            return (
+              <Card
+                key={np.id}
+                onClick={() => handleNonprofitSelect(np)}
+                className={`
+                  cursor-pointer p-4 transition-all hover:shadow-md
+                  ${
+                    isSelected
+                      ? "border-primary ring-2 ring-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }
+                `}
               >
-                {isSelected ? "Selected" : "Select Nonprofit"}
-              </Button>
-            </Card>
-          );
-        })}
-        {displayedNonprofits.length === 0 && searchQuery.trim() && (
-          <div className="col-span-full text-center py-12">
-            <p className="text-lg text-foreground">
-              No nonprofits found for "{searchQuery}"
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Try a different search term
-            </p>
-          </div>
-        )}
-      </div>
+                <div className="flex items-center gap-4">
+                  {/* Logo */}
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary/20">
+                    {np.logo_url ? (
+                      <img 
+                        src={np.logo_url} 
+                        alt={`${np.name} logo`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-primary font-bold text-xl">
+                        {np.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Name and Location */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-semibold text-primary mb-1 break-words">
+                      {np.name}
+                    </h3>
+                    {(np.city || np.state) && (
+                      <p className="text-sm text-muted-foreground">
+                        {[np.city, np.state].filter(Boolean).join(", ")}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-1 items-center">
+                    {isTopFundraiser(np.id) && (
+                      <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                        Top
+                      </Badge>
+                    )}
+                    {isTopRisingFundraiser(np.id) && (
+                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 text-xs">
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                        Rising
+                      </Badge>
+                    )}
+                    {np.created_at && isNewlyAdded(np.created_at) && (
+                      <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 text-xs">
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        New
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="flex gap-6 items-center">
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Raised</p>
+                      <p className="text-lg font-bold text-primary">
+                        ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Supporters</p>
+                      <p className="text-lg font-bold text-primary">
+                        {(np.supporter_count || 0).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Select Button */}
+                  <Button
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full min-w-[100px]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNonprofitSelect(np);
+                    }}
+                  >
+                    {isSelected ? "Selected" : "Select"}
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+          {displayedNonprofits.length === 0 && searchQuery.trim() && (
+            <div className="text-center py-12">
+              <p className="text-lg text-foreground">
+                No nonprofits found for "{searchQuery}"
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Try a different search term
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedNonprofit && (
         <div className="flex justify-center mt-12">
