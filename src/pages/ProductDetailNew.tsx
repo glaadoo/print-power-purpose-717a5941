@@ -15,6 +15,7 @@ import ReviewForm from "@/components/ReviewForm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import ImageGallery from "@/components/ImageGallery";
+import ArtworkUpload from "@/components/ArtworkUpload";
 
 type ProductRow = {
   id: string;
@@ -53,6 +54,8 @@ export default function ProductDetailNew() {
   const [frequentlyBought, setFrequentlyBought] = useState<ProductRow[]>([]);
   const [avgRating, setAvgRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  const [artworkFileUrl, setArtworkFileUrl] = useState<string>("");
+  const [artworkFileName, setArtworkFileName] = useState<string>("");
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -143,7 +146,11 @@ export default function ProductDetailNew() {
     product.pricing_data.length > 0;
   
   const isConfigured = configuredPriceCents !== null;
-  const canAddToCart = !requiresConfiguration || isConfigured;
+  
+  // Check if artwork is uploaded (required for all products)
+  const hasArtwork = artworkFileUrl && artworkFileName;
+  
+  const canAddToCart = (!requiresConfiguration || isConfigured) && hasArtwork;
 
   // Calculate price
   let unitCents: number;
@@ -397,6 +404,31 @@ export default function ProductDetailNew() {
                 </div>
               )}
 
+              {/* Artwork Upload Section - REQUIRED */}
+              <div className="w-full p-8 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 rounded-2xl border-4 border-blue-400 dark:border-blue-600 shadow-lg">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-100">Upload Your Artwork</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">Required before adding to cart</p>
+                  </div>
+                </div>
+                <ArtworkUpload
+                  productId={product.id}
+                  productName={product.name}
+                  onUploadComplete={(fileUrl, fileName) => {
+                    setArtworkFileUrl(fileUrl);
+                    setArtworkFileName(fileName);
+                  }}
+                  initialFileUrl={artworkFileUrl}
+                  initialFileName={artworkFileName}
+                />
+              </div>
+
               {/* Quantity */}
               <div>
                 <label className="block text-sm font-medium mb-2">Quantity</label>
@@ -412,6 +444,12 @@ export default function ProductDetailNew() {
               {requiresConfiguration && !isConfigured && (
                 <p className="text-sm text-yellow-600 dark:text-yellow-400">
                   Please select product options above before adding to cart
+                </p>
+              )}
+              
+              {!hasArtwork && (
+                <p className="text-sm text-amber-600 dark:text-amber-400 font-semibold">
+                  ⚠️ Please upload your artwork before adding to cart
                 </p>
               )}
 
