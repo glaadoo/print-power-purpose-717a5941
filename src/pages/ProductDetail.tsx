@@ -3,14 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { supabase } from "@/integrations/supabase/client";
-import VideoBackground from "@/components/VideoBackground";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Heart } from "lucide-react";
-import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
+import VistaprintNav from "@/components/VistaprintNav";
+import ProductImageGallery from "@/components/product-detail/ProductImageGallery";
+import ProductInfo from "@/components/product-detail/ProductInfo";
+import ProductTabs from "@/components/product-detail/ProductTabs";
+import RelatedProductsCarousel from "@/components/product-detail/RelatedProductsCarousel";
+import FrequentlyBoughtCarousel from "@/components/product-detail/FrequentlyBoughtCarousel";
+import RecentlyViewed from "@/components/RecentlyViewed";
+import { toast } from "sonner";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
-import ProductReviews from "@/components/ProductReviews";
-import ReviewForm from "@/components/ReviewForm";
-import ArtworkUpload from "@/components/ArtworkUpload";
 
 type ProductRow = {
   id: string;
@@ -31,8 +32,7 @@ type ProductRow = {
 export default function ProductDetail() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { add, items } = useCart();
-  const { count: favoritesCount } = useFavorites();
+  const { add } = useCart();
 
   const [product, setProduct] = useState<ProductRow | null>(null);
   const [qty, setQty] = useState(1);
@@ -40,42 +40,43 @@ export default function ProductDetail() {
   const [err, setErr] = useState<string | null>(null);
   const [configuredPriceCents, setConfiguredPriceCents] = useState<number | null>(null);
   const [productConfig, setProductConfig] = useState<Record<string, string>>({});
-  const [packageInfo, setPackageInfo] = useState<any>(null);
-  const [imageError, setImageError] = useState(false);
   const [reviewsKey, setReviewsKey] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<ProductRow[]>([]);
   const [frequentlyBought, setFrequentlyBought] = useState<ProductRow[]>([]);
   const [artworkFileUrl, setArtworkFileUrl] = useState<string>("");
   const [artworkFileName, setArtworkFileName] = useState<string>("");
+  const [avgRating, setAvgRating] = useState<number | undefined>(undefined);
+  const [reviewCount, setReviewCount] = useState<number>(0);
 
-  // Helper function to navigate to product
-  const navigateToProduct = (product: ProductRow) => {
-    const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    const categorySlug = slugify(product.category || 'uncategorized');
-    const subcategorySlug = slugify(product.subcategory || 'all');
-    const productSlug = slugify(product.name);
-    nav(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`);
-  };
-
-  // Fetch product by ID from Supabase
+  // Fetch product and related data
   useEffect(() => {
     if (!id) return;
+    
     (async () => {
       setLoading(true);
       setErr(null);
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-      if (error) {
-        setErr(error.message);
-      } else if (!data) {
-        setErr("Product not found");
-      } else {
+      
+      try {
+        // Fetch main product
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+        
+        if (error) {
+          setErr(error.message);
+          return;
+        }
+        
+        if (!data) {
+          setErr("Product not found");
+          return;
+        }
+
         setProduct(data as ProductRow);
         
-        // Track as recently viewed when product loads
+        // Track as recently viewed
         addRecentlyViewed({
           id: data.id,
           name: data.name,
@@ -83,22 +84,35 @@ export default function ProductDetail() {
           category: data.category
         });
 
-        // Fetch related products (same category, different product)
+        // Fetch reviews for rating
+        const { data: reviewsData } = await supabase
+          .from("reviews")
+          .select("rating")
+          .eq("product_id", id);
+        
+        if (reviewsData && reviewsData.length > 0) {
+          const sum = reviewsData.reduce((acc, r) => acc + r.rating, 0);
+          setAvgRating(sum / reviewsData.length);
+          setReviewCount(reviewsData.length);
+        }
+
+        // Fetch related products (same category, exclude Canada)
         const { data: related } = await supabase
           .from("products")
           .select("*")
           .eq("category", data.category)
           .neq("id", id)
           .eq("is_active", true)
-          .limit(6);
+          .limit(8);
         
         if (related) {
-          // Filter out Canada products
-          const filteredRelated = (related as ProductRow[]).filter(product => !product.name.toLowerCase().includes('canada'));
+          const filteredRelated = (related as ProductRow[]).filter(
+            product => !product.name.toLowerCase().includes('canada')
+          );
           setRelatedProducts(filteredRelated);
         }
 
-        // Fetch frequently bought together (same vendor, different category)
+        // Fetch frequently bought together (same vendor, different category, exclude Canada)
         const { data: frequent } = await supabase
           .from("products")
           .select("*")
@@ -106,15 +120,20 @@ export default function ProductDetail() {
           .neq("category", data.category)
           .neq("id", id)
           .eq("is_active", true)
-          .limit(6);
+          .limit(8);
         
         if (frequent) {
-          // Filter out Canada products
-          const filteredFrequent = (frequent as ProductRow[]).filter(product => !product.name.toLowerCase().includes('canada'));
+          const filteredFrequent = (frequent as ProductRow[]).filter(
+            product => !product.name.toLowerCase().includes('canada')
+          );
           setFrequentlyBought(filteredFrequent);
         }
+      } catch (error: any) {
+        console.error("Error loading product:", error);
+        setErr(error.message || "Failed to load product");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, [id]);
 
@@ -122,27 +141,21 @@ export default function ProductDetail() {
     document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
   }, [product]);
 
-  // Check if product requires configuration
+  // Calculate unit price
   const requiresConfiguration = product?.pricing_data && 
     Array.isArray(product.pricing_data) && 
     product.pricing_data.length > 0;
   
   const isConfigured = configuredPriceCents !== null;
-  
-  // Check if artwork is uploaded (required for all products)
   const hasArtwork = artworkFileUrl && artworkFileName;
-  
   const canAddToCart = (!requiresConfiguration || isConfigured) && hasArtwork;
 
-  // For Sinalite products with pricing_data, price ONLY comes from API after configuration
   let unitCents: number;
   if (configuredPriceCents !== null) {
     unitCents = configuredPriceCents;
   } else if (product && product.vendor === "sinalite" && product.pricing_data) {
-    // Sinalite products require configuration - no default price
     unitCents = 0;
   } else if (product) {
-    // Apply product-level markup if set
     const markup_fixed = product.markup_fixed_cents ?? 0;
     const markup_percent = product.markup_percent ?? 0;
     const base = product.base_cost_cents;
@@ -155,6 +168,7 @@ export default function ProductDetail() {
 
   function handleAddToCart() {
     if (!product || !canAddToCart) return;
+    
     add(
       {
         id: product.id,
@@ -165,341 +179,147 @@ export default function ProductDetail() {
       },
       Math.max(1, Number(qty))
     );
+    
+    toast.success(`Added ${qty} ${product.name} to cart`, {
+      description: "Product has been added to your cart",
+      action: {
+        label: "View Cart",
+        onClick: () => nav("/cart")
+      }
+    });
   }
+
+  function handleCheckout() {
+    if (!product || !canAddToCart) return;
+    
+    // Add to cart first
+    add(
+      {
+        id: product.id,
+        name: product.name,
+        priceCents: unitCents,
+        imageUrl: product.image_url,
+        currency: product.currency || "USD",
+      },
+      Math.max(1, Number(qty))
+    );
+    
+    // Navigate to checkout
+    nav("/checkout");
+  }
+
+  const handleReviewSubmit = () => {
+    setReviewsKey(prev => prev + 1);
+  };
+
+  // Get product images (support for multiple images in the future)
+  const productImages = product?.image_url ? [product.image_url] : [];
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between bg-white border-b border-gray-200 shadow-sm relative">
-        {/* Left: Back button */}
-        <Button
-          onClick={() => nav(-1)}
-          variant="outline"
-          className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
-          size="sm"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        
-        {/* Center: Brand */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <a
-            href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase text-blue-600 hover:text-blue-700"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
-        </div>
-
-        {/* Right: Wishlist and Cart */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => nav("/favorites")}
-            className="rounded-full border-gray-300 bg-white text-gray-900 hover:bg-gray-50 relative"
-          >
-            <Heart className="w-4 h-4" />
-            {favoritesCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {favoritesCount}
-              </span>
-            )}
-          </Button>
-          
-          <button
-            onClick={() => nav("/cart")}
-            className="flex items-center gap-2 rounded-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white relative transition-colors"
-            aria-label="View cart"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M9 2L7.17 4H3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4.17L15 2H9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M5 7v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="hidden sm:inline">Cart</span>
-            {items.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {items.length}
-              </span>
-            )}
-          </button>
-        </div>
-      </header>
-
-      {/* Scrollable content */}
-      <div className="pt-16 min-h-screen bg-gray-50">
-        <section className="py-12 px-4">
-          <div className="w-full max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-              {loading && <p className="text-center text-gray-600">Loading product…</p>}
-              
-              {err && (
-                <p className="text-center text-red-600">{err || "Product not found"}</p>
-              )}
-
-              {!loading && !err && product && (
-                <>
-                  {/* Product Image */}
-                  <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 border border-gray-200 mb-6">
-                    {product.image_url && !imageError ? (
-                      <img 
-                        src={product.image_url} 
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error(`Failed to load image for product "${product.name}":`, product.image_url);
-                          setImageError(true);
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <div className="text-center p-6">
-                          <svg className="w-20 h-20 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-gray-400 text-sm mt-3">No image available</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                   <h1 className="text-3xl font-bold text-center text-blue-600 mb-4">
-                    {product.name}
-                  </h1>
-                  {unitPrice > 0 ? (
-                    <p className="text-center text-xl font-bold text-gray-900 mb-2">
-                      Price: ${unitPrice.toFixed(2)}
-                    </p>
-                  ) : (
-                    <p className="text-center text-sm text-amber-600 mb-2">
-                      Configure product to see pricing
-                    </p>
-                  )}
-                  {product.description && (
-                    <p className="text-center text-gray-600 mb-6">{product.description}</p>
-                  )}
-
-                  <div className="flex flex-col gap-6 items-center">
-                    {/* Product Configuration */}
-                    {(product.pricing_data || product.vendor === 'sinalite') && (
-                      <ProductConfiguratorLoader
-                        productId={product.id}
-                        onPriceChange={setConfiguredPriceCents}
-                        onConfigChange={setProductConfig}
-                        onQuantityOptionsChange={(opts) => {
-                          // Optional: handle quantity options
-                        }}
-                      />
-                    )}
-
-                    {/* Artwork Upload Section - REQUIRED - Prominent Display */}
-                    <div className="w-full p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-4 border-blue-400 shadow-lg mt-6">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-blue-900">Upload Your Artwork</h3>
-                          <p className="text-sm text-blue-700">Required before adding to cart</p>
-                        </div>
-                      </div>
-                      <ArtworkUpload
-                        productId={product.id}
-                        productName={product.name}
-                        onUploadComplete={(fileUrl, fileName) => {
-                          setArtworkFileUrl(fileUrl);
-                          setArtworkFileName(fileName);
-                        }}
-                        initialFileUrl={artworkFileUrl}
-                        initialFileName={artworkFileName}
-                      />
-                    </div>
-
-                    {/* Package Information */}
-                    {packageInfo && (
-                      <div className="w-full mt-4 p-4 bg-white rounded-lg border border-gray-200 space-y-2">
-                        <h4 className="text-sm font-semibold text-gray-900">Package Information</h4>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                          {packageInfo["total weight"] && (
-                            <div>
-                              <span className="font-medium">Total Weight:</span> {packageInfo["total weight"]} lbs
-                            </div>
-                          )}
-                          {packageInfo["box size"] && (
-                            <div>
-                              <span className="font-medium">Box Size:</span> {packageInfo["box size"]}"
-                            </div>
-                          )}
-                          {packageInfo["Units Per Box"] && (
-                            <div>
-                              <span className="font-medium">Units Per Box:</span> {packageInfo["Units Per Box"]}
-                            </div>
-                          )}
-                          {packageInfo["number of boxes"] && (
-                            <div>
-                              <span className="font-medium">Number of Boxes:</span> {packageInfo["number of boxes"]}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="w-full max-w-xs">
-                      <label className="block text-sm font-medium mb-2 text-center text-gray-700">Quantity</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={qty}
-                        onChange={(e) => setQty(Math.max(1, Number(e.target.value || 1)))}
-                        className="w-full rounded-xl bg-white border border-gray-300 text-gray-900 px-4 py-2 text-center outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                      />
-                    </div>
-
-                    {requiresConfiguration && !isConfigured && (
-                      <p className="text-sm text-amber-600 mb-3">
-                        Please select product options above before adding to cart
-                      </p>
-                    )}
-                    
-                    {!hasArtwork && (
-                      <p className="text-sm text-amber-600 mb-3">
-                        Please upload your artwork before adding to cart
-                      </p>
-                    )}
-
-                    <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-                      <Button
-                        onClick={handleAddToCart}
-                        disabled={!canAddToCart}
-                        className="flex-1 rounded-full px-6 py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Add to Cart
-                      </Button>
-
-                      <Button
-                        onClick={() =>
-                          nav("/checkout", { state: { productId: product.id, qty } })
-                        }
-                        disabled={!canAddToCart}
-                        className="flex-1 rounded-full px-6 py-3 bg-gray-900 text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Checkout
-                      </Button>
-                    </div>
-
-                    <button
-                      onClick={() => nav("/products")}
-                      className="mt-2 text-sm text-blue-600 hover:text-blue-700 underline"
-                    >
-                      ← Back to products
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Related Products Section */}
-            {!loading && !err && product && relatedProducts.length > 0 && (
-              <div className="relative w-full max-w-6xl mx-auto mt-8">
-                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-                  <h2 className="text-2xl font-serif font-semibold mb-6">Related Products</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {relatedProducts.map((relatedProduct) => (
-                      <div 
-                        key={relatedProduct.id}
-                        onClick={() => navigateToProduct(relatedProduct)}
-                        className="cursor-pointer group"
-                      >
-                        <div className="aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2">
-                          {relatedProduct.image_url ? (
-                            <img 
-                              src={relatedProduct.image_url} 
-                              alt={relatedProduct.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                          {relatedProduct.name}
-                        </h3>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Starting at ${(relatedProduct.base_cost_cents / 100).toFixed(2)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Frequently Bought Together Section */}
-            {!loading && !err && product && frequentlyBought.length > 0 && (
-              <div className="relative w-full max-w-6xl mx-auto mt-8">
-                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-                  <h2 className="text-2xl font-serif font-semibold mb-6">Frequently Bought Together</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {frequentlyBought.map((frequentProduct) => (
-                      <div 
-                        key={frequentProduct.id}
-                        onClick={() => navigateToProduct(frequentProduct)}
-                        className="cursor-pointer group"
-                      >
-                        <div className="aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2">
-                          {frequentProduct.image_url ? (
-                            <img 
-                              src={frequentProduct.image_url} 
-                              alt={frequentProduct.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                          {frequentProduct.name}
-                        </h3>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Starting at ${(frequentProduct.base_cost_cents / 100).toFixed(2)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Reviews Section */}
-            {!loading && !err && product && (
-              <div className="relative w-full max-w-2xl mx-auto mt-8">
-                <div className="rounded-3xl border border-white/30 bg-white/10 backdrop-blur shadow-2xl p-6 md:p-8">
-                  <h2 className="text-2xl font-serif font-semibold mb-6">Customer Reviews</h2>
-                  
-                  <div className="space-y-8">
-                    <ReviewForm
-                      productId={product.id}
-                      onReviewSubmitted={() => setReviewsKey((k) => k + 1)}
-                    />
-                    <ProductReviews key={reviewsKey} productId={product.id} />
-                  </div>
-                </div>
-              </div>
-            )}
+      <VistaprintNav />
+      
+      {/* Main Content */}
+      <div className="pt-20">
+        {loading ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center text-gray-600">Loading product…</div>
           </div>
-        </section>
+        ) : err ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">{err || "Product not found"}</p>
+              <button
+                onClick={() => nav("/products")}
+                className="text-blue-600 hover:text-blue-700 underline"
+              >
+                ← Back to products
+              </button>
+            </div>
+          </div>
+        ) : product ? (
+          <>
+            {/* Top Section: Two-Column Layout */}
+            <section className="bg-white py-8 md:py-12">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+                  {/* Left Column: Image Gallery */}
+                  <div className="md:sticky md:top-24 md:self-start">
+                    <ProductImageGallery
+                      images={productImages}
+                      productName={product.name}
+                    />
+                  </div>
+
+                  {/* Right Column: Product Info */}
+                  <div>
+                    <ProductInfo
+                      product={product}
+                      unitPrice={unitPrice}
+                      quantity={qty}
+                      onQuantityChange={setQty}
+                      onPriceChange={setConfiguredPriceCents}
+                      onConfigChange={setProductConfig}
+                      onAddToCart={handleAddToCart}
+                      onCheckout={handleCheckout}
+                      canAddToCart={canAddToCart}
+                      avgRating={avgRating}
+                      reviewCount={reviewCount}
+                      artworkFileUrl={artworkFileUrl}
+                      artworkFileName={artworkFileName}
+                      onArtworkUpload={(fileUrl, fileName) => {
+                        setArtworkFileUrl(fileUrl);
+                        setArtworkFileName(fileName);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Banner / Promotional Section */}
+            <section className="bg-blue-600 py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center text-white">
+                  <p className="text-lg font-semibold">
+                    🎉 Every purchase supports a nonprofit of your choice! 🎉
+                  </p>
+                  <p className="text-sm mt-1 opacity-90">
+                    Choose your cause at checkout and make an impact with every order
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Product Details Tabs Section */}
+            <section className="bg-white py-12">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <ProductTabs
+                  product={product}
+                  reviewsKey={reviewsKey}
+                  onReviewSubmit={handleReviewSubmit}
+                />
+              </div>
+            </section>
+
+            {/* Related Products Carousel */}
+            {relatedProducts.length > 0 && (
+              <RelatedProductsCarousel products={relatedProducts} />
+            )}
+
+            {/* Frequently Bought Together Carousel */}
+            {frequentlyBought.length > 0 && (
+              <FrequentlyBoughtCarousel products={frequentlyBought} />
+            )}
+
+            {/* Recently Viewed Section */}
+            <section className="bg-gray-50 py-12">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <RecentlyViewed />
+              </div>
+            </section>
+          </>
+        ) : null}
       </div>
     </div>
   );
