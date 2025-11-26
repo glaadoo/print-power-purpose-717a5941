@@ -104,6 +104,16 @@ export default function SelectNonprofit() {
       .map(np => np.id);
   }, [allNonprofits]);
 
+  // Calculate counts for sort options
+  const sortCounts = useMemo(() => {
+    return {
+      default: allNonprofits.length,
+      top_fundraisers: allNonprofits.filter(np => (np.total_raised_cents || 0) > 0).length,
+      new_fundraisers: allNonprofits.filter(np => np.created_at && isNewlyAdded(np.created_at)).length,
+      rising_fundraisers: allNonprofits.length, // All nonprofits sorted by supporter count
+    };
+  }, [allNonprofits]);
+
   // Check if nonprofit is newly added (last 30 days)
   const isNewlyAdded = (createdAt: string) => {
     const thirtyDaysAgo = new Date();
@@ -442,10 +452,30 @@ export default function SelectNonprofit() {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="top_fundraisers">Top Fundraisers</SelectItem>
-              <SelectItem value="new_fundraisers">New Fundraisers</SelectItem>
-              <SelectItem value="rising_fundraisers">Top Rising Fundraisers</SelectItem>
+              <SelectItem value="default">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span>Default</span>
+                  <Badge variant="secondary" className="text-xs">{sortCounts.default}</Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="top_fundraisers">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span>Top Fundraisers</span>
+                  <Badge variant="secondary" className="text-xs">{sortCounts.top_fundraisers}</Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="new_fundraisers">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span>New Fundraisers</span>
+                  <Badge variant="secondary" className="text-xs">{sortCounts.new_fundraisers}</Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="rising_fundraisers">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span>Top Rising Fundraisers</span>
+                  <Badge variant="secondary" className="text-xs">{sortCounts.rising_fundraisers}</Badge>
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
 
