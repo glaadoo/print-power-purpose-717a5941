@@ -253,8 +253,30 @@ export default function SelectNonprofit() {
         if (alive) setAllNonprofits(nonprofitsWithMetrics);
 
         // Get 10 random for initial display
-        const shuffled = [...nonprofitsWithMetrics].sort(() => Math.random() - 0.5).slice(0, 10);
-        if (alive) setRandomNonprofits(shuffled);
+        // If there's a selected nonprofit from context, ensure it's included in the display
+        let initialDisplay: Nonprofit[];
+        if (nonprofit) {
+          // Find the selected nonprofit in the full list
+          const selectedNp = nonprofitsWithMetrics.find(np => np.id === nonprofit.id);
+          if (selectedNp) {
+            // Get 9 random nonprofits (excluding the selected one)
+            const others = nonprofitsWithMetrics
+              .filter(np => np.id !== nonprofit.id)
+              .sort(() => Math.random() - 0.5)
+              .slice(0, 9);
+            // Put selected nonprofit first, then the random 9
+            initialDisplay = [selectedNp, ...others];
+            console.log("[SelectNonprofit] Including selected nonprofit in initial display:", selectedNp.name);
+          } else {
+            // Selected nonprofit not found, just show random 10
+            initialDisplay = [...nonprofitsWithMetrics].sort(() => Math.random() - 0.5).slice(0, 10);
+          }
+        } else {
+          // No selection, show random 10
+          initialDisplay = [...nonprofitsWithMetrics].sort(() => Math.random() - 0.5).slice(0, 10);
+        }
+        
+        if (alive) setRandomNonprofits(initialDisplay);
         
       } catch (e: any) {
         if (alive) setErr(e?.message || "Failed to load nonprofits");
@@ -266,7 +288,7 @@ export default function SelectNonprofit() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [nonprofit]);
 
   // Initialize and sync with context nonprofit (for persistence)
   useEffect(() => {
