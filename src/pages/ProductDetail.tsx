@@ -294,11 +294,36 @@ export default function ProductDetail() {
                       />
                     )}
 
+                    {/* Artwork Upload Section - REQUIRED - Prominent Display */}
+                    <div className="w-full p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-4 border-blue-400 shadow-lg mt-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold text-blue-900">Upload Your Artwork</h3>
+                          <p className="text-sm text-blue-700">Required before adding to cart</p>
+                        </div>
+                      </div>
+                      <ArtworkUpload
+                        productId={product.id}
+                        productName={product.name}
+                        onUploadComplete={(fileUrl, fileName) => {
+                          setArtworkFileUrl(fileUrl);
+                          setArtworkFileName(fileName);
+                        }}
+                        initialFileUrl={artworkFileUrl}
+                        initialFileName={artworkFileName}
+                      />
+                    </div>
+
                     {/* Package Information */}
                     {packageInfo && (
-                      <div className="mt-4 p-4 bg-background/60 backdrop-blur-sm rounded-lg border border-border/40 space-y-2">
-                        <h4 className="text-sm font-semibold text-foreground">Package Information</h4>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                      <div className="w-full mt-4 p-4 bg-white rounded-lg border border-gray-200 space-y-2">
+                        <h4 className="text-sm font-semibold text-gray-900">Package Information</h4>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                           {packageInfo["total weight"] && (
                             <div>
                               <span className="font-medium">Total Weight:</span> {packageInfo["total weight"]} lbs
@@ -322,21 +347,6 @@ export default function ProductDetail() {
                         </div>
                       </div>
                     )}
-
-                    {/* Artwork Upload - Required */}
-                    <div className="w-full mt-6 p-6 bg-blue-50 rounded-xl border-2 border-blue-200">
-                      <h3 className="text-lg font-semibold text-blue-600 mb-4">Upload Your Artwork</h3>
-                      <ArtworkUpload
-                        productId={product.id}
-                        productName={product.name}
-                        onUploadComplete={(fileUrl, fileName) => {
-                          setArtworkFileUrl(fileUrl);
-                          setArtworkFileName(fileName);
-                        }}
-                        initialFileUrl={artworkFileUrl}
-                        initialFileName={artworkFileName}
-                      />
-                    </div>
 
                     <div className="w-full max-w-xs">
                       <label className="block text-sm font-medium mb-2 text-center text-gray-700">Quantity</label>
