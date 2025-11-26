@@ -133,7 +133,18 @@ export default function ArtworkUpload({
   };
 
   return (
-    <div className="w-full space-y-3">
+    <div className="w-full space-y-3 relative">
+      {/* Loading Overlay */}
+      {uploading && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 rounded-xl flex flex-col items-center justify-center gap-3">
+          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+          <div className="text-center">
+            <p className="text-sm font-semibold text-gray-900">Uploading artwork...</p>
+            <p className="text-xs text-gray-600 mt-1">Please wait while we process your file</p>
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-gray-700">
           Your Design File <span className="text-red-600">*</span>
