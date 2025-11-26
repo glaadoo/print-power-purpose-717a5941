@@ -164,7 +164,12 @@ export default function SelectNonprofit() {
           .in("status", ["paid", "completed"])
           .not("nonprofit_id", "is", null);
 
-        if (ordersError) throw ordersError;
+        console.log("[SelectNonprofit] Orders query result:", { ordersData, ordersError });
+
+        if (ordersError) {
+          console.error("[SelectNonprofit] Orders query failed:", ordersError);
+          // Don't throw - continue with empty metrics if orders query fails due to RLS
+        }
 
         // Aggregate metrics by nonprofit
         const metricsMap = new Map<string, { total_raised_cents: number; supporter_count: number }>();
