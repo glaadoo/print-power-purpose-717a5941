@@ -432,7 +432,7 @@ export default function SelectNonprofit() {
               <SelectItem value="default">Default</SelectItem>
               <SelectItem value="top_fundraisers">Top Fundraisers</SelectItem>
               <SelectItem value="new_fundraisers">New Fundraisers</SelectItem>
-              <SelectItem value="rising_fundraisers">Rising Fundraisers</SelectItem>
+              <SelectItem value="rising_fundraisers">Top Rising Fundraisers</SelectItem>
             </SelectContent>
           </Select>
 
