@@ -56,6 +56,7 @@ export default function SelectNonprofit() {
   const [sortBy, setSortBy] = useState<string>("default");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showAll, setShowAll] = useState(false);
+  const [isRestoringSelection, setIsRestoringSelection] = useState(false);
   
   // Ref to track scroll position during sorting
   const scrollPositionRef = useRef<number>(0);
@@ -272,7 +273,15 @@ export default function SelectNonprofit() {
     // On mount, restore selection from context if exists
     if (nonprofit) {
       console.log("[SelectNonprofit] Restoring selection from context:", nonprofit);
+      setIsRestoringSelection(true);
       setSelectedNonprofit(nonprofit);
+      
+      // Clear restoration flag after animation completes
+      const timer = setTimeout(() => {
+        setIsRestoringSelection(false);
+      }, 300); // Match fade-in animation duration
+      
+      return () => clearTimeout(timer);
     }
   }, [nonprofit]);
 
@@ -367,6 +376,7 @@ export default function SelectNonprofit() {
                       ? "border-primary ring-2 ring-primary bg-primary/5"
                       : "border-border hover:border-primary/50"
                     }
+                    ${isSelected && isRestoringSelection ? "animate-fade-in" : ""}
                   `}
                 >
                   {/* Ranking Badge */}
@@ -639,6 +649,7 @@ export default function SelectNonprofit() {
                       ? "border-primary ring-2 ring-primary"
                       : "border-border hover:border-primary/50"
                   }
+                  ${isSelected && isRestoringSelection ? "animate-fade-in" : ""}
                 `}
               >
                 {/* Featured Badges */}
@@ -760,6 +771,7 @@ export default function SelectNonprofit() {
                       ? "border-primary ring-2 ring-primary bg-primary/5"
                       : "border-border hover:border-primary/50"
                   }
+                  ${isSelected && isRestoringSelection ? "animate-fade-in" : ""}
                 `}
               >
                 <div className="flex items-center gap-4">
