@@ -151,12 +151,22 @@ export default function Success() {
               {items.map((item: any, idx: number) => (
                 <div key={idx} className="flex justify-between items-start py-3 border-b border-border last:border-0">
                   <div className="flex-1">
-                    <p className="font-medium text-foreground">{item.name || "Product"}</p>
+                    <p className="font-medium text-foreground">{item.product_name || item.name || "Product"}</p>
                     <p className="text-sm text-muted-foreground">Quantity: {item.quantity || 1}</p>
+                    {item.configuration && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {Object.entries(item.configuration).map(([key, value]) => `${key}: ${value}`).join(', ')}
+                      </p>
+                    )}
                   </div>
-                  <p className="font-semibold text-foreground">
-                    ${((item.priceCents || 0) / 100).toFixed(2)}
-                  </p>
+                  <div className="text-right">
+                    <p className="font-semibold text-foreground">
+                      ${((item.final_price_per_unit_cents || item.priceCents || 0) / 100).toFixed(2)} each
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Total: ${(((item.final_price_per_unit_cents || item.priceCents || 0) * (item.quantity || 1)) / 100).toFixed(2)}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

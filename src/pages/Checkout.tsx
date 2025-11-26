@@ -398,37 +398,91 @@ export default function Checkout() {
           {/* Order summary */}
           <div className="space-y-4 mb-6">
             {cartItems.map((item) => (
-              <div key={item.id} className="border-b border-gray-200 pb-4">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Product</span>
-                  <span className="font-semibold text-gray-900">{item.name}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Quantity</span>
-                  <span className="font-semibold text-gray-900">{item.quantity}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total</span>
-                  <span className="font-semibold text-gray-900">
-                    ${((item.priceCents * item.quantity) / 100).toFixed(2)}
-                  </span>
+              <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="flex gap-4">
+                  {/* Product Image */}
+                  {item.imageUrl && (
+                    <div className="w-20 h-20 flex-shrink-0">
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.name}
+                        className="w-full h-full object-cover rounded-md border border-gray-200"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="flex-1 space-y-2">
+                    {/* Product Name & Price */}
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                      <span className="font-bold text-blue-600">
+                        ${((item.priceCents * item.quantity) / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    
+                    {/* Configuration Details */}
+                    {item.configuration && Object.keys(item.configuration).length > 0 && (
+                      <div className="text-sm text-gray-600">
+                        <span className="font-medium">Configuration: </span>
+                        {Object.entries(item.configuration).map(([key, value], idx) => (
+                          <span key={key}>
+                            {key}: {String(value)}
+                            {idx < Object.keys(item.configuration!).length - 1 && ', '}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Quantity & Unit Price */}
+                    <div className="flex gap-4 text-sm text-gray-600">
+                      <span>Quantity: <span className="font-semibold">{item.quantity}</span></span>
+                      <span>Unit Price: <span className="font-semibold">${(item.priceCents / 100).toFixed(2)}</span></span>
+                    </div>
+                    
+                    {/* Artwork Preview */}
+                    {item.artworkUrl && (
+                      <div className="mt-2 pt-2 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm text-gray-700">
+                              Artwork: {item.artworkFileName || 'Uploaded'}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              // Open artwork in new tab for preview
+                              window.open(item.artworkUrl!, '_blank');
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
-            <div className="border-b border-gray-200 pb-4">
+            
+            {/* Supporting Cause/Nonprofit */}
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
               <div className="flex justify-between mb-2">
-                <span className="text-gray-600">Supporting Cause</span>
-                <span className="font-semibold text-gray-900">
+                <span className="text-gray-700 font-medium">Supporting</span>
+                <span className="font-semibold text-blue-700">
                   {selectedCauseName || causeCtx?.cause?.name || "General Fund"}
                 </span>
               </div>
               {causeCtx?.nonprofit && (
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Nonprofit</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-gray-900">
                     {causeCtx.nonprofit.name}
                     {causeCtx.nonprofit.ein && (
-                      <span className="text-sm text-gray-500 ml-2">(EIN: {causeCtx.nonprofit.ein})</span>
+                      <span className="text-gray-500 ml-2">(EIN: {causeCtx.nonprofit.ein})</span>
                     )}
                   </span>
                 </div>
