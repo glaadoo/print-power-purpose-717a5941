@@ -10,6 +10,8 @@ type ProductImageGalleryProps = {
 export default function ProductImageGallery({ images, productName }: ProductImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const handlePrevious = () => {
     setSelectedImage((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -17,6 +19,32 @@ export default function ProductImageGallery({ images, productName }: ProductImag
 
   const handleNext = () => {
     setSelectedImage((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  // Touch swipe handlers
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNext();
+    } else if (isRightSwipe) {
+      handlePrevious();
+    }
   };
 
   // Keyboard navigation
@@ -136,7 +164,12 @@ export default function ProductImageGallery({ images, productName }: ProductImag
             <X className="w-6 h-6" />
           </Button>
 
-          <div className="relative max-w-5xl w-full">
+          <div 
+            className="relative max-w-5xl w-full"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             <img
               src={images[selectedImage]}
               alt={`${productName} - Fullscreen`}
