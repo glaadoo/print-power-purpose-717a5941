@@ -31,7 +31,7 @@ export default function FeaturedProducts() {
           .from("products")
           .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, vendor, vendor_product_id, pricing_data")
           .eq("is_active", true)
-          .limit(20);
+          .limit(12);
 
         if (error) {
           console.error("[FeaturedProducts] Error loading:", error);
@@ -105,10 +105,10 @@ export default function FeaturedProducts() {
           </div>
         </div>
 
-        {/* Grid Layout - 18 products */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {/* Grid Layout - 12 products */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
           {products.map(product => (
-            <ProductCard key={product.id} product={product} compact />
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
 
