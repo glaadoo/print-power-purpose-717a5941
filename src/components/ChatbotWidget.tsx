@@ -21,7 +21,7 @@ export default function ChatbotWidget() {
         whileTap={{ scale: 0.95 }}
         className="absolute bottom-20 right-0 bg-background/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-border whitespace-nowrap hover:bg-background transition-colors cursor-pointer"
       >
-        <p className="text-sm font-medium text-foreground">Need help?</p>
+        <p className="text-sm font-medium text-foreground">Chat with Kenzie</p>
       </motion.button>
 
       {/* Small decorative paws */}
