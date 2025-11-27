@@ -142,6 +142,12 @@ export default {
           "70%": { opacity: "0.5", transform: "scale(1) translateY(-5px)" },
           "100%": { opacity: "0", transform: "scale(0.8) translateY(-15px)" },
         },
+        "paw-walk-horizontal": {
+          "0%": { opacity: "0", transform: "scale(0.5) translateX(20px)" },
+          "20%": { opacity: "0.7", transform: "scale(1) translateX(0)" },
+          "80%": { opacity: "0.4", transform: "scale(0.9) translateX(-30px)" },
+          "100%": { opacity: "0", transform: "scale(0.7) translateX(-50px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",

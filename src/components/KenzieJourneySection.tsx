@@ -84,30 +84,30 @@ export default function KenzieJourneySection() {
                 <span className="text-lg">🧡</span>
               </div>
               
-              {/* Walking paw prints trail - alternating left/right pattern */}
-              {/* Step 1 - front left */}
-              <div className="absolute bottom-0 left-[45%] animate-[paw-walk_2.4s_ease-in-out_infinite]">
-                <span className="text-2xl rotate-[-20deg] inline-block">🐾</span>
+              {/* Walking paw prints trail - horizontal walking pattern */}
+              {/* Step 1 - under puppy left */}
+              <div className="absolute -bottom-2 left-[30%] animate-[paw-walk-horizontal_3s_ease-out_infinite]">
+                <span className="text-2xl rotate-[-30deg] inline-block">🐾</span>
               </div>
-              {/* Step 2 - front right */}
-              <div className="absolute -bottom-4 left-[55%] animate-[paw-walk_2.4s_ease-in-out_infinite_0.3s]">
-                <span className="text-2xl rotate-[20deg] inline-block">🐾</span>
+              {/* Step 2 - moving right */}
+              <div className="absolute -bottom-4 left-[20%] animate-[paw-walk-horizontal_3s_ease-out_infinite_0.4s]">
+                <span className="text-xl rotate-[-25deg] inline-block">🐾</span>
               </div>
-              {/* Step 3 - continuing left */}
-              <div className="absolute -bottom-8 left-[48%] animate-[paw-walk_2.4s_ease-in-out_infinite_0.6s]">
-                <span className="text-xl rotate-[-15deg] inline-block">🐾</span>
+              {/* Step 3 - continuing right */}
+              <div className="absolute -bottom-2 left-[10%] animate-[paw-walk-horizontal_3s_ease-out_infinite_0.8s]">
+                <span className="text-xl rotate-[-30deg] inline-block">🐾</span>
               </div>
-              {/* Step 4 - continuing right */}
-              <div className="absolute -bottom-12 left-[58%] animate-[paw-walk_2.4s_ease-in-out_infinite_0.9s]">
-                <span className="text-xl rotate-[15deg] inline-block">🐾</span>
+              {/* Step 4 - fading trail */}
+              <div className="absolute -bottom-4 left-[0%] animate-[paw-walk-horizontal_3s_ease-out_infinite_1.2s]">
+                <span className="text-lg rotate-[-25deg] inline-block">🐾</span>
               </div>
-              {/* Step 5 - fading left */}
-              <div className="absolute -bottom-16 left-[50%] animate-[paw-walk_2.4s_ease-in-out_infinite_1.2s]">
-                <span className="text-lg rotate-[-10deg] inline-block">🐾</span>
+              {/* Step 5 - far trail */}
+              <div className="absolute -bottom-2 -left-[10%] animate-[paw-walk-horizontal_3s_ease-out_infinite_1.6s]">
+                <span className="text-lg rotate-[-30deg] inline-block">🐾</span>
               </div>
-              {/* Step 6 - fading right */}
-              <div className="absolute -bottom-20 left-[60%] animate-[paw-walk_2.4s_ease-in-out_infinite_1.5s]">
-                <span className="text-lg rotate-[10deg] inline-block">🐾</span>
+              {/* Step 6 - farthest */}
+              <div className="absolute -bottom-4 -left-[20%] animate-[paw-walk-horizontal_3s_ease-out_infinite_2s]">
+                <span className="text-base rotate-[-25deg] inline-block">🐾</span>
               </div>
             </div>
           </div>
