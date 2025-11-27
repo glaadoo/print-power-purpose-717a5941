@@ -83,42 +83,25 @@ export default function KenzieJourneySection() {
                 <span className="text-base">🧡</span>
               </div>
               
-              {/* Butterflies with motion blur wing effect */}
+              {/* Butterflies */}
               <div className="absolute top-[15%] right-[25%] z-20 animate-[butterfly-orbit_4s_ease-in-out_infinite]">
-                <div className="relative">
-                  {/* Motion blur ghost wings */}
-                  <span className="absolute text-lg opacity-30 blur-[1px] animate-[wing-flap-blur_0.15s_ease-in-out_infinite]">🦋</span>
-                  <span className="absolute text-lg opacity-20 blur-[2px] animate-[wing-flap-blur_0.15s_ease-in-out_infinite_0.05s]">🦋</span>
-                  {/* Main butterfly */}
-                  <span className="relative text-lg animate-[wing-flap_0.12s_ease-in-out_infinite]">🦋</span>
-                </div>
+                <span className="text-lg">🦋</span>
                 <span className="absolute -top-2 right-0 text-xs animate-[sparkle_0.8s_ease-in-out_infinite]">✨</span>
               </div>
               
               <div className="absolute top-[45%] left-[15%] z-20 animate-[butterfly-orbit_5s_ease-in-out_infinite_1s]">
-                <div className="relative">
-                  <span className="absolute text-base opacity-30 blur-[1px] animate-[wing-flap-blur_0.12s_ease-in-out_infinite]">🦋</span>
-                  <span className="absolute text-base opacity-20 blur-[2px] animate-[wing-flap-blur_0.12s_ease-in-out_infinite_0.04s]">🦋</span>
-                  <span className="relative text-base animate-[wing-flap_0.1s_ease-in-out_infinite]">🦋</span>
-                </div>
+                <span className="text-base">🦋</span>
                 <span className="absolute -top-2 left-0 text-xs animate-[sparkle_0.6s_ease-in-out_infinite_0.2s]">✨</span>
               </div>
               
               <div className="absolute top-[60%] right-[18%] z-20 animate-[butterfly-orbit_4.5s_ease-in-out_infinite_2s]">
-                <div className="relative">
-                  <span className="absolute text-base opacity-30 blur-[1px] animate-[wing-flap-blur_0.14s_ease-in-out_infinite]">🦋</span>
-                  <span className="absolute text-base opacity-20 blur-[2px] animate-[wing-flap-blur_0.14s_ease-in-out_infinite_0.05s]">🦋</span>
-                  <span className="relative text-base animate-[wing-flap_0.11s_ease-in-out_infinite]">🦋</span>
-                </div>
+                <span className="text-base">🦋</span>
                 <span className="absolute -bottom-2 right-0 text-xs animate-[sparkle_0.7s_ease-in-out_infinite_0.4s]">✨</span>
               </div>
               
               {/* Fourth butterfly - lands on Kenzie's head */}
               <div className="absolute top-[5%] left-[45%] z-30 animate-[butterfly-land_8s_ease-in-out_infinite]">
-                <div className="relative">
-                  <span className="absolute text-base opacity-30 blur-[1px] animate-[wing-flap-land_8s_ease-in-out_infinite]">🦋</span>
-                  <span className="relative text-base animate-[wing-flap-land_8s_ease-in-out_infinite]">🦋</span>
-                </div>
+                <span className="text-base">🦋</span>
                 <span className="absolute -top-1 -right-1 text-xs animate-[sparkle_1s_ease-in-out_infinite_0.3s]">✨</span>
               </div>
               
