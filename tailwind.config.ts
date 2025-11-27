@@ -148,6 +148,12 @@ export default {
           "80%": { opacity: "0.4", transform: "scale(0.9) translateX(-30px)" },
           "100%": { opacity: "0", transform: "scale(0.7) translateX(-50px)" },
         },
+        "butterfly": {
+          "0%, 100%": { transform: "translateY(0) translateX(0) rotate(0deg)" },
+          "25%": { transform: "translateY(-10px) translateX(8px) rotate(5deg)" },
+          "50%": { transform: "translateY(-5px) translateX(-5px) rotate(-3deg)" },
+          "75%": { transform: "translateY(-15px) translateX(3px) rotate(8deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
