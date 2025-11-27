@@ -154,6 +154,13 @@ export default {
           "50%": { transform: "translateY(-5px) translateX(-5px) rotate(-3deg)" },
           "75%": { transform: "translateY(-15px) translateX(3px) rotate(8deg)" },
         },
+        "butterfly-orbit": {
+          "0%": { transform: "translateX(0) translateY(0) rotate(0deg)" },
+          "25%": { transform: "translateX(15px) translateY(-10px) rotate(10deg)" },
+          "50%": { transform: "translateX(5px) translateY(8px) rotate(-5deg)" },
+          "75%": { transform: "translateX(-12px) translateY(-5px) rotate(8deg)" },
+          "100%": { transform: "translateX(0) translateY(0) rotate(0deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
