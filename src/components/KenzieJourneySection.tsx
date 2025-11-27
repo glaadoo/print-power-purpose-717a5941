@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import kenzieMascot from "@/assets/kenzie-mascot.png";
+import kenziePuppy from "@/assets/kenzie-puppy-transparent.png";
 import { Sparkles, ShoppingBag } from "lucide-react";
 
 export default function KenzieJourneySection() {
@@ -73,11 +73,11 @@ export default function KenzieJourneySection() {
             <div className="relative animate-[kenzie-bounce_2s_ease-in-out_infinite]">
               {/* The puppy image */}
               <img
-                src={kenzieMascot}
+                src={kenziePuppy}
                 alt="Kenzie the puppy mascot"
-                className="w-44 h-44 md:w-56 md:h-56 object-contain drop-shadow-xl relative z-10"
+                className="w-48 h-48 md:w-60 md:h-60 object-contain relative z-10"
                 style={{
-                  filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.15))',
+                  filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.12))',
                 }}
               />
               
