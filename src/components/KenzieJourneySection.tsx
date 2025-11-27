@@ -138,17 +138,17 @@ export default function KenzieJourneySection() {
             <div className="relative inline-block mb-6 animate-fade-in">
               {/* Walking paw prints - appear and disappear in sequence */}
               {/* Right side paws - walking up */}
-              <span className="absolute -right-10 bottom-2 text-lg animate-[paw-step-1_2.5s_ease-in-out_infinite]">🐾</span>
-              <span className="absolute -right-8 top-1/2 text-base animate-[paw-step-2_2.5s_ease-in-out_infinite]">🐾</span>
-              <span className="absolute -right-10 top-0 text-lg animate-[paw-step-3_2.5s_ease-in-out_infinite]">🐾</span>
+              <span className="absolute -right-4 bottom-2 text-lg animate-[paw-step-1_2.5s_ease-in-out_infinite]">🐾</span>
+              <span className="absolute -right-3 top-1/2 text-base animate-[paw-step-2_2.5s_ease-in-out_infinite]">🐾</span>
+              <span className="absolute -right-4 top-0 text-lg animate-[paw-step-3_2.5s_ease-in-out_infinite]">🐾</span>
               
               {/* Left side paws - walking up */}
-              <span className="absolute -left-10 bottom-0 text-base animate-[paw-step-1_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
-              <span className="absolute -left-8 top-1/2 text-lg animate-[paw-step-2_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
-              <span className="absolute -left-10 top-2 text-base animate-[paw-step-3_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
+              <span className="absolute -left-4 bottom-0 text-base animate-[paw-step-1_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
+              <span className="absolute -left-3 top-1/2 text-lg animate-[paw-step-2_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
+              <span className="absolute -left-4 top-2 text-base animate-[paw-step-3_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
               
               {/* Free-floating text - no box */}
-              <p className="text-xl md:text-2xl font-medium text-gray-800 px-12">
+              <p className="text-xl md:text-2xl font-medium text-gray-800 px-6">
                 Hi! I'm <span className="text-amber-500 font-bold">Kenzie</span>. 
                 <span className="block mt-1 text-gray-600">
                   I'm here to guide you! <span className="inline-block animate-[paw-wiggle_1.5s_ease-in-out_infinite]">🐾</span>
