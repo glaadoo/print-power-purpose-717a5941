@@ -337,12 +337,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Recently Viewed */}
-      <section className="bg-gray-50 py-16 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <RecentlyViewed />
-        </div>
-      </section>
+      {/* Recently Viewed - Only show for authenticated users */}
+      {isAuthenticated && (
+        <section className="bg-gray-50 py-16 border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <RecentlyViewed />
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <Footer />
