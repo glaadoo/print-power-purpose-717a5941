@@ -115,6 +115,12 @@ export default {
           "0%, 100%": { opacity: "1", transform: "scale(1) rotate(0deg)" },
           "50%": { opacity: "0.6", transform: "scale(1.2) rotate(180deg)" },
         },
+        "paw-appear": {
+          "0%": { opacity: "0", transform: "scale(0.5) translateY(0)" },
+          "20%": { opacity: "0.6", transform: "scale(1) translateY(-5px)" },
+          "80%": { opacity: "0.6", transform: "scale(1) translateY(-5px)" },
+          "100%": { opacity: "0", transform: "scale(0.5) translateY(-10px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -125,6 +131,7 @@ export default {
         "kenzie-bounce": "kenzie-bounce 2s ease-in-out infinite",
         "tail-wag": "tail-wag 0.4s ease-in-out infinite",
         "sparkle-tail": "sparkle-tail 0.6s ease-in-out infinite",
+        "paw-appear": "paw-appear 1.2s ease-in-out infinite",
       },
     },
   },

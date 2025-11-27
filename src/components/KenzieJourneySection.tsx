@@ -66,11 +66,25 @@ export default function KenzieJourneySection() {
             
             {/* Kenzie standing with excited animation */}
             <div className="relative">
+              {/* Paw prints appearing and disappearing - running in place effect */}
+              <div className="absolute -bottom-2 left-8 animate-[paw-appear_1.2s_ease-in-out_infinite]">
+                <span className="text-2xl opacity-60">🐾</span>
+              </div>
+              <div className="absolute -bottom-4 right-8 animate-[paw-appear_1.2s_ease-in-out_infinite_0.3s]">
+                <span className="text-xl opacity-50">🐾</span>
+              </div>
+              <div className="absolute -bottom-1 left-16 animate-[paw-appear_1.2s_ease-in-out_infinite_0.6s]">
+                <span className="text-lg opacity-40">🐾</span>
+              </div>
+              <div className="absolute -bottom-3 right-16 animate-[paw-appear_1.2s_ease-in-out_infinite_0.9s]">
+                <span className="text-xl opacity-50">🐾</span>
+              </div>
+              
               {/* The puppy with subtle body movement */}
               <img
                 src={kenziePuppy}
                 alt="Kenzie the puppy"
-                className="w-56 h-56 md:w-72 md:h-72 object-contain animate-[puppy-excited_1s_ease-in-out_infinite]"
+                className="w-56 h-56 md:w-72 md:h-72 object-contain animate-[puppy-excited_1s_ease-in-out_infinite] relative z-10"
               />
               
               {/* Tail wagging motion lines */}
