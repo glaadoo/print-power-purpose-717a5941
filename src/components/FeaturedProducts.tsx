@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ProductCard from "./ProductCard";
 import { Button } from "./ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 type ProductRow = {
   id: string;
@@ -22,6 +24,23 @@ export default function FeaturedProducts() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { 
+      loop: true, 
+      align: "start",
+      slidesToScroll: 1,
+    },
+    [Autoplay({ delay: 4000, stopOnInteraction: false })]
+  );
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
 
   useEffect(() => {
     async function loadFeaturedProducts() {
@@ -58,10 +77,10 @@ export default function FeaturedProducts() {
       <div className="w-full max-w-7xl mx-auto px-6 py-12">
         <div className="text-center">
           <div className="animate-pulse">
-            <div className="h-8 bg-white/20 rounded w-64 mx-auto mb-8"></div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
-                <div key={i} className="h-80 bg-white/10 rounded-2xl"></div>
+            <div className="h-8 bg-gray-200 rounded w-64 mx-auto mb-8"></div>
+            <div className="flex gap-6 overflow-hidden">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="flex-shrink-0 w-72 h-80 bg-gray-100 rounded-2xl"></div>
               ))}
             </div>
           </div>
@@ -75,15 +94,15 @@ export default function FeaturedProducts() {
     return (
       <div className="w-full max-w-7xl mx-auto px-6 py-12">
         <div className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Featured Products
           </h2>
-          <p className="text-white/60 mb-8">
+          <p className="text-gray-600 mb-8">
             Products are currently being loaded. Please check back soon!
           </p>
           <Button
             onClick={() => navigate("/products")}
-            className="rounded-full bg-white text-black hover:bg-white/90 px-8 py-6 text-lg font-semibold"
+            className="rounded-full bg-blue-600 text-white hover:bg-blue-700 px-8 py-6 text-lg font-semibold"
           >
             View All Products
             <ArrowRight className="ml-2 w-5 h-5" />
@@ -103,13 +122,37 @@ export default function FeaturedProducts() {
             </h2>
             <p className="text-gray-600">Browse our most popular printing products</p>
           </div>
+          
+          {/* Navigation Arrows */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={scrollPrev}
+              className="rounded-full border-gray-300 hover:bg-gray-100"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={scrollNext}
+              className="rounded-full border-gray-300 hover:bg-gray-100"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
-        {/* Grid Layout - 12 products */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-          {products.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        {/* Carousel */}
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-6">
+            {products.map(product => (
+              <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[300px] md:w-[320px]">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="text-center mt-10">
