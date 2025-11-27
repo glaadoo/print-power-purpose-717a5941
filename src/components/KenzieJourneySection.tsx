@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import kenziePuppy from "@/assets/kenzie-no-stand.png";
+import kenziePuppy from "@/assets/kenzie-standing.png";
 import { Sparkles, ShoppingBag } from "lucide-react";
 
 export default function KenzieJourneySection() {
@@ -72,15 +72,18 @@ export default function KenzieJourneySection() {
                 className="w-56 h-56 md:w-72 md:h-72 object-contain relative z-10"
               />
               
-              {/* Tail wagging effect - sparkles near tail (right side) */}
-              <div className="absolute top-1/2 -right-2 md:right-0 animate-[tail-wag_0.3s_ease-in-out_infinite]">
-                <span className="text-lg">✨</span>
+              {/* Tail wagging motion lines */}
+              <div className="absolute top-[35%] right-0 md:right-2 animate-[tail-wag_0.2s_ease-in-out_infinite]">
+                <span className="text-lg">〰️</span>
               </div>
-              <div className="absolute top-[45%] right-2 md:right-4 animate-[tail-wag_0.25s_ease-in-out_infinite_0.1s]">
-                <span className="text-xl">⭐</span>
+              <div className="absolute top-[30%] right-2 md:right-4 animate-[tail-wag_0.15s_ease-in-out_infinite_0.05s]">
+                <span className="text-sm text-amber-400">✦</span>
               </div>
-              <div className="absolute top-[55%] -right-1 md:right-1 animate-[tail-wag_0.35s_ease-in-out_infinite_0.15s]">
-                <span className="text-sm">✨</span>
+              <div className="absolute top-[40%] right-4 md:right-6 animate-[tail-wag_0.18s_ease-in-out_infinite_0.1s]">
+                <span className="text-xs text-amber-300">✦</span>
+              </div>
+              <div className="absolute top-[32%] -right-1 md:right-0 animate-[tail-wag_0.22s_ease-in-out_infinite_0.08s]">
+                <span className="text-sm text-yellow-400">⭐</span>
               </div>
               
               {/* Floating hearts */}
