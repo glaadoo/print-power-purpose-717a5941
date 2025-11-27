@@ -132,6 +132,10 @@ export default {
           "40%": { opacity: "0.4", transform: "scale(1) translateX(-5px)" },
           "100%": { opacity: "0", transform: "scale(0.8) translateX(-15px)" },
         },
+        "puppy-bounce": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
