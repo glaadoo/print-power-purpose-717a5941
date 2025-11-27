@@ -199,6 +199,17 @@ export default {
           "0%, 100%": { opacity: "0", transform: "scale(0.5) rotate(0deg)" },
           "50%": { opacity: "1", transform: "scale(1.2) rotate(180deg)" },
         },
+        "paw-walk-up": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "20%": { opacity: "1", transform: "translateY(0)" },
+          "60%": { opacity: "1", transform: "translateY(0)" },
+          "80%": { opacity: "0", transform: "translateY(-10px)" },
+          "100%": { opacity: "0", transform: "translateY(10px)" },
+        },
+        "draw-line": {
+          "0%": { strokeDasharray: "100", strokeDashoffset: "100" },
+          "100%": { strokeDasharray: "100", strokeDashoffset: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",

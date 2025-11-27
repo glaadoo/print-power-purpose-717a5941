@@ -117,10 +117,33 @@ export default function KenzieJourneySection() {
           </div>
 
           {/* Content area */}
-          <div className="flex-1 text-center md:text-left">
-            {/* Main greeting speech bubble */}
-            <div className="relative inline-block bg-white rounded-2xl px-6 py-4 shadow-lg mb-6 animate-fade-in border border-amber-100">
-              <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-white hidden md:block" />
+          <div className="flex-1 text-center md:text-left relative">
+            {/* Speech tail - curved line from puppy to text */}
+            <svg 
+              className="absolute -left-8 top-4 w-12 h-8 hidden md:block" 
+              viewBox="0 0 48 32" 
+              fill="none"
+            >
+              <path 
+                d="M0 16 Q 12 16, 24 8 Q 36 0, 48 4" 
+                stroke="#F59E0B" 
+                strokeWidth="2" 
+                strokeLinecap="round"
+                fill="none"
+                className="animate-[draw-line_1s_ease-out_forwards]"
+              />
+            </svg>
+            
+            {/* Free-floating greeting text with paw prints */}
+            <div className="relative inline-flex items-start gap-4 mb-6 animate-fade-in">
+              {/* Vertical paw prints walking animation */}
+              <div className="hidden md:flex flex-col gap-2 pt-2">
+                <span className="text-lg animate-[paw-walk-up_2s_ease-in-out_infinite]">🐾</span>
+                <span className="text-base animate-[paw-walk-up_2s_ease-in-out_infinite_0.4s]">🐾</span>
+                <span className="text-sm animate-[paw-walk-up_2s_ease-in-out_infinite_0.8s]">🐾</span>
+              </div>
+              
+              {/* Free-floating text - no box */}
               <p className="text-xl md:text-2xl font-medium text-gray-800">
                 Hi! I'm <span className="text-amber-500 font-bold">Kenzie</span>. 
                 <span className="block mt-1 text-gray-600">I'm here to guide you! 🐾</span>
