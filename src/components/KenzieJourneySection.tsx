@@ -66,7 +66,32 @@ export default function KenzieJourneySection() {
             
             {/* Kenzie standing with excited animation */}
             <div className="relative">
-              {/* Paw prints appearing and disappearing - running in place effect */}
+              {/* Dust clouds beneath paws */}
+              <div className="absolute bottom-4 left-12 animate-[dust-puff_0.8s_ease-out_infinite]">
+                <span className="text-2xl text-gray-300">💨</span>
+              </div>
+              <div className="absolute bottom-2 right-12 animate-[dust-puff_0.8s_ease-out_infinite_0.2s]">
+                <span className="text-xl text-gray-300">💨</span>
+              </div>
+              <div className="absolute bottom-6 left-16 animate-[dust-puff_0.6s_ease-out_infinite_0.4s]">
+                <span className="text-lg text-gray-200">💨</span>
+              </div>
+              <div className="absolute bottom-3 right-16 animate-[dust-puff_0.7s_ease-out_infinite_0.3s]">
+                <span className="text-lg text-gray-200">💨</span>
+              </div>
+              
+              {/* Small dust particles spreading */}
+              <div className="absolute bottom-2 left-20 animate-[dust-spread_0.6s_ease-out_infinite]">
+                <div className="w-2 h-2 rounded-full bg-gray-200/50"></div>
+              </div>
+              <div className="absolute bottom-4 right-20 animate-[dust-spread_0.5s_ease-out_infinite_0.15s]">
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-200/40"></div>
+              </div>
+              <div className="absolute bottom-1 left-24 animate-[dust-spread_0.7s_ease-out_infinite_0.25s]">
+                <div className="w-1 h-1 rounded-full bg-gray-200/30"></div>
+              </div>
+              
+              {/* Paw prints appearing and disappearing */}
               <div className="absolute -bottom-2 left-8 animate-[paw-appear_1.2s_ease-in-out_infinite]">
                 <span className="text-2xl opacity-60">🐾</span>
               </div>
