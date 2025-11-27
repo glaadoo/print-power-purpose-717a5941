@@ -84,13 +84,13 @@ export default function KenzieJourneySection() {
               </div>
               
               {/* Floating hearts */}
-              <div className="absolute -top-4 right-8 animate-[float_2s_ease-in-out_infinite]">
+              <div className="absolute -top-4 right-8 z-20 animate-[float_2s_ease-in-out_infinite]">
                 <span className="text-xl">💛</span>
               </div>
-              <div className="absolute top-8 -left-6 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
+              <div className="absolute top-8 -left-6 z-20 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
                 <span className="text-lg">💙</span>
               </div>
-              <div className="absolute top-4 -right-4 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
+              <div className="absolute top-4 -right-4 z-20 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
                 <span className="text-lg">🧡</span>
               </div>
               
