@@ -119,10 +119,10 @@ export default function KenzieJourneySection() {
           {/* Content area */}
           <div className="flex-1 text-center md:text-left relative">
             {/* Floating dots connector from puppy to text */}
-            <div className="absolute -left-16 top-6 hidden md:flex items-center gap-2">
-              <span className="text-amber-400 text-xl animate-[speech-dot_1.5s_ease-in-out_infinite]">•</span>
-              <span className="text-amber-400 text-lg animate-[speech-dot_1.5s_ease-in-out_infinite_0.2s]">•</span>
-              <span className="text-amber-400 text-base animate-[speech-dot_1.5s_ease-in-out_infinite_0.4s]">•</span>
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+              <span className="text-amber-500 text-2xl animate-[speech-dot_1.5s_ease-in-out_infinite]">•</span>
+              <span className="text-amber-500 text-xl animate-[speech-dot_1.5s_ease-in-out_infinite_0.2s]">•</span>
+              <span className="text-amber-500 text-lg animate-[speech-dot_1.5s_ease-in-out_infinite_0.4s]">•</span>
             </div>
             
             {/* Free-floating greeting text with walking paw prints */}
