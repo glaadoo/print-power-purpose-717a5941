@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import kenziePuppy from "@/assets/kenzie-standing.png";
+import kenziePuppy from "@/assets/kenzie-no-stand.png";
 import { Sparkles, ShoppingBag } from "lucide-react";
 
 export default function KenzieJourneySection() {
@@ -14,7 +14,6 @@ export default function KenzieJourneySection() {
       setTimeout(() => setShowWoof(false), 2000);
     }, 5000);
     
-    // Show initially after a short delay
     const initialTimeout = setTimeout(() => setShowWoof(true), 1000);
     const hideInitial = setTimeout(() => setShowWoof(false), 3000);
     
@@ -46,7 +45,7 @@ export default function KenzieJourneySection() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-          {/* Kenzie Puppy - no background, just animations */}
+          {/* Kenzie Puppy */}
           <div className="relative flex-shrink-0">
             {/* Woof woof bubble */}
             <div 
@@ -64,77 +63,43 @@ export default function KenzieJourneySection() {
               </div>
             </div>
             
-            {/* Kenzie standing with excited animation */}
+            {/* Kenzie standing still - only tail area animates */}
             <div className="relative">
-              {/* Dust clouds beneath paws */}
-              <div className="absolute bottom-4 left-12 animate-[dust-puff_0.8s_ease-out_infinite]">
-                <span className="text-2xl text-gray-300">💨</span>
-              </div>
-              <div className="absolute bottom-2 right-12 animate-[dust-puff_0.8s_ease-out_infinite_0.2s]">
-                <span className="text-xl text-gray-300">💨</span>
-              </div>
-              <div className="absolute bottom-6 left-16 animate-[dust-puff_0.6s_ease-out_infinite_0.4s]">
-                <span className="text-lg text-gray-200">💨</span>
-              </div>
-              <div className="absolute bottom-3 right-16 animate-[dust-puff_0.7s_ease-out_infinite_0.3s]">
-                <span className="text-lg text-gray-200">💨</span>
-              </div>
-              
-              {/* Small dust particles spreading */}
-              <div className="absolute bottom-2 left-20 animate-[dust-spread_0.6s_ease-out_infinite]">
-                <div className="w-2 h-2 rounded-full bg-gray-200/50"></div>
-              </div>
-              <div className="absolute bottom-4 right-20 animate-[dust-spread_0.5s_ease-out_infinite_0.15s]">
-                <div className="w-1.5 h-1.5 rounded-full bg-gray-200/40"></div>
-              </div>
-              <div className="absolute bottom-1 left-24 animate-[dust-spread_0.7s_ease-out_infinite_0.25s]">
-                <div className="w-1 h-1 rounded-full bg-gray-200/30"></div>
-              </div>
-              
-              {/* Paw prints appearing and disappearing */}
-              <div className="absolute -bottom-2 left-8 animate-[paw-appear_1.2s_ease-in-out_infinite]">
-                <span className="text-2xl opacity-60">🐾</span>
-              </div>
-              <div className="absolute -bottom-4 right-8 animate-[paw-appear_1.2s_ease-in-out_infinite_0.3s]">
-                <span className="text-xl opacity-50">🐾</span>
-              </div>
-              <div className="absolute -bottom-1 left-16 animate-[paw-appear_1.2s_ease-in-out_infinite_0.6s]">
-                <span className="text-lg opacity-40">🐾</span>
-              </div>
-              <div className="absolute -bottom-3 right-16 animate-[paw-appear_1.2s_ease-in-out_infinite_0.9s]">
-                <span className="text-xl opacity-50">🐾</span>
-              </div>
-              
-              {/* The puppy with subtle body movement */}
+              {/* The puppy - standing still */}
               <img
                 src={kenziePuppy}
                 alt="Kenzie the puppy"
-                className="w-56 h-56 md:w-72 md:h-72 object-contain animate-[puppy-excited_1s_ease-in-out_infinite] relative z-10"
+                className="w-56 h-56 md:w-72 md:h-72 object-contain relative z-10"
               />
               
-              {/* Tail wagging motion lines */}
-              <div className="absolute bottom-20 left-2 md:left-4">
-                <div className="animate-[tail-wag_0.2s_ease-in-out_infinite] text-amber-400 font-bold text-xl">~</div>
+              {/* Tail wagging effect - sparkles near tail (right side) */}
+              <div className="absolute top-1/2 -right-2 md:right-0 animate-[tail-wag_0.3s_ease-in-out_infinite]">
+                <span className="text-lg">✨</span>
               </div>
-              <div className="absolute bottom-24 left-0 md:left-2">
-                <div className="animate-[tail-wag_0.2s_ease-in-out_infinite_0.05s] text-amber-300 font-bold text-lg">~</div>
+              <div className="absolute top-[45%] right-2 md:right-4 animate-[tail-wag_0.25s_ease-in-out_infinite_0.1s]">
+                <span className="text-xl">⭐</span>
               </div>
-              <div className="absolute bottom-16 left-4 md:left-6">
-                <div className="animate-[tail-wag_0.25s_ease-in-out_infinite_0.1s] text-amber-200 font-bold">~</div>
+              <div className="absolute top-[55%] -right-1 md:right-1 animate-[tail-wag_0.35s_ease-in-out_infinite_0.15s]">
+                <span className="text-sm">✨</span>
               </div>
               
-              {/* Sparkles around the happy puppy */}
-              <div className="absolute -top-2 right-8 animate-[float_1.5s_ease-in-out_infinite]">
-                <span className="text-xl">✨</span>
+              {/* Floating hearts */}
+              <div className="absolute -top-4 right-8 animate-[float_2s_ease-in-out_infinite]">
+                <span className="text-xl">💛</span>
               </div>
-              <div className="absolute top-8 -right-2 animate-[float_2s_ease-in-out_infinite_0.3s]">
-                <span className="text-lg">💛</span>
-              </div>
-              <div className="absolute top-4 -left-4 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
+              <div className="absolute top-8 -left-6 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
                 <span className="text-lg">💙</span>
               </div>
-              <div className="absolute bottom-8 right-4 animate-[sparkle-tail_0.5s_ease-in-out_infinite]">
-                <span className="text-sm">⭐</span>
+              <div className="absolute top-4 -right-4 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
+                <span className="text-lg">🧡</span>
+              </div>
+              
+              {/* Ground paw prints */}
+              <div className="absolute -bottom-6 left-1/4 animate-[paw-appear_1.5s_ease-in-out_infinite]">
+                <span className="text-xl opacity-40">🐾</span>
+              </div>
+              <div className="absolute -bottom-8 right-1/4 animate-[paw-appear_1.5s_ease-in-out_infinite_0.5s]">
+                <span className="text-lg opacity-30">🐾</span>
               </div>
             </div>
           </div>
