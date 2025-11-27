@@ -113,6 +113,15 @@ export default function KenzieJourneySection() {
                 <span className="absolute -bottom-2 right-0 text-xs animate-[sparkle_0.7s_ease-in-out_infinite_0.4s]">✨</span>
               </div>
               
+              {/* Fourth butterfly - lands on Kenzie's head */}
+              <div className="absolute top-[5%] left-[45%] z-30 animate-[butterfly-land_8s_ease-in-out_infinite]">
+                <div className="relative">
+                  <span className="absolute text-base opacity-30 blur-[1px] animate-[wing-flap-land_8s_ease-in-out_infinite]">🦋</span>
+                  <span className="relative text-base animate-[wing-flap-land_8s_ease-in-out_infinite]">🦋</span>
+                </div>
+                <span className="absolute -top-1 -right-1 text-xs animate-[sparkle_1s_ease-in-out_infinite_0.3s]">✨</span>
+              </div>
+              
               {/* Extra floating sparkles near puppy */}
               <div className="absolute top-[30%] right-[35%] z-20 animate-[sparkle_1.2s_ease-in-out_infinite]">
                 <span className="text-xs">✨</span>
