@@ -83,15 +83,26 @@ export default function KenzieJourneySection() {
                 <span className="text-base">🧡</span>
               </div>
               
-              {/* Butterflies - close to puppy with wing flapping */}
+              {/* Butterflies with sparkles */}
               <div className="absolute top-[15%] right-[25%] z-20 animate-[butterfly-orbit_4s_ease-in-out_infinite]">
                 <span className="text-lg animate-[wing-flap_0.2s_ease-in-out_infinite]">🦋</span>
+                <span className="absolute -top-1 -right-1 text-xs animate-[sparkle_0.8s_ease-in-out_infinite]">✨</span>
               </div>
               <div className="absolute top-[45%] left-[15%] z-20 animate-[butterfly-orbit_5s_ease-in-out_infinite_1s]">
                 <span className="text-base animate-[wing-flap_0.15s_ease-in-out_infinite_0.05s]">🦋</span>
+                <span className="absolute -top-1 -left-1 text-xs animate-[sparkle_0.6s_ease-in-out_infinite_0.2s]">✨</span>
               </div>
               <div className="absolute top-[60%] right-[18%] z-20 animate-[butterfly-orbit_4.5s_ease-in-out_infinite_2s]">
                 <span className="text-base animate-[wing-flap_0.18s_ease-in-out_infinite_0.1s]">🦋</span>
+                <span className="absolute -bottom-1 -right-1 text-xs animate-[sparkle_0.7s_ease-in-out_infinite_0.4s]">✨</span>
+              </div>
+              
+              {/* Extra floating sparkles near puppy */}
+              <div className="absolute top-[30%] right-[35%] z-20 animate-[sparkle_1.2s_ease-in-out_infinite]">
+                <span className="text-xs">✨</span>
+              </div>
+              <div className="absolute top-[55%] left-[25%] z-20 animate-[sparkle_1s_ease-in-out_infinite_0.5s]">
+                <span className="text-xs">✨</span>
               </div>
               
             </div>
