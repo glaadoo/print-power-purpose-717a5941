@@ -118,21 +118,12 @@ export default function KenzieJourneySection() {
 
           {/* Content area */}
           <div className="flex-1 text-center md:text-left relative">
-            {/* Speech tail - curved line from puppy to text */}
-            <svg 
-              className="absolute -left-8 top-4 w-12 h-8 hidden md:block" 
-              viewBox="0 0 48 32" 
-              fill="none"
-            >
-              <path 
-                d="M0 16 Q 12 16, 24 8 Q 36 0, 48 4" 
-                stroke="#F59E0B" 
-                strokeWidth="2" 
-                strokeLinecap="round"
-                fill="none"
-                className="animate-[draw-line_1s_ease-out_forwards]"
-              />
-            </svg>
+            {/* Floating dots connector from puppy to text */}
+            <div className="absolute -left-16 top-6 hidden md:flex items-center gap-2">
+              <span className="text-amber-400 text-xl animate-[speech-dot_1.5s_ease-in-out_infinite]">•</span>
+              <span className="text-amber-400 text-lg animate-[speech-dot_1.5s_ease-in-out_infinite_0.2s]">•</span>
+              <span className="text-amber-400 text-base animate-[speech-dot_1.5s_ease-in-out_infinite_0.4s]">•</span>
+            </div>
             
             {/* Free-floating greeting text with walking paw prints */}
             <div className="relative inline-block mb-6 animate-fade-in">
