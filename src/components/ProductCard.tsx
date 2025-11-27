@@ -22,9 +22,10 @@ type ProductCardProps = {
   };
   categorySlug?: string;
   subcategorySlug?: string;
+  compact?: boolean;
 };
 
-export default function ProductCard({ product, categorySlug, subcategorySlug }: ProductCardProps) {
+export default function ProductCard({ product, categorySlug, subcategorySlug, compact = false }: ProductCardProps) {
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -133,11 +134,13 @@ export default function ProductCard({ product, categorySlug, subcategorySlug }: 
 
   return (
     <div 
-      className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer overflow-hidden group"
+      className={`bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer overflow-hidden group ${
+        compact ? 'text-sm' : ''
+      }`}
       onClick={handleCardClick}
     >
       {/* Product Image */}
-      <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
+      <div className={`relative w-full overflow-hidden bg-gray-50 ${compact ? 'aspect-[4/3]' : 'aspect-square'}`}>
         {imageSrc && !imageError ? (
           <img 
             src={imageSrc} 
@@ -148,54 +151,56 @@ export default function ProductCard({ product, categorySlug, subcategorySlug }: 
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100">
-            <svg className="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`text-gray-300 ${compact ? 'w-12 h-12' : 'w-20 h-20'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
         )}
         
-        {/* Action Buttons Overlay */}
-        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={handleToggleComparison}
-            className={`p-2 rounded-full shadow-lg transition-all ${
-              isInCompare 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-            aria-label={isInCompare ? "Remove from comparison" : "Add to comparison"}
-          >
-            <Scale className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={handleToggleFavorite}
-            className={`p-2 rounded-full shadow-lg transition-all ${
-              isProductFavorite 
-                ? 'bg-red-500 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-            aria-label={isProductFavorite ? "Remove from favorites" : "Add to favorites"}
-          >
-            <Heart className={`w-4 h-4 ${isProductFavorite ? 'fill-current' : ''}`} />
-          </button>
-        </div>
+        {/* Action Buttons Overlay - hide in compact mode */}
+        {!compact && (
+          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={handleToggleComparison}
+              className={`p-2 rounded-full shadow-lg transition-all ${
+                isInCompare 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+              aria-label={isInCompare ? "Remove from comparison" : "Add to comparison"}
+            >
+              <Scale className="w-4 h-4" />
+            </button>
+            
+            <button
+              onClick={handleToggleFavorite}
+              className={`p-2 rounded-full shadow-lg transition-all ${
+                isProductFavorite 
+                  ? 'bg-red-500 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+              aria-label={isProductFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Heart className={`w-4 h-4 ${isProductFavorite ? 'fill-current' : ''}`} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
+      <div className={compact ? 'p-2' : 'p-4'}>
         {/* Category Label */}
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+        <p className={`text-gray-500 uppercase tracking-wide mb-1 ${compact ? 'text-[10px]' : 'text-xs'}`}>
           {product.category || "Product"}
         </p>
         
         {/* Product Name */}
-        <h3 className="text-base font-bold product-name line-clamp-2 mb-2 min-h-[48px]">
+        <h3 className={`font-bold product-name line-clamp-2 mb-1 ${compact ? 'text-xs min-h-[32px]' : 'text-base min-h-[48px] mb-2'}`}>
           {product.name}
         </h3>
         
-        {/* Description Toggle */}
-        {product.description && (
+        {/* Description Toggle - hide in compact mode */}
+        {!compact && product.description && (
           <Collapsible open={descriptionOpen} onOpenChange={toggleDescription}>
             <CollapsibleTrigger 
               onClick={(e) => e.stopPropagation()}
@@ -212,8 +217,8 @@ export default function ProductCard({ product, categorySlug, subcategorySlug }: 
           </Collapsible>
         )}
         
-        {/* Rating */}
-        {averageRating !== null && reviewCount > 0 && (
+        {/* Rating - hide in compact mode */}
+        {!compact && averageRating !== null && reviewCount > 0 && (
           <div className="flex items-center gap-2 mb-3">
             <div className="flex gap-0.5">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -234,16 +239,18 @@ export default function ProductCard({ product, categorySlug, subcategorySlug }: 
         )}
         
         {/* Price */}
-        <p className="text-xl font-bold text-gray-900 mb-3">
-          Starting at ${(product.base_cost_cents / 100).toFixed(2)}
+        <p className={`font-bold text-gray-900 mb-2 ${compact ? 'text-sm' : 'text-xl mb-3'}`}>
+          ${(product.base_cost_cents / 100).toFixed(2)}
         </p>
         
         {/* CTA Button */}
         <button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+          className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors ${
+            compact ? 'py-1.5 px-2 text-xs' : 'py-2.5 px-4'
+          }`}
           onClick={handleCardClick}
         >
-          Customize
+          {compact ? 'View' : 'Customize'}
         </button>
       </div>
     </div>
