@@ -64,27 +64,27 @@ export default function KenzieJourneySection() {
               </div>
             </div>
             
-            {/* Kenzie with bounce animation */}
-            <div className="relative animate-[kenzie-bounce_2s_ease-in-out_infinite]">
-              {/* The puppy with subtle tail wag effect */}
+            {/* Kenzie with gentle bounce animation */}
+            <div className="relative animate-[kenzie-bounce_3s_ease-in-out_infinite]">
+              {/* The puppy - no shaking, just gentle bounce */}
               <img
                 src={kenziePuppy}
                 alt="Kenzie the puppy"
-                className="w-56 h-56 md:w-72 md:h-72 object-contain animate-tail-wag origin-bottom"
+                className="w-56 h-56 md:w-72 md:h-72 object-contain"
               />
               
-              {/* Tail wagging sparkles - positioned near tail */}
-              <div className="absolute bottom-12 right-2 md:right-4 animate-sparkle-tail">
+              {/* Tail wagging effect - sparkles near tail area */}
+              <div className="absolute bottom-16 right-6 md:right-10 animate-[tail-wag_0.3s_ease-in-out_infinite]">
                 <span className="text-lg">✨</span>
               </div>
-              <div className="absolute bottom-16 right-0 md:right-2 animate-[sparkle-tail_0.5s_ease-in-out_infinite_0.2s]">
+              <div className="absolute bottom-20 right-4 md:right-8 animate-[tail-wag_0.3s_ease-in-out_infinite_0.1s]">
                 <span className="text-sm">⭐</span>
               </div>
-              <div className="absolute bottom-10 right-6 md:right-8 animate-[sparkle-tail_0.7s_ease-in-out_infinite_0.1s]">
+              <div className="absolute bottom-14 right-10 md:right-14 animate-[tail-wag_0.4s_ease-in-out_infinite_0.15s]">
                 <span className="text-xs">✨</span>
               </div>
               
-              {/* Floating hearts around puppy */}
+              {/* Floating hearts */}
               <div className="absolute -top-2 right-4 animate-[float_2s_ease-in-out_infinite]">
                 <span className="text-xl">💛</span>
               </div>
