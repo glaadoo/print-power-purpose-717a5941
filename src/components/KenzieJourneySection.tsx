@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import kenziePuppy from "@/assets/kenzie-clean.png";
+import kenziePuppy from "@/assets/kenzie-transparent.png";
 import { Sparkles, ShoppingBag } from "lucide-react";
 
 export default function KenzieJourneySection() {
@@ -26,7 +26,7 @@ export default function KenzieJourneySection() {
   }, []);
 
   return (
-    <section className="relative bg-gradient-to-br from-blue-50 via-amber-50/30 to-orange-50/40 py-16 overflow-hidden">
+    <section className="relative bg-white py-16 overflow-hidden">
       {/* Subtle paw prints background */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
         {[...Array(8)].map((_, i) => (
@@ -70,10 +70,7 @@ export default function KenzieJourneySection() {
               <img
                 src={kenziePuppy}
                 alt="Kenzie the puppy"
-                className="w-52 h-52 md:w-64 md:h-64 object-contain animate-tail-wag origin-bottom"
-                style={{
-                  filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
-                }}
+                className="w-56 h-56 md:w-72 md:h-72 object-contain animate-tail-wag origin-bottom"
               />
               
               {/* Tail wagging sparkles - positioned near tail */}
