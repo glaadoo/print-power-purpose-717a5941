@@ -65,11 +65,11 @@ export default function KenzieJourneySection() {
             
             {/* Kenzie standing still - only tail area animates */}
             <div className="relative">
-              {/* The puppy - standing still */}
+              {/* The puppy - with gentle bounce */}
               <img
                 src={kenziePuppy}
                 alt="Kenzie the puppy"
-                className="w-56 h-56 md:w-72 md:h-72 object-contain relative z-10"
+                className="w-56 h-56 md:w-72 md:h-72 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite]"
               />
               
               {/* Tail wagging motion lines - subtle curved lines */}
