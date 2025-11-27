@@ -182,36 +182,32 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <VistaprintNav />
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-white py-20">
+      {/* Dashboard Header */}
+      <section className="bg-gradient-to-br from-blue-50 to-white border-b border-gray-200 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            {/* Mascot */}
-            <div className="flex justify-center mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
               <img
                 src={kenzieMascot}
                 alt="Kenzie - Print Power Purpose Mascot"
-                className="w-40 h-40 sm:w-48 sm:h-48 object-contain drop-shadow-2xl"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
               />
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                  Welcome to Print Power Purpose
+                </h1>
+                <p className="text-base text-gray-600">
+                  Professional printing that supports your favorite causes
+                </p>
+              </div>
             </div>
-
-            {/* Hero Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              E-commerce printing, centered around <span className="section-title">your cause</span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
-              One platform for professional print orders and optional donations—connecting
-              communities and nonprofits in a single, seamless checkout.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex gap-3">
               <button
                 onClick={() => nav("/auth")}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-colors shadow-lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm"
               >
                 Sign Up / Sign In
               </button>
@@ -220,7 +216,7 @@ export default function Home() {
                   localStorage.setItem("ppp_access", "guest");
                   nav("/welcome");
                 }}
-                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-8 py-4 rounded-lg text-lg border-2 border-gray-300 transition-colors"
+                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-6 py-3 rounded-lg border-2 border-gray-300 transition-colors"
               >
                 Continue as Guest
               </button>
@@ -232,65 +228,66 @@ export default function Home() {
       {/* Featured Products Section */}
       <FeaturedProducts />
 
-      {/* Stats Section */}
-      <section className="bg-white py-20">
+      {/* Milestone Dashboard and Donor Stories - Two Column Layout */}
+      <section className="bg-white py-16 border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Real impact requires real community
-            </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Comprehensive print + donation tools designed to help nonprofits grow from a
-              360-degree perspective.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold section-title mb-2">
-                ${(stats.totalRaised / 100).toLocaleString('en-US', { 
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0 
-                })}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Impact Metrics Card */}
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Our Impact
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Real impact requires real community. Comprehensive print + donation tools designed to help nonprofits grow.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-6">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-1">
+                    ${(stats.totalRaised / 100).toLocaleString('en-US', { 
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0 
+                    })}
+                  </div>
+                  <div className="text-xs text-gray-600 uppercase tracking-wide">Raised for nonprofits</div>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-1">{stats.organizationCount}+</div>
+                  <div className="text-xs text-gray-600 uppercase tracking-wide">Partner organizations</div>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-1">99.95%</div>
+                  <div className="text-xs text-gray-600 uppercase tracking-wide">Platform uptime</div>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-1">{stats.orderCount.toLocaleString()}+</div>
+                  <div className="text-xs text-gray-600 uppercase tracking-wide">Orders fulfilled</div>
+                </div>
               </div>
-              <div className="text-sm text-gray-600 uppercase tracking-wide">Raised for nonprofits</div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold section-title mb-2">{stats.organizationCount}+</div>
-              <div className="text-sm text-gray-600 uppercase tracking-wide">Partner organizations</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold section-title mb-2">99.95%</div>
-              <div className="text-sm text-gray-600 uppercase tracking-wide">Platform uptime</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold section-title mb-2">{stats.orderCount.toLocaleString()}+</div>
-              <div className="text-sm text-gray-600 uppercase tracking-wide">Orders fulfilled</div>
-            </div>
-          </div>
 
-          {featuredVideos.length > 0 && (
-            <div className="mt-16">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Milestone Donor Stories</h3>
-              <div className="relative max-w-5xl mx-auto px-12">
-                <Carousel
-                  opts={{
-                    align: "start",
-                    loop: true,
-                  }}
-                  plugins={[
-                    Autoplay({
-                      delay: 8000,
-                      stopOnInteraction: true,
-                    }),
-                  ]}
-                  className="w-full"
-                >
-                  <CarouselContent>
-                    {featuredVideos.map((video, index) => (
-                      <CarouselItem key={index} className="md:basis-1/1 lg:basis-1/1">
-                        <div className="p-1">
-                          <div className="rounded-lg overflow-hidden shadow-xl bg-gray-900 aspect-video relative group">
+            {/* Donor Stories Card */}
+            {featuredVideos.length > 0 && (
+              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Milestone Donor Stories</h2>
+                <div className="relative">
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      loop: true,
+                    }}
+                    plugins={[
+                      Autoplay({
+                        delay: 8000,
+                        stopOnInteraction: true,
+                      }),
+                    ]}
+                    className="w-full"
+                  >
+                    <CarouselContent>
+                      {featuredVideos.map((video, index) => (
+                        <CarouselItem key={index} className="md:basis-1/1 lg:basis-1/1">
+                          <div className="rounded-lg overflow-hidden shadow-lg bg-gray-900 aspect-video relative group">
                             {video.thumbnail_url && (
                               <img
                                 src={video.thumbnail_url}
@@ -307,24 +304,24 @@ export default function Home() {
                               poster={video.thumbnail_url || undefined}
                             />
                           </div>
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="bg-white hover:bg-gray-100 border-gray-300" />
-                  <CarouselNext className="bg-white hover:bg-gray-100 border-gray-300" />
-                </Carousel>
-                <p className="text-center text-xs text-gray-500 mt-4">
-                  Auto-plays every 8 seconds • Click video to pause
-                </p>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="bg-white hover:bg-gray-100 border-gray-300 -left-4" />
+                    <CarouselNext className="bg-white hover:bg-gray-100 border-gray-300 -right-4" />
+                  </Carousel>
+                  <p className="text-center text-xs text-gray-500 mt-4">
+                    Auto-plays every 8 seconds • Click video to pause
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </section>
 
       {/* Recently Viewed */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-16 border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <RecentlyViewed />
         </div>
