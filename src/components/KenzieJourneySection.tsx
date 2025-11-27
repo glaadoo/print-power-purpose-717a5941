@@ -170,7 +170,7 @@ export default function KenzieJourneySection() {
                 className="group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 <Sparkles className="w-5 h-5 group-hover:animate-spin" />
-                Ready to Print
+                I'm ready to print
               </button>
 
               <button
