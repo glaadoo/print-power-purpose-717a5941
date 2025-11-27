@@ -187,13 +187,15 @@ export default function FeaturedProducts() {
   const scrollNext = () => emblaApi?.scrollNext();
 
   return (
-    <section className="bg-gray-50 py-16">
+    <section className="bg-white py-16 border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            Popular Products
-          </h2>
-          <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Featured Products
+            </h2>
+            <p className="text-gray-600">Browse our most popular printing products</p>
+          </div>
         </div>
 
         <div className="relative">
