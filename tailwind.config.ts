@@ -101,11 +101,15 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-6px)" },
         },
+        "puppy-excited": {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "25%": { transform: "translateY(-4px) rotate(-1deg)" },
+          "50%": { transform: "translateY(0) rotate(0deg)" },
+          "75%": { transform: "translateY(-4px) rotate(1deg)" },
+        },
         "tail-wag": {
-          "0%, 100%": { transform: "translateX(0) rotate(0deg)", opacity: "1" },
-          "25%": { transform: "translateX(3px) rotate(10deg)", opacity: "0.8" },
-          "50%": { transform: "translateX(-2px) rotate(-5deg)", opacity: "1" },
-          "75%": { transform: "translateX(2px) rotate(8deg)", opacity: "0.9" },
+          "0%, 100%": { transform: "translateX(-4px) rotate(-15deg)" },
+          "50%": { transform: "translateX(4px) rotate(15deg)" },
         },
         "sparkle-tail": {
           "0%, 100%": { opacity: "1", transform: "scale(1) rotate(0deg)" },
