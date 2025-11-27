@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import KenzieChat from "@/components/KenzieChat";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import ScrollToTop from "@/components/ScrollToTop";
-import { StripeModeIndicator } from "@/components/StripeModeIndicator";
 import ComparisonBar from "@/components/ComparisonBar";
 
 
@@ -813,11 +812,6 @@ export default function App() {
       {/* Chatbot widget - show on all pages */}
       <RouteBoundary name="ChatbotWidget">
         <ChatbotWidget />
-      </RouteBoundary>
-
-      {/* Stripe Mode Indicator - shows current API mode */}
-      <RouteBoundary name="StripeModeIndicator">
-        <StripeModeIndicator />
       </RouteBoundary>
 
       {/* Comparison Bar - floating bar for product comparison */}
