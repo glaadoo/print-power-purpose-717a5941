@@ -72,24 +72,15 @@ export default function KenzieJourneySection() {
                 className="w-56 h-56 md:w-72 md:h-72 object-contain relative z-10"
               />
               
-              {/* Tail wagging motion lines - GIF-like effect */}
-              <div className="absolute top-[45%] -right-4 md:-right-2 animate-[tail-wag_0.15s_ease-in-out_infinite]">
-                <span className="text-2xl">〰️</span>
+              {/* Tail wagging motion lines - subtle curved lines */}
+              <div className="absolute top-[38%] -right-2 md:right-0 animate-[tail-wag_0.15s_ease-in-out_infinite] opacity-60">
+                <span className="text-amber-400 text-xl">)</span>
               </div>
-              <div className="absolute top-[40%] -right-2 md:right-0 animate-[tail-wag_0.12s_ease-in-out_infinite_0.03s]">
-                <span className="text-xl text-amber-400">✦</span>
+              <div className="absolute top-[42%] -right-4 md:-right-2 animate-[tail-wag_0.12s_ease-in-out_infinite_0.03s] opacity-50">
+                <span className="text-amber-300 text-lg">)</span>
               </div>
-              <div className="absolute top-[50%] -right-6 md:-right-4 animate-[tail-wag_0.1s_ease-in-out_infinite_0.06s]">
-                <span className="text-lg text-yellow-400">⭐</span>
-              </div>
-              <div className="absolute top-[42%] -right-8 md:-right-6 animate-[tail-wag_0.13s_ease-in-out_infinite_0.02s]">
-                <span className="text-xl text-amber-300">✨</span>
-              </div>
-              <div className="absolute top-[48%] right-0 md:right-2 animate-[tail-wag_0.11s_ease-in-out_infinite_0.04s]">
-                <span className="text-lg text-yellow-300">💫</span>
-              </div>
-              <div className="absolute top-[38%] -right-3 md:-right-1 animate-[tail-wag_0.14s_ease-in-out_infinite_0.05s]">
-                <span className="text-2xl text-amber-500">✦</span>
+              <div className="absolute top-[36%] -right-6 md:-right-4 animate-[tail-wag_0.1s_ease-in-out_infinite_0.06s] opacity-40">
+                <span className="text-amber-200 text-xl">)</span>
               </div>
               
               {/* Floating hearts */}
