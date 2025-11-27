@@ -59,9 +59,9 @@ export default function FeaturedProducts() {
         <div className="text-center">
           <div className="animate-pulse">
             <div className="h-8 bg-white/20 rounded w-64 mx-auto mb-8"></div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
-                <div key={i} className="h-72 bg-white/10 rounded-2xl"></div>
+                <div key={i} className="h-80 bg-white/10 rounded-2xl"></div>
               ))}
             </div>
           </div>
