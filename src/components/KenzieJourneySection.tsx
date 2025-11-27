@@ -72,18 +72,24 @@ export default function KenzieJourneySection() {
                 className="w-56 h-56 md:w-72 md:h-72 object-contain relative z-10"
               />
               
-              {/* Tail wagging motion lines */}
-              <div className="absolute top-[35%] right-0 md:right-2 animate-[tail-wag_0.2s_ease-in-out_infinite]">
-                <span className="text-lg">〰️</span>
+              {/* Tail wagging motion lines - GIF-like effect */}
+              <div className="absolute top-[45%] -right-4 md:-right-2 animate-[tail-wag_0.15s_ease-in-out_infinite]">
+                <span className="text-2xl">〰️</span>
               </div>
-              <div className="absolute top-[30%] right-2 md:right-4 animate-[tail-wag_0.15s_ease-in-out_infinite_0.05s]">
-                <span className="text-sm text-amber-400">✦</span>
+              <div className="absolute top-[40%] -right-2 md:right-0 animate-[tail-wag_0.12s_ease-in-out_infinite_0.03s]">
+                <span className="text-xl text-amber-400">✦</span>
               </div>
-              <div className="absolute top-[40%] right-4 md:right-6 animate-[tail-wag_0.18s_ease-in-out_infinite_0.1s]">
-                <span className="text-xs text-amber-300">✦</span>
+              <div className="absolute top-[50%] -right-6 md:-right-4 animate-[tail-wag_0.1s_ease-in-out_infinite_0.06s]">
+                <span className="text-lg text-yellow-400">⭐</span>
               </div>
-              <div className="absolute top-[32%] -right-1 md:right-0 animate-[tail-wag_0.22s_ease-in-out_infinite_0.08s]">
-                <span className="text-sm text-yellow-400">⭐</span>
+              <div className="absolute top-[42%] -right-8 md:-right-6 animate-[tail-wag_0.13s_ease-in-out_infinite_0.02s]">
+                <span className="text-xl text-amber-300">✨</span>
+              </div>
+              <div className="absolute top-[48%] right-0 md:right-2 animate-[tail-wag_0.11s_ease-in-out_infinite_0.04s]">
+                <span className="text-lg text-yellow-300">💫</span>
+              </div>
+              <div className="absolute top-[38%] -right-3 md:-right-1 animate-[tail-wag_0.14s_ease-in-out_infinite_0.05s]">
+                <span className="text-2xl text-amber-500">✦</span>
               </div>
               
               {/* Floating hearts */}
@@ -97,12 +103,30 @@ export default function KenzieJourneySection() {
                 <span className="text-lg">🧡</span>
               </div>
               
-              {/* Ground paw prints */}
-              <div className="absolute -bottom-6 left-1/4 animate-[paw-appear_1.5s_ease-in-out_infinite]">
-                <span className="text-xl opacity-40">🐾</span>
+              {/* Ground paw prints - more and bigger */}
+              <div className="absolute -bottom-4 left-1/4 animate-[paw-appear_1.2s_ease-in-out_infinite]">
+                <span className="text-3xl opacity-50">🐾</span>
               </div>
-              <div className="absolute -bottom-8 right-1/4 animate-[paw-appear_1.5s_ease-in-out_infinite_0.5s]">
-                <span className="text-lg opacity-30">🐾</span>
+              <div className="absolute -bottom-6 right-1/4 animate-[paw-appear_1.2s_ease-in-out_infinite_0.3s]">
+                <span className="text-2xl opacity-45">🐾</span>
+              </div>
+              <div className="absolute -bottom-8 left-1/2 animate-[paw-appear_1.2s_ease-in-out_infinite_0.6s]">
+                <span className="text-3xl opacity-40">🐾</span>
+              </div>
+              <div className="absolute -bottom-3 left-8 animate-[paw-appear_1.2s_ease-in-out_infinite_0.15s]">
+                <span className="text-2xl opacity-55">🐾</span>
+              </div>
+              <div className="absolute -bottom-5 right-8 animate-[paw-appear_1.2s_ease-in-out_infinite_0.45s]">
+                <span className="text-3xl opacity-35">🐾</span>
+              </div>
+              <div className="absolute -bottom-7 left-4 animate-[paw-appear_1.2s_ease-in-out_infinite_0.75s]">
+                <span className="text-2xl opacity-40">🐾</span>
+              </div>
+              <div className="absolute -bottom-4 right-4 animate-[paw-appear_1.2s_ease-in-out_infinite_0.9s]">
+                <span className="text-3xl opacity-50">🐾</span>
+              </div>
+              <div className="absolute -bottom-6 left-12 animate-[paw-appear_1.2s_ease-in-out_infinite_0.2s]">
+                <span className="text-2xl opacity-45">🐾</span>
               </div>
             </div>
           </div>
