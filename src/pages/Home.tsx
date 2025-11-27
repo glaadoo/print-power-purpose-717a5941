@@ -11,6 +11,7 @@ import kenzieMascot from "@/assets/kenzie-mascot.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import KenzieJourneySection from "@/components/KenzieJourneySection";
 
 export default function Home() {
   console.log('[Home] Component rendering');
@@ -241,6 +242,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Kenzie Journey Section - Only show for authenticated users */}
+      {isAuthenticated && <KenzieJourneySection />}
 
       {/* Featured Products Section */}
       <FeaturedProducts />
