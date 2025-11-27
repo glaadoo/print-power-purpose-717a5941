@@ -19,6 +19,9 @@ export default function Home() {
   const menu = useToggle(false);
   console.log('[Home] State initialized');
 
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   // Real stats from database
   const [stats, setStats] = useState({
     totalRaised: 0,
@@ -35,9 +38,21 @@ export default function Home() {
     thumbnail_url: string | null;
   }>>([]);
 
-  // Set document title
+  // Set document title and check auth state
   useEffect(() => {
     document.title = "Home - Print Power Purpose";
+    
+    // Check initial auth state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Handle payment success from donation page
@@ -204,23 +219,25 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => nav("/auth")}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm"
-              >
-                Sign Up / Sign In
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.setItem("ppp_access", "guest");
-                  nav("/welcome");
-                }}
-                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-6 py-3 rounded-lg border-2 border-gray-300 transition-colors"
-              >
-                Continue as Guest
-              </button>
-            </div>
+            {!isAuthenticated && (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => nav("/auth")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm"
+                >
+                  Sign Up / Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem("ppp_access", "guest");
+                    nav("/welcome");
+                  }}
+                  className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-6 py-3 rounded-lg border-2 border-gray-300 transition-colors"
+                >
+                  Continue as Guest
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>
