@@ -162,8 +162,18 @@ export default {
           "100%": { transform: "translateX(0) translateY(0) rotate(0deg)" },
         },
         "wing-flap": {
-          "0%, 100%": { transform: "scaleX(1)" },
-          "50%": { transform: "scaleX(0.6)" },
+          "0%": { transform: "scaleX(1) rotateY(0deg)" },
+          "25%": { transform: "scaleX(0.4) rotateY(60deg)" },
+          "50%": { transform: "scaleX(1) rotateY(0deg)" },
+          "75%": { transform: "scaleX(0.4) rotateY(-60deg)" },
+          "100%": { transform: "scaleX(1) rotateY(0deg)" },
+        },
+        "wing-flap-blur": {
+          "0%": { transform: "scaleX(1.1) translateX(-2px)" },
+          "25%": { transform: "scaleX(0.5) translateX(2px)" },
+          "50%": { transform: "scaleX(1.1) translateX(-2px)" },
+          "75%": { transform: "scaleX(0.5) translateX(2px)" },
+          "100%": { transform: "scaleX(1.1) translateX(-2px)" },
         },
         "sparkle": {
           "0%, 100%": { opacity: "0", transform: "scale(0.5) rotate(0deg)" },
