@@ -121,6 +121,17 @@ export default {
           "80%": { opacity: "0.6", transform: "scale(1) translateY(-5px)" },
           "100%": { opacity: "0", transform: "scale(0.5) translateY(-10px)" },
         },
+        "dust-puff": {
+          "0%": { opacity: "0", transform: "scale(0.3) translateY(0)" },
+          "30%": { opacity: "0.5", transform: "scale(1) translateY(-8px)" },
+          "70%": { opacity: "0.3", transform: "scale(1.3) translateY(-12px)" },
+          "100%": { opacity: "0", transform: "scale(1.5) translateY(-16px)" },
+        },
+        "dust-spread": {
+          "0%": { opacity: "0", transform: "scale(0.5) translateX(0)" },
+          "40%": { opacity: "0.4", transform: "scale(1) translateX(-5px)" },
+          "100%": { opacity: "0", transform: "scale(0.8) translateX(-15px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -132,6 +143,8 @@ export default {
         "tail-wag": "tail-wag 0.4s ease-in-out infinite",
         "sparkle-tail": "sparkle-tail 0.6s ease-in-out infinite",
         "paw-appear": "paw-appear 1.2s ease-in-out infinite",
+        "dust-puff": "dust-puff 0.8s ease-out infinite",
+        "dust-spread": "dust-spread 0.6s ease-out infinite",
       },
     },
   },
