@@ -73,25 +73,25 @@ export default function KenzieJourneySection() {
               />
               
               {/* Floating hearts - very close to puppy */}
-              <div className="absolute top-[20%] right-[15%] z-20 animate-[float_2s_ease-in-out_infinite]">
+              <div className="absolute top-[25%] right-[22%] z-20 animate-[float_2s_ease-in-out_infinite]">
                 <span className="text-lg">💛</span>
               </div>
-              <div className="absolute top-[35%] left-[12%] z-20 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
+              <div className="absolute top-[40%] left-[18%] z-20 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
                 <span className="text-base">💙</span>
               </div>
-              <div className="absolute top-[15%] left-[25%] z-20 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
+              <div className="absolute top-[18%] left-[30%] z-20 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
                 <span className="text-base">🧡</span>
               </div>
               
-              {/* Butterflies - orbiting around puppy */}
-              <div className="absolute top-[10%] right-[20%] z-20 animate-[butterfly-orbit_4s_ease-in-out_infinite]">
-                <span className="text-lg">🦋</span>
+              {/* Butterflies - close to puppy with wing flapping */}
+              <div className="absolute top-[15%] right-[25%] z-20 animate-[butterfly-orbit_4s_ease-in-out_infinite]">
+                <span className="text-lg animate-[wing-flap_0.2s_ease-in-out_infinite]">🦋</span>
               </div>
-              <div className="absolute top-[50%] left-[8%] z-20 animate-[butterfly-orbit_5s_ease-in-out_infinite_1s]">
-                <span className="text-base">🦋</span>
+              <div className="absolute top-[45%] left-[15%] z-20 animate-[butterfly-orbit_5s_ease-in-out_infinite_1s]">
+                <span className="text-base animate-[wing-flap_0.15s_ease-in-out_infinite_0.05s]">🦋</span>
               </div>
-              <div className="absolute bottom-[30%] right-[10%] z-20 animate-[butterfly-orbit_4.5s_ease-in-out_infinite_2s]">
-                <span className="text-sm">🦋</span>
+              <div className="absolute top-[60%] right-[18%] z-20 animate-[butterfly-orbit_4.5s_ease-in-out_infinite_2s]">
+                <span className="text-base animate-[wing-flap_0.18s_ease-in-out_infinite_0.1s]">🦋</span>
               </div>
               
             </div>

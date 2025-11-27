@@ -156,10 +156,14 @@ export default {
         },
         "butterfly-orbit": {
           "0%": { transform: "translateX(0) translateY(0) rotate(0deg)" },
-          "25%": { transform: "translateX(15px) translateY(-10px) rotate(10deg)" },
-          "50%": { transform: "translateX(5px) translateY(8px) rotate(-5deg)" },
-          "75%": { transform: "translateX(-12px) translateY(-5px) rotate(8deg)" },
+          "25%": { transform: "translateX(10px) translateY(-8px) rotate(8deg)" },
+          "50%": { transform: "translateX(3px) translateY(6px) rotate(-4deg)" },
+          "75%": { transform: "translateX(-8px) translateY(-4px) rotate(6deg)" },
           "100%": { transform: "translateX(0) translateY(0) rotate(0deg)" },
+        },
+        "wing-flap": {
+          "0%, 100%": { transform: "scaleX(1)" },
+          "50%": { transform: "scaleX(0.6)" },
         },
       },
       animation: {
