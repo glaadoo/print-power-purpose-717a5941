@@ -136,18 +136,18 @@ export default function KenzieJourneySection() {
             
             {/* Free-floating greeting text with paw prints */}
             <div className="relative inline-flex items-start gap-4 mb-6 animate-fade-in">
-              {/* Vertical paw prints walking animation */}
-              <div className="hidden md:flex flex-col gap-2 pt-2">
-                <span className="text-lg animate-[paw-walk-up_2s_ease-in-out_infinite]">🐾</span>
-                <span className="text-base animate-[paw-walk-up_2s_ease-in-out_infinite_0.4s]">🐾</span>
-                <span className="text-sm animate-[paw-walk-up_2s_ease-in-out_infinite_0.8s]">🐾</span>
-              </div>
-              
               {/* Free-floating text - no box */}
               <p className="text-xl md:text-2xl font-medium text-gray-800">
                 Hi! I'm <span className="text-amber-500 font-bold">Kenzie</span>. 
                 <span className="block mt-1 text-gray-600">I'm here to guide you! 🐾</span>
               </p>
+              
+              {/* Vertical paw prints walking animation - right side */}
+              <div className="hidden md:flex flex-col gap-2 pt-2">
+                <span className="text-lg animate-[paw-walk-up_2s_ease-in-out_infinite]">🐾</span>
+                <span className="text-base animate-[paw-walk-up_2s_ease-in-out_infinite_0.4s]">🐾</span>
+                <span className="text-sm animate-[paw-walk-up_2s_ease-in-out_infinite_0.8s]">🐾</span>
+              </div>
             </div>
 
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
