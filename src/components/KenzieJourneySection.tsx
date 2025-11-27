@@ -134,20 +134,27 @@ export default function KenzieJourneySection() {
               />
             </svg>
             
-            {/* Free-floating greeting text with paw prints */}
-            <div className="relative inline-flex items-start gap-4 mb-6 animate-fade-in">
-              {/* Free-floating text - no box */}
-              <p className="text-xl md:text-2xl font-medium text-gray-800">
-                Hi! I'm <span className="text-amber-500 font-bold">Kenzie</span>. 
-                <span className="block mt-1 text-gray-600">I'm here to guide you! 🐾</span>
-              </p>
+            {/* Free-floating greeting text with playful paw prints */}
+            <div className="relative inline-block mb-6 animate-fade-in">
+              {/* Playful paw prints dancing around the message */}
+              {/* Left side paws */}
+              <span className="absolute -left-8 top-0 text-lg animate-[paw-float_2.5s_ease-in-out_infinite]">🐾</span>
+              <span className="absolute -left-6 top-8 text-base animate-[paw-wiggle_1.8s_ease-in-out_infinite_0.3s]">🐾</span>
               
-              {/* Vertical paw prints walking animation - right side */}
-              <div className="hidden md:flex flex-col gap-2 pt-2">
-                <span className="text-lg animate-[paw-walk-up_2s_ease-in-out_infinite]">🐾</span>
-                <span className="text-base animate-[paw-walk-up_2s_ease-in-out_infinite_0.4s]">🐾</span>
-                <span className="text-sm animate-[paw-walk-up_2s_ease-in-out_infinite_0.8s]">🐾</span>
-              </div>
+              {/* Right side paws */}
+              <span className="absolute -right-8 top-2 text-lg animate-[paw-pop_2s_ease-in-out_infinite_0.5s]">🐾</span>
+              <span className="absolute -right-6 bottom-0 text-base animate-[paw-dance_2.2s_ease-in-out_infinite_0.8s]">🐾</span>
+              
+              {/* Top paw */}
+              <span className="absolute left-1/2 -top-6 text-sm animate-[paw-bounce_1.5s_ease-in-out_infinite_0.2s]">🐾</span>
+              
+              {/* Free-floating text - no box */}
+              <p className="text-xl md:text-2xl font-medium text-gray-800 px-10">
+                Hi! I'm <span className="text-amber-500 font-bold">Kenzie</span>. 
+                <span className="block mt-1 text-gray-600">
+                  I'm here to guide you! <span className="inline-block animate-[paw-wiggle_1.5s_ease-in-out_infinite]">🐾</span>
+                </span>
+              </p>
             </div>
 
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">

@@ -199,12 +199,34 @@ export default {
           "0%, 100%": { opacity: "0", transform: "scale(0.5) rotate(0deg)" },
           "50%": { opacity: "1", transform: "scale(1.2) rotate(180deg)" },
         },
-        "paw-walk-up": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "20%": { opacity: "1", transform: "translateY(0)" },
-          "60%": { opacity: "1", transform: "translateY(0)" },
-          "80%": { opacity: "0", transform: "translateY(-10px)" },
-          "100%": { opacity: "0", transform: "translateY(10px)" },
+        "paw-float": {
+          "0%, 100%": { transform: "translateY(0) translateX(0)", opacity: "0.7" },
+          "25%": { transform: "translateY(-8px) translateX(3px)", opacity: "1" },
+          "50%": { transform: "translateY(-4px) translateX(-2px)", opacity: "0.9" },
+          "75%": { transform: "translateY(-10px) translateX(2px)", opacity: "1" },
+        },
+        "paw-wiggle": {
+          "0%, 100%": { transform: "rotate(0deg) scale(1)" },
+          "20%": { transform: "rotate(-15deg) scale(1.1)" },
+          "40%": { transform: "rotate(10deg) scale(0.95)" },
+          "60%": { transform: "rotate(-8deg) scale(1.05)" },
+          "80%": { transform: "rotate(12deg) scale(1)" },
+        },
+        "paw-pop": {
+          "0%, 100%": { transform: "scale(1)", opacity: "0.8" },
+          "30%": { transform: "scale(1.3)", opacity: "1" },
+          "50%": { transform: "scale(0.9)", opacity: "0.6" },
+          "70%": { transform: "scale(1.15)", opacity: "1" },
+        },
+        "paw-dance": {
+          "0%, 100%": { transform: "translateX(0) translateY(0) rotate(0deg)" },
+          "25%": { transform: "translateX(5px) translateY(-5px) rotate(10deg)" },
+          "50%": { transform: "translateX(-3px) translateY(3px) rotate(-8deg)" },
+          "75%": { transform: "translateX(4px) translateY(-2px) rotate(5deg)" },
+        },
+        "paw-bounce": {
+          "0%, 100%": { transform: "translateY(0) scale(1)", opacity: "0.7" },
+          "50%": { transform: "translateY(-12px) scale(1.2)", opacity: "1" },
         },
         "draw-line": {
           "0%": { strokeDasharray: "100", strokeDashoffset: "100" },
