@@ -810,12 +810,10 @@ export default function App() {
         <KenzieChat />
       </RouteBoundary>
 
-      {/* Chatbot widget - show on all pages except home */}
-      {location.pathname !== "/" && (
-        <RouteBoundary name="ChatbotWidget">
-          <ChatbotWidget />
-        </RouteBoundary>
-      )}
+      {/* Chatbot widget - show on all pages */}
+      <RouteBoundary name="ChatbotWidget">
+        <ChatbotWidget />
+      </RouteBoundary>
 
       {/* Stripe Mode Indicator - shows current API mode */}
       <RouteBoundary name="StripeModeIndicator">
