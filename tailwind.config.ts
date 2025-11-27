@@ -99,7 +99,17 @@ export default {
         },
         "kenzie-bounce": {
           "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-12px)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
+        "tail-wag": {
+          "0%, 100%": { transform: "rotate(-3deg)" },
+          "25%": { transform: "rotate(2deg)" },
+          "50%": { transform: "rotate(-2deg)" },
+          "75%": { transform: "rotate(3deg)" },
+        },
+        "sparkle-tail": {
+          "0%, 100%": { opacity: "1", transform: "scale(1) rotate(0deg)" },
+          "50%": { opacity: "0.6", transform: "scale(1.2) rotate(180deg)" },
         },
       },
       animation: {
@@ -109,6 +119,8 @@ export default {
         float: "float 2s ease-in-out infinite",
         "fade-in": "fade-in 0.5s ease-out forwards",
         "kenzie-bounce": "kenzie-bounce 2s ease-in-out infinite",
+        "tail-wag": "tail-wag 0.4s ease-in-out infinite",
+        "sparkle-tail": "sparkle-tail 0.6s ease-in-out infinite",
       },
     },
   },

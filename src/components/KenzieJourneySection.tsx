@@ -64,26 +64,34 @@ export default function KenzieJourneySection() {
               </div>
             </div>
             
-            {/* Kenzie with bounce and wiggle animation */}
+            {/* Kenzie with bounce animation */}
             <div className="relative animate-[kenzie-bounce_2s_ease-in-out_infinite]">
-              {/* The puppy - no background container */}
+              {/* The puppy with subtle tail wag effect */}
               <img
                 src={kenziePuppy}
                 alt="Kenzie the puppy"
-                className="w-52 h-52 md:w-64 md:h-64 object-contain animate-[wiggle_4s_ease-in-out_infinite]"
+                className="w-52 h-52 md:w-64 md:h-64 object-contain animate-tail-wag origin-bottom"
                 style={{
                   filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))',
                 }}
               />
               
-              {/* Floating sparkles around puppy */}
+              {/* Tail wagging sparkles - positioned near tail */}
+              <div className="absolute bottom-12 right-2 md:right-4 animate-sparkle-tail">
+                <span className="text-lg">✨</span>
+              </div>
+              <div className="absolute bottom-16 right-0 md:right-2 animate-[sparkle-tail_0.5s_ease-in-out_infinite_0.2s]">
+                <span className="text-sm">⭐</span>
+              </div>
+              <div className="absolute bottom-10 right-6 md:right-8 animate-[sparkle-tail_0.7s_ease-in-out_infinite_0.1s]">
+                <span className="text-xs">✨</span>
+              </div>
+              
+              {/* Floating hearts around puppy */}
               <div className="absolute -top-2 right-4 animate-[float_2s_ease-in-out_infinite]">
-                <span className="text-xl">✨</span>
+                <span className="text-xl">💛</span>
               </div>
               <div className="absolute top-1/4 -left-4 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
-                <span className="text-lg">💛</span>
-              </div>
-              <div className="absolute bottom-4 -right-2 animate-[float_1.8s_ease-in-out_infinite_0.6s]">
                 <span className="text-lg">💙</span>
               </div>
             </div>
