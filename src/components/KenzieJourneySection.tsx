@@ -72,16 +72,6 @@ export default function KenzieJourneySection() {
                 className="w-56 h-56 md:w-72 md:h-72 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite]"
               />
               
-              {/* Tail wagging motion lines - subtle curved lines */}
-              <div className="absolute top-[38%] -right-2 md:right-0 animate-[tail-wag_0.15s_ease-in-out_infinite] opacity-60">
-                <span className="text-amber-400 text-xl">)</span>
-              </div>
-              <div className="absolute top-[42%] -right-4 md:-right-2 animate-[tail-wag_0.12s_ease-in-out_infinite_0.03s] opacity-50">
-                <span className="text-amber-300 text-lg">)</span>
-              </div>
-              <div className="absolute top-[36%] -right-6 md:-right-4 animate-[tail-wag_0.1s_ease-in-out_infinite_0.06s] opacity-40">
-                <span className="text-amber-200 text-xl">)</span>
-              </div>
               
               {/* Floating hearts */}
               <div className="absolute -top-4 right-8 z-20 animate-[float_2s_ease-in-out_infinite]">
