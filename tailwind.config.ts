@@ -165,6 +165,10 @@ export default {
           "0%, 100%": { transform: "scaleX(1)" },
           "50%": { transform: "scaleX(0.6)" },
         },
+        "sparkle": {
+          "0%, 100%": { opacity: "0", transform: "scale(0.5) rotate(0deg)" },
+          "50%": { opacity: "1", transform: "scale(1.2) rotate(180deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
