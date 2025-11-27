@@ -136,6 +136,12 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-8px)" },
         },
+        "paw-walk": {
+          "0%": { opacity: "0", transform: "scale(0.3) translateY(10px)" },
+          "15%": { opacity: "0.7", transform: "scale(1) translateY(0)" },
+          "70%": { opacity: "0.5", transform: "scale(1) translateY(-5px)" },
+          "100%": { opacity: "0", transform: "scale(0.8) translateY(-15px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
