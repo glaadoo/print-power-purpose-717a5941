@@ -137,15 +137,15 @@ export default function KenzieJourneySection() {
             {/* Free-floating greeting text with walking paw prints */}
             <div className="relative inline-block mb-6 animate-fade-in">
               {/* Walking paw prints - appear and disappear in sequence */}
-              {/* Right side paws - walking up */}
-              <span className="absolute -right-4 bottom-2 text-lg animate-[paw-step-1_2.5s_ease-in-out_infinite]">🐾</span>
-              <span className="absolute -right-3 top-1/2 text-base animate-[paw-step-2_2.5s_ease-in-out_infinite]">🐾</span>
-              <span className="absolute -right-4 top-0 text-lg animate-[paw-step-3_2.5s_ease-in-out_infinite]">🐾</span>
+              {/* Right side paws - walking up, spaced out */}
+              <span className="absolute -right-5 -bottom-4 text-lg animate-[paw-step-1_2.5s_ease-in-out_infinite]">🐾</span>
+              <span className="absolute -right-4 top-1/2 -translate-y-1/2 text-base animate-[paw-step-2_2.5s_ease-in-out_infinite]">🐾</span>
+              <span className="absolute -right-5 -top-4 text-lg animate-[paw-step-3_2.5s_ease-in-out_infinite]">🐾</span>
               
-              {/* Left side paws - walking up */}
-              <span className="absolute -left-4 bottom-0 text-base animate-[paw-step-1_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
-              <span className="absolute -left-3 top-1/2 text-lg animate-[paw-step-2_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
-              <span className="absolute -left-4 top-2 text-base animate-[paw-step-3_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
+              {/* Left side paws - walking up, spaced out */}
+              <span className="absolute -left-5 -bottom-4 text-base animate-[paw-step-1_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
+              <span className="absolute -left-4 top-1/2 -translate-y-1/2 text-lg animate-[paw-step-2_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
+              <span className="absolute -left-5 -top-4 text-base animate-[paw-step-3_2.8s_ease-in-out_infinite_0.3s]">🐾</span>
               
               {/* Free-floating text - no box */}
               <p className="text-xl md:text-2xl font-medium text-gray-800 px-6">
