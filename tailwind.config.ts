@@ -86,24 +86,29 @@ export default {
           },
         },
         wiggle: {
-          "0%, 100%": { transform: "rotate(-8deg)" },
-          "50%": { transform: "rotate(8deg)" },
+          "0%, 100%": { transform: "rotate(-12deg)" },
+          "50%": { transform: "rotate(12deg)" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-10px)" },
+          "50%": { transform: "translateY(-8px)" },
         },
         "fade-in": {
           "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "kenzie-bounce": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-12px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        wiggle: "wiggle 0.5s ease-in-out infinite",
+        wiggle: "wiggle 0.3s ease-in-out infinite",
         float: "float 2s ease-in-out infinite",
         "fade-in": "fade-in 0.5s ease-out forwards",
+        "kenzie-bounce": "kenzie-bounce 2s ease-in-out infinite",
       },
     },
   },
