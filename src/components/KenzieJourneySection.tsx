@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import kenziePuppy from "@/assets/kenzie-transparent.png";
+import kenziePuppy from "@/assets/kenzie-standing.png";
 import { Sparkles, ShoppingBag } from "lucide-react";
 
 export default function KenzieJourneySection() {
@@ -64,32 +64,38 @@ export default function KenzieJourneySection() {
               </div>
             </div>
             
-            {/* Kenzie with gentle bounce animation */}
-            <div className="relative animate-[kenzie-bounce_3s_ease-in-out_infinite]">
-              {/* The puppy - no shaking, just gentle bounce */}
+            {/* Kenzie standing with excited animation */}
+            <div className="relative">
+              {/* The puppy with subtle body movement */}
               <img
                 src={kenziePuppy}
                 alt="Kenzie the puppy"
-                className="w-56 h-56 md:w-72 md:h-72 object-contain"
+                className="w-56 h-56 md:w-72 md:h-72 object-contain animate-[puppy-excited_1s_ease-in-out_infinite]"
               />
               
-              {/* Tail wagging effect - sparkles near tail area */}
-              <div className="absolute bottom-16 right-6 md:right-10 animate-[tail-wag_0.3s_ease-in-out_infinite]">
-                <span className="text-lg">✨</span>
+              {/* Tail wagging motion lines */}
+              <div className="absolute bottom-20 left-2 md:left-4">
+                <div className="animate-[tail-wag_0.2s_ease-in-out_infinite] text-amber-400 font-bold text-xl">~</div>
               </div>
-              <div className="absolute bottom-20 right-4 md:right-8 animate-[tail-wag_0.3s_ease-in-out_infinite_0.1s]">
-                <span className="text-sm">⭐</span>
+              <div className="absolute bottom-24 left-0 md:left-2">
+                <div className="animate-[tail-wag_0.2s_ease-in-out_infinite_0.05s] text-amber-300 font-bold text-lg">~</div>
               </div>
-              <div className="absolute bottom-14 right-10 md:right-14 animate-[tail-wag_0.4s_ease-in-out_infinite_0.15s]">
-                <span className="text-xs">✨</span>
+              <div className="absolute bottom-16 left-4 md:left-6">
+                <div className="animate-[tail-wag_0.25s_ease-in-out_infinite_0.1s] text-amber-200 font-bold">~</div>
               </div>
               
-              {/* Floating hearts */}
-              <div className="absolute -top-2 right-4 animate-[float_2s_ease-in-out_infinite]">
-                <span className="text-xl">💛</span>
+              {/* Sparkles around the happy puppy */}
+              <div className="absolute -top-2 right-8 animate-[float_1.5s_ease-in-out_infinite]">
+                <span className="text-xl">✨</span>
               </div>
-              <div className="absolute top-1/4 -left-4 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
+              <div className="absolute top-8 -right-2 animate-[float_2s_ease-in-out_infinite_0.3s]">
+                <span className="text-lg">💛</span>
+              </div>
+              <div className="absolute top-4 -left-4 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
                 <span className="text-lg">💙</span>
+              </div>
+              <div className="absolute bottom-8 right-4 animate-[sparkle-tail_0.5s_ease-in-out_infinite]">
+                <span className="text-sm">⭐</span>
               </div>
             </div>
           </div>
