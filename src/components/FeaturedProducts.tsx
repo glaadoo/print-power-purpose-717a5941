@@ -31,7 +31,7 @@ export default function FeaturedProducts() {
           .from("products")
           .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, vendor, vendor_product_id, pricing_data")
           .eq("is_active", true)
-          .limit(18);
+          .limit(20);
 
         if (error) {
           console.error("[FeaturedProducts] Error loading:", error);
