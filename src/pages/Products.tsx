@@ -160,6 +160,7 @@ export default function Products() {
                 .from("products")
                 .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id")
                 .eq("is_active", true)
+                .eq("vendor", "scalablepress")
                 .order("category", { ascending: true })
                 .order("name", { ascending: true });
               
