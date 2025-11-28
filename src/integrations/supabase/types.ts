@@ -1037,6 +1037,57 @@ export type Database = {
         }
         Relationships: []
       }
+      requested_schools: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          city: string
+          country: string | null
+          county: string | null
+          created_at: string | null
+          created_by_user_id: string | null
+          district: string | null
+          id: string
+          is_approved: boolean | null
+          name: string
+          school_level: string | null
+          state: string
+          zip: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          city: string
+          country?: string | null
+          county?: string | null
+          created_at?: string | null
+          created_by_user_id?: string | null
+          district?: string | null
+          id?: string
+          is_approved?: boolean | null
+          name: string
+          school_level?: string | null
+          state: string
+          zip: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          city?: string
+          country?: string | null
+          county?: string | null
+          created_at?: string | null
+          created_by_user_id?: string | null
+          district?: string | null
+          id?: string
+          is_approved?: boolean | null
+          name?: string
+          school_level?: string | null
+          state?: string
+          zip?: string
+        }
+        Relationships: []
+      }
       review_votes: {
         Row: {
           created_at: string

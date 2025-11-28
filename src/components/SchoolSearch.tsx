@@ -91,7 +91,7 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
   return (
     <div className="w-full space-y-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 pointer-events-none z-10" />
         <Input
           type="text"
           placeholder="Search by school name, city, state, or ZIP..."
@@ -100,7 +100,7 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
             console.log('[SchoolSearch] Input changed:', e.target.value);
             setQuery(e.target.value);
           }}
-          className="pl-10 pr-10 text-foreground bg-background caret-foreground"
+          className="pl-12 pr-10 text-gray-900 bg-white border-gray-300 placeholder:text-gray-400 rounded-lg h-12"
           autoFocus
         />
         {query && (
@@ -109,10 +109,10 @@ export default function SchoolSearch({ onSelect, selectedId }: Props) {
               setQuery("");
               setResults([]);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Clear search"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         )}
       </div>

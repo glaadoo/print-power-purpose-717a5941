@@ -70,7 +70,6 @@ export default function SelectSchool() {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [levelFilter, setLevelFilter] = useState<string>("all");
   const [formData, setFormData] = useState<FormData>({
     name: "",
     district: "",
@@ -93,15 +92,20 @@ export default function SelectSchool() {
   async function loadSchools() {
     try {
       setLoading(true);
-      console.log('[SelectSchool] Loading schools...');
-      const { data, error } = await supabase.functions.invoke('schools-list', {
-        body: { page: 1, pageSize: 50 }
-      });
+      console.log('[SelectSchool] Loading requested schools...');
+      
+      // Load from requested_schools table (user-submitted schools only)
+      const { data, error } = await supabase
+        .from('requested_schools')
+        .select('id, name, city, state, zip, school_level')
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
 
-      console.log('[SelectSchool] Loaded schools:', data?.items?.length || 0, data);
-      setSchools(data.items || []);
+      console.log('[SelectSchool] Loaded requested schools:', data?.length || 0);
+      setSchools(data || []);
     } catch (error) {
       console.error('[SelectSchool] Error loading schools:', error);
       toast({
@@ -325,31 +329,6 @@ export default function SelectSchool() {
                 Search by school name, city, state, or ZIP code
               </p>
               
-              {/* Level Filter */}
-              <div className="mb-6">
-                <Label htmlFor="level-filter" className="text-gray-900 mb-2 block">
-                  Filter by School Level
-                </Label>
-                <Select value={levelFilter} onValueChange={setLevelFilter}>
-                  <SelectTrigger 
-                    id="level-filter"
-                    className="bg-white border-gray-300 text-gray-900 w-full md:w-64"
-                  >
-                    <SelectValue placeholder="All Levels" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200 z-[100]">
-                    <SelectItem value="all" className="text-gray-900 hover:bg-gray-50">
-                      All Levels
-                    </SelectItem>
-                    {SCHOOL_LEVELS.map(level => (
-                      <SelectItem key={level} value={level} className="text-gray-900 hover:bg-gray-50">
-                        {level}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
               <SchoolSearch
                 onSelect={(school) => {
                   setSelectedSchoolId(school.id);
@@ -407,7 +386,7 @@ export default function SelectSchool() {
                 <div>
                   <h2 className="text-2xl font-bold mb-2 text-blue-600">Add your school</h2>
                   <p className="text-sm text-gray-600">
-                    Can't find your school? Add it here and it becomes an option for everyone.
+                    Can't find your school? Add it here, and we'll include it in the list for future users.
                   </p>
                 </div>
                 
@@ -634,9 +613,7 @@ export default function SelectSchool() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {schools
-                .filter(school => levelFilter === "all" || school.school_level === levelFilter)
-                .map(school => (
+              {schools.map(school => (
                 <button
                   key={school.id}
                   id={`school-${school.id}`}
