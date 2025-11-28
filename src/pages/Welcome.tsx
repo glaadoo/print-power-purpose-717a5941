@@ -250,13 +250,15 @@ export default function Welcome() {
                             Nonprofit
                           </option>
                           <option value="personal" className="text-black">
-                            Personal mission
-                          </option>
-                        </select>
-                      </div>
-                    )}
-                  </div>
+                          Personal mission
+                        </option>
+                      </select>
+                    </div>
+                  )}
                 </div>
+              </div>
+              {/* Spacer for footer clearance */}
+              <div className="h-24 md:h-32" />
             </div>
           </div>
         </div>
