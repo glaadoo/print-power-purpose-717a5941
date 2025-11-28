@@ -644,9 +644,14 @@ export default function SelectSchool() {
                     {school.name}
                   </h3>
                   
-                  <p className="text-xs md:text-sm text-gray-600 mb-3">
+                  <p className="text-xs md:text-sm text-gray-600 mb-1">
                     {school.city}, {school.state}
                   </p>
+                  {school.zip && (
+                    <p className="text-xs text-gray-500 mb-2">
+                      {school.zip}
+                    </p>
+                  )}
 
                   {school.school_level && (
                     <div className="mt-auto">
