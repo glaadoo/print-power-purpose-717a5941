@@ -116,7 +116,7 @@ serve(async (req) => {
       );
     }
 
-    // Insert new school
+    // Insert new school into schools_user_added (for search)
     const { data: newSchool, error: insertError } = await supabase
       .from('schools_user_added')
       .insert([{
@@ -149,6 +149,29 @@ serve(async (req) => {
 
       console.error('[schools-add] Error inserting school:', insertError);
       throw insertError;
+    }
+
+    // Also insert into requested_schools (for "Or Select a School" grid)
+    const { error: requestedError } = await supabase
+      .from('requested_schools')
+      .insert([{
+        name: sanitizedData.name,
+        district: sanitizedData.district,
+        address_line1: sanitizedData.address_line1,
+        address_line2: sanitizedData.address_line2,
+        city: sanitizedData.city,
+        state: sanitizedData.state,
+        county: sanitizedData.county,
+        zip: sanitizedData.zip,
+        country: sanitizedData.country,
+        school_level: sanitizedData.school_level,
+        created_at: new Date().toISOString(),
+        is_approved: true,
+      }]);
+
+    if (requestedError) {
+      console.error('[schools-add] Error inserting into requested_schools:', requestedError);
+      // Don't throw - the main insert succeeded
     }
 
     console.log('[schools-add] Successfully added new school:', newSchool.id);
