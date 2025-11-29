@@ -348,12 +348,9 @@ export default function Home() {
                 className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
               />
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                  Welcome to Print Power Purpose
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  Create Impact Through Every Purchase
                 </h1>
-                <p className="text-base text-gray-600">
-                  Professional printing that supports your favorite causes
-                </p>
               </div>
             </div>
             {!isAuthenticated && (
