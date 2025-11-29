@@ -2,10 +2,11 @@ import { useMemo, useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
-import { X, ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
+import { X, ArrowLeft, ArrowRight, ShoppingCart, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateOrderShipping, getShippingTierLabel } from "@/lib/shipping-tiers";
 import {
   Dialog,
   DialogContent,
@@ -77,6 +78,14 @@ export default function Cart() {
   );
 
   const subtotal = totalCents;
+  
+  // Calculate shipping estimate
+  const shippingCents = useMemo(() => {
+    if (items.length === 0) return 0;
+    return calculateOrderShipping(items.map(item => ({ name: item.name, category: null })));
+  }, [items]);
+  const shippingLabel = getShippingTierLabel(shippingCents);
+  const estimatedTotal = subtotal + shippingCents;
 
   return (
     <div className="fixed inset-0 bg-white text-gray-900">{/* Removed z-50 to work with App animation wrapper */}
@@ -240,10 +249,23 @@ export default function Cart() {
                     Continue Shopping
                   </button>
                   
-                  <div className="text-center">
-                    <div className="text-gray-600 text-sm mb-2">Subtotal</div>
-                    <div className="text-3xl font-bold text-gray-900">
-                      ${(totalCents / 100).toFixed(2)}
+                  <div className="text-center space-y-2">
+                    <div className="flex justify-between gap-8 text-gray-600 text-sm">
+                      <span>Subtotal:</span>
+                      <span className="font-medium">${(subtotal / 100).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-8 text-gray-600 text-sm items-center">
+                      <span className="flex items-center gap-1">
+                        <Truck size={14} />
+                        {shippingLabel}:
+                      </span>
+                      <span className="font-medium">${(shippingCents / 100).toFixed(2)}</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-2">
+                      <div className="text-gray-500 text-xs mb-1">Estimated Total</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        ${(estimatedTotal / 100).toFixed(2)}
+                      </div>
                     </div>
                   </div>
                   
