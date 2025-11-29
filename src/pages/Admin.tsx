@@ -284,8 +284,10 @@ export default function Admin() {
       setOrders(stats?.orders || []);
       setDonations(stats?.donations || []);
       setCauses(stats?.causes || []);
-      setProducts(stats?.products || []);
-      setStoryRequests(stats?.storyRequests || []);
+      // Products is just a count in stats, keep empty array
+      setProducts([]);
+      // StoryRequests is just a count in stats, keep empty array
+      setStoryRequests([]);
 
       console.log('Admin Stats Loaded:');
       console.log('Orders:', stats?.orders?.length || 0, 'Total Revenue:', stats?.totalRevenue);
