@@ -109,6 +109,7 @@ import AdminStripeAnalytics from "./pages/AdminStripeAnalytics";
 import AdminTransactions from "./pages/AdminTransactions";
 const AdminProducts = lazyPage("AdminProducts", () => import("./pages/AdminProducts"));
 const AdminOrders = lazyPage("AdminOrders", () => import("./pages/AdminOrders"));
+const AdminVendorFulfillment = lazyPage("AdminVendorFulfillment", () => import("./pages/AdminVendorFulfillment"));
 const AdminLiveModeSetup = lazyPage("AdminLiveModeSetup", () => import("./pages/AdminLiveModeSetup"));
 const AdminAccessLogs = lazyPage("AdminAccessLogs", () => import("./pages/AdminAccessLogs"));
 const NonprofitProfile = lazyPage("NonprofitProfile", () => import("./pages/NonprofitProfile"));
@@ -686,6 +687,18 @@ export default function App() {
               <RouteBoundary name="AdminOrders">
                 <AdminProtectedRoute>
                   <AdminOrders />
+                </AdminProtectedRoute>
+              </RouteBoundary>
+            }
+          />
+
+          {/* Admin Vendor Fulfillment */}
+          <Route
+            path="/admin/vendor-fulfillment"
+            element={
+              <RouteBoundary name="AdminVendorFulfillment">
+                <AdminProtectedRoute>
+                  <AdminVendorFulfillment />
                 </AdminProtectedRoute>
               </RouteBoundary>
             }

@@ -750,6 +750,12 @@ export type Database = {
           stripe_payment_intent_id: string | null
           subtotal_cents: number | null
           tax_cents: number | null
+          vendor_error_message: string | null
+          vendor_exported_at: string | null
+          vendor_key: string | null
+          vendor_name: string | null
+          vendor_order_id: string | null
+          vendor_status: string | null
         }
         Insert: {
           amount_total_cents?: number
@@ -776,6 +782,12 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           subtotal_cents?: number | null
           tax_cents?: number | null
+          vendor_error_message?: string | null
+          vendor_exported_at?: string | null
+          vendor_key?: string | null
+          vendor_name?: string | null
+          vendor_order_id?: string | null
+          vendor_status?: string | null
         }
         Update: {
           amount_total_cents?: number
@@ -802,6 +814,12 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           subtotal_cents?: number | null
           tax_cents?: number | null
+          vendor_error_message?: string | null
+          vendor_exported_at?: string | null
+          vendor_key?: string | null
+          vendor_name?: string | null
+          vendor_order_id?: string | null
+          vendor_status?: string | null
         }
         Relationships: []
       }

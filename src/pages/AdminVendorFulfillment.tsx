@@ -1,0 +1,385 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Download, CheckCircle, Mail, FileText } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface Order {
+  id: string;
+  order_number: string;
+  status: string;
+  created_at: string;
+  customer_email: string | null;
+  amount_total_cents: number;
+  vendor_key: string | null;
+  vendor_name: string | null;
+  vendor_status: string | null;
+  vendor_order_id: string | null;
+  vendor_exported_at: string | null;
+  vendor_error_message: string | null;
+  items: any[];
+}
+
+export default function AdminVendorFulfillment() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadOrders();
+  }, [statusFilter, vendorFilter]);
+
+  async function loadOrders() {
+    try {
+      setLoading(true);
+      let query = supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (statusFilter !== "all") {
+        query = query.eq("vendor_status", statusFilter);
+      }
+
+      if (vendorFilter !== "all") {
+        query = query.eq("vendor_key", vendorFilter);
+      }
+
+      const { data, error } = await query.limit(100);
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (err) {
+      console.error("Error loading orders:", err);
+      toast({
+        title: "Error",
+        description: "Failed to load orders",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function markAsExported(orderId: string) {
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          vendor_status: "exported_manual",
+          vendor_exported_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Order marked as exported",
+      });
+
+      loadOrders();
+    } catch (err) {
+      console.error("Error marking as exported:", err);
+      toast({
+        title: "Error",
+        description: "Failed to mark order as exported",
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function downloadCSV() {
+    try {
+      const ordersToExport = orders.filter(
+        (o) => statusFilter === "all" || o.vendor_status === statusFilter
+      );
+
+      if (ordersToExport.length === 0) {
+        toast({
+          title: "No orders",
+          description: "No orders available to export",
+        });
+        return;
+      }
+
+      // Build CSV content
+      const headers = [
+        "Order Number",
+        "Customer Email",
+        "Customer Name",
+        "Total Amount",
+        "Vendor",
+        "Status",
+        "Product Name",
+        "Quantity",
+        "Shipping Address",
+        "Phone",
+        "Created At",
+      ];
+
+      const rows = ordersToExport.map((order) => {
+        const firstItem = order.items?.[0] || {};
+        const shippingAddr = firstItem.shipping_address || {};
+        
+        return [
+          order.order_number,
+          order.customer_email || "",
+          `${shippingAddr.first_name || ""} ${shippingAddr.last_name || ""}`,
+          (order.amount_total_cents / 100).toFixed(2),
+          order.vendor_name || order.vendor_key || "",
+          order.vendor_status || "",
+          firstItem.product_name || "",
+          firstItem.quantity || 1,
+          `${shippingAddr.line1 || ""}, ${shippingAddr.city || ""}, ${shippingAddr.state || ""} ${shippingAddr.postal_code || ""}`,
+          shippingAddr.phone || "",
+          new Date(order.created_at).toLocaleDateString(),
+        ];
+      });
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.map(cell => `"${cell}"`).join(",")),
+      ].join("\\n");
+
+      // Download file
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `orders-${statusFilter}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Success",
+        description: `Exported ${ordersToExport.length} orders to CSV`,
+      });
+    } catch (err) {
+      console.error("Error downloading CSV:", err);
+      toast({
+        title: "Error",
+        description: "Failed to download CSV",
+        variant: "destructive",
+      });
+    }
+  }
+
+  function getStatusBadge(status: string | null) {
+    const statusColors: Record<string, string> = {
+      pending: "secondary",
+      submitted: "default",
+      emailed_vendor: "default",
+      pending_manual: "secondary",
+      exported_manual: "default",
+      error: "destructive",
+    };
+
+    return (
+      <Badge variant={statusColors[status || "pending"] as any}>
+        {status || "pending"}
+      </Badge>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Vendor Fulfillment</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage order fulfillment across all vendors
+          </p>
+        </div>
+
+        {/* Fulfillment Mode Info */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Fulfillment Options
+            </CardTitle>
+            <CardDescription>
+              Current mode is controlled by VENDOR_FULFILLMENT_MODE environment variable
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="p-4 border rounded-lg">
+                <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  Option 1: AUTO_API
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Automatically submit orders to vendor APIs after payment success. Orders show as "submitted".
+                </p>
+              </div>
+              <div className="p-4 border rounded-lg">
+                <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-600" />
+                  Option 2: EMAIL_VENDOR
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Send order details to vendor via email. Orders show as "emailed_vendor".
+                </p>
+              </div>
+              <div className="p-4 border rounded-lg">
+                <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Download className="h-4 w-4 text-orange-600" />
+                  Option 3: MANUAL_EXPORT
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Queue orders for manual CSV export. Orders show as "pending_manual" until exported.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Filters and Actions */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle>Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-4 mb-6">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="pending_manual">Pending Manual</SelectItem>
+                  <SelectItem value="submitted">Submitted</SelectItem>
+                  <SelectItem value="emailed_vendor">Emailed Vendor</SelectItem>
+                  <SelectItem value="exported_manual">Exported Manual</SelectItem>
+                  <SelectItem value="error">Error</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={vendorFilter} onValueChange={setVendorFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filter by vendor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Vendors</SelectItem>
+                  <SelectItem value="sinalite">SinaLite</SelectItem>
+                  <SelectItem value="scalablepress">Scalable Press</SelectItem>
+                  <SelectItem value="psrestful">PSRestful</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button onClick={downloadCSV} variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Download CSV
+              </Button>
+            </div>
+
+            {/* Orders Table */}
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order Number</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Vendor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Vendor Order ID</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">
+                        {order.order_number}
+                      </TableCell>
+                      <TableCell>{order.customer_email || "N/A"}</TableCell>
+                      <TableCell>
+                        {order.vendor_name || order.vendor_key || "N/A"}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(order.vendor_status)}</TableCell>
+                      <TableCell>
+                        {order.vendor_order_id ? (
+                          <code className="text-xs bg-muted px-2 py-1 rounded">
+                            {order.vendor_order_id}
+                          </code>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        ${(order.amount_total_cents / 100).toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {order.vendor_status === "pending_manual" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => markAsExported(order.id)}
+                          >
+                            Mark Exported
+                          </Button>
+                        )}
+                        {order.vendor_error_message && (
+                          <span
+                            className="text-xs text-destructive cursor-help"
+                            title={order.vendor_error_message}
+                          >
+                            View Error
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {orders.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No orders found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
