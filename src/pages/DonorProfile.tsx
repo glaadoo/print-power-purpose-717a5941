@@ -25,6 +25,7 @@ import {
 } from "@/lib/milestone-tiers";
 import MilestoneAchievementBadge from "@/components/MilestoneAchievementBadge";
 import { Progress } from "@/components/ui/progress";
+import { markMilestonesAsSeen } from "@/hooks/useUnseenMilestones";
 
 interface Donation {
   id: string;
@@ -95,6 +96,13 @@ export default function DonorProfile() {
   const currentTier = getCurrentTier(totalDonatedCents);
   const nextTier = getNextTier(totalDonatedCents);
   const progress = getProgressToNextTier(totalDonatedCents);
+
+  // Mark achieved milestones as seen when page loads
+  useEffect(() => {
+    if (achievedTiers.length > 0) {
+      markMilestonesAsSeen(achievedTiers.map(t => t.id));
+    }
+  }, [achievedTiers]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
