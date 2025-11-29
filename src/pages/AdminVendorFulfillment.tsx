@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Download, CheckCircle, Mail, FileText, Truck, Edit } from "lucide-react";
+import { Loader2, Download, CheckCircle, Mail, FileText, Truck, Edit, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import AdminAnalyticsCharts from "@/components/admin/AdminAnalyticsCharts";
 
 interface Order {
   id: string;
@@ -57,18 +58,24 @@ export default function AdminVendorFulfillment() {
     tracking_carrier: "",
     shipping_status: "pending",
   });
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const ordersPerPage = 20;
   const { toast } = useToast();
 
   useEffect(() => {
     loadOrders();
-  }, [statusFilter, vendorFilter]);
+  }, [statusFilter, vendorFilter, currentPage]);
 
   async function loadOrders() {
     try {
       setLoading(true);
+      
+      // Build query with filters
       let query = supabase
         .from("orders")
-        .select("*")
+        .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
 
       if (statusFilter !== "all") {
@@ -79,10 +86,16 @@ export default function AdminVendorFulfillment() {
         query = query.eq("vendor_key", vendorFilter);
       }
 
-      const { data, error } = await query.limit(100);
+      // Apply pagination
+      const from = (currentPage - 1) * ordersPerPage;
+      const to = from + ordersPerPage - 1;
+      
+      const { data, error, count } = await query.range(from, to);
 
       if (error) throw error;
+      
       setOrders(data || []);
+      setTotalCount(count || 0);
     } catch (err) {
       console.error("Error loading orders:", err);
       toast({
@@ -267,14 +280,43 @@ export default function AdminVendorFulfillment() {
     );
   }
 
+  const totalPages = Math.ceil(totalCount / ordersPerPage);
+
+  if (showAnalytics) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
+              <p className="text-muted-foreground mt-2">
+                Revenue and donation trends over time
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => setShowAnalytics(false)}>
+              Back to Orders
+            </Button>
+          </div>
+          <AdminAnalyticsCharts />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Vendor Fulfillment</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage order fulfillment across all vendors
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Vendor Fulfillment</h1>
+            <p className="text-muted-foreground mt-2">
+              Manage order fulfillment across all vendors
+            </p>
+          </div>
+          <Button onClick={() => setShowAnalytics(true)} variant="outline">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            View Analytics
+          </Button>
         </div>
 
         {/* Fulfillment Mode Info */}
@@ -507,6 +549,39 @@ export default function AdminVendorFulfillment() {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {((currentPage - 1) * ordersPerPage) + 1} to{" "}
+                  {Math.min(currentPage * ordersPerPage, totalCount)} of {totalCount} orders
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  <div className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

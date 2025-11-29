@@ -95,7 +95,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(stats),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=300, s-maxage=300" // Cache for 5 minutes
+        } 
+      }
     );
   } catch (error) {
     console.error("Error in admin-stats:", error);
