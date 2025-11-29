@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
@@ -25,7 +25,12 @@ import {
 } from "@/lib/milestone-tiers";
 import MilestoneAchievementBadge from "@/components/MilestoneAchievementBadge";
 import { Progress } from "@/components/ui/progress";
-import { markMilestonesAsSeen } from "@/hooks/useUnseenMilestones";
+import { 
+  markMilestonesAsSeen, 
+  getUncelebratedMilestones, 
+  markMilestonesAsCelebrated 
+} from "@/hooks/useUnseenMilestones";
+import confetti from "canvas-confetti";
 
 interface Donation {
   id: string;
@@ -42,6 +47,8 @@ export default function DonorProfile() {
   const [userName, setUserName] = useState<string | null>(null);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [totalDonatedCents, setTotalDonatedCents] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const celebrationTriggered = useRef(false);
 
   useEffect(() => {
     async function fetchDonorData() {
@@ -97,12 +104,53 @@ export default function DonorProfile() {
   const nextTier = getNextTier(totalDonatedCents);
   const progress = getProgressToNextTier(totalDonatedCents);
 
-  // Mark achieved milestones as seen when page loads
+  // Check for uncelebrated milestones and trigger confetti
   useEffect(() => {
-    if (achievedTiers.length > 0) {
+    if (achievedTiers.length > 0 && !loading && !celebrationTriggered.current) {
+      const uncelebrated = getUncelebratedMilestones(achievedTiers.map(t => t.id));
+      
+      if (uncelebrated.length > 0) {
+        celebrationTriggered.current = true;
+        setShowCelebration(true);
+        
+        // Fire confetti burst
+        const duration = 3000;
+        const end = Date.now() + duration;
+        
+        const colors = ['#FFD700', '#FFA500', '#FF6347', '#9370DB', '#00CED1'];
+        
+        (function frame() {
+          confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.6 },
+            colors: colors
+          });
+          confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.6 },
+            colors: colors
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        }());
+        
+        // Mark as celebrated after animation
+        setTimeout(() => {
+          markMilestonesAsCelebrated(uncelebrated);
+          setShowCelebration(false);
+        }, duration);
+      }
+      
+      // Always mark as seen
       markMilestonesAsSeen(achievedTiers.map(t => t.id));
     }
-  }, [achievedTiers]);
+  }, [achievedTiers, loading]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -114,7 +162,7 @@ export default function DonorProfile() {
 
   if (loading) {
     return (
-      <Layout centered={false} title="Donor Profile">
+      <Layout centered={false} title="My Impact">
         <div className="max-w-4xl mx-auto py-8 space-y-6">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-64 w-full" />
@@ -125,7 +173,28 @@ export default function DonorProfile() {
   }
 
   return (
-    <Layout centered={false} title="Donor Profile">
+    <Layout centered={false} title="My Impact">
+      {/* Celebration Overlay */}
+      {showCelebration && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+        >
+          <div className="bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white px-8 py-6 rounded-2xl shadow-2xl text-center">
+            <motion.div
+              animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+              transition={{ duration: 0.5, repeat: 2 }}
+            >
+              <Trophy className="w-16 h-16 mx-auto mb-4 text-yellow-200" />
+            </motion.div>
+            <h2 className="text-2xl font-bold mb-2">Congratulations! 🎉</h2>
+            <p className="text-lg opacity-90">You've earned new milestone badges!</p>
+          </div>
+        </motion.div>
+      )}
+
       <div className="max-w-4xl mx-auto py-8 space-y-8">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -139,7 +208,7 @@ export default function DonorProfile() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              {userName ? `${userName}'s Donor Profile` : "Your Donor Profile"}
+              {userName ? `${userName}'s Impact` : "My Impact"}
             </h1>
             <p className="text-muted-foreground">{userEmail}</p>
           </div>
