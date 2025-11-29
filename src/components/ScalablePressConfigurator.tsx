@@ -11,6 +11,7 @@ interface ScalablePressConfiguratorProps {
   onConfigChange: (config: Record<string, string>) => void;
   onSelectionComplete?: (isComplete: boolean) => void;
   onVariantKeyChange?: (variantKey: string) => void;
+  onColorChange?: (color: { name: string; images?: any[] }) => void;
 }
 
 const getStockStatus = (quantity: number | undefined): { status: string; color: string; label: string } => {
@@ -28,6 +29,7 @@ export default function ScalablePressConfigurator({
   onConfigChange,
   onSelectionComplete,
   onVariantKeyChange,
+  onColorChange,
 }: ScalablePressConfiguratorProps) {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -149,6 +151,14 @@ export default function ScalablePressConfigurator({
       setSelectedSize(newColorSizes[0]);
     } else {
       setSelectedSize("");
+    }
+    
+    // Notify parent about color change with images
+    if (onColorChange) {
+      const colorObj = colors.find((c: any) => c.name === colorName);
+      if (colorObj) {
+        onColorChange({ name: colorName, images: colorObj.images });
+      }
     }
   };
 

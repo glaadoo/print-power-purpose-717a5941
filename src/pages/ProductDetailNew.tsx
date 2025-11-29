@@ -56,6 +56,8 @@ export default function ProductDetailNew() {
   const [reviewCount, setReviewCount] = useState(0);
   const [artworkFileUrl, setArtworkFileUrl] = useState<string>("");
   const [artworkFileName, setArtworkFileName] = useState<string>("");
+  const [selectedColorImages, setSelectedColorImages] = useState<any[]>([]);
+  const [gallerySelectedIndex, setGallerySelectedIndex] = useState(0);
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -218,15 +220,28 @@ export default function ProductDetailNew() {
     );
   }
 
-  // Build image gallery array
+  // Build image gallery array - prioritize selected color images
   const galleryImages: Array<{ url: string; label?: string }> = [];
   
-  // Add main product image
-  if (product.image_url && !imageError) {
+  // If a color is selected, show those images first
+  if (selectedColorImages.length > 0) {
+    selectedColorImages.forEach((img: any, idx: number) => {
+      const imageUrl = typeof img === 'string' ? img : img.url;
+      if (imageUrl && !galleryImages.some(g => g.url === imageUrl)) {
+        galleryImages.push({ 
+          url: imageUrl, 
+          label: idx === 0 ? 'Selected Color' : `View ${idx + 1}`
+        });
+      }
+    });
+  }
+  
+  // Add main product image if not already included
+  if (product.image_url && !imageError && !galleryImages.some(g => g.url === product.image_url)) {
     galleryImages.push({ url: product.image_url, label: "Main" });
   }
   
-  // Add color variant images for Scalable Press products
+  // Add remaining color variant images for Scalable Press products
   if (product.vendor === 'scalablepress' && product.pricing_data?.colors) {
     product.pricing_data.colors.forEach((color: any) => {
       if (color.images && Array.isArray(color.images)) {
@@ -244,6 +259,14 @@ export default function ProductDetailNew() {
       }
     });
   }
+
+  // Handle color change from ScalablePressConfigurator
+  const handleScalablePressColorChange = (color: { name: string; images?: any[] }) => {
+    if (color.images && color.images.length > 0) {
+      setSelectedColorImages(color.images);
+      setGallerySelectedIndex(0); // Reset to first image of new color
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-background text-foreground">
@@ -324,6 +347,7 @@ export default function ProductDetailNew() {
                   images={galleryImages}
                   alt={product.name}
                   onError={() => setImageError(true)}
+                  selectedIndex={gallerySelectedIndex}
                 />
               ) : (
                 <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border">
@@ -412,6 +436,7 @@ export default function ProductDetailNew() {
                     pricingData={product.pricing_data}
                     onPriceChange={setConfiguredPriceCents}
                     onConfigChange={setProductConfig}
+                    onColorChange={handleScalablePressColorChange}
                   />
                 </div>
               )}

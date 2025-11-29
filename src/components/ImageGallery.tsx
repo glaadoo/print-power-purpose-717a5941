@@ -9,10 +9,18 @@ interface ImageGalleryProps {
   images: Array<{ url: string; label?: string }>;
   alt: string;
   onError?: () => void;
+  selectedIndex?: number;
 }
 
-export default function ImageGallery({ images, alt, onError }: ImageGalleryProps) {
+export default function ImageGallery({ images, alt, onError, selectedIndex }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Sync with external selectedIndex when it changes
+  useEffect(() => {
+    if (selectedIndex !== undefined && selectedIndex >= 0 && selectedIndex < images.length) {
+      setCurrentIndex(selectedIndex);
+    }
+  }, [selectedIndex, images.length]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
