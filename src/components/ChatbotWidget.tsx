@@ -42,7 +42,7 @@ export default function ChatbotWidget() {
       >
         <div className="relative bg-white rounded-lg px-2 py-1 shadow-md border border-amber-200">
           <span className="text-xs font-bold text-amber-600 whitespace-nowrap">
-            Woof! 🐾
+            Woof, woof! 🐾
           </span>
           {/* Speech bubble tail */}
           <div className="absolute -bottom-2 right-3 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-white" />
