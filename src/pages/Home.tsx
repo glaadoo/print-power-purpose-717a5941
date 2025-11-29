@@ -8,7 +8,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
-import kenzieAnimated from "@/assets/kenzie-mascot-transparent.png";
+import kenzieAnimated from "@/assets/kenzie-clean-transparent.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -293,7 +293,7 @@ export default function Home() {
                 <img
                   src={kenzieAnimated}
                   alt="Kenzie - Your friendly guide"
-                  className="w-56 h-56 sm:w-72 sm:h-72 object-contain drop-shadow-lg mix-blend-multiply"
+                  className="w-56 h-56 sm:w-72 sm:h-72 object-contain drop-shadow-lg"
                 />
               </div>
 
