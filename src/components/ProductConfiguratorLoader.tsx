@@ -42,15 +42,19 @@ export default function ProductConfiguratorLoader({
     
     setFetchingRef(true);
     
-    // Check sessionStorage cache first
-    const cacheKey = `product-options-${productId}`;
+    // Check sessionStorage cache first (v2 includes full metadata structure)
+    const cacheKey = `product-options-v2-${productId}`;
     const cached = sessionStorage.getItem(cacheKey);
+    
+    // Clear old v1 cache
+    sessionStorage.removeItem(`product-options-${productId}`);
+    
     if (cached) {
       try {
         const { data, timestamp } = JSON.parse(cached);
         // Cache valid for 1 hour
         if (Date.now() - timestamp < 60 * 60 * 1000) {
-          console.log('[ProductConfiguratorLoader] Using cached options');
+          console.log('[ProductConfiguratorLoader] Using cached options (v2)');
           setPricingOptions(data.pricingOptions);
           setProductData(data.product);
           setLoading(false);
