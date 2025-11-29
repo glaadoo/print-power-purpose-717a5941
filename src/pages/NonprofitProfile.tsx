@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, MapPin, Globe, DollarSign, Users, TrendingUp } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import UserDonationProgress from "@/components/UserDonationProgress";
 
 type Nonprofit = {
   id: string;
@@ -115,6 +116,9 @@ export default function NonprofitProfile() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Causes
         </Button>
+
+        {/* User Donation Progress */}
+        <UserDonationProgress variant="dark" className="mb-6" />
 
         {/* Header Section */}
         <GlassCard className="mb-6">
