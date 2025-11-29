@@ -288,9 +288,9 @@ export default function Home() {
             </div>
 
             {/* Donor Stories Card */}
-            {featuredVideos.length > 0 && (
-              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Milestone Donor Stories</h2>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Milestone Donor Stories</h2>
+              {featuredVideos.length > 0 ? (
                 <div className="relative">
                   <Carousel
                     opts={{
@@ -335,8 +335,17 @@ export default function Home() {
                     Auto-plays every 8 seconds • Click video to pause
                   </p>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col items-center justify-center aspect-video bg-blue-50 rounded-lg border-2 border-dashed border-blue-200">
+                  <p className="text-gray-600 text-center mb-2">
+                    No donor stories yet
+                  </p>
+                  <p className="text-sm text-gray-500 text-center">
+                    Upload videos in the admin panel to showcase donor stories
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
