@@ -8,6 +8,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
+import kenzieAnimated from "@/assets/kenzie-animated.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -246,72 +247,92 @@ export default function Home() {
       </section>
 
       {/* Welcome Section with Animated Kenzie */}
-      <section className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-16 overflow-hidden">
-        {/* Subtle background decorations */}
+      <section className="relative bg-gradient-to-b from-white via-amber-50/30 to-white py-20 overflow-hidden">
+        {/* Subtle background dots */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-200/30 rounded-full blur-2xl" />
-          <div className="absolute bottom-10 right-10 w-32 h-32 bg-pink-200/30 rounded-full blur-2xl" />
-          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-blue-200/30 rounded-full blur-xl" />
+          <div className="absolute top-20 right-20 w-2 h-2 bg-amber-300 rounded-full opacity-60" />
+          <div className="absolute top-40 left-1/4 w-1.5 h-1.5 bg-orange-300 rounded-full opacity-50" />
+          <div className="absolute bottom-32 right-1/3 w-2 h-2 bg-yellow-400 rounded-full opacity-40" />
         </div>
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-            {/* Animated Kenzie */}
-            <div className="relative flex-shrink-0">
-              {/* Floating hearts */}
-              <div className="absolute -top-4 -right-2 text-2xl animate-heart-float" style={{ animationDelay: '0s' }}>💛</div>
-              <div className="absolute top-0 -left-4 text-xl animate-heart-float" style={{ animationDelay: '0.7s' }}>💙</div>
-              <div className="absolute -bottom-2 right-0 text-lg animate-heart-float" style={{ animationDelay: '1.4s' }}>💜</div>
-              
-              {/* Kenzie with animations */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col items-center">
+            {/* Animated Kenzie Container */}
+            <div className="relative mb-8">
+              {/* Speech Bubble */}
+              <div className="absolute -top-4 right-0 sm:right-8 z-20">
+                <div className="bg-amber-100 border border-amber-200 rounded-2xl px-4 py-2 shadow-sm animate-float">
+                  <span className="text-gray-800 font-medium text-sm sm:text-base">Woof woof! 🐾</span>
+                </div>
+                {/* Speech bubble tail */}
+                <div className="absolute -bottom-2 left-8 w-4 h-4 bg-amber-100 border-l border-b border-amber-200 transform rotate-45" />
+              </div>
+
+              {/* Butterflies */}
+              <div className="absolute -top-8 left-4 text-xl animate-butterfly-orbit" style={{ animationDuration: '4s' }}>🦋</div>
+              <div className="absolute top-12 -left-12 text-lg animate-butterfly-orbit" style={{ animationDuration: '5s', animationDelay: '1s' }}>🦋</div>
+              <div className="absolute -top-4 -right-8 text-xl animate-butterfly-orbit" style={{ animationDuration: '4.5s', animationDelay: '0.5s' }}>🦋</div>
+              <div className="absolute bottom-16 -right-10 text-lg animate-butterfly-orbit" style={{ animationDuration: '5.5s', animationDelay: '2s' }}>🦋</div>
+              <div className="absolute bottom-4 -left-8 text-base animate-butterfly-orbit" style={{ animationDuration: '4s', animationDelay: '1.5s' }}>🦋</div>
+
+              {/* Floating Hearts */}
+              <div className="absolute -top-6 left-12 text-orange-400 text-xl animate-heart-float" style={{ animationDelay: '0s' }}>🧡</div>
+              <div className="absolute top-8 -left-6 text-blue-400 text-lg animate-heart-float" style={{ animationDelay: '0.5s' }}>💙</div>
+              <div className="absolute top-4 right-16 text-yellow-400 text-xl animate-heart-float" style={{ animationDelay: '1s' }}>💛</div>
+              <div className="absolute bottom-20 -right-4 text-orange-400 text-lg animate-heart-float" style={{ animationDelay: '1.5s' }}>🧡</div>
+              <div className="absolute bottom-8 left-4 text-yellow-400 text-base animate-heart-float" style={{ animationDelay: '2s' }}>💛</div>
+
+              {/* Sparkles */}
+              <div className="absolute -top-2 left-20 text-amber-400 animate-sparkle-tail" style={{ animationDelay: '0s' }}>✨</div>
+              <div className="absolute top-16 -right-6 text-yellow-300 animate-sparkle-tail" style={{ animationDelay: '0.3s' }}>✨</div>
+              <div className="absolute bottom-24 -left-4 text-amber-300 animate-sparkle-tail" style={{ animationDelay: '0.6s' }}>✨</div>
+              <div className="absolute bottom-12 right-8 text-yellow-400 animate-sparkle-tail" style={{ animationDelay: '0.9s' }}>✨</div>
+
+              {/* Kenzie with bounce animation */}
               <div className="relative animate-gentle-bounce">
                 <img
-                  src={kenzieMascot}
+                  src={kenzieAnimated}
                   alt="Kenzie - Your friendly guide"
-                  className="w-40 h-40 sm:w-52 sm:h-52 object-contain drop-shadow-xl"
+                  className="w-56 h-56 sm:w-72 sm:h-72 object-contain drop-shadow-lg"
                 />
-                {/* Sparkle effects */}
-                <div className="absolute -top-2 right-4 text-yellow-400 animate-sparkle-tail" style={{ animationDelay: '0s' }}>✨</div>
-                <div className="absolute top-8 -right-2 text-yellow-300 animate-sparkle-tail" style={{ animationDelay: '0.3s' }}>✨</div>
-                <div className="absolute bottom-12 -left-4 text-yellow-400 animate-sparkle-tail" style={{ animationDelay: '0.6s' }}>✨</div>
               </div>
-              
-              {/* Paw prints */}
-              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3">
-                <span className="text-amber-300/60 text-xl animate-paw-appear" style={{ animationDelay: '0s' }}>🐾</span>
-                <span className="text-amber-300/60 text-xl animate-paw-appear" style={{ animationDelay: '0.4s' }}>🐾</span>
-                <span className="text-amber-300/60 text-xl animate-paw-appear" style={{ animationDelay: '0.8s' }}>🐾</span>
+
+              {/* Paw prints at bottom */}
+              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
+                <span className="text-amber-300/70 text-lg animate-paw-appear" style={{ animationDelay: '0s' }}>🐾</span>
+                <span className="text-amber-300/70 text-lg animate-paw-appear" style={{ animationDelay: '0.4s' }}>🐾</span>
+                <span className="text-amber-300/70 text-lg animate-paw-appear" style={{ animationDelay: '0.8s' }}>🐾</span>
               </div>
             </div>
 
             {/* Welcome Message */}
-            <div className="text-center lg:text-left flex-1">
+            <div className="text-center max-w-2xl">
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">KenzieCare!</span>
+                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">KenzieCare!</span>
               </h2>
               <p className="text-lg sm:text-xl text-gray-700 mb-3 font-medium">
                 Where every small donation creates a big impact.
               </p>
-              <p className="text-base text-gray-600 mb-8 max-w-xl">
+              <p className="text-base text-gray-600 mb-8">
                 We connect generous people with meaningful causes and help schools, nonprofits, and communities achieve their goals—one donation at a time.
               </p>
 
               {/* Cause Icons */}
-              <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-100">
-                  <span className="text-2xl">🏫</span>
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <span className="text-xl">🏫</span>
                   <span className="text-sm font-medium text-gray-700">Schools</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-100">
-                  <span className="text-2xl">🏠</span>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <span className="text-xl">🏠</span>
                   <span className="text-sm font-medium text-gray-700">Shelters</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-100">
-                  <span className="text-2xl">💚</span>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <span className="text-xl">💚</span>
                   <span className="text-sm font-medium text-gray-700">Nonprofits</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-100">
-                  <span className="text-2xl">🌍</span>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <span className="text-xl">🌍</span>
                   <span className="text-sm font-medium text-gray-700">Communities</span>
                 </div>
               </div>
@@ -322,7 +343,7 @@ export default function Home() {
                   localStorage.setItem("ppp_access", "guest");
                   nav("/select/nonprofit");
                 }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg"
               >
                 Start Exploring
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
