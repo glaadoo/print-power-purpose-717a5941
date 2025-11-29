@@ -217,7 +217,7 @@ export default function VistaprintNav() {
                 Contact
               </Link>
               
-              {/* Donation Profile - Only for authenticated users */}
+              {/* My Impact - Only for authenticated users */}
               {isAuthenticated && (
                 <Link 
                   to="/donor-profile" 
@@ -228,7 +228,7 @@ export default function VistaprintNav() {
                   }`}
                 >
                   <Trophy className="w-4 h-4 text-amber-500" />
-                  Donation Profile
+                  My Impact
                   {unseenMilestones > 0 && (
                     <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
                       {unseenMilestones}
@@ -355,7 +355,7 @@ export default function VistaprintNav() {
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                       >
                         <Trophy className="w-4 h-4 text-amber-500" />
-                        Donor Profile
+                        My Impact
                         {unseenMilestones > 0 && (
                           <span className="ml-auto bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
                             {unseenMilestones}
