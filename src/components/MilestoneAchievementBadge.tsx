@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Download, Share2, Twitter, Facebook, Linkedin, Copy, Award } from "lucide-react";
+import { Download, Share2, Twitter, Facebook, Linkedin, Copy, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -69,6 +69,34 @@ export default function MilestoneAchievementBadge({
   const shareOnLinkedIn = () => {
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
     window.open(url, "_blank", "width=600,height=400");
+  };
+
+  const shareOnInstagram = async () => {
+    // Instagram doesn't have a web share API, so we download the badge and instruct user
+    if (!badgeRef.current) return;
+    
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(badgeRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+      });
+      
+      const link = document.createElement("a");
+      link.download = `ppp-${tier.id}-milestone-badge.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      
+      toast.success("Badge downloaded! Share it on Instagram Stories or your feed.", {
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Error downloading badge:", error);
+      toast.error("Failed to download badge for Instagram");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const copyToClipboard = async () => {
@@ -169,7 +197,8 @@ export default function MilestoneAchievementBadge({
               variant="outline"
               size="icon"
               onClick={shareOnTwitter}
-              className="hover:bg-blue-500/10 hover:border-blue-500/50 hover:text-blue-500"
+              className="hover:bg-sky-500/10 hover:border-sky-500/50 hover:text-sky-500"
+              title="Share on X (Twitter)"
             >
               <Twitter className="h-4 w-4" />
             </Button>
@@ -178,14 +207,26 @@ export default function MilestoneAchievementBadge({
               size="icon"
               onClick={shareOnFacebook}
               className="hover:bg-blue-600/10 hover:border-blue-600/50 hover:text-blue-600"
+              title="Share on Facebook"
             >
               <Facebook className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="icon"
+              onClick={shareOnInstagram}
+              disabled={isDownloading}
+              className="hover:bg-pink-500/10 hover:border-pink-500/50 hover:text-pink-500"
+              title="Download for Instagram"
+            >
+              <Instagram className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
               onClick={shareOnLinkedIn}
               className="hover:bg-blue-700/10 hover:border-blue-700/50 hover:text-blue-700"
+              title="Share on LinkedIn"
             >
               <Linkedin className="h-4 w-4" />
             </Button>
@@ -194,6 +235,7 @@ export default function MilestoneAchievementBadge({
               size="icon"
               onClick={copyToClipboard}
               className="hover:bg-gray-500/10 hover:border-gray-500/50"
+              title="Copy to clipboard"
             >
               <Copy className="h-4 w-4" />
             </Button>
