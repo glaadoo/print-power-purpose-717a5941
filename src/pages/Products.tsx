@@ -411,6 +411,9 @@ export default function Products() {
     // Exclude Canada products
     filtered = filtered.filter(product => !product.name.toLowerCase().includes('canada'));
     
+    // Show only Scalable Press products
+    filtered = filtered.filter(product => product.vendor === 'scalablepress');
+    
     // Apply rating filter
     if (ratingFilter === "4plus") {
       filtered = filtered.filter(product => {
