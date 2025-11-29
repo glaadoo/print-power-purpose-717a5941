@@ -58,6 +58,7 @@ export default function ProductDetailNew() {
   const [artworkFileName, setArtworkFileName] = useState<string>("");
   const [selectedColorImages, setSelectedColorImages] = useState<any[]>([]);
   const [gallerySelectedIndex, setGallerySelectedIndex] = useState(0);
+  const [selectedColorName, setSelectedColorName] = useState<string>("");
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -262,6 +263,7 @@ export default function ProductDetailNew() {
 
   // Handle color change from ScalablePressConfigurator
   const handleScalablePressColorChange = (color: { name: string; images?: any[] }) => {
+    setSelectedColorName(color.name);
     if (color.images && color.images.length > 0) {
       setSelectedColorImages(color.images);
       setGallerySelectedIndex(0); // Reset to first image of new color
@@ -348,6 +350,7 @@ export default function ProductDetailNew() {
                   alt={product.name}
                   onError={() => setImageError(true)}
                   selectedIndex={gallerySelectedIndex}
+                  colorLabel={product.vendor === 'scalablepress' && selectedColorName ? selectedColorName : undefined}
                 />
               ) : (
                 <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border">

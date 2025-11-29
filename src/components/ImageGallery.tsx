@@ -10,9 +10,10 @@ interface ImageGalleryProps {
   alt: string;
   onError?: () => void;
   selectedIndex?: number;
+  colorLabel?: string;
 }
 
-export default function ImageGallery({ images, alt, onError, selectedIndex }: ImageGalleryProps) {
+export default function ImageGallery({ images, alt, onError, selectedIndex, colorLabel }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Sync with external selectedIndex when it changes
@@ -151,6 +152,13 @@ export default function ImageGallery({ images, alt, onError, selectedIndex }: Im
           <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <ZoomIn className="w-5 h-5 text-foreground" />
           </div>
+
+          {/* Selected Color Label */}
+          {colorLabel && (
+            <div className="absolute top-4 right-4 bg-primary text-primary-foreground rounded-full px-4 py-1.5 shadow-lg">
+              <p className="text-sm font-semibold">{colorLabel}</p>
+            </div>
+          )}
 
           {/* Hover Hint */}
           <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
