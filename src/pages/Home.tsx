@@ -8,7 +8,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
-import kenzieAnimated from "@/assets/kenzie-standing.png";
+import kenzieAnimated from "@/assets/kenzie-sitting-happy.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -284,7 +284,7 @@ export default function Home() {
                 <img
                   src={kenzieAnimated}
                   alt="Kenzie the puppy"
-                  className="w-72 h-72 md:w-96 md:h-96 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite]"
+                  className="w-72 h-72 md:w-96 md:h-96 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite] mix-blend-multiply"
                 />
                 
                 {/* Floating hearts */}
@@ -334,13 +334,13 @@ export default function Home() {
               </div>
               
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">KenzieCare!</span>
+                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">Print Power Purpose</span>
               </h2>
               <p className="text-lg text-gray-700 mb-2 font-medium">
-                Where every small donation creates a big impact.
+                Where every donation helps create meaningful change.
               </p>
               <p className="text-gray-600 mb-6 max-w-md mx-auto md:mx-0">
-                We connect generous people with meaningful causes and help schools, nonprofits, and communities achieve their goals—one donation at a time.
+                We connect generous people with impactful nonprofits and help communities achieve their goals — one contribution at a time.
               </p>
 
               {/* Cause Icons */}
@@ -348,10 +348,6 @@ export default function Home() {
                 <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                   <span className="text-xl">🏫</span>
                   <span className="text-sm font-medium text-gray-700">Schools</span>
-                </div>
-                <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-                  <span className="text-xl">🏠</span>
-                  <span className="text-sm font-medium text-gray-700">Shelters</span>
                 </div>
                 <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                   <span className="text-xl">💚</span>
