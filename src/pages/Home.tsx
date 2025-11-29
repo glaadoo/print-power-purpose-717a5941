@@ -366,7 +366,7 @@ export default function Home() {
                     localStorage.setItem("ppp_access", "guest");
                     nav("/select/nonprofit");
                   }}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-lg"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-lg animate-[button-glow_2s_ease-in-out_infinite]"
                 >
                   Start Exploring
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

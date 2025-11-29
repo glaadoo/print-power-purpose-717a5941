@@ -136,6 +136,16 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-8px)" },
         },
+        "button-glow": {
+          "0%, 100%": { 
+            boxShadow: "0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(234, 179, 8, 0.3), 0 0 60px rgba(168, 85, 247, 0.2)",
+            transform: "scale(1)"
+          },
+          "50%": { 
+            boxShadow: "0 0 30px rgba(239, 68, 68, 0.6), 0 0 50px rgba(234, 179, 8, 0.5), 0 0 70px rgba(168, 85, 247, 0.4)",
+            transform: "scale(1.02)"
+          },
+        },
         "paw-walk": {
           "0%": { opacity: "0", transform: "scale(0.3) translateY(10px)" },
           "15%": { opacity: "0.7", transform: "scale(1) translateY(0)" },
