@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
-import { Target, Sparkles, PartyPopper } from "lucide-react";
+import { Target, Sparkles, PartyPopper, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import MilestoneAchievementBadge from "./MilestoneAchievementBadge";
-
-const MILESTONE_CENTS = 77700; // $777
+import {
+  MILESTONE_TIERS,
+  getAchievedTiers,
+  getProgressToNextTier,
+  formatCents,
+  MilestoneTier,
+} from "@/lib/milestone-tiers";
 
 interface UserDonationProgressProps {
   variant?: "light" | "dark";
@@ -23,7 +28,6 @@ export default function UserDonationProgress({
   useEffect(() => {
     async function fetchUserDonations() {
       try {
-        // Get current user session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user?.email) {
@@ -33,7 +37,6 @@ export default function UserDonationProgress({
 
         setUserEmail(session.user.email);
 
-        // Fetch all donations for this user
         const { data: donations, error } = await supabase
           .from("donations")
           .select("amount_cents")
@@ -52,7 +55,6 @@ export default function UserDonationProgress({
 
     fetchUserDonations();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       fetchUserDonations();
     });
@@ -60,72 +62,83 @@ export default function UserDonationProgress({
     return () => subscription.unsubscribe();
   }, []);
 
-  // Don't render if not authenticated or still loading
   if (loading || !userEmail) {
     return null;
   }
 
-  const percentage = Math.min(100, Math.round((totalDonatedCents / MILESTONE_CENTS) * 100));
-  const totalDonatedUsd = (totalDonatedCents / 100).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-  const milestoneUsd = (MILESTONE_CENTS / 100).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-  const remainingCents = Math.max(0, MILESTONE_CENTS - totalDonatedCents);
-  const remainingUsd = (remainingCents / 100).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-
+  const achievedTiers = getAchievedTiers(totalDonatedCents);
+  const { nextTier, percentage, remainingCents } = getProgressToNextTier(totalDonatedCents);
+  const totalDonatedUsd = formatCents(totalDonatedCents);
   const isLight = variant === "light";
+  const allTiersCompleted = achievedTiers.length === MILESTONE_TIERS.length;
 
   return (
     <div className={`rounded-xl p-6 ${isLight ? "bg-gradient-to-br from-blue-50 to-white border border-blue-100" : "bg-white/10 border border-white/20"} ${className}`}>
+      {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Target className={`h-5 w-5 ${isLight ? "text-blue-600" : "text-blue-400"}`} />
         <h3 className={`font-semibold ${isLight ? "text-gray-900" : "text-white"}`}>
-          Your Donation Milestone
+          Your Giving Journey
         </h3>
       </div>
 
+      {/* Total Donated */}
       <div className="mb-4">
         <div className="flex justify-between items-baseline mb-2">
           <span className={`text-3xl font-bold ${isLight ? "text-blue-600" : "text-white"}`}>
             {totalDonatedUsd}
           </span>
           <span className={`text-sm ${isLight ? "text-gray-600" : "text-white/70"}`}>
-            of {milestoneUsd} goal
+            total donated
           </span>
-        </div>
-        
-        <Progress 
-          value={percentage} 
-          className={`h-3 ${isLight ? "bg-blue-100" : "bg-white/20"}`}
-        />
-        
-        <div className="flex justify-between items-center mt-2">
-          <span className={`text-sm font-medium ${isLight ? "text-blue-600" : "text-blue-400"}`}>
-            {percentage}% complete
-          </span>
-          {percentage < 100 && (
-            <span className={`text-xs ${isLight ? "text-gray-500" : "text-white/60"}`}>
-              {remainingUsd} to go
-            </span>
-          )}
         </div>
       </div>
 
+      {/* Achieved Badges */}
+      {achievedTiers.length > 0 && (
+        <div className="mb-4">
+          <p className={`text-xs font-medium mb-2 ${isLight ? "text-gray-500" : "text-white/60"}`}>
+            Milestones Achieved
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {achievedTiers.map((tier) => (
+              <MilestoneAchievementBadge
+                key={tier.id}
+                tier={tier}
+                totalDonated={totalDonatedUsd}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Progress to Next Tier */}
+      {nextTier && (
+        <div className={`p-3 rounded-lg ${isLight ? "bg-gray-50" : "bg-white/5"} mb-4`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{nextTier.icon}</span>
+              <span className={`text-sm font-medium ${isLight ? "text-gray-700" : "text-white/90"}`}>
+                Next: {nextTier.name}
+              </span>
+            </div>
+            <span className={`text-xs ${isLight ? "text-gray-500" : "text-white/60"}`}>
+              {formatCents(remainingCents)} to go
+            </span>
+          </div>
+          <Progress 
+            value={percentage} 
+            className={`h-2 ${isLight ? "bg-gray-200" : "bg-white/20"}`}
+          />
+          <p className={`text-xs mt-1 ${isLight ? "text-gray-500" : "text-white/60"}`}>
+            {percentage}% to {formatCents(nextTier.amountCents)}
+          </p>
+        </div>
+      )}
+
+      {/* All Tiers Completed Celebration */}
       <AnimatePresence>
-        {percentage >= 100 ? (
+        {allTiersCompleted && (
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -141,66 +154,45 @@ export default function UserDonationProgress({
                     i % 4 === 1 ? "bg-pink-400" : 
                     i % 4 === 2 ? "bg-blue-400" : "bg-green-400"
                   }`}
-                  initial={{ 
-                    x: "50%", 
-                    y: "50%", 
-                    scale: 0,
-                    opacity: 1 
-                  }}
+                  initial={{ x: "50%", y: "50%", scale: 0, opacity: 1 }}
                   animate={{ 
                     x: `${Math.random() * 100}%`,
                     y: `${Math.random() * 100}%`,
                     scale: [0, 1, 0.5],
                     opacity: [1, 1, 0],
                   }}
-                  transition={{ 
-                    duration: 2,
-                    delay: i * 0.1,
-                    repeat: Infinity,
-                    repeatDelay: 3
-                  }}
+                  transition={{ duration: 2, delay: i * 0.1, repeat: Infinity, repeatDelay: 3 }}
                 />
               ))}
             </div>
             
             <div className={`flex items-center gap-3 p-4 rounded-xl ${
               isLight 
-                ? "bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border border-green-200" 
-                : "bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-teal-500/20 border border-green-500/30"
+                ? "bg-gradient-to-r from-purple-50 via-pink-50 to-cyan-50 border border-purple-200" 
+                : "bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-cyan-500/20 border border-purple-500/30"
             }`}>
               <motion.div
-                animate={{ 
-                  rotate: [0, -10, 10, -10, 0],
-                  scale: [1, 1.1, 1]
-                }}
-                transition={{ 
-                  duration: 0.6,
-                  repeat: Infinity,
-                  repeatDelay: 2
-                }}
+                animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
               >
-                <PartyPopper className={`h-6 w-6 ${isLight ? "text-green-600" : "text-green-400"}`} />
+                <PartyPopper className={`h-6 w-6 ${isLight ? "text-purple-600" : "text-purple-400"}`} />
               </motion.div>
               
               <div className="flex-1">
                 <motion.p 
-                  className={`font-semibold ${isLight ? "text-green-700" : "text-green-300"}`}
+                  className={`font-semibold ${isLight ? "text-purple-700" : "text-purple-300"}`}
                   animate={{ scale: [1, 1.02, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  🎉 Congratulations! You've reached your $777 milestone!
+                  👑 Legendary! All milestones completed!
                 </motion.p>
-                <p className={`text-xs mt-1 ${isLight ? "text-green-600" : "text-green-400/80"}`}>
-                  Thank you for your incredible generosity!
+                <p className={`text-xs mt-1 ${isLight ? "text-purple-600" : "text-purple-400/80"}`}>
+                  You are a true giving champion!
                 </p>
-                <MilestoneAchievementBadge totalDonated={totalDonatedUsd} />
               </div>
               
               <motion.div
-                animate={{ 
-                  rotate: 360,
-                  scale: [1, 1.2, 1]
-                }}
+                animate={{ rotate: 360, scale: [1, 1.2, 1] }}
                 transition={{ 
                   rotate: { duration: 3, repeat: Infinity, ease: "linear" },
                   scale: { duration: 1.5, repeat: Infinity }
@@ -210,12 +202,37 @@ export default function UserDonationProgress({
               </motion.div>
             </div>
           </motion.div>
-        ) : (
-          <p className={`text-sm ${isLight ? "text-gray-600" : "text-white/70"}`}>
-            Keep donating to reach your {milestoneUsd} milestone and unlock special recognition!
-          </p>
         )}
       </AnimatePresence>
+
+      {/* Milestone Tiers Preview */}
+      <div className="mt-4 pt-4 border-t border-gray-200/50">
+        <p className={`text-xs font-medium mb-3 ${isLight ? "text-gray-500" : "text-white/60"}`}>
+          All Milestone Tiers
+        </p>
+        <div className="grid grid-cols-5 gap-1">
+          {MILESTONE_TIERS.map((tier) => {
+            const isAchieved = totalDonatedCents >= tier.amountCents;
+            return (
+              <div
+                key={tier.id}
+                className={`flex flex-col items-center p-2 rounded-lg transition-all ${
+                  isAchieved 
+                    ? `${tier.colors.bg} ${tier.colors.border} border` 
+                    : isLight ? "bg-gray-100 opacity-50" : "bg-white/5 opacity-50"
+                }`}
+              >
+                <span className={`text-xl ${!isAchieved && "grayscale"}`}>{tier.icon}</span>
+                <span className={`text-[10px] font-medium mt-1 ${
+                  isAchieved ? tier.colors.text : isLight ? "text-gray-400" : "text-white/40"
+                }`}>
+                  {formatCents(tier.amountCents)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
