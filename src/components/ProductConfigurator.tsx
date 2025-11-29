@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
 import { invokeWithRetry } from "@/lib/api-retry";
@@ -60,8 +61,10 @@ export function ProductConfigurator({
   const [failedOptionIds, setFailedOptionIds] = useState<Set<number>>(new Set()); // Track options that don't have valid prices
   const [validatingOptions, setValidatingOptions] = useState(false); // Track pre-validation state
   const [preValidationComplete, setPreValidationComplete] = useState(false); // Track if pre-validation is done
+  const [customQuantity, setCustomQuantity] = useState<string>("100"); // For variable_qty products
   const lastChangedOptionRef = useRef<{ group: string; optionId: number } | null>(null);
   const preValidationRunRef = useRef(false); // Prevent multiple pre-validation runs
+  const quantityDebounceRef = useRef<NodeJS.Timeout | null>(null); // Debounce quantity input
   
   // Use refs to store callbacks to avoid dependency issues causing stale closures
   const onPriceChangeRef = useRef(onPriceChange);
@@ -104,6 +107,18 @@ export function ProductConfigurator({
     hasPricingData: !!pricingData,
     pricingDataLength: Array.isArray(pricingData) ? pricingData.length : 'not-array'
   });
+
+  // Check if this is a variable quantity product
+  const isVariableQty = useMemo(() => {
+    if (!pricingData || !Array.isArray(pricingData) || !pricingData[2]) {
+      return false;
+    }
+    const metadata = pricingData[2];
+    if (Array.isArray(metadata) && metadata.length > 0) {
+      return metadata.some((m: any) => m?.metadata === 'variable_qty');
+    }
+    return false;
+  }, [pricingData]);
 
   // Note: pricingData[1] contains hash-based combinations, not variant key mappings
   // We cannot pre-filter options from this data structure
@@ -316,6 +331,34 @@ export function ProductConfigurator({
     }
   }, [optionGroups]);
 
+  // Report customQuantity to parent config for variable qty products
+  useEffect(() => {
+    if (!isVariableQty || !customQuantity) return;
+    
+    // Find the qty group name
+    const qtyGroup = optionGroups.find(g => 
+      g.group.toLowerCase().includes('qty') || 
+      g.group.toLowerCase().includes('quantity')
+    );
+    
+    if (qtyGroup) {
+      // Build full config with custom quantity
+      const configUpdate = Object.fromEntries(
+        optionGroups.map(group => {
+          const isQty = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
+          if (isQty) {
+            return [group.group, customQuantity];
+          }
+          const optId = selectedOptions[group.group];
+          const name = group.options.find(o => o.id === optId)?.name || String(optId);
+          return [group.group, name];
+        })
+      );
+      console.log('[ProductConfigurator] Config update with custom qty:', configUpdate);
+      onConfigChangeRef.current(configUpdate);
+    }
+  }, [isVariableQty, customQuantity, optionGroups, selectedOptions]);
+
   // Fetch price whenever selections change
   useEffect(() => {
     const optionIds = Object.values(selectedOptions);
@@ -325,7 +368,9 @@ export function ProductConfigurator({
       optionGroupsLength: optionGroups.length,
       optionIds,
       selectedOptions,
-      vendorProductId
+      vendorProductId,
+      isVariableQty,
+      customQuantity
     });
     
     // CRITICAL: Validate vendorProductId before any API calls
@@ -347,8 +392,14 @@ export function ProductConfigurator({
       return;
     }
     
-    // Only fetch if we have selections for all groups
-    if (optionIds.length !== optionGroups.length) {
+    // For variable qty products, we don't need qty option selected
+    const nonQtyOptionCount = optionGroups.filter(g => {
+      const isQty = g.group.toLowerCase().includes('qty') || g.group.toLowerCase().includes('quantity');
+      return !isQty || !isVariableQty;
+    }).length;
+    
+    // Only fetch if we have selections for all required groups
+    if (!isVariableQty && optionIds.length !== optionGroups.length) {
       console.log('[ProductConfigurator] Skipping price fetch: not all groups selected');
       return;
     }
@@ -413,6 +464,97 @@ export function ProductConfigurator({
       // PRIORITY 3: Fetch from API
       setFetchingPrice(true);
       setPriceError(null);
+      
+      // For variable quantity products, use POST with productOptions
+      // For fixed quantity products, use PRICEBYKEY
+      const usePost = isVariableQty && customQuantity;
+      
+      if (usePost) {
+        // Build productOptions array: all non-qty option IDs + custom quantity
+        const productOptions: (number | string)[] = [];
+        optionGroups.forEach(group => {
+          const isQty = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
+          if (isQty) {
+            // Add the custom quantity as a number
+            productOptions.push(parseInt(customQuantity) || 100);
+          } else {
+            // Add the selected option ID
+            const optId = selectedOptions[group.group];
+            if (optId) productOptions.push(optId);
+          }
+        });
+        
+        console.log('[ProductConfigurator] Calling sinalite-price with POST (variable qty)...');
+        console.log('[ProductConfigurator] Request body:', {
+          productId: vendorProductId,
+          storeCode: storeCode,
+          productOptions: productOptions,
+          method: 'POST'
+        });
+        
+        try {
+          const startTime = Date.now();
+          const { data, error } = await invokeWithRetry(
+            supabase,
+            'sinalite-price',
+            {
+              body: {
+                productId: vendorProductId,
+                storeCode: storeCode,
+                productOptions: productOptions,
+                method: 'POST'
+              },
+            },
+            {
+              maxAttempts: 2,
+              initialDelayMs: 500,
+              shouldRetry: (err: any) => err?.status === 503 || err?.status >= 500
+            }
+          );
+          
+          const endTime = Date.now();
+          console.log('[ProductConfigurator] POST completed in', endTime - startTime, 'ms');
+          console.log('[ProductConfigurator] Response:', data);
+          
+          if (error) {
+            console.error('[ProductConfigurator] POST error:', error);
+            setPriceError('Error loading price. Please try again.');
+            setFetchingPrice(false);
+            return;
+          }
+          
+          // POST response may have different structure - check for price
+          let priceValue = null;
+          if (data && typeof data === 'object') {
+            if (data.price !== undefined) {
+              priceValue = parseFloat(data.price);
+            } else if (Array.isArray(data) && data[0]?.price !== undefined) {
+              priceValue = parseFloat(data[0].price);
+            } else if (data.total !== undefined) {
+              priceValue = parseFloat(data.total);
+            }
+          }
+          
+          if (priceValue && priceValue > 0) {
+            const priceCents = Math.round(priceValue * 100);
+            console.log('[ProductConfigurator] Variable qty price:', priceCents);
+            setPriceError(null);
+            onPriceChangeRef.current(priceCents);
+            setPriceCache(`${variantKey}-${customQuantity}`, priceCents);
+          } else {
+            console.warn('[ProductConfigurator] No price in POST response:', data);
+            setPriceError('Price unavailable for this quantity. Try a different amount.');
+          }
+          setFetchingPrice(false);
+          return;
+        } catch (err: any) {
+          console.error('[ProductConfigurator] POST exception:', err);
+          setPriceError('Error loading price. Please try again.');
+          setFetchingPrice(false);
+          return;
+        }
+      }
+      
       console.log('[ProductConfigurator] Calling sinalite-price edge function...');
       console.log('[ProductConfigurator] Request body:', {
         productId: vendorProductId,
@@ -563,7 +705,7 @@ export function ProductConfigurator({
     };
 
     fetchPrice();
-  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, productId, userInteracted]);
+  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, productId, userInteracted, isVariableQty, customQuantity]);
 
   const handleOptionChange = (group: string, optionId: string) => {
     console.log('[ProductConfigurator] handleOptionChange called:', { group, optionId });
@@ -673,6 +815,49 @@ export function ProductConfigurator({
         // Skip rendering if no valid options remain
         if (validOptions.length === 0) {
           return null;
+        }
+        
+        // Check if this is the quantity group and we have variable quantity
+        const isQtyGroup = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
+        
+        // For variable quantity products, show an input field for qty instead of select
+        if (isVariableQty && isQtyGroup) {
+          // Parse min/max from options (should be 1 and 1000000 for variable qty products)
+          const minOption = validOptions.find(opt => opt.name === "1");
+          const maxOption = validOptions.find(opt => parseInt(opt.name) > 1);
+          const minQty = minOption ? parseInt(minOption.name) : 1;
+          const maxQty = maxOption ? parseInt(maxOption.name) : 1000000;
+          
+          return (
+            <div key={group.group} className="space-y-2">
+              <label htmlFor={group.group} className="block text-foreground font-semibold text-sm mb-1">
+                {formatGroupName(group.group)} (Enter {minQty.toLocaleString()} - {maxQty.toLocaleString()})
+              </label>
+              <Input
+                id={group.group}
+                type="number"
+                min={minQty}
+                max={maxQty}
+                value={customQuantity}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setCustomQuantity(value);
+                  setUserInteracted(true);
+                  
+                  // Debounce the price fetch
+                  if (quantityDebounceRef.current) {
+                    clearTimeout(quantityDebounceRef.current);
+                  }
+                  quantityDebounceRef.current = setTimeout(() => {
+                    // Trigger price fetch by updating a dummy state or just rely on the useEffect
+                    setSelectedOptions(prev => ({ ...prev })); // Force re-render to trigger price fetch
+                  }, 800);
+                }}
+                className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40"
+                placeholder={`Enter quantity (${minQty.toLocaleString()} - ${maxQty.toLocaleString()})`}
+              />
+            </div>
+          );
         }
         
         return (
