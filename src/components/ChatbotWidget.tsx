@@ -32,22 +32,9 @@ export default function ChatbotWidget() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Chat with Kenzie bubble */}
-      <motion.button
-        onClick={handleClick}
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1, duration: 0.5 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="absolute bottom-20 right-0 bg-background/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-border whitespace-nowrap hover:bg-background transition-colors cursor-pointer"
-      >
-        <p className="text-sm font-medium text-foreground">Chat with Kenzie</p>
-      </motion.button>
-
-      {/* Woof speech bubble */}
+      {/* Woof speech bubble - positioned above and to the left */}
       <div 
-        className={`absolute -top-2 -left-4 z-30 transition-all duration-300 pointer-events-none ${
+        className={`absolute -top-10 -left-8 z-30 transition-all duration-300 pointer-events-none ${
           showWoof 
             ? 'opacity-100 translate-y-0 scale-100' 
             : 'opacity-0 translate-y-2 scale-90'
