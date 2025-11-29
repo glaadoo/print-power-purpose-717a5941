@@ -335,11 +335,15 @@ export default function Products() {
     return matches;
   }, [searchTerm, rows]);
 
-  // Handle suggestion selection
-  const handleSuggestionClick = (productName: string) => {
-    setSearchTerm(productName);
+  // Handle suggestion selection - navigate to product detail page
+  const handleSuggestionClick = (product: ProductRow) => {
     setShowSuggestions(false);
     setSuggestionIndex(-1);
+    
+    // Navigate to product detail page
+    const category = product.category?.toLowerCase().replace(/\s+/g, '-') || 'uncategorized';
+    const productSlug = product.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    navigate(`/products/${category}/${productSlug}`);
   };
 
   // Handle keyboard navigation in suggestions
@@ -356,7 +360,7 @@ export default function Products() {
       setSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
     } else if (e.key === 'Enter' && suggestionIndex >= 0) {
       e.preventDefault();
-      handleSuggestionClick(suggestions[suggestionIndex].name);
+      handleSuggestionClick(suggestions[suggestionIndex]);
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
       setSuggestionIndex(-1);
@@ -600,7 +604,7 @@ export default function Products() {
                     {suggestions.map((product, index) => (
                       <button
                         key={product.id}
-                        onClick={() => handleSuggestionClick(product.name)}
+                        onClick={() => handleSuggestionClick(product)}
                         className={cn(
                           "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0",
                           index === suggestionIndex && "bg-gray-50"
