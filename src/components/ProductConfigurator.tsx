@@ -460,12 +460,14 @@ export function ProductConfigurator({
       }
       
       // PRIORITY 2: Check global cache
+      // For variable qty products, cache key includes the custom quantity
       const cache = getPriceCache();
-      if (cache[variantKey]) {
-        console.log('[ProductConfigurator] Using cached price for:', variantKey);
+      const cacheKey = isVariableQty && customQuantity ? `${variantKey}-${customQuantity}` : variantKey;
+      if (cache[cacheKey]) {
+        console.log('[ProductConfigurator] Using cached price for:', cacheKey);
         setPriceError(null); // Clear any previous errors when using cached price
         setFetchingPrice(false);
-        onPriceChangeRef.current(cache[variantKey]);
+        onPriceChangeRef.current(cache[cacheKey]);
         return;
       }
       
