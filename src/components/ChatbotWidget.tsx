@@ -53,7 +53,7 @@ export default function ChatbotWidget() {
       {/* Kenzie dog button */}
       <motion.button
         onClick={handleClick}
-        className="w-24 h-24 rounded-full bg-white shadow-lg hover:shadow-2xl transition-all flex items-center justify-center overflow-hidden border-2 border-amber-200"
+        className="w-18 h-18 rounded-full bg-white shadow-lg hover:shadow-2xl transition-all flex items-center justify-center overflow-hidden border-2 border-amber-200"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         initial={{ scale: 0, opacity: 0 }}
@@ -77,7 +77,7 @@ export default function ChatbotWidget() {
         <img 
           src={kenziePuppy} 
           alt="Kenzie" 
-          className="w-20 h-20 object-contain"
+          className="w-14 h-14 object-contain"
         />
       </motion.button>
     </div>
