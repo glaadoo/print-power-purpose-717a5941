@@ -34,7 +34,7 @@ export default function ChatbotWidget() {
     <div className="fixed bottom-6 right-6 z-50">
       {/* Woof speech bubble - positioned above and to the left */}
       <div 
-        className={`absolute -top-10 -left-8 z-30 transition-all duration-300 pointer-events-none ${
+        className={`absolute -top-6 -left-2 z-30 transition-all duration-300 pointer-events-none ${
           showWoof 
             ? 'opacity-100 translate-y-0 scale-100' 
             : 'opacity-0 translate-y-2 scale-90'
