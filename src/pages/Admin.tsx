@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import {
   Trash2, KeyRound, RefreshCw, Download, Search, Upload,
   AlertCircle, CheckCircle, X, ArrowLeft, Check,
-  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity, FileText, CreditCard
+  Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity, FileText, CreditCard, Package
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import VideoBackground from "@/components/VideoBackground";
@@ -723,6 +723,12 @@ export default function Admin() {
                 <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
                   <Activity className="h-4 w-4" />
                   System Logs
+                </Button>
+              </Link>
+              <Link to="/admin/vendor-fulfillment">
+                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                  <Package className="h-4 w-4" />
+                  Vendor Orders
                 </Button>
               </Link>
             </div>
