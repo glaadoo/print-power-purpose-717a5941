@@ -3,7 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, CheckCircle, Mail, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Loader2, Download, CheckCircle, Mail, FileText, Truck, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -35,6 +38,11 @@ interface Order {
   vendor_exported_at: string | null;
   vendor_error_message: string | null;
   items: any[];
+  tracking_number: string | null;
+  tracking_url: string | null;
+  tracking_carrier: string | null;
+  shipping_status: string | null;
+  shipped_at: string | null;
 }
 
 export default function AdminVendorFulfillment() {
@@ -42,6 +50,13 @@ export default function AdminVendorFulfillment() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [trackingForm, setTrackingForm] = useState({
+    tracking_number: "",
+    tracking_url: "",
+    tracking_carrier: "",
+    shipping_status: "pending",
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -186,6 +201,47 @@ export default function AdminVendorFulfillment() {
     }
   }
 
+  function openTrackingDialog(order: Order) {
+    setEditingOrder(order);
+    setTrackingForm({
+      tracking_number: order.tracking_number || "",
+      tracking_url: order.tracking_url || "",
+      tracking_carrier: order.tracking_carrier || "",
+      shipping_status: order.shipping_status || "pending",
+    });
+  }
+
+  async function updateTracking() {
+    if (!editingOrder) return;
+
+    try {
+      // Call edge function to update tracking
+      const { data, error } = await supabase.functions.invoke('update-order-tracking', {
+        body: {
+          orderId: editingOrder.id,
+          ...trackingForm,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Tracking information updated and notification sent",
+      });
+
+      setEditingOrder(null);
+      loadOrders();
+    } catch (err) {
+      console.error("Error updating tracking:", err);
+      toast({
+        title: "Error",
+        description: "Failed to update tracking information",
+        variant: "destructive",
+      });
+    }
+  }
+
   function getStatusBadge(status: string | null) {
     const statusColors: Record<string, string> = {
       pending: "secondary",
@@ -314,7 +370,8 @@ export default function AdminVendorFulfillment() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Vendor</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Vendor Order ID</TableHead>
+                    <TableHead>Shipping</TableHead>
+                    <TableHead>Tracking</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Actions</TableHead>
@@ -332,10 +389,22 @@ export default function AdminVendorFulfillment() {
                       </TableCell>
                       <TableCell>{getStatusBadge(order.vendor_status)}</TableCell>
                       <TableCell>
-                        {order.vendor_order_id ? (
-                          <code className="text-xs bg-muted px-2 py-1 rounded">
-                            {order.vendor_order_id}
-                          </code>
+                        <Badge variant={order.shipping_status === 'delivered' ? 'default' : 'secondary'}>
+                          {order.shipping_status || 'pending'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {order.tracking_number ? (
+                          <div className="flex flex-col gap-1">
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {order.tracking_number}
+                            </code>
+                            {order.tracking_carrier && (
+                              <span className="text-xs text-muted-foreground">
+                                {order.tracking_carrier}
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           "—"
                         )}
@@ -347,29 +416,90 @@ export default function AdminVendorFulfillment() {
                         {new Date(order.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        {order.vendor_status === "pending_manual" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => markAsExported(order.id)}
-                          >
-                            Mark Exported
-                          </Button>
-                        )}
-                        {order.vendor_error_message && (
-                          <span
-                            className="text-xs text-destructive cursor-help"
-                            title={order.vendor_error_message}
-                          >
-                            View Error
-                          </span>
-                        )}
+                        <div className="flex gap-2">
+                          <Dialog open={editingOrder?.id === order.id} onOpenChange={(open) => !open && setEditingOrder(null)}>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openTrackingDialog(order)}
+                              >
+                                <Truck className="h-4 w-4 mr-1" />
+                                Tracking
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>Update Tracking Info</DialogTitle>
+                                <DialogDescription>
+                                  Order {order.order_number} - Customer will receive email notification
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <div>
+                                  <Label>Shipping Status</Label>
+                                  <Select
+                                    value={trackingForm.shipping_status}
+                                    onValueChange={(val) => setTrackingForm({ ...trackingForm, shipping_status: val })}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="pending">Pending</SelectItem>
+                                      <SelectItem value="shipped">Shipped</SelectItem>
+                                      <SelectItem value="in_transit">In Transit</SelectItem>
+                                      <SelectItem value="delivered">Delivered</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label>Tracking Number</Label>
+                                  <Input
+                                    value={trackingForm.tracking_number}
+                                    onChange={(e) => setTrackingForm({ ...trackingForm, tracking_number: e.target.value })}
+                                    placeholder="e.g., 1Z999AA10123456784"
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Tracking URL</Label>
+                                  <Input
+                                    value={trackingForm.tracking_url}
+                                    onChange={(e) => setTrackingForm({ ...trackingForm, tracking_url: e.target.value })}
+                                    placeholder="https://..."
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Carrier</Label>
+                                  <Input
+                                    value={trackingForm.tracking_carrier}
+                                    onChange={(e) => setTrackingForm({ ...trackingForm, tracking_carrier: e.target.value })}
+                                    placeholder="e.g., UPS, FedEx, USPS"
+                                  />
+                                </div>
+                                <Button onClick={updateTracking} className="w-full">
+                                  Update & Send Notification
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                          
+                          {order.vendor_status === "pending_manual" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => markAsExported(order.id)}
+                            >
+                              Mark Exported
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
                   {orders.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                         No orders found
                       </TableCell>
                     </TableRow>

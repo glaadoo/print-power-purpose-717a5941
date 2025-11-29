@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home } from "lucide-react";
+import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home, Truck, ExternalLink } from "lucide-react";
 import Footer from "@/components/Footer";
 
 interface OrderDetails {
@@ -16,6 +16,10 @@ interface OrderDetails {
   cause_name?: string;
   nonprofit_name?: string;
   created_at: string;
+  tracking_number?: string | null;
+  tracking_url?: string | null;
+  tracking_carrier?: string | null;
+  shipping_status?: string | null;
 }
 
 export default function Success() {
@@ -196,6 +200,35 @@ export default function Success() {
             </div>
           </div>
         </div>
+
+        {/* Tracking Info */}
+        {orderDetails.tracking_number && (
+          <div className="bg-card border border-border rounded-2xl p-6 mb-6">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Truck className="w-5 h-5" />
+              Tracking Information
+            </h2>
+            <div className="space-y-3">
+              {orderDetails.tracking_carrier && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Carrier:</span>
+                  <p className="font-medium">{orderDetails.tracking_carrier}</p>
+                </div>
+              )}
+              <div>
+                <span className="text-sm text-muted-foreground">Tracking Number:</span>
+                <p className="font-mono text-lg">{orderDetails.tracking_number}</p>
+              </div>
+              {orderDetails.tracking_url && (
+                <Button asChild variant="default">
+                  <a href={orderDetails.tracking_url} target="_blank" rel="noopener noreferrer">
+                    Track Package <ExternalLink className="w-4 h-4 ml-2" />
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Cause/Nonprofit Info */}
         {(cause_name || nonprofit_name) && (
