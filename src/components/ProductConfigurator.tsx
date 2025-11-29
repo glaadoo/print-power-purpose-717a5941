@@ -58,7 +58,10 @@ export function ProductConfigurator({
   const [priceError, setPriceError] = useState<string | null>(null);
   const [userInteracted, setUserInteracted] = useState(false); // Track if user has manually changed options
   const [failedOptionIds, setFailedOptionIds] = useState<Set<number>>(new Set()); // Track options that don't have valid prices
+  const [validatingOptions, setValidatingOptions] = useState(false); // Track pre-validation state
+  const [preValidationComplete, setPreValidationComplete] = useState(false); // Track if pre-validation is done
   const lastChangedOptionRef = useRef<{ group: string; optionId: number } | null>(null);
+  const preValidationRunRef = useRef(false); // Prevent multiple pre-validation runs
   
   // Use refs to store callbacks to avoid dependency issues causing stale closures
   const onPriceChangeRef = useRef(onPriceChange);
@@ -210,6 +213,93 @@ export function ProductConfigurator({
       setUserInteracted(true);
     }, 100);
   }, [optionGroups]);
+
+  // Pre-validate quantity options on mount to hide invalid ones
+  useEffect(() => {
+    // Only run once, and only after we have option groups and initial selections
+    if (preValidationRunRef.current || optionGroups.length === 0 || Object.keys(selectedOptions).length === 0) {
+      return;
+    }
+    
+    // Find the quantity group
+    const qtyGroup = optionGroups.find(g => 
+      g.group.toLowerCase().includes('qty') || 
+      g.group.toLowerCase().includes('quantity')
+    );
+    
+    if (!qtyGroup || qtyGroup.options.length <= 1) {
+      setPreValidationComplete(true);
+      return;
+    }
+    
+    preValidationRunRef.current = true;
+    setValidatingOptions(true);
+    
+    console.log('[ProductConfigurator] Pre-validating quantity options:', qtyGroup.options.length);
+    
+    // Get base selections (all non-qty options)
+    const baseSelections = { ...selectedOptions };
+    
+    // Test each quantity option in parallel
+    const validateOption = async (option: { id: number; name: string }): Promise<{ id: number; valid: boolean }> => {
+      const testSelections = { ...baseSelections, [qtyGroup.group]: option.id };
+      const optionIds = Object.values(testSelections);
+      const variantKey = optionIds.sort((a, b) => a - b).join('-');
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('sinalite-price', {
+          body: {
+            productId: vendorProductId,
+            storeCode: storeCode,
+            variantKey: variantKey,
+            method: 'PRICEBYKEY'
+          }
+        });
+        
+        const isValid = !error && data && Array.isArray(data) && data.length > 0 && data[0]?.price;
+        console.log(`[ProductConfigurator] Pre-validate ${option.name} (${variantKey}):`, isValid ? 'VALID' : 'INVALID');
+        return { id: option.id, valid: isValid };
+      } catch {
+        return { id: option.id, valid: false };
+      }
+    };
+    
+    // Run all validations in parallel
+    Promise.all(qtyGroup.options.map(validateOption))
+      .then(results => {
+        const invalidIds = results.filter(r => !r.valid).map(r => r.id);
+        console.log('[ProductConfigurator] Invalid quantity option IDs:', invalidIds);
+        
+        if (invalidIds.length > 0) {
+          setFailedOptionIds(prev => {
+            const newSet = new Set(prev);
+            invalidIds.forEach(id => newSet.add(id));
+            return newSet;
+          });
+          
+          // If current selection is invalid, switch to first valid option
+          const currentQtyId = selectedOptions[qtyGroup.group];
+          if (invalidIds.includes(currentQtyId)) {
+            const firstValidOption = qtyGroup.options.find(opt => !invalidIds.includes(opt.id));
+            if (firstValidOption) {
+              console.log('[ProductConfigurator] Switching to first valid qty:', firstValidOption.name);
+              setSelectedOptions(prev => ({
+                ...prev,
+                [qtyGroup.group]: firstValidOption.id
+              }));
+            }
+          }
+        }
+        
+        setValidatingOptions(false);
+        setPreValidationComplete(true);
+      })
+      .catch(err => {
+        console.error('[ProductConfigurator] Pre-validation error:', err);
+        setValidatingOptions(false);
+        setPreValidationComplete(true);
+      });
+  }, [optionGroups, selectedOptions, vendorProductId, storeCode]);
 
   // Notify parent of quantity options - separate effect
   useEffect(() => {
@@ -559,13 +649,13 @@ export function ProductConfigurator({
     <div className="space-y-4 w-full p-4 bg-white/5 rounded-lg border border-white/10">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Product Configuration</h3>
-        {fetchingPrice && (
+        {(fetchingPrice || validatingOptions) && (
           <div className="flex items-center gap-1 text-xs text-white/60">
             <Loader2 className="w-3 h-3 animate-spin" />
-            <span>Updating price...</span>
+            <span>{validatingOptions ? 'Loading options...' : 'Updating price...'}</span>
           </div>
         )}
-        {!fetchingPrice && priceError && (
+        {!fetchingPrice && !validatingOptions && priceError && (
           <div className="flex items-center gap-1 text-xs text-amber-400">
             <AlertCircle className="w-3 h-3" />
             <span>{priceError}</span>
