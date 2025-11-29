@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAchievedTiers } from "@/lib/milestone-tiers";
 
 const SEEN_MILESTONES_KEY = "ppp_seen_milestones";
+const CELEBRATED_MILESTONES_KEY = "ppp_celebrated_milestones";
 
 export function useUnseenMilestones() {
   const [unseenCount, setUnseenCount] = useState(0);
@@ -80,4 +81,21 @@ export function markMilestonesAsSeen(tierIds: string[]) {
   
   // Dispatch event to update nav badge
   window.dispatchEvent(new CustomEvent("milestones-seen"));
+}
+
+export function getUncelebratedMilestones(achievedTierIds: string[]): string[] {
+  const celebrated = JSON.parse(
+    localStorage.getItem(CELEBRATED_MILESTONES_KEY) || "[]"
+  ) as string[];
+  
+  return achievedTierIds.filter(id => !celebrated.includes(id));
+}
+
+export function markMilestonesAsCelebrated(tierIds: string[]) {
+  const existing = JSON.parse(
+    localStorage.getItem(CELEBRATED_MILESTONES_KEY) || "[]"
+  ) as string[];
+  
+  const updated = [...new Set([...existing, ...tierIds])];
+  localStorage.setItem(CELEBRATED_MILESTONES_KEY, JSON.stringify(updated));
 }
