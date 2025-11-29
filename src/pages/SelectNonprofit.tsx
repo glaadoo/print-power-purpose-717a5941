@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/Footer";
+import UserDonationProgress from "@/components/UserDonationProgress";
 
 type Nonprofit = {
   id: string;
@@ -980,6 +981,9 @@ export default function SelectNonprofit() {
             </p>
           </div>
         </div>
+
+        {/* User Donation Progress */}
+        <UserDonationProgress variant="light" className="mb-8" />
 
         {body}
       </main>
