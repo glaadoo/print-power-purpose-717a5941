@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Medal, Award, Crown } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MILESTONE_TIERS, formatCents } from "@/lib/milestone-tiers";
 
@@ -14,6 +14,27 @@ interface TopDonor {
   rank: number;
 }
 
+// Track which donors have changed for highlight animation
+const getChangedDonors = (prev: TopDonor[], next: TopDonor[]): Set<string> => {
+  const changed = new Set<string>();
+  
+  next.forEach((donor) => {
+    const prevDonor = prev.find(p => p.donor_display_name === donor.donor_display_name);
+    if (!prevDonor) {
+      // New donor on leaderboard
+      changed.add(donor.donor_display_name);
+    } else if (
+      prevDonor.rank !== donor.rank ||
+      prevDonor.total_donated_cents !== donor.total_donated_cents
+    ) {
+      // Position or amount changed
+      changed.add(donor.donor_display_name);
+    }
+  });
+  
+  return changed;
+};
+
 const getTierInfo = (tierId: string | null) => {
   if (!tierId) return null;
   return MILESTONE_TIERS.find((t) => t.id === tierId) || null;
@@ -22,6 +43,8 @@ const getTierInfo = (tierId: string | null) => {
 export default function DonorLeaderboard() {
   const [donors, setDonors] = useState<TopDonor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [changedDonors, setChangedDonors] = useState<Set<string>>(new Set());
+  const prevDonorsRef = useRef<TopDonor[]>([]);
 
   const fetchTopDonors = async () => {
     try {
@@ -30,7 +53,21 @@ export default function DonorLeaderboard() {
       });
 
       if (error) throw error;
-      setDonors(data || []);
+      
+      const newDonors = data || [];
+      
+      // Detect changes and trigger highlight
+      if (prevDonorsRef.current.length > 0) {
+        const changed = getChangedDonors(prevDonorsRef.current, newDonors);
+        if (changed.size > 0) {
+          setChangedDonors(changed);
+          // Clear highlight after animation
+          setTimeout(() => setChangedDonors(new Set()), 2000);
+        }
+      }
+      
+      prevDonorsRef.current = newDonors;
+      setDonors(newDonors);
     } catch (error) {
       console.error("Error fetching top donors:", error);
     } finally {
@@ -137,68 +174,89 @@ export default function DonorLeaderboard() {
         </p>
       </CardHeader>
       <CardContent className="p-4 space-y-2">
-        {donors.map((donor, index) => {
-          const tierInfo = getTierInfo(donor.highest_tier);
-          return (
-            <motion.div
-              key={donor.rank}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`flex items-center gap-3 p-3 rounded-xl border ${getRankBg(
-                donor.rank
-              )} transition-all hover:scale-[1.02]`}
-            >
-              {/* Rank */}
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 shadow-sm">
-                {getRankIcon(donor.rank)}
-              </div>
-
-              {/* Donor Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-gray-900 truncate">
-                    {donor.donor_display_name}
-                  </span>
-                  {tierInfo && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${tierInfo.colors.bg} ${tierInfo.colors.border} border`}
-                    >
-                      <span className="text-xs">{tierInfo.icon}</span>
-                      <span className={`text-[10px] font-bold ${tierInfo.colors.text}`}>
-                        {tierInfo.name}
-                      </span>
-                    </motion.div>
-                  )}
+        <AnimatePresence mode="popLayout">
+          {donors.map((donor, index) => {
+            const tierInfo = getTierInfo(donor.highest_tier);
+            const isChanged = changedDonors.has(donor.donor_display_name);
+            return (
+              <motion.div
+                key={donor.donor_display_name}
+                layout
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ 
+                  opacity: 1, 
+                  x: 0,
+                  scale: isChanged ? [1, 1.02, 1] : 1,
+                  boxShadow: isChanged 
+                    ? ["0 0 0 0 rgba(234, 179, 8, 0)", "0 0 20px 4px rgba(234, 179, 8, 0.4)", "0 0 0 0 rgba(234, 179, 8, 0)"]
+                    : "0 0 0 0 rgba(234, 179, 8, 0)"
+                }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ 
+                  delay: index * 0.05,
+                  layout: { type: "spring", stiffness: 300, damping: 30 },
+                  scale: { duration: 0.6, ease: "easeInOut" },
+                  boxShadow: { duration: 1.5, ease: "easeOut" }
+                }}
+                className={`flex items-center gap-3 p-3 rounded-xl border ${getRankBg(
+                  donor.rank
+                )} transition-colors hover:scale-[1.02] ${
+                  isChanged ? "ring-2 ring-yellow-400/50 ring-offset-1" : ""
+                }`}
+              >
+                {/* Rank */}
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 shadow-sm">
+                  {getRankIcon(donor.rank)}
                 </div>
-                <p className="text-xs text-gray-500">
-                  {donor.donation_count} donation
-                  {donor.donation_count !== 1 ? "s" : ""}
-                </p>
-              </div>
 
-              {/* Amount */}
-              <div className="text-right">
-                <p
-                  className={`font-bold ${
-                    donor.rank === 1
-                      ? "text-yellow-600 text-lg"
-                      : donor.rank <= 3
-                      ? "text-amber-600"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {formatCents(donor.total_donated_cents)}
-                </p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">
-                  Total
-                </p>
-              </div>
-            </motion.div>
-          );
-        })}
+                {/* Donor Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-gray-900 truncate">
+                      {donor.donor_display_name}
+                    </span>
+                    {tierInfo && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${tierInfo.colors.bg} ${tierInfo.colors.border} border`}
+                      >
+                        <span className="text-xs">{tierInfo.icon}</span>
+                        <span className={`text-[10px] font-bold ${tierInfo.colors.text}`}>
+                          {tierInfo.name}
+                        </span>
+                      </motion.div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {donor.donation_count} donation
+                    {donor.donation_count !== 1 ? "s" : ""}
+                  </p>
+                </div>
+
+                {/* Amount */}
+                <div className="text-right">
+                  <motion.p
+                    animate={isChanged ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.4 }}
+                    className={`font-bold ${
+                      donor.rank === 1
+                        ? "text-yellow-600 text-lg"
+                        : donor.rank <= 3
+                        ? "text-amber-600"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {formatCents(donor.total_donated_cents)}
+                  </motion.p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">
+                    Total
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );
