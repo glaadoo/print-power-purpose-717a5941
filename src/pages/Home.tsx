@@ -8,7 +8,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
-import kenzieAnimated from "@/assets/kenzie-clean-transparent.png";
+import kenzieAnimated from "@/assets/kenzie-final-transparent.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -247,7 +247,7 @@ export default function Home() {
       </section>
 
       {/* Welcome Section with Animated Kenzie */}
-      <section className="relative bg-gradient-to-b from-white via-amber-50/30 to-white py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-b from-amber-50/50 via-orange-50/30 to-amber-50/50 py-20 overflow-hidden">
         {/* Subtle background dots */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-20 w-2 h-2 bg-amber-300 rounded-full opacity-60" />
@@ -293,7 +293,11 @@ export default function Home() {
                 <img
                   src={kenzieAnimated}
                   alt="Kenzie - Your friendly guide"
-                  className="w-56 h-56 sm:w-72 sm:h-72 object-contain drop-shadow-lg"
+                  className="w-56 h-56 sm:w-72 sm:h-72 object-contain drop-shadow-xl [filter:drop-shadow(0_4px_6px_rgba(0,0,0,0.1))]"
+                  style={{ 
+                    background: 'transparent',
+                    mixBlendMode: 'multiply'
+                  }}
                 />
               </div>
 
