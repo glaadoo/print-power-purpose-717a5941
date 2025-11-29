@@ -241,25 +241,6 @@ export default function ProductDetailNew() {
   if (product.image_url && !imageError && !galleryImages.some(g => g.url === product.image_url)) {
     galleryImages.push({ url: product.image_url, label: "Main" });
   }
-  
-  // Add remaining color variant images for Scalable Press products
-  if (product.vendor === 'scalablepress' && product.pricing_data?.colors) {
-    product.pricing_data.colors.forEach((color: any) => {
-      if (color.images && Array.isArray(color.images)) {
-        color.images.forEach((img: any, idx: number) => {
-          if (img.url || img) {
-            const imageUrl = typeof img === 'string' ? img : img.url;
-            if (imageUrl && !galleryImages.some(g => g.url === imageUrl)) {
-              galleryImages.push({ 
-                url: imageUrl, 
-                label: `${color.name} ${idx > 0 ? `- View ${idx + 1}` : ''}`
-              });
-            }
-          }
-        });
-      }
-    });
-  }
 
   // Handle color change from ScalablePressConfigurator
   const handleScalablePressColorChange = (color: { name: string; images?: any[] }) => {
