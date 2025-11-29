@@ -1534,6 +1534,16 @@ export type Database = {
           total_raised_cents: number
         }[]
       }
+      get_top_donors: {
+        Args: { limit_count?: number }
+        Returns: {
+          donation_count: number
+          donor_display_name: string
+          milestone_reached: boolean
+          rank: number
+          total_donated_cents: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

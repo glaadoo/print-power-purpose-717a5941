@@ -13,6 +13,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import Autoplay from "embla-carousel-autoplay";
 import KenzieJourneySection from "@/components/KenzieJourneySection";
 import UserDonationProgress from "@/components/UserDonationProgress";
+import DonorLeaderboard from "@/components/DonorLeaderboard";
 
 export default function Home() {
   console.log('[Home] Component rendering');
@@ -251,7 +252,10 @@ export default function Home() {
       {isAuthenticated && (
         <section className="bg-white py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <UserDonationProgress variant="light" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <UserDonationProgress variant="light" />
+              <DonorLeaderboard />
+            </div>
           </div>
         </section>
       )}
