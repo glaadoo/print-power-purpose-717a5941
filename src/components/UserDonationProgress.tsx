@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
-import { Target, TrendingUp } from "lucide-react";
+import { Target, TrendingUp, Sparkles, PartyPopper } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MILESTONE_CENTS = 77700; // $777
 
@@ -122,18 +123,97 @@ export default function UserDonationProgress({
         </div>
       </div>
 
-      {percentage >= 100 ? (
-        <div className={`flex items-center gap-2 p-3 rounded-lg ${isLight ? "bg-green-50 text-green-700" : "bg-green-500/20 text-green-300"}`}>
-          <TrendingUp className="h-4 w-4" />
-          <span className="text-sm font-medium">
-            Congratulations! You've reached your $777 milestone!
-          </span>
-        </div>
-      ) : (
-        <p className={`text-sm ${isLight ? "text-gray-600" : "text-white/70"}`}>
-          Keep donating to reach your ${milestoneUsd} milestone and unlock special recognition!
-        </p>
-      )}
+      <AnimatePresence>
+        {percentage >= 100 ? (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative overflow-hidden"
+          >
+            {/* Confetti particles */}
+            <div className="absolute inset-0 pointer-events-none">
+              {[...Array(12)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className={`absolute w-2 h-2 rounded-full ${
+                    i % 4 === 0 ? "bg-yellow-400" : 
+                    i % 4 === 1 ? "bg-pink-400" : 
+                    i % 4 === 2 ? "bg-blue-400" : "bg-green-400"
+                  }`}
+                  initial={{ 
+                    x: "50%", 
+                    y: "50%", 
+                    scale: 0,
+                    opacity: 1 
+                  }}
+                  animate={{ 
+                    x: `${Math.random() * 100}%`,
+                    y: `${Math.random() * 100}%`,
+                    scale: [0, 1, 0.5],
+                    opacity: [1, 1, 0],
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    delay: i * 0.1,
+                    repeat: Infinity,
+                    repeatDelay: 3
+                  }}
+                />
+              ))}
+            </div>
+            
+            <div className={`flex items-center gap-3 p-4 rounded-xl ${
+              isLight 
+                ? "bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border border-green-200" 
+                : "bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-teal-500/20 border border-green-500/30"
+            }`}>
+              <motion.div
+                animate={{ 
+                  rotate: [0, -10, 10, -10, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ 
+                  duration: 0.6,
+                  repeat: Infinity,
+                  repeatDelay: 2
+                }}
+              >
+                <PartyPopper className={`h-6 w-6 ${isLight ? "text-green-600" : "text-green-400"}`} />
+              </motion.div>
+              
+              <div className="flex-1">
+                <motion.p 
+                  className={`font-semibold ${isLight ? "text-green-700" : "text-green-300"}`}
+                  animate={{ scale: [1, 1.02, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🎉 Congratulations! You've reached your $777 milestone!
+                </motion.p>
+                <p className={`text-xs mt-1 ${isLight ? "text-green-600" : "text-green-400/80"}`}>
+                  Thank you for your incredible generosity!
+                </p>
+              </div>
+              
+              <motion.div
+                animate={{ 
+                  rotate: 360,
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ 
+                  rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+                  scale: { duration: 1.5, repeat: Infinity }
+                }}
+              >
+                <Sparkles className={`h-5 w-5 ${isLight ? "text-yellow-500" : "text-yellow-400"}`} />
+              </motion.div>
+            </div>
+          </motion.div>
+        ) : (
+          <p className={`text-sm ${isLight ? "text-gray-600" : "text-white/70"}`}>
+            Keep donating to reach your {milestoneUsd} milestone and unlock special recognition!
+          </p>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
