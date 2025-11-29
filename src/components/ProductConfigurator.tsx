@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Select,
   SelectContent,
@@ -57,6 +57,20 @@ export function ProductConfigurator({
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
   const [userInteracted, setUserInteracted] = useState(false); // Track if user has manually changed options
+  
+  // Use refs to store callbacks to avoid dependency issues causing stale closures
+  const onPriceChangeRef = useRef(onPriceChange);
+  const onPackageInfoChangeRef = useRef(onPackageInfoChange);
+  const onVariantKeyChangeRef = useRef(onVariantKeyChange);
+  const onConfigChangeRef = useRef(onConfigChange);
+  
+  // Keep refs updated
+  useEffect(() => {
+    onPriceChangeRef.current = onPriceChange;
+    onPackageInfoChangeRef.current = onPackageInfoChange;
+    onVariantKeyChangeRef.current = onVariantKeyChange;
+    onConfigChangeRef.current = onConfigChange;
+  }, [onPriceChange, onPackageInfoChange, onVariantKeyChange, onConfigChange]);
   
   // Global price cache in sessionStorage
   const getPriceCache = (): Record<string, number> => {
@@ -167,10 +181,10 @@ export function ProductConfigurator({
     // CRITICAL FIX: Immediately notify parent of the initial variant key
     // This enables admin price fields for the default configuration without requiring manual changes
     const optionIds = Object.values(initial);
-    if (optionIds.length > 0 && onVariantKeyChange) {
+    if (optionIds.length > 0 && onVariantKeyChangeRef.current) {
       const variantKey = optionIds.sort((a, b) => a - b).join('-');
       console.log('[ProductConfigurator] Initial variant key set:', variantKey);
-      onVariantKeyChange(variantKey);
+      onVariantKeyChangeRef.current(variantKey);
     }
     
     // Also notify parent of the initial config
@@ -183,13 +197,13 @@ export function ProductConfigurator({
       })
     );
     console.log('[ProductConfigurator] Initial config set:', configUpdate);
-    onConfigChange(configUpdate);
+    onConfigChangeRef.current(configUpdate);
     
     // Mark as user-interacted after initial setup to enable first price fetch
     setTimeout(() => {
       setUserInteracted(true);
     }, 100);
-  }, [optionGroups, onVariantKeyChange, onConfigChange]);
+  }, [optionGroups]);
 
   // Notify parent of quantity options - separate effect
   useEffect(() => {
@@ -263,8 +277,8 @@ export function ProductConfigurator({
       }
       
       // Notify parent of variant key change
-      if (onVariantKeyChange) {
-        onVariantKeyChange(variantKey);
+      if (onVariantKeyChangeRef.current) {
+        onVariantKeyChangeRef.current(variantKey);
       }
       
       // PRIORITY 1: Check for custom price in database
@@ -283,7 +297,7 @@ export function ProductConfigurator({
           console.log('[ProductConfigurator] Using custom price from database:', customPrice.custom_price_cents);
           setPriceError(null);
           setFetchingPrice(false);
-          onPriceChange(customPrice.custom_price_cents);
+          onPriceChangeRef.current(customPrice.custom_price_cents);
           return;
         }
       } catch (err) {
@@ -296,7 +310,7 @@ export function ProductConfigurator({
         console.log('[ProductConfigurator] Using cached price for:', variantKey);
         setPriceError(null); // Clear any previous errors when using cached price
         setFetchingPrice(false);
-        onPriceChange(cache[variantKey]);
+        onPriceChangeRef.current(cache[variantKey]);
         return;
       }
       
@@ -383,10 +397,10 @@ export function ProductConfigurator({
           setFetchingPrice(false);
           
           setPriceCache(variantKey, priceCents);
-          onPriceChange(priceCents);
+          onPriceChangeRef.current(priceCents);
           
-          if (onPackageInfoChange) {
-            onPackageInfoChange(null);
+          if (onPackageInfoChangeRef.current) {
+            onPackageInfoChangeRef.current(null);
           }
           
           console.log('[ProductConfigurator] Error state cleared, price updated');
@@ -422,7 +436,7 @@ export function ProductConfigurator({
     };
 
     fetchPrice();
-  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, onPriceChange, onPackageInfoChange, userInteracted]); // Added userInteracted
+  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, productId, userInteracted]);
 
   const handleOptionChange = (group: string, optionId: string) => {
     console.log('[ProductConfigurator] handleOptionChange called:', { group, optionId });
@@ -455,7 +469,7 @@ export function ProductConfigurator({
       );
       
       console.log('[ProductConfigurator] Config update:', configUpdate);
-      onConfigChange(configUpdate);
+      onConfigChangeRef.current(configUpdate);
       
       return updated;
     });
