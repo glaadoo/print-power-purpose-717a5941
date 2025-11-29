@@ -93,9 +93,10 @@ export default function ImageGallery({ images, alt, onError, selectedIndex, colo
           onClick={() => setIsModalOpen(true)}
         >
           <BlurImage
+            key={currentImage}
             src={currentImage}
             alt={alt}
-            className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full transition-transform duration-300 group-hover:scale-105 animate-fade-in"
             loading="eager"
             onError={onError}
           />
