@@ -57,6 +57,8 @@ export function ProductConfigurator({
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
   const [userInteracted, setUserInteracted] = useState(false); // Track if user has manually changed options
+  const [failedOptionIds, setFailedOptionIds] = useState<Set<number>>(new Set()); // Track options that don't have valid prices
+  const lastChangedOptionRef = useRef<{ group: string; optionId: number } | null>(null);
   
   // Use refs to store callbacks to avoid dependency issues causing stale closures
   const onPriceChangeRef = useRef(onPriceChange);
@@ -100,32 +102,9 @@ export function ProductConfigurator({
     pricingDataLength: Array.isArray(pricingData) ? pricingData.length : 'not-array'
   });
 
-  // Extract valid variant keys from combinations data
-  const validVariantKeys: Set<string> = useMemo(() => {
-    if (!pricingData || !Array.isArray(pricingData) || !pricingData[1]) {
-      return new Set<string>();
-    }
-    
-    const combinations = pricingData[1];
-    const keys = new Set<string>();
-    
-    // Combinations can be an object with variant keys as properties, or an array
-    if (Array.isArray(combinations)) {
-      combinations.forEach((combo: any) => {
-        if (combo && combo.key) {
-          keys.add(combo.key);
-        } else if (typeof combo === 'string') {
-          keys.add(combo);
-        }
-      });
-    } else if (typeof combinations === 'object') {
-      // Keys are the variant keys themselves
-      Object.keys(combinations).forEach(key => keys.add(key));
-    }
-    
-    console.log('[ProductConfigurator] Valid variant keys count:', keys.size);
-    return keys;
-  }, [pricingData]);
+  // Note: pricingData[1] contains hash-based combinations, not variant key mappings
+  // We cannot pre-filter options from this data structure
+  // Instead, we handle invalid combinations gracefully in the price fetch
 
   // Parse product options from SinaLite structure
   const optionGroups: OptionGroup[] = useMemo(() => {
@@ -188,78 +167,19 @@ export function ProductConfigurator({
     }));
   }, [pricingData]);
 
-  // Filter options based on valid combinations with current selections
-  const getFilteredOptionsForGroup = useCallback((groupName: string, currentSelections: Record<string, number>): ProductOption[] => {
-    const group = optionGroups.find(g => g.group === groupName);
-    if (!group) return [];
-    
-    // If no valid variant keys, show all options (fallback)
-    if (validVariantKeys.size === 0) {
-      return group.options;
-    }
-    
-    // Get selected IDs from other groups
-    const otherSelections = Object.entries(currentSelections)
-      .filter(([g]) => g !== groupName)
-      .map(([, id]) => id);
-    
-    // Filter options to only those that have at least one valid combination
-    return group.options.filter(option => {
-      // Build all possible variant keys with this option
-      const testIds = [...otherSelections, option.id].sort((a, b) => a - b);
-      const testKey = testIds.join('-');
-      
-      // Check if this exact combination exists
-      if (validVariantKeys.has(testKey)) {
-        return true;
-      }
-      
-      // If not all groups are selected yet, check if this option appears in any valid key
-      if (otherSelections.length < optionGroups.length - 1) {
-        for (const validKey of validVariantKeys) {
-          if (validKey.split('-').includes(String(option.id))) {
-            return true;
-          }
-        }
-      }
-      
-      return false;
-    });
-  }, [optionGroups, validVariantKeys]);
-
-  // Initialize with first valid option from each group - ONLY RUN ONCE
+  // Initialize with first option from each group - ONLY RUN ONCE
   useEffect(() => {
     if (optionGroups.length === 0) {
       console.log('[ProductConfigurator] No option groups available');
       return;
     }
 
-    // Try to find a valid initial combination
-    let initial: Record<string, number> = {};
-    
-    // If we have valid variant keys, try to use the first one as default
-    if (validVariantKeys.size > 0) {
-      const firstValidKey = Array.from(validVariantKeys)[0];
-      const validIds = firstValidKey.split('-').map(id => parseInt(id, 10));
-      
-      // Map these IDs back to groups
-      optionGroups.forEach((group) => {
-        const matchingOption = group.options.find(opt => validIds.includes(opt.id));
-        if (matchingOption) {
-          initial[group.group] = matchingOption.id;
-        } else if (group.options.length > 0) {
-          // Fallback to first option
-          initial[group.group] = group.options[0].id;
-        }
-      });
-    } else {
-      // Fallback: use first option from each group
-      optionGroups.forEach((group) => {
-        if (group.options.length > 0) {
-          initial[group.group] = group.options[0].id;
-        }
-      });
-    }
+    const initial: Record<string, number> = {};
+    optionGroups.forEach((group) => {
+      if (group.options.length > 0) {
+        initial[group.group] = group.options[0].id;
+      }
+    });
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
@@ -289,7 +209,7 @@ export function ProductConfigurator({
     setTimeout(() => {
       setUserInteracted(true);
     }, 100);
-  }, [optionGroups, validVariantKeys]);
+  }, [optionGroups]);
 
   // Notify parent of quantity options - separate effect
   useEffect(() => {
@@ -494,7 +414,36 @@ export function ProductConfigurator({
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
           // This configuration combination doesn't exist in SinaLite's system
-          // Provide a helpful message suggesting user try different options
+          // Mark the last changed option as failed and hide it
+          if (lastChangedOptionRef.current) {
+            const failedId = lastChangedOptionRef.current.optionId;
+            const failedGroup = lastChangedOptionRef.current.group;
+            console.log('[ProductConfigurator] Marking option as failed:', failedId, 'in group:', failedGroup);
+            
+            setFailedOptionIds(prev => {
+              const newSet = new Set(prev);
+              newSet.add(failedId);
+              return newSet;
+            });
+            
+            // Auto-select next valid option in the same group
+            const group = optionGroups.find(g => g.group === failedGroup);
+            if (group) {
+              const nextValidOption = group.options.find(opt => 
+                opt.id !== failedId && !failedOptionIds.has(opt.id)
+              );
+              if (nextValidOption) {
+                console.log('[ProductConfigurator] Auto-selecting next valid option:', nextValidOption.id);
+                setSelectedOptions(prev => ({
+                  ...prev,
+                  [failedGroup]: nextValidOption.id
+                }));
+                lastChangedOptionRef.current = null;
+                return; // Will trigger another price fetch with valid option
+              }
+            }
+          }
+          
           setPriceError('This configuration is not available. Please try a different quantity or option.');
           setFetchingPrice(false);
         }
@@ -537,6 +486,12 @@ export function ProductConfigurator({
       console.error('[ProductConfigurator] Invalid option ID:', optionId);
       return;
     }
+    
+    // Track which option was just changed (for failure tracking)
+    lastChangedOptionRef.current = { group, optionId: id };
+    
+    // Clear any price error when user makes a new selection
+    setPriceError(null);
     
     // Update selected options immediately
     setSelectedOptions((prev) => {
@@ -621,10 +576,12 @@ export function ProductConfigurator({
       {optionGroups.map((group) => {
         const currentValue = selectedOptions[group.group];
         const stringValue = currentValue ? String(currentValue) : "";
-        const filteredOptions = getFilteredOptionsForGroup(group.group, selectedOptions);
         
-        // Skip rendering if no valid options for this group
-        if (filteredOptions.length === 0) {
+        // Filter out options that have been marked as failed (no valid price)
+        const validOptions = group.options.filter(opt => !failedOptionIds.has(opt.id));
+        
+        // Skip rendering if no valid options remain
+        if (validOptions.length === 0) {
           return null;
         }
         
@@ -651,7 +608,7 @@ export function ProductConfigurator({
                 <SelectValue placeholder={`Select ${formatGroupName(group.group)}`} />
               </SelectTrigger>
               <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
-                {filteredOptions.map((option) => (
+                {validOptions.map((option) => (
                   <SelectItem
                     key={option.id}
                     value={String(option.id)}
