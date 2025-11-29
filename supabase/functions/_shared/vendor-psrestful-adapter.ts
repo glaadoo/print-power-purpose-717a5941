@@ -4,6 +4,7 @@
  */
 
 import type { VendorAdapter, OrderRecord } from './vendor-fulfillment.ts';
+import { getPSRestfulTracking } from './vendor-psrestful-adapter-tracking.ts';
 
 export const psRestfulAdapter: VendorAdapter = {
   async submitOrder(order: OrderRecord) {
@@ -52,6 +53,11 @@ export const psRestfulAdapter: VendorAdapter = {
       console.error('[PSRESTFUL-ADAPTER] Error:', error);
       throw error;
     }
+  },
+
+  // Tracking API integration
+  async getTrackingInfo(vendorOrderId: string) {
+    return await getPSRestfulTracking(vendorOrderId);
   }
 };
 

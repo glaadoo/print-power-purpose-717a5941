@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ interface Order {
 }
 
 export default function AdminVendorFulfillment() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -293,9 +295,15 @@ export default function AdminVendorFulfillment() {
                 Revenue and donation trends over time
               </p>
             </div>
-            <Button variant="outline" onClick={() => setShowAnalytics(false)}>
-              Back to Orders
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate("/admin/order-tracking")}>
+                <Truck className="h-4 w-4 mr-2" />
+                Manage Tracking
+              </Button>
+              <Button variant="outline" onClick={() => setShowAnalytics(false)}>
+                Back to Orders
+              </Button>
+            </div>
           </div>
           <AdminAnalyticsCharts />
         </div>
@@ -313,10 +321,16 @@ export default function AdminVendorFulfillment() {
               Manage order fulfillment across all vendors
             </p>
           </div>
-          <Button onClick={() => setShowAnalytics(true)} variant="outline">
-            <TrendingUp className="h-4 w-4 mr-2" />
-            View Analytics
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/admin/order-tracking")}>
+              <Truck className="h-4 w-4 mr-2" />
+              Manage Tracking
+            </Button>
+            <Button onClick={() => setShowAnalytics(true)} variant="outline">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              View Analytics
+            </Button>
+          </div>
         </div>
 
         {/* Fulfillment Mode Info */}

@@ -5,6 +5,8 @@
 
 import type { VendorAdapter, OrderRecord } from './vendor-fulfillment.ts';
 
+import { getSinaliteTracking } from './vendor-sinalite-adapter-tracking.ts';
+
 export const sinaliteAdapter: VendorAdapter = {
   async submitOrder(order: OrderRecord) {
     console.log(`[SINALITE-ADAPTER] Submitting order ${order.order_number}`);
@@ -91,6 +93,11 @@ export const sinaliteAdapter: VendorAdapter = {
       console.error('[SINALITE-ADAPTER] Error:', error);
       throw error;
     }
+  },
+
+  // Tracking API integration
+  async getTrackingInfo(vendorOrderId: string) {
+    return await getSinaliteTracking(vendorOrderId);
   }
 };
 
