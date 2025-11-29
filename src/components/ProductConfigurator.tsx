@@ -548,8 +548,17 @@ export function ProductConfigurator({
           }
           
           if (priceValue && priceValue > 0) {
-            const priceCents = Math.round(priceValue * 100);
-            console.log('[ProductConfigurator] Variable qty price:', priceCents);
+            // For variable qty products, SinaLite returns per-unit price
+            // We need to multiply by the custom quantity
+            const qty = parseInt(customQuantity) || 1;
+            const totalPrice = priceValue * qty;
+            const priceCents = Math.round(totalPrice * 100);
+            console.log('[ProductConfigurator] Variable qty price calculation:', {
+              perUnitPrice: priceValue,
+              quantity: qty,
+              totalPrice,
+              priceCents
+            });
             setPriceError(null);
             onPriceChangeRef.current(priceCents);
             setPriceCache(`${variantKey}-${customQuantity}`, priceCents);
