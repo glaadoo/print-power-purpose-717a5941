@@ -24,40 +24,7 @@ export default function ChatbotWidget() {
         <p className="text-sm font-medium text-foreground">Chat with Kenzie</p>
       </motion.button>
 
-      {/* Small decorative paws */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ 
-          opacity: [0.4, 0.7, 0.4],
-          scale: 1,
-          rotate: -15
-        }}
-        transition={{ 
-          opacity: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-          scale: { delay: 0.8, duration: 0.3 }
-        }}
-        className="absolute -top-2 -left-2 text-primary"
-      >
-        <PawPrint className="w-6 h-6" />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ 
-          opacity: [0.3, 0.6, 0.3],
-          scale: 1,
-          rotate: 25
-        }}
-        transition={{ 
-          opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
-          scale: { delay: 1, duration: 0.3 }
-        }}
-        className="absolute -bottom-1 -left-3 text-primary/80"
-      >
-        <PawPrint className="w-6 h-6" />
-      </motion.div>
-
-      {/* Main button */}
+      {/* Main circular blue button only */}
       <motion.button
         onClick={handleClick}
         className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-lg hover:shadow-2xl transition-all flex items-center justify-center group"
