@@ -230,7 +230,15 @@ export function ProductConfigurator({
   }, [optionGroups]);
 
   // Pre-validate quantity options on mount to hide invalid ones
+  // SKIP for variable quantity products - they use input fields, not dropdowns
   useEffect(() => {
+    // Skip pre-validation for variable quantity products
+    if (isVariableQty) {
+      console.log('[ProductConfigurator] Skipping pre-validation for variable qty product');
+      setPreValidationComplete(true);
+      return;
+    }
+    
     // Only run once, and only after we have option groups and initial selections
     if (preValidationRunRef.current || optionGroups.length === 0 || Object.keys(selectedOptions).length === 0) {
       return;
@@ -314,7 +322,7 @@ export function ProductConfigurator({
         setValidatingOptions(false);
         setPreValidationComplete(true);
       });
-  }, [optionGroups, selectedOptions, vendorProductId, storeCode]);
+  }, [optionGroups, selectedOptions, vendorProductId, storeCode, isVariableQty]);
 
   // Notify parent of quantity options - separate effect
   useEffect(() => {
