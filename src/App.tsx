@@ -120,6 +120,7 @@ const WhoWeServeSchools = lazyPage("WhoWeServeSchools", () => import("./pages/Wh
 const OrderHistory = lazyPage("OrderHistory", () => import("./pages/OrderHistory"));
 const VideoGallery = lazyPage("VideoGallery", () => import("./pages/VideoGallery"));
 const Compare = lazyPage("Compare", () => import("./pages/Compare"));
+const DonorProfile = lazyPage("DonorProfile", () => import("./pages/DonorProfile"));
 
 /* ---------- Fallback UI ---------- */
 
@@ -457,6 +458,16 @@ export default function App() {
               <RouteBoundary name="OrderHistory">
                 <ProtectedRoute>
                   <OrderHistory />
+                </ProtectedRoute>
+              </RouteBoundary>
+            }
+          />
+          <Route
+            path="/donor-profile"
+            element={
+              <RouteBoundary name="DonorProfile">
+                <ProtectedRoute>
+                  <DonorProfile />
                 </ProtectedRoute>
               </RouteBoundary>
             }
