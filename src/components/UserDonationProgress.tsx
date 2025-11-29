@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
-import { Target, TrendingUp, Sparkles, PartyPopper } from "lucide-react";
+import { Target, Sparkles, PartyPopper } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import MilestoneAchievementBadge from "./MilestoneAchievementBadge";
 
 const MILESTONE_CENTS = 77700; // $777
 
@@ -192,6 +193,7 @@ export default function UserDonationProgress({
                 <p className={`text-xs mt-1 ${isLight ? "text-green-600" : "text-green-400/80"}`}>
                   Thank you for your incredible generosity!
                 </p>
+                <MilestoneAchievementBadge totalDonated={totalDonatedUsd} />
               </div>
               
               <motion.div
