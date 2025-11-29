@@ -280,17 +280,16 @@ export default function Admin() {
         return;
       }
 
-      if (stats) {
-        setOrders(stats.orders || []);
-        setDonations(stats.donations || []);
-        setCauses(stats.causes || []);
-        setProducts(stats.products || []);
-        setStoryRequests(stats.storyRequests || []);
+      // Set all data with fallback to empty arrays
+      setOrders(stats?.orders || []);
+      setDonations(stats?.donations || []);
+      setCauses(stats?.causes || []);
+      setProducts(stats?.products || []);
+      setStoryRequests(stats?.storyRequests || []);
 
-        console.log('Admin Stats Loaded:');
-        console.log('Orders:', stats.orders?.length || 0, 'Total Revenue:', stats.totalRevenue);
-        console.log('Donations:', stats.donations?.length || 0, 'Total Donations:', stats.totalDonations);
-      }
+      console.log('Admin Stats Loaded:');
+      console.log('Orders:', stats?.orders?.length || 0, 'Total Revenue:', stats?.totalRevenue);
+      console.log('Donations:', stats?.donations?.length || 0, 'Total Donations:', stats?.totalDonations);
 
       // Load other data directly
       const [schoolsRes, nonprofitsRes, errorLogsRes] = await Promise.all([
