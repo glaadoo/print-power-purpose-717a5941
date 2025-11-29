@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import KenzieJourneySection from "@/components/KenzieJourneySection";
+import UserDonationProgress from "@/components/UserDonationProgress";
 
 export default function Home() {
   console.log('[Home] Component rendering');
@@ -245,6 +246,15 @@ export default function Home() {
 
       {/* Kenzie Journey Section - Only show for authenticated users */}
       {isAuthenticated && <KenzieJourneySection />}
+
+      {/* User Donation Progress - Only show for authenticated users */}
+      {isAuthenticated && (
+        <section className="bg-white py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <UserDonationProgress variant="light" />
+          </div>
+        </section>
+      )}
 
       {/* Featured Products Section */}
       <FeaturedProducts />
