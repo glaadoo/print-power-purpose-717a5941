@@ -100,6 +100,33 @@ export function ProductConfigurator({
     pricingDataLength: Array.isArray(pricingData) ? pricingData.length : 'not-array'
   });
 
+  // Extract valid variant keys from combinations data
+  const validVariantKeys: Set<string> = useMemo(() => {
+    if (!pricingData || !Array.isArray(pricingData) || !pricingData[1]) {
+      return new Set<string>();
+    }
+    
+    const combinations = pricingData[1];
+    const keys = new Set<string>();
+    
+    // Combinations can be an object with variant keys as properties, or an array
+    if (Array.isArray(combinations)) {
+      combinations.forEach((combo: any) => {
+        if (combo && combo.key) {
+          keys.add(combo.key);
+        } else if (typeof combo === 'string') {
+          keys.add(combo);
+        }
+      });
+    } else if (typeof combinations === 'object') {
+      // Keys are the variant keys themselves
+      Object.keys(combinations).forEach(key => keys.add(key));
+    }
+    
+    console.log('[ProductConfigurator] Valid variant keys count:', keys.size);
+    return keys;
+  }, [pricingData]);
+
   // Parse product options from SinaLite structure
   const optionGroups: OptionGroup[] = useMemo(() => {
     if (!pricingData || !Array.isArray(pricingData)) {
@@ -161,19 +188,78 @@ export function ProductConfigurator({
     }));
   }, [pricingData]);
 
-  // Initialize with first option from each group - ONLY RUN ONCE
+  // Filter options based on valid combinations with current selections
+  const getFilteredOptionsForGroup = useCallback((groupName: string, currentSelections: Record<string, number>): ProductOption[] => {
+    const group = optionGroups.find(g => g.group === groupName);
+    if (!group) return [];
+    
+    // If no valid variant keys, show all options (fallback)
+    if (validVariantKeys.size === 0) {
+      return group.options;
+    }
+    
+    // Get selected IDs from other groups
+    const otherSelections = Object.entries(currentSelections)
+      .filter(([g]) => g !== groupName)
+      .map(([, id]) => id);
+    
+    // Filter options to only those that have at least one valid combination
+    return group.options.filter(option => {
+      // Build all possible variant keys with this option
+      const testIds = [...otherSelections, option.id].sort((a, b) => a - b);
+      const testKey = testIds.join('-');
+      
+      // Check if this exact combination exists
+      if (validVariantKeys.has(testKey)) {
+        return true;
+      }
+      
+      // If not all groups are selected yet, check if this option appears in any valid key
+      if (otherSelections.length < optionGroups.length - 1) {
+        for (const validKey of validVariantKeys) {
+          if (validKey.split('-').includes(String(option.id))) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    });
+  }, [optionGroups, validVariantKeys]);
+
+  // Initialize with first valid option from each group - ONLY RUN ONCE
   useEffect(() => {
     if (optionGroups.length === 0) {
       console.log('[ProductConfigurator] No option groups available');
       return;
     }
 
-    const initial: Record<string, number> = {};
-    optionGroups.forEach((group) => {
-      if (group.options.length > 0) {
-        initial[group.group] = group.options[0].id;
-      }
-    });
+    // Try to find a valid initial combination
+    let initial: Record<string, number> = {};
+    
+    // If we have valid variant keys, try to use the first one as default
+    if (validVariantKeys.size > 0) {
+      const firstValidKey = Array.from(validVariantKeys)[0];
+      const validIds = firstValidKey.split('-').map(id => parseInt(id, 10));
+      
+      // Map these IDs back to groups
+      optionGroups.forEach((group) => {
+        const matchingOption = group.options.find(opt => validIds.includes(opt.id));
+        if (matchingOption) {
+          initial[group.group] = matchingOption.id;
+        } else if (group.options.length > 0) {
+          // Fallback to first option
+          initial[group.group] = group.options[0].id;
+        }
+      });
+    } else {
+      // Fallback: use first option from each group
+      optionGroups.forEach((group) => {
+        if (group.options.length > 0) {
+          initial[group.group] = group.options[0].id;
+        }
+      });
+    }
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
@@ -203,7 +289,7 @@ export function ProductConfigurator({
     setTimeout(() => {
       setUserInteracted(true);
     }, 100);
-  }, [optionGroups]);
+  }, [optionGroups, validVariantKeys]);
 
   // Notify parent of quantity options - separate effect
   useEffect(() => {
@@ -535,6 +621,12 @@ export function ProductConfigurator({
       {optionGroups.map((group) => {
         const currentValue = selectedOptions[group.group];
         const stringValue = currentValue ? String(currentValue) : "";
+        const filteredOptions = getFilteredOptionsForGroup(group.group, selectedOptions);
+        
+        // Skip rendering if no valid options for this group
+        if (filteredOptions.length === 0) {
+          return null;
+        }
         
         return (
           <div key={group.group} className="space-y-2">
@@ -559,7 +651,7 @@ export function ProductConfigurator({
                 <SelectValue placeholder={`Select ${formatGroupName(group.group)}`} />
               </SelectTrigger>
               <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
-                {group.options.map((option) => (
+                {filteredOptions.map((option) => (
                   <SelectItem
                     key={option.id}
                     value={String(option.id)}
