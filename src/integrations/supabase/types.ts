@@ -1539,7 +1539,7 @@ export type Database = {
         Returns: {
           donation_count: number
           donor_display_name: string
-          milestone_reached: boolean
+          highest_tier: string
           rank: number
           total_donated_cents: number
         }[]
