@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Download, Share2, Twitter, Facebook, Linkedin, X, Award } from "lucide-react";
+import { Download, Share2, Twitter, Facebook, Linkedin, Copy, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,13 +11,16 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
+import { MilestoneTier } from "@/lib/milestone-tiers";
 
 interface MilestoneAchievementBadgeProps {
+  tier: MilestoneTier;
   totalDonated: string;
   userName?: string;
 }
 
 export default function MilestoneAchievementBadge({ 
+  tier,
   totalDonated, 
   userName 
 }: MilestoneAchievementBadgeProps) {
@@ -25,7 +28,7 @@ export default function MilestoneAchievementBadge({
   const [isDownloading, setIsDownloading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const shareText = `🎉 I just reached the $777 Giving Milestone on Print Power Purpose! I've donated ${totalDonated} to support amazing nonprofits. Join me in making a difference! #PrintPowerPurpose #GivingBack #777Milestone`;
+  const shareText = `🎉 I just reached the ${tier.name} milestone on Print Power Purpose! I've donated ${totalDonated} to support amazing nonprofits. Join me in making a difference! #PrintPowerPurpose #GivingBack`;
   const shareUrl = window.location.origin;
 
   const handleDownload = async () => {
@@ -40,7 +43,7 @@ export default function MilestoneAchievementBadge({
       });
       
       const link = document.createElement("a");
-      link.download = "ppp-777-milestone-badge.png";
+      link.download = `ppp-${tier.id}-milestone-badge.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
       
@@ -80,20 +83,18 @@ export default function MilestoneAchievementBadge({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="mt-3 gap-2 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50 text-yellow-700 hover:text-yellow-800"
+        <button
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all hover:scale-105 ${tier.colors.bg} ${tier.colors.border} border ${tier.colors.text}`}
         >
-          <Award className="h-4 w-4" />
-          View & Share Badge
-        </Button>
+          <span>{tier.icon}</span>
+          <span>{tier.name}</span>
+        </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-yellow-500" />
-            Your Achievement Badge
+            <span className="text-xl">{tier.icon}</span>
+            {tier.name} Achievement
           </DialogTitle>
         </DialogHeader>
         
@@ -101,15 +102,15 @@ export default function MilestoneAchievementBadge({
         <div className="flex justify-center p-4">
           <div
             ref={badgeRef}
-            className="relative w-72 h-72 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-3xl p-1 shadow-2xl"
+            className={`relative w-72 h-72 bg-gradient-to-br ${tier.colors.gradient} rounded-3xl p-1 shadow-2xl`}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-3xl blur-xl opacity-50" />
+            <div className={`absolute inset-0 bg-gradient-to-br ${tier.colors.gradient} rounded-3xl blur-xl opacity-50`} />
             <div className="relative h-full w-full bg-gradient-to-br from-slate-900 to-slate-800 rounded-[22px] flex flex-col items-center justify-center p-6 text-center">
               {/* Decorative elements */}
-              <div className="absolute top-4 left-4 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-              <div className="absolute top-4 right-4 w-2 h-2 bg-orange-400 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }} />
-              <div className="absolute bottom-4 left-4 w-2 h-2 bg-red-400 rounded-full animate-pulse" style={{ animationDelay: "1s" }} />
-              <div className="absolute bottom-4 right-4 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: "1.5s" }} />
+              <div className="absolute top-4 left-4 w-2 h-2 bg-white/50 rounded-full animate-pulse" />
+              <div className="absolute top-4 right-4 w-2 h-2 bg-white/50 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }} />
+              <div className="absolute bottom-4 left-4 w-2 h-2 bg-white/50 rounded-full animate-pulse" style={{ animationDelay: "1s" }} />
+              <div className="absolute bottom-4 right-4 w-2 h-2 bg-white/50 rounded-full animate-pulse" style={{ animationDelay: "1.5s" }} />
               
               {/* Star decoration */}
               <motion.div
@@ -121,19 +122,19 @@ export default function MilestoneAchievementBadge({
               </motion.div>
               
               {/* Badge content */}
-              <div className="text-6xl mb-2">🏆</div>
-              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 mb-1">
-                $777 MILESTONE
+              <div className="text-6xl mb-2">{tier.icon}</div>
+              <h3 className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r ${tier.colors.primary} mb-1`}>
+                {tier.title}
               </h3>
-              <p className="text-white/80 text-sm mb-3">Giving Champion</p>
+              <p className="text-white/80 text-sm mb-3">{tier.name}</p>
               
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-2" />
+              <div className={`w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent my-2`} />
               
               <p className="text-white font-semibold text-lg">{totalDonated}</p>
               <p className="text-white/60 text-xs">Total Donated</p>
               
               {userName && (
-                <p className="text-yellow-400/80 text-sm mt-3 font-medium">{userName}</p>
+                <p className="text-white/70 text-sm mt-3 font-medium">{userName}</p>
               )}
               
               <div className="absolute bottom-3 w-full text-center">
@@ -148,7 +149,7 @@ export default function MilestoneAchievementBadge({
           <Button 
             onClick={handleDownload} 
             disabled={isDownloading}
-            className="w-full gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+            className={`w-full gap-2 bg-gradient-to-r ${tier.colors.primary} hover:opacity-90`}
           >
             <Download className="h-4 w-4" />
             {isDownloading ? "Downloading..." : "Download Badge"}
@@ -194,7 +195,7 @@ export default function MilestoneAchievementBadge({
               onClick={copyToClipboard}
               className="hover:bg-gray-500/10 hover:border-gray-500/50"
             >
-              <X className="h-4 w-4" />
+              <Copy className="h-4 w-4" />
             </Button>
           </div>
         </div>
