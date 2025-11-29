@@ -202,7 +202,7 @@ export default function Success() {
         </div>
 
         {/* Tracking Info */}
-        {orderDetails.tracking_number && (
+        {orderDetails.tracking_number ? (
           <div className="bg-card border border-border rounded-2xl p-6 mb-6">
             <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
               <Truck className="w-5 h-5" />
@@ -227,6 +227,16 @@ export default function Success() {
                 </Button>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="bg-muted/50 border border-border rounded-2xl p-6 mb-6">
+            <h2 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Order Processing
+            </h2>
+            <p className="text-muted-foreground">
+              Your order is being processed. Tracking information will appear here once your package ships.
+            </p>
           </div>
         )}
 

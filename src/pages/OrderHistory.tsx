@@ -255,7 +255,7 @@ export default function OrderHistory() {
                       <Separator className="bg-gray-200" />
                       <div className="p-6 bg-gray-50">
                         {/* Tracking Info */}
-                        {order.tracking_number && (
+                        {order.tracking_number ? (
                           <div className="mb-6">
                             <h4 className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
                               <Truck className="w-4 h-4" />
@@ -280,6 +280,18 @@ export default function OrderHistory() {
                                   </a>
                                 </Button>
                               )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mb-6">
+                            <h4 className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
+                              <Truck className="w-4 h-4" />
+                              Shipping Status
+                            </h4>
+                            <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
+                              <p className="text-sm text-gray-700">
+                                Your order is being processed. Tracking will appear here once your package ships.
+                              </p>
                             </div>
                           </div>
                         )}

@@ -4,6 +4,7 @@
  */
 
 import type { VendorAdapter, OrderRecord } from './vendor-fulfillment.ts';
+import { getScalablePressTracking } from './vendor-scalablepress-adapter-tracking.ts';
 
 export const scalablePressAdapter: VendorAdapter = {
   async submitOrder(order: OrderRecord) {
@@ -52,6 +53,11 @@ export const scalablePressAdapter: VendorAdapter = {
       console.error('[SCALABLEPRESS-ADAPTER] Error:', error);
       throw error;
     }
+  },
+
+  // Tracking API integration
+  async getTrackingInfo(vendorOrderId: string) {
+    return await getScalablePressTracking(vendorOrderId);
   }
 };
 
