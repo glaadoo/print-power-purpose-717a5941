@@ -407,7 +407,9 @@ export function ProductConfigurator({
           return; // Exit early to prevent further processing
         } else {
           console.warn('[ProductConfigurator] No price in response:', data);
-          setPriceError('Price not available for this configuration');
+          // This configuration combination doesn't exist in SinaLite's system
+          // Provide a helpful message suggesting user try different options
+          setPriceError('This configuration is not available. Please try a different quantity or option.');
           setFetchingPrice(false);
         }
       } catch (err: any) {
