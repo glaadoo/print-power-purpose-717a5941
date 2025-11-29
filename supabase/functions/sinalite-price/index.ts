@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, storeCode, productOptions, variantKey, method = 'POST' } = await req.json();
+    const { productId, storeCode, productOptions, variantKey, quantity, method = 'POST' } = await req.json();
 
-    console.log("[SINALITE-PRICE] Request:", { method, productId, storeCode, productOptions, variantKey });
+    console.log("[SINALITE-PRICE] Request:", { method, productId, storeCode, productOptions, variantKey, quantity });
 
     // Validate productId and storeCode are valid
     if (!productId || !storeCode) {
@@ -206,6 +206,13 @@ serve(async (req) => {
       const pricingUrl = `${baseUrl}/price/${productId}/${storeCode}`;
       console.log("[SINALITE-PRICE] Calling POST:", pricingUrl);
       console.log("[SINALITE-PRICE] Option IDs:", productOptions);
+      console.log("[SINALITE-PRICE] Quantity:", quantity);
+      
+      // Build request body - include quantity separately for variable qty products
+      const requestBody: { productOptions: number[]; quantity?: number } = { productOptions };
+      if (quantity && typeof quantity === 'number' && quantity > 0) {
+        requestBody.quantity = quantity;
+      }
       
       apiResponse = await fetch(pricingUrl, {
         method: "POST",
@@ -213,7 +220,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ productOptions }),
+        body: JSON.stringify(requestBody),
       });
     }
 

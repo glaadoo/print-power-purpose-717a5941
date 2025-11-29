@@ -480,25 +480,26 @@ export function ProductConfigurator({
       const usePost = isVariableQty && customQuantity;
       
       if (usePost) {
-        // Build productOptions array: all non-qty option IDs + custom quantity
-        const productOptions: (number | string)[] = [];
+        // Build productOptions array with ONLY non-qty option IDs
+        // The quantity is passed separately for variable_qty products
+        const productOptions: number[] = [];
         optionGroups.forEach(group => {
           const isQty = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
-          if (isQty) {
-            // Add the custom quantity as a number
-            productOptions.push(parseInt(customQuantity) || 100);
-          } else {
-            // Add the selected option ID
+          if (!isQty) {
+            // Add only non-qty option IDs
             const optId = selectedOptions[group.group];
             if (optId) productOptions.push(optId);
           }
         });
+        
+        const quantityValue = parseInt(customQuantity) || 100;
         
         console.log('[ProductConfigurator] Calling sinalite-price with POST (variable qty)...');
         console.log('[ProductConfigurator] Request body:', {
           productId: vendorProductId,
           storeCode: storeCode,
           productOptions: productOptions,
+          quantity: quantityValue,
           method: 'POST'
         });
         
@@ -512,6 +513,7 @@ export function ProductConfigurator({
                 productId: vendorProductId,
                 storeCode: storeCode,
                 productOptions: productOptions,
+                quantity: quantityValue,
                 method: 'POST'
               },
             },
