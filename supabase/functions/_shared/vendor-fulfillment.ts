@@ -19,9 +19,24 @@ export interface OrderRecord {
   items: any[];
   vendor_key?: string;
   vendor_status?: string;
+  vendor_order_id?: string;
   shipping_address?: any;
   billing_address?: any;
-  // Add other order fields as needed
+  // Tracking fields
+  tracking_number?: string | null;
+  tracking_url?: string | null;
+  tracking_carrier?: string | null;
+  shipping_status?: string | null;
+  shipped_at?: string | null;
+}
+
+export interface TrackingInfo {
+  tracking_number?: string;
+  tracking_url?: string;
+  tracking_carrier?: string;
+  shipping_status?: string;
+  shipped_at?: string;
+  rawResponse?: any;
 }
 
 export interface VendorAdapter {
@@ -30,6 +45,14 @@ export interface VendorAdapter {
     status: string;
     rawResponse?: any;
   }>;
+  
+  /**
+   * Optional: Fetch tracking information from vendor API
+   * Implement this method if the vendor provides tracking via API
+   * @param vendorOrderId The vendor's order ID
+   * @returns Tracking information or null if not available
+   */
+  getTrackingInfo?(vendorOrderId: string): Promise<TrackingInfo | null>;
 }
 
 // Registry of all vendor adapters
@@ -329,5 +352,66 @@ async function updateOrderVendorStatus(
     }
   } catch (error) {
     console.error('[VENDOR-FULFILLMENT] Failed to update order status:', error);
+  }
+}
+
+/**
+ * Update tracking information from vendor API
+ * Non-blocking - logs errors but doesn't throw
+ */
+export async function updateTrackingFromVendor(order: OrderRecord): Promise<void> {
+  console.log(`[VENDOR-FULFILLMENT] Attempting to fetch tracking for order ${order.order_number}`);
+  
+  try {
+    const vendorKey = order.vendor_key || 'sinalite';
+    const adapter = vendorAdapters[vendorKey];
+    
+    if (!adapter?.getTrackingInfo) {
+      console.log(`[VENDOR-FULFILLMENT] No tracking API available for vendor: ${vendorKey}`);
+      return;
+    }
+    
+    if (!order.vendor_order_id) {
+      console.log(`[VENDOR-FULFILLMENT] No vendor_order_id available for order ${order.order_number}`);
+      return;
+    }
+    
+    const trackingInfo = await adapter.getTrackingInfo(order.vendor_order_id);
+    
+    if (!trackingInfo) {
+      console.log(`[VENDOR-FULFILLMENT] No tracking info returned from vendor for ${order.vendor_order_id}`);
+      return;
+    }
+    
+    console.log(`[VENDOR-FULFILLMENT] Received tracking info:`, trackingInfo);
+    
+    // Update order with tracking information
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    const updateData: any = {};
+    if (trackingInfo.tracking_number) updateData.tracking_number = trackingInfo.tracking_number;
+    if (trackingInfo.tracking_url) updateData.tracking_url = trackingInfo.tracking_url;
+    if (trackingInfo.tracking_carrier) updateData.tracking_carrier = trackingInfo.tracking_carrier;
+    if (trackingInfo.shipping_status) updateData.shipping_status = trackingInfo.shipping_status;
+    if (trackingInfo.shipped_at) updateData.shipped_at = trackingInfo.shipped_at;
+    
+    if (Object.keys(updateData).length > 0) {
+      const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', order.id);
+      
+      if (error) {
+        console.error('[VENDOR-FULFILLMENT] Error updating tracking:', error);
+      } else {
+        console.log(`[VENDOR-FULFILLMENT] Updated tracking for order ${order.order_number}`);
+      }
+    }
+  } catch (error) {
+    console.error('[VENDOR-FULFILLMENT] Error fetching tracking from vendor:', error);
+    // Don't throw - this is non-blocking
   }
 }

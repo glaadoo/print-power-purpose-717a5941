@@ -14,6 +14,8 @@ import {
   ChevronDown,
   ChevronUp,
   ShoppingBag,
+  Truck,
+  ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -36,6 +38,10 @@ interface Order {
   cause_name?: string;
   nonprofit_name?: string;
   customer_email: string;
+  tracking_number?: string | null;
+  tracking_url?: string | null;
+  tracking_carrier?: string | null;
+  shipping_status?: string | null;
 }
 
 export default function OrderHistory() {
@@ -216,6 +222,12 @@ export default function OrderHistory() {
                               {order.nonprofit_name || order.cause_name}
                             </div>
                           )}
+                          {order.tracking_number && (
+                            <div className="flex items-center gap-1">
+                              <Truck className="w-4 h-4" />
+                              {order.shipping_status || 'Shipped'}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -242,6 +254,36 @@ export default function OrderHistory() {
                     <>
                       <Separator className="bg-gray-200" />
                       <div className="p-6 bg-gray-50">
+                        {/* Tracking Info */}
+                        {order.tracking_number && (
+                          <div className="mb-6">
+                            <h4 className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
+                              <Truck className="w-4 h-4" />
+                              Tracking Information
+                            </h4>
+                            <div className="bg-white rounded-lg border border-gray-200 p-4">
+                              {order.tracking_carrier && (
+                                <p className="text-sm text-gray-600 mb-1">
+                                  Carrier: <span className="font-medium text-gray-900">{order.tracking_carrier}</span>
+                                </p>
+                              )}
+                              <p className="text-sm text-gray-600 mb-1">
+                                Status: <span className="font-medium text-gray-900">{order.shipping_status || 'Shipped'}</span>
+                              </p>
+                              <p className="text-sm text-gray-600 mb-3">
+                                Tracking: <code className="font-mono text-gray-900">{order.tracking_number}</code>
+                              </p>
+                              {order.tracking_url && (
+                                <Button asChild variant="outline" size="sm" className="w-full">
+                                  <a href={order.tracking_url} target="_blank" rel="noopener noreferrer">
+                                    Track Package <ExternalLink className="w-4 h-4 ml-2" />
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Items List */}
                         {order.items && order.items.length > 0 && (
                           <div className="mb-6">
