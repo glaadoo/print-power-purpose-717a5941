@@ -5,6 +5,7 @@ import { useFavorites } from "@/context/FavoritesContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef } from "react";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
+import { useUnseenMilestones } from "@/hooks/useUnseenMilestones";
 
 export default function VistaprintNav() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function VistaprintNav() {
   const productsMenuRef = useRef<HTMLDivElement>(null);
   
   const isHomePage = location.pathname === "/";
+  const { unseenCount: unseenMilestones } = useUnseenMilestones();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -334,6 +336,11 @@ export default function VistaprintNav() {
                       >
                         <Trophy className="w-4 h-4 text-amber-500" />
                         Donor Profile
+                        {unseenMilestones > 0 && (
+                          <span className="ml-auto bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                            {unseenMilestones}
+                          </span>
+                        )}
                       </button>
                       <div className="border-t border-gray-200 my-2"></div>
                       <button
