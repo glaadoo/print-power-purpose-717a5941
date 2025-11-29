@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, Heart, User, Search, Menu, ChevronDown, Package, MessageCircle, Loader2 } from "lucide-react";
+import { ShoppingCart, Heart, User, Menu, ChevronDown, Package, MessageCircle, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -219,15 +219,6 @@ export default function VistaprintNav() {
 
           {/* Right: Utility Items */}
           <div className="flex items-center gap-4">
-            {/* Search Icon */}
-            <button 
-              onClick={() => navigate("/products?search=true")}
-              className="p-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
             {/* Wishlist - Hidden on home page */}
             {!isHomePage && (
               <button 
