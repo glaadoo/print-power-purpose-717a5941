@@ -172,17 +172,21 @@ export default function ScalablePressConfigurator({
 
   return (
     <div className="space-y-4 p-3 bg-white/5 rounded-lg border border-white/10">
-      {/* Color Selection */}
+      {/* Color Selection with Product Images */}
       <div>
         <label className="block text-sm font-semibold text-foreground mb-3">
           Color: {selectedColor && <span className="text-primary font-medium">{selectedColor}</span>}
         </label>
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-3">
           {colors.map((color: any) => {
             const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === color.name.toLowerCase());
             const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
             const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
-            const colorHex = getColorHex(color.name, color.hex);
+            
+            // Get the first image for this color
+            const colorImage = color.images && color.images.length > 0 
+              ? (typeof color.images[0] === 'string' ? color.images[0] : color.images[0]?.url)
+              : null;
             
             return (
               <div key={color.name} className="flex flex-col items-center gap-1">
@@ -190,30 +194,46 @@ export default function ScalablePressConfigurator({
                   type="button"
                   onClick={() => handleColorChange(color.name)}
                   className={`
-                    relative w-12 h-12 rounded-full border-4 transition-all duration-200 shadow-md cursor-pointer
+                    relative w-20 h-20 rounded-lg border-2 transition-all duration-200 overflow-hidden cursor-pointer bg-muted
                     ${selectedColor === color.name 
-                      ? 'border-primary ring-4 ring-primary/30 scale-110 shadow-lg shadow-primary/50' 
-                      : 'border-white/30 hover:border-primary/50 hover:scale-105 hover:shadow-xl'
+                      ? 'border-primary ring-2 ring-primary/30 scale-105 shadow-lg' 
+                      : 'border-border hover:border-primary/50 hover:scale-105 hover:shadow-md'
                     }
-                    ${!hasStock ? 'opacity-40' : 'hover:brightness-110'}
+                    ${!hasStock ? 'opacity-50' : ''}
                   `}
-                  style={{ backgroundColor: colorHex }}
                   title={`${color.name}${!hasStock ? ' (Out of Stock)' : ''}`}
                   aria-label={`Select ${color.name}`}
                 >
+                  {colorImage ? (
+                    <img 
+                      src={colorImage} 
+                      alt={color.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div 
+                      className="w-full h-full"
+                      style={{ backgroundColor: getColorHex(color.name, color.hex) }}
+                    />
+                  )}
+                  
                   {selectedColor === color.name && (
-                    <span className="absolute inset-0 flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                      <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+                    <span className="absolute inset-0 flex items-center justify-center bg-primary/20">
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
                     </span>
                   )}
+                  
                   {!hasStock && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md" />
+                    <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border border-white shadow-sm" />
                   )}
                 </button>
-                <span className="text-xs text-foreground font-medium text-center">{color.name}</span>
-                <span className={`text-[10px] font-semibold ${hasStock ? 'text-green-400' : 'text-red-400'}`}>
+                <span className="text-xs text-foreground font-medium text-center max-w-20 truncate">{color.name}</span>
+                <span className={`text-[10px] font-semibold ${hasStock ? 'text-green-500' : 'text-red-400'}`}>
                   {hasStock ? 'In Stock' : 'Out of Stock'}
                 </span>
               </div>
