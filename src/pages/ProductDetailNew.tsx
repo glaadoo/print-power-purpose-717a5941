@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import ImageGallery from "@/components/ImageGallery";
 import ArtworkUpload from "@/components/ArtworkUpload";
+import ProductDescription from "@/components/product-detail/ProductDescription";
 
 type ProductRow = {
   id: string;
@@ -393,7 +394,12 @@ export default function ProductDetailNew() {
 
                 {/* Description */}
                 {product.description && (
-                  <p className="text-muted-foreground mb-6">{product.description}</p>
+                  <div className="mb-6">
+                    <ProductDescription 
+                      description={product.description} 
+                      productName={product.name}
+                    />
+                  </div>
                 )}
               </div>
 
