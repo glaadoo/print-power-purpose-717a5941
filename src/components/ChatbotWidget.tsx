@@ -77,7 +77,7 @@ export default function ChatbotWidget() {
         <img 
           src={kenziePuppy} 
           alt="Kenzie" 
-          className="w-14 h-14 object-contain"
+          className="w-16 h-16 object-contain"
         />
       </motion.button>
     </div>
