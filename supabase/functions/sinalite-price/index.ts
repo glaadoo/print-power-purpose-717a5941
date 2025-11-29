@@ -208,11 +208,14 @@ serve(async (req) => {
       console.log("[SINALITE-PRICE] Option IDs:", productOptions);
       console.log("[SINALITE-PRICE] Quantity:", quantity);
       
-      // Build request body - include quantity separately for variable qty products
-      const requestBody: { productOptions: number[]; quantity?: number } = { productOptions };
+      // Build request body - include qty separately for variable qty products
+      // SinaLite API expects 'qty' not 'quantity' for custom quantity
+      const requestBody: { productOptions: number[]; qty?: number } = { productOptions };
       if (quantity && typeof quantity === 'number' && quantity > 0) {
-        requestBody.quantity = quantity;
+        requestBody.qty = quantity;
       }
+      
+      console.log("[SINALITE-PRICE] Request body:", JSON.stringify(requestBody));
       
       apiResponse = await fetch(pricingUrl, {
         method: "POST",
