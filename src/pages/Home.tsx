@@ -331,9 +331,6 @@ export default function Home() {
                     <CarouselPrevious className="bg-white hover:bg-gray-100 border-gray-300 -left-4" />
                     <CarouselNext className="bg-white hover:bg-gray-100 border-gray-300 -right-4" />
                   </Carousel>
-                  <p className="text-center text-xs text-gray-500 mt-4">
-                    Auto-plays every 8 seconds • Click video to pause
-                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center aspect-video bg-blue-50 rounded-lg border-2 border-dashed border-blue-200">
