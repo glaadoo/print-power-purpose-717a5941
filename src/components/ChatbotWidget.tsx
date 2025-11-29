@@ -40,8 +40,8 @@ export default function ChatbotWidget() {
             : 'opacity-0 translate-y-2 scale-90'
         }`}
       >
-        <div className="relative bg-white rounded-xl px-3 py-1.5 shadow-md border-2 border-amber-200">
-          <span className="text-sm font-bold text-amber-600 whitespace-nowrap">
+        <div className="relative bg-white rounded-lg px-2 py-1 shadow-md border border-amber-200">
+          <span className="text-xs font-bold text-amber-600 whitespace-nowrap">
             Woof! 🐾
           </span>
           {/* Speech bubble tail */}
