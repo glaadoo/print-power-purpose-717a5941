@@ -196,6 +196,25 @@ export default function ImageGallery({ images, alt, onError, selectedIndex, colo
             ))}
           </div>
         )}
+
+        {/* Navigation Dots (when thumbnails are hidden) */}
+        {images.length > 1 && hideThumbnails && (
+          <div className="flex justify-center gap-2 pt-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => handleThumbnailClick(index)}
+                className={cn(
+                  "w-2.5 h-2.5 rounded-full transition-all duration-200",
+                  currentIndex === index
+                    ? "bg-primary scale-125"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                )}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Full Screen Modal */}
