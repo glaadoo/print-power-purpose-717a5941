@@ -333,7 +333,7 @@ export default function Home() {
                 <span className="absolute left-9 top-5 text-amber-500 text-lg animate-[speech-dot_1.5s_ease-in-out_infinite_0.4s]">•</span>
               </div>
               
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 whitespace-nowrap">
                 Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">Print Power Purpose</span>
               </h2>
               <p className="text-lg text-gray-700 mb-2 font-medium">
@@ -360,18 +360,20 @@ export default function Home() {
               </div>
 
               {/* CTA Button */}
-              <button
-                onClick={() => {
-                  localStorage.setItem("ppp_access", "guest");
-                  nav("/select/nonprofit");
-                }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-lg"
-              >
-                Start Exploring
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </button>
+              <div className="flex justify-center md:justify-end">
+                <button
+                  onClick={() => {
+                    localStorage.setItem("ppp_access", "guest");
+                    nav("/select/nonprofit");
+                  }}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-lg"
+                >
+                  Start Exploring
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
