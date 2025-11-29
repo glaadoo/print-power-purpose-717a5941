@@ -5,6 +5,7 @@ import { Trophy, Medal, Award, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MILESTONE_TIERS, formatCents } from "@/lib/milestone-tiers";
+import confetti from "canvas-confetti";
 
 interface TopDonor {
   donor_display_name: string;
@@ -35,6 +36,45 @@ const getChangedDonors = (prev: TopDonor[], next: TopDonor[]): Set<string> => {
   return changed;
 };
 
+// Check if any donor moved into top 3
+const checkTop3Entry = (prev: TopDonor[], next: TopDonor[]): boolean => {
+  return next.some((donor) => {
+    if (donor.rank > 3) return false;
+    const prevDonor = prev.find(p => p.donor_display_name === donor.donor_display_name);
+    // New to top 3 or moved up into top 3
+    return !prevDonor || prevDonor.rank > 3;
+  });
+};
+
+// Trigger celebration confetti
+const triggerConfetti = () => {
+  const duration = 3000;
+  const end = Date.now() + duration;
+
+  const colors = ["#fbbf24", "#f59e0b", "#d97706", "#ffffff", "#fef3c7"];
+
+  (function frame() {
+    confetti({
+      particleCount: 3,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+      colors,
+    });
+    confetti({
+      particleCount: 3,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 },
+      colors,
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
+};
+
 const getTierInfo = (tierId: string | null) => {
   if (!tierId) return null;
   return MILESTONE_TIERS.find((t) => t.id === tierId) || null;
@@ -63,6 +103,11 @@ export default function DonorLeaderboard() {
           setChangedDonors(changed);
           // Clear highlight after animation
           setTimeout(() => setChangedDonors(new Set()), 2000);
+        }
+        
+        // Trigger confetti if someone moved into top 3
+        if (checkTop3Entry(prevDonorsRef.current, newDonors)) {
+          triggerConfetti();
         }
       }
       
