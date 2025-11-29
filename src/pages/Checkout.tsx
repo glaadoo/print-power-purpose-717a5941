@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { normalizeDonationCents } from "@/lib/donation-utils";
 import { withRetry } from "@/lib/api-retry";
+import { calculateOrderShipping, getShippingTierLabel } from "@/lib/shipping-tiers";
 import {
   Dialog,
   DialogContent,
@@ -358,7 +359,9 @@ export default function Checkout() {
 
   // Calculate totals from cart items
   const subtotal = cartItems.reduce((sum, item) => sum + (item.priceCents * item.quantity), 0);
-  const total = subtotal + donation;
+  const shippingCents = calculateOrderShipping(cartItems.map(item => ({ name: item.name, category: null })));
+  const shippingLabel = getShippingTierLabel(shippingCents);
+  const total = subtotal + shippingCents + donation;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -548,6 +551,10 @@ export default function Checkout() {
             <div className="flex justify-between text-xl font-bold mb-2 text-gray-900">
               <span>Subtotal</span>
               <span>${(subtotal / 100).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-lg text-gray-600 mb-2">
+              <span>{shippingLabel}</span>
+              <span>${(shippingCents / 100).toFixed(2)}</span>
             </div>
             {donation > 0 && (
               <div className="flex justify-between text-lg text-gray-600 mb-2">

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { computeGlobalPricing, type PricingSettings } from "../_shared/pricing.ts";
+import { calculateOrderShipping, getShippingTierLabel } from "../_shared/shipping-tiers.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -88,18 +89,22 @@ serve(async (req) => {
     // Build order items with global pricing
     const orderItems = [];
     let subtotalCents = 0;
+    const shippingItems: Array<{ productName: string; category?: string | null }> = [];
 
     for (const cartItem of cart.items) {
-      // Fetch product
+      // Fetch product with category
       const { data: product } = await supabase
         .from("products")
-        .select("id, name, vendor, base_cost_cents")
+        .select("id, name, vendor, base_cost_cents, category")
         .eq("id", cartItem.id)
         .single();
 
       if (!product) {
         throw new Error(`Product not found: ${cartItem.id}`);
       }
+
+      // Collect for shipping calculation
+      shippingItems.push({ productName: product.name, category: product.category });
 
       // Compute pricing using global engine
       const pricing = computeGlobalPricing({
@@ -115,6 +120,7 @@ serve(async (req) => {
         productId: product.id,
         productName: product.name,
         vendor: product.vendor,
+        category: product.category,
         quantity: cartItem.quantity,
         base_cost_cents: pricing.base_price_per_unit_cents,
         markup_amount_cents: pricing.markup_amount_cents,
@@ -128,6 +134,7 @@ serve(async (req) => {
         product_id: product.id,
         product_name: product.name,
         vendor: product.vendor,
+        category: product.category,
         quantity: cartItem.quantity,
         base_price_per_unit_cents: pricing.base_price_per_unit_cents,
         markup_mode: settings.markup_mode,
@@ -143,12 +150,18 @@ serve(async (req) => {
       });
     }
 
+    // Calculate shipping based on product categories
+    const shippingCents = calculateOrderShipping(shippingItems);
+    const shippingLabel = getShippingTierLabel(shippingCents);
+    console.log("[PPP:SHIPPING] Calculated shipping:", { shippingCents, shippingLabel, items: shippingItems });
+
     const taxCents = 0;
     const donationAmount = donationCents || 0;
-    const totalAmountCents = subtotalCents + taxCents + donationAmount;
+    const totalAmountCents = subtotalCents + shippingCents + taxCents + donationAmount;
 
     console.log("[PPP:PRICING:CHECKOUT] Order totals:", {
       subtotalCents,
+      shippingCents,
       taxCents,
       donationAmount,
       totalAmountCents,
@@ -221,6 +234,20 @@ serve(async (req) => {
       quantity: item.quantity,
     }));
 
+    // Add shipping line item
+    if (shippingCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: shippingLabel,
+          },
+          unit_amount: shippingCents,
+        },
+        quantity: 1,
+      });
+    }
+
     // Add donation if present
     if (donationAmount > 0) {
       lineItems.push({
@@ -250,6 +277,7 @@ serve(async (req) => {
         nonprofit_name: nonprofitName || "",
         nonprofit_ein: nonprofitEin || "",
         donation_cents: String(donationAmount),
+        shipping_cents: String(shippingCents),
       },
     });
 
