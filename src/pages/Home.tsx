@@ -8,7 +8,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { supabase } from "@/integrations/supabase/client";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
-import kenzieAnimated from "@/assets/kenzie-final-transparent.png";
+import kenzieAnimated from "@/assets/kenzie-standing.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -247,107 +247,129 @@ export default function Home() {
       </section>
 
       {/* Welcome Section with Animated Kenzie */}
-      <section className="relative bg-gradient-to-b from-amber-50/50 via-orange-50/30 to-amber-50/50 py-20 overflow-hidden">
-        {/* Subtle background dots */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 right-20 w-2 h-2 bg-amber-300 rounded-full opacity-60" />
-          <div className="absolute top-40 left-1/4 w-1.5 h-1.5 bg-orange-300 rounded-full opacity-50" />
-          <div className="absolute bottom-32 right-1/3 w-2 h-2 bg-yellow-400 rounded-full opacity-40" />
+      <section className="relative bg-white py-16 overflow-hidden">
+        {/* Subtle paw prints background */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
+          {[...Array(8)].map((_, i) => (
+            <span
+              key={i}
+              className="absolute text-4xl"
+              style={{
+                left: `${10 + Math.random() * 80}%`,
+                top: `${10 + Math.random() * 80}%`,
+                transform: `rotate(${Math.random() * 360}deg)`,
+              }}
+            >
+              🐾
+            </span>
+          ))}
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col items-center">
-            {/* Animated Kenzie Container */}
-            <div className="relative mb-8">
-              {/* Speech Bubble */}
-              <div className="absolute -top-4 right-0 sm:right-8 z-20">
-                <div className="bg-amber-100 border border-amber-200 rounded-2xl px-4 py-2 shadow-sm animate-float">
-                  <span className="text-gray-800 font-medium text-sm sm:text-base">Woof woof! 🐾</span>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            {/* Kenzie Puppy */}
+            <div className="relative flex-shrink-0">
+              {/* Woof woof bubble */}
+              <div className="absolute -top-6 right-0 z-20">
+                <div className="relative bg-white rounded-2xl px-4 py-2 shadow-lg border-2 border-amber-200">
+                  <span className="text-lg font-bold text-amber-600 whitespace-nowrap">
+                    Woof woof! 🐕
+                  </span>
+                  <div className="absolute -bottom-2 left-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-white" />
                 </div>
-                {/* Speech bubble tail */}
-                <div className="absolute -bottom-2 left-8 w-4 h-4 bg-amber-100 border-l border-b border-amber-200 transform rotate-45" />
               </div>
-
-              {/* Butterflies */}
-              <div className="absolute -top-8 left-4 text-xl animate-butterfly-orbit" style={{ animationDuration: '4s' }}>🦋</div>
-              <div className="absolute top-12 -left-12 text-lg animate-butterfly-orbit" style={{ animationDuration: '5s', animationDelay: '1s' }}>🦋</div>
-              <div className="absolute -top-4 -right-8 text-xl animate-butterfly-orbit" style={{ animationDuration: '4.5s', animationDelay: '0.5s' }}>🦋</div>
-              <div className="absolute bottom-16 -right-10 text-lg animate-butterfly-orbit" style={{ animationDuration: '5.5s', animationDelay: '2s' }}>🦋</div>
-              <div className="absolute bottom-4 -left-8 text-base animate-butterfly-orbit" style={{ animationDuration: '4s', animationDelay: '1.5s' }}>🦋</div>
-
-              {/* Floating Hearts */}
-              <div className="absolute -top-6 left-12 text-orange-400 text-xl animate-heart-float" style={{ animationDelay: '0s' }}>🧡</div>
-              <div className="absolute top-8 -left-6 text-blue-400 text-lg animate-heart-float" style={{ animationDelay: '0.5s' }}>💙</div>
-              <div className="absolute top-4 right-16 text-yellow-400 text-xl animate-heart-float" style={{ animationDelay: '1s' }}>💛</div>
-              <div className="absolute bottom-20 -right-4 text-orange-400 text-lg animate-heart-float" style={{ animationDelay: '1.5s' }}>🧡</div>
-              <div className="absolute bottom-8 left-4 text-yellow-400 text-base animate-heart-float" style={{ animationDelay: '2s' }}>💛</div>
-
-              {/* Sparkles */}
-              <div className="absolute -top-2 left-20 text-amber-400 animate-sparkle-tail" style={{ animationDelay: '0s' }}>✨</div>
-              <div className="absolute top-16 -right-6 text-yellow-300 animate-sparkle-tail" style={{ animationDelay: '0.3s' }}>✨</div>
-              <div className="absolute bottom-24 -left-4 text-amber-300 animate-sparkle-tail" style={{ animationDelay: '0.6s' }}>✨</div>
-              <div className="absolute bottom-12 right-8 text-yellow-400 animate-sparkle-tail" style={{ animationDelay: '0.9s' }}>✨</div>
-
-              {/* Kenzie with bounce animation */}
-              <div className="relative animate-gentle-bounce">
+              
+              {/* Kenzie with gentle bounce */}
+              <div className="relative">
                 <img
                   src={kenzieAnimated}
-                  alt="Kenzie - Your friendly guide"
-                  className="w-56 h-56 sm:w-72 sm:h-72 object-contain drop-shadow-xl [filter:drop-shadow(0_4px_6px_rgba(0,0,0,0.1))]"
-                  style={{ 
-                    background: 'transparent',
-                    mixBlendMode: 'multiply'
-                  }}
+                  alt="Kenzie the puppy"
+                  className="w-72 h-72 md:w-96 md:h-96 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite]"
                 />
-              </div>
-
-              {/* Paw prints at bottom */}
-              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
-                <span className="text-amber-300/70 text-lg animate-paw-appear" style={{ animationDelay: '0s' }}>🐾</span>
-                <span className="text-amber-300/70 text-lg animate-paw-appear" style={{ animationDelay: '0.4s' }}>🐾</span>
-                <span className="text-amber-300/70 text-lg animate-paw-appear" style={{ animationDelay: '0.8s' }}>🐾</span>
+                
+                {/* Floating hearts */}
+                <div className="absolute top-[25%] right-[22%] z-20 animate-[float_2s_ease-in-out_infinite]">
+                  <span className="text-lg">💛</span>
+                </div>
+                <div className="absolute top-[40%] left-[18%] z-20 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
+                  <span className="text-base">💙</span>
+                </div>
+                <div className="absolute top-[18%] left-[30%] z-20 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
+                  <span className="text-base">🧡</span>
+                </div>
+                
+                {/* Butterflies */}
+                <div className="absolute top-[15%] right-[25%] z-20 animate-[butterfly-orbit_4s_ease-in-out_infinite]">
+                  <span className="text-lg">🦋</span>
+                  <span className="absolute -top-2 right-0 text-xs animate-[sparkle_0.8s_ease-in-out_infinite]">✨</span>
+                </div>
+                
+                <div className="absolute top-[45%] left-[15%] z-20 animate-[butterfly-orbit_5s_ease-in-out_infinite_1s]">
+                  <span className="text-base">🦋</span>
+                  <span className="absolute -top-2 left-0 text-xs animate-[sparkle_0.6s_ease-in-out_infinite_0.2s]">✨</span>
+                </div>
+                
+                <div className="absolute top-[60%] right-[18%] z-20 animate-[butterfly-orbit_4.5s_ease-in-out_infinite_2s]">
+                  <span className="text-base">🦋</span>
+                  <span className="absolute -bottom-2 right-0 text-xs animate-[sparkle_0.7s_ease-in-out_infinite_0.4s]">✨</span>
+                </div>
+                
+                {/* Extra sparkles */}
+                <div className="absolute top-[30%] right-[35%] z-20 animate-[sparkle_1.2s_ease-in-out_infinite]">
+                  <span className="text-xs">✨</span>
+                </div>
+                <div className="absolute top-[55%] left-[25%] z-20 animate-[sparkle_1s_ease-in-out_infinite_0.5s]">
+                  <span className="text-xs">✨</span>
+                </div>
               </div>
             </div>
 
-            {/* Welcome Message */}
-            <div className="text-center max-w-2xl">
+            {/* Content area */}
+            <div className="flex-1 text-center md:text-left relative">
+              {/* Floating dots connector */}
+              <div className="absolute -left-12 top-8 hidden md:block">
+                <span className="absolute left-0 top-0 text-amber-500 text-2xl animate-[speech-dot_1.5s_ease-in-out_infinite]">•</span>
+                <span className="absolute left-5 top-3 text-amber-500 text-xl animate-[speech-dot_1.5s_ease-in-out_infinite_0.2s]">•</span>
+                <span className="absolute left-9 top-5 text-amber-500 text-lg animate-[speech-dot_1.5s_ease-in-out_infinite_0.4s]">•</span>
+              </div>
+              
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
                 Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">KenzieCare!</span>
               </h2>
-              <p className="text-lg sm:text-xl text-gray-700 mb-3 font-medium">
+              <p className="text-lg text-gray-700 mb-2 font-medium">
                 Where every small donation creates a big impact.
               </p>
-              <p className="text-base text-gray-600 mb-8">
+              <p className="text-gray-600 mb-6 max-w-md mx-auto md:mx-0">
                 We connect generous people with meaningful causes and help schools, nonprofits, and communities achieve their goals—one donation at a time.
               </p>
 
               {/* Cause Icons */}
-              <div className="flex flex-wrap justify-center gap-3 mb-8">
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-8">
+                <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                   <span className="text-xl">🏫</span>
                   <span className="text-sm font-medium text-gray-700">Schools</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                   <span className="text-xl">🏠</span>
                   <span className="text-sm font-medium text-gray-700">Shelters</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                   <span className="text-xl">💚</span>
                   <span className="text-sm font-medium text-gray-700">Nonprofits</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                   <span className="text-xl">🌍</span>
                   <span className="text-sm font-medium text-gray-700">Communities</span>
                 </div>
               </div>
 
-              {/* Start Exploring Button */}
+              {/* CTA Button */}
               <button
                 onClick={() => {
                   localStorage.setItem("ppp_access", "guest");
                   nav("/select/nonprofit");
                 }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-lg"
               >
                 Start Exploring
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
