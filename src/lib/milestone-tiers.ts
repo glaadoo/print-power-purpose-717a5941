@@ -25,9 +25,9 @@ export const MILESTONE_TIERS: MilestoneTier[] = [
       primary: "from-amber-600 to-amber-800",
       secondary: "amber",
       gradient: "from-amber-600 via-orange-700 to-amber-800",
-      text: "text-yellow-600",
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/30",
+      text: "text-orange-600",
+      bg: "bg-orange-100",
+      border: "border-orange-400",
     },
   },
   {
