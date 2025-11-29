@@ -204,48 +204,6 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <VistaprintNav />
 
-      {/* Dashboard Header */}
-      <section className="bg-gradient-to-br from-blue-50 to-white border-b border-gray-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-6">
-              <img
-                src={kenzieMascot}
-                alt="Kenzie - Print Power Purpose Mascot"
-                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
-              />
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                  Welcome to Print Power Purpose
-                </h1>
-                <p className="text-base text-gray-600">
-                  Professional printing that supports your favorite causes
-                </p>
-              </div>
-            </div>
-            {!isAuthenticated && (
-              <div className="flex gap-3">
-                <button
-                  onClick={() => nav("/auth")}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm"
-                >
-                  Sign Up / Sign In
-                </button>
-                <button
-                  onClick={() => {
-                    localStorage.setItem("ppp_access", "guest");
-                    nav("/welcome");
-                  }}
-                  className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-6 py-3 rounded-lg border-2 border-gray-300 transition-colors"
-                >
-                  Continue as Guest
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* Welcome Section with Animated Kenzie */}
       <section className="relative bg-white py-16 overflow-hidden">
         {/* Subtle paw prints background */}
@@ -375,6 +333,48 @@ export default function Home() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dashboard Header */}
+      <section className="bg-gradient-to-br from-blue-50 to-white border-b border-gray-200 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <img
+                src={kenzieMascot}
+                alt="Kenzie - Print Power Purpose Mascot"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
+              />
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                  Welcome to Print Power Purpose
+                </h1>
+                <p className="text-base text-gray-600">
+                  Professional printing that supports your favorite causes
+                </p>
+              </div>
+            </div>
+            {!isAuthenticated && (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => nav("/auth")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm"
+                >
+                  Sign Up / Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem("ppp_access", "guest");
+                    nav("/welcome");
+                  }}
+                  className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-6 py-3 rounded-lg border-2 border-gray-300 transition-colors"
+                >
+                  Continue as Guest
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>
