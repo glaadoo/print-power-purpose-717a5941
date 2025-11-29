@@ -216,6 +216,26 @@ export default function VistaprintNav() {
               >
                 Contact
               </Link>
+              
+              {/* Donation Profile - Only for authenticated users */}
+              {isAuthenticated && (
+                <Link 
+                  to="/donor-profile" 
+                  className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                    isActive("/donor-profile") 
+                      ? "text-blue-600" 
+                      : "text-gray-700 hover:text-blue-600"
+                  }`}
+                >
+                  <Trophy className="w-4 h-4 text-amber-500" />
+                  Donation Profile
+                  {unseenMilestones > 0 && (
+                    <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                      {unseenMilestones}
+                    </span>
+                  )}
+                </Link>
+              )}
             </div>
           </div>
 
