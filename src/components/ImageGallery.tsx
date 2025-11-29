@@ -11,9 +11,10 @@ interface ImageGalleryProps {
   onError?: () => void;
   selectedIndex?: number;
   colorLabel?: string;
+  hideThumbnails?: boolean;
 }
 
-export default function ImageGallery({ images, alt, onError, selectedIndex, colorLabel }: ImageGalleryProps) {
+export default function ImageGallery({ images, alt, onError, selectedIndex, colorLabel, hideThumbnails }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Sync with external selectedIndex when it changes
@@ -167,7 +168,7 @@ export default function ImageGallery({ images, alt, onError, selectedIndex, colo
         </div>
 
         {/* Thumbnails */}
-        {images.length > 1 && (
+        {images.length > 1 && !hideThumbnails && (
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {images.map((image, index) => (
               <button
