@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -54,6 +54,8 @@ export default function Products() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [searchParams] = useSearchParams();
   const { open: showCategories, toggle: toggleCategories } = useToggle(true);
 
   // Load cached categories from localStorage immediately
@@ -240,6 +242,14 @@ export default function Products() {
     fetchCategories();
     fetchProducts();
   }, []);
+
+  // Focus search input when navigating from header search icon
+  useEffect(() => {
+    if (searchParams.get('search') === 'true' && searchInputRef.current) {
+      searchInputRef.current.focus();
+      setShowSuggestions(true);
+    }
+  }, [searchParams]);
 
   // No preloading - base_cost_cents already contains first configuration price from sync
 
@@ -575,6 +585,7 @@ export default function Products() {
               <div className="flex-1 relative" ref={searchRef}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
+                  ref={searchInputRef}
                   type="text"
                   placeholder="Search products..."
                   value={searchTerm}

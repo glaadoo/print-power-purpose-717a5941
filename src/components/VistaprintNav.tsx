@@ -221,7 +221,8 @@ export default function VistaprintNav() {
           <div className="flex items-center gap-4">
             {/* Search Icon */}
             <button 
-              className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+              onClick={() => navigate("/products?search=true")}
+              className="p-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
