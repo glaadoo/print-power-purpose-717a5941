@@ -1,5 +1,5 @@
-import { PawPrint } from "lucide-react";
 import { motion } from "framer-motion";
+import kenziePuppy from "@/assets/kenzie-standing.png";
 
 export default function ChatbotWidget() {
   const handleClick = () => {
@@ -24,53 +24,35 @@ export default function ChatbotWidget() {
         <p className="text-sm font-medium text-foreground">Chat with Kenzie</p>
       </motion.button>
 
-      {/* Main circular blue button only */}
+      {/* Kenzie dog button */}
       <motion.button
         onClick={handleClick}
-        className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-lg hover:shadow-2xl transition-all flex items-center justify-center group"
-        whileHover={{ scale: 1.15, rotate: 5 }}
+        className="w-20 h-20 rounded-full bg-white shadow-lg hover:shadow-2xl transition-all flex items-center justify-center overflow-hidden border-2 border-amber-200"
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ 
           scale: 1, 
           opacity: 1,
-          y: [0, -8, 0],
-          rotate: [0, -3, 3, 0]
+          y: [0, -6, 0]
         }}
         transition={{ 
           scale: { duration: 0.3, ease: "easeOut" },
           opacity: { duration: 0.3, ease: "easeOut" },
           y: { 
-            duration: 3, 
+            duration: 2.5, 
             ease: "easeInOut", 
             repeat: Infinity,
             repeatDelay: 0.5
-          },
-          rotate: {
-            duration: 4,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatDelay: 1
           }
         }}
-        aria-label="Open chatbot"
+        aria-label="Chat with Kenzie"
       >
-        <motion.div
-          animate={{ 
-            scale: [1, 1.1, 1]
-          }}
-          transition={{
-            duration: 2,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatDelay: 0.5
-          }}
-        >
-          <PawPrint className="w-7 h-7" />
-        </motion.div>
-        
-        {/* Gentle pulse animation */}
-        <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping opacity-10" style={{ animationDuration: '2s' }} />
+        <img 
+          src={kenziePuppy} 
+          alt="Kenzie" 
+          className="w-16 h-16 object-contain"
+        />
       </motion.button>
     </div>
   );
