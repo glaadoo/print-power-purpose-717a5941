@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, Heart, User, Menu, ChevronDown, Package, MessageCircle, Loader2 } from "lucide-react";
+import { ShoppingCart, Heart, User, Menu, ChevronDown, Package, MessageCircle, Loader2, Trophy } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -324,6 +324,16 @@ export default function VistaprintNav() {
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         My Favorites
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/donor-profile");
+                          setMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                      >
+                        <Trophy className="w-4 h-4 text-amber-500" />
+                        Donor Profile
                       </button>
                       <div className="border-t border-gray-200 my-2"></div>
                       <button
