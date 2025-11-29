@@ -23,23 +23,44 @@ export default function DonorLeaderboard() {
   const [donors, setDonors] = useState<TopDonor[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchTopDonors() {
-      try {
-        const { data, error } = await supabase.rpc("get_top_donors", {
-          limit_count: 10,
-        });
+  const fetchTopDonors = async () => {
+    try {
+      const { data, error } = await supabase.rpc("get_top_donors", {
+        limit_count: 10,
+      });
 
-        if (error) throw error;
-        setDonors(data || []);
-      } catch (error) {
-        console.error("Error fetching top donors:", error);
-      } finally {
-        setLoading(false);
-      }
+      if (error) throw error;
+      setDonors(data || []);
+    } catch (error) {
+      console.error("Error fetching top donors:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchTopDonors();
+
+    // Subscribe to real-time changes on the donations table
+    const channel = supabase
+      .channel('donor-leaderboard-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'donations'
+        },
+        () => {
+          // Refetch leaderboard when donations change
+          fetchTopDonors();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getRankIcon = (rank: number) => {
