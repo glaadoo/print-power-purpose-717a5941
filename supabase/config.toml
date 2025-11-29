@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.test-product-pricing]
 verify_jwt = false
+
+[functions.delete-canada-products]
+verify_jwt = false
