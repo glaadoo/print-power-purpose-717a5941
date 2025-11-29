@@ -190,35 +190,43 @@ export default function ProductConfiguratorLoader({
         
         // Handle different possible data structures - be more flexible
         let optionsData = null;
+        let fullPricingData: any[] | null = null; // Preserve full structure including metadata
         
         // Case 1: Direct array of options
         if (Array.isArray(pricingData) && pricingData.length > 0) {
-          // Check if it's [options, combinations, metadata] format
+          // Check if it's [options, combinations, metadata] format - PRESERVE FULL STRUCTURE
           if (Array.isArray(pricingData[0]) && pricingData[0].length > 0 && pricingData[0][0]?.id && pricingData[0][0]?.group) {
             optionsData = pricingData[0];
-            console.log('[ProductConfiguratorLoader] Using nested array format');
+            fullPricingData = pricingData; // Keep full array including metadata at [2]
+            console.log('[ProductConfiguratorLoader] Using nested array format, preserving metadata:', {
+              hasMetadata: !!pricingData[2],
+              metadataContent: pricingData[2]
+            });
           } 
           // Or just a flat array of options
           else if (pricingData[0]?.id && pricingData[0]?.group) {
             optionsData = pricingData;
+            fullPricingData = [pricingData, {}, {}]; // Wrap in expected format
             console.log('[ProductConfiguratorLoader] Using flat array format');
           }
         } 
         // Case 2: Object with various keys
         else if (pricingData.options && Array.isArray(pricingData.options)) {
           optionsData = pricingData.options;
+          fullPricingData = [pricingData.options, {}, {}];
         } else if (pricingData.configurations && Array.isArray(pricingData.configurations)) {
           optionsData = pricingData.configurations;
+          fullPricingData = [pricingData.configurations, {}, {}];
         } else if (pricingData.attributes && Array.isArray(pricingData.attributes)) {
           optionsData = pricingData.attributes;
+          fullPricingData = [pricingData.attributes, {}, {}];
         }
         
-        if (optionsData && Array.isArray(optionsData) && optionsData.length > 0) {
+        if (optionsData && Array.isArray(optionsData) && optionsData.length > 0 && fullPricingData) {
           console.log('[ProductConfiguratorLoader] Using options from pricing_data, count:', optionsData.length);
           
-          // Format as expected by ProductConfigurator: [options, {}, {}]
-          const options = [optionsData, {}, {}];
-          setPricingOptions(options);
+          // Use the full pricing data structure (preserves metadata for variable_qty detection)
+          setPricingOptions(fullPricingData);
           setProductData(product);
           
           // Immediately fetch default price (first option from each group)
@@ -241,10 +249,10 @@ export default function ProductConfiguratorLoader({
             // Price will be fetched by ProductConfigurator - skip duplicate call
           }
           
-          // Cache the result
+          // Cache the result with full structure
           try {
             sessionStorage.setItem(cacheKey, JSON.stringify({
-              data: { pricingOptions: options, product },
+              data: { pricingOptions: fullPricingData, product },
               timestamp: Date.now()
             }));
           } catch (e) {
