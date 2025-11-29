@@ -252,13 +252,41 @@ export default function Home() {
       {isAuthenticated && (
         <section className="bg-white py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <UserDonationProgress variant="light" />
-              <DonorLeaderboard />
-            </div>
+            <UserDonationProgress variant="light" />
           </div>
         </section>
       )}
+
+      {/* Public Donor Leaderboard - Visible to all users */}
+      <section className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 py-16 border-t border-amber-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              🏆 Top Donors Making a Difference
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Join our community of generous supporters who are making real impact through their donations. 
+              Every contribution counts!
+            </p>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <DonorLeaderboard />
+          </div>
+          {!isAuthenticated && (
+            <div className="text-center mt-8">
+              <button
+                onClick={() => {
+                  localStorage.setItem("ppp_access", "guest");
+                  nav("/select/nonprofit?flow=donation");
+                }}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Start Donating Today
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Featured Products Section */}
       <FeaturedProducts />
