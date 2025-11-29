@@ -333,6 +333,7 @@ export default function ProductDetailNew() {
                   onError={() => setImageError(true)}
                   selectedIndex={gallerySelectedIndex}
                   colorLabel={product.vendor === 'scalablepress' && selectedColorName ? selectedColorName : undefined}
+                  hideThumbnails={product.vendor === 'scalablepress'}
                 />
               ) : (
                 <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border">
