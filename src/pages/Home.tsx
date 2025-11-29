@@ -245,6 +245,95 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Welcome Section with Animated Kenzie */}
+      <section className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-16 overflow-hidden">
+        {/* Subtle background decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-200/30 rounded-full blur-2xl" />
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-pink-200/30 rounded-full blur-2xl" />
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-blue-200/30 rounded-full blur-xl" />
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            {/* Animated Kenzie */}
+            <div className="relative flex-shrink-0">
+              {/* Floating hearts */}
+              <div className="absolute -top-4 -right-2 text-2xl animate-heart-float" style={{ animationDelay: '0s' }}>💛</div>
+              <div className="absolute top-0 -left-4 text-xl animate-heart-float" style={{ animationDelay: '0.7s' }}>💙</div>
+              <div className="absolute -bottom-2 right-0 text-lg animate-heart-float" style={{ animationDelay: '1.4s' }}>💜</div>
+              
+              {/* Kenzie with animations */}
+              <div className="relative animate-gentle-bounce">
+                <img
+                  src={kenzieMascot}
+                  alt="Kenzie - Your friendly guide"
+                  className="w-40 h-40 sm:w-52 sm:h-52 object-contain drop-shadow-xl"
+                />
+                {/* Sparkle effects */}
+                <div className="absolute -top-2 right-4 text-yellow-400 animate-sparkle-tail" style={{ animationDelay: '0s' }}>✨</div>
+                <div className="absolute top-8 -right-2 text-yellow-300 animate-sparkle-tail" style={{ animationDelay: '0.3s' }}>✨</div>
+                <div className="absolute bottom-12 -left-4 text-yellow-400 animate-sparkle-tail" style={{ animationDelay: '0.6s' }}>✨</div>
+              </div>
+              
+              {/* Paw prints */}
+              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3">
+                <span className="text-amber-300/60 text-xl animate-paw-appear" style={{ animationDelay: '0s' }}>🐾</span>
+                <span className="text-amber-300/60 text-xl animate-paw-appear" style={{ animationDelay: '0.4s' }}>🐾</span>
+                <span className="text-amber-300/60 text-xl animate-paw-appear" style={{ animationDelay: '0.8s' }}>🐾</span>
+              </div>
+            </div>
+
+            {/* Welcome Message */}
+            <div className="text-center lg:text-left flex-1">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">KenzieCare!</span>
+              </h2>
+              <p className="text-lg sm:text-xl text-gray-700 mb-3 font-medium">
+                Where every small donation creates a big impact.
+              </p>
+              <p className="text-base text-gray-600 mb-8 max-w-xl">
+                We connect generous people with meaningful causes and help schools, nonprofits, and communities achieve their goals—one donation at a time.
+              </p>
+
+              {/* Cause Icons */}
+              <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                  <span className="text-2xl">🏫</span>
+                  <span className="text-sm font-medium text-gray-700">Schools</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                  <span className="text-2xl">🏠</span>
+                  <span className="text-sm font-medium text-gray-700">Shelters</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                  <span className="text-2xl">💚</span>
+                  <span className="text-sm font-medium text-gray-700">Nonprofits</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                  <span className="text-2xl">🌍</span>
+                  <span className="text-sm font-medium text-gray-700">Communities</span>
+                </div>
+              </div>
+
+              {/* Start Exploring Button */}
+              <button
+                onClick={() => {
+                  localStorage.setItem("ppp_access", "guest");
+                  nav("/select/nonprofit");
+                }}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg"
+              >
+                Start Exploring
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Kenzie Journey Section - Only show for authenticated users */}
       {isAuthenticated && <KenzieJourneySection />}
 
