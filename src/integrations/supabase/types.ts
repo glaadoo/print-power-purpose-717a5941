@@ -745,11 +745,16 @@ export type Database = {
           quantity: number
           receipt_url: string | null
           session_id: string
+          shipped_at: string | null
+          shipping_status: string | null
           sinalite_order_id: string | null
           status: string
           stripe_payment_intent_id: string | null
           subtotal_cents: number | null
           tax_cents: number | null
+          tracking_carrier: string | null
+          tracking_number: string | null
+          tracking_url: string | null
           vendor_error_message: string | null
           vendor_exported_at: string | null
           vendor_key: string | null
@@ -777,11 +782,16 @@ export type Database = {
           quantity?: number
           receipt_url?: string | null
           session_id: string
+          shipped_at?: string | null
+          shipping_status?: string | null
           sinalite_order_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           subtotal_cents?: number | null
           tax_cents?: number | null
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          tracking_url?: string | null
           vendor_error_message?: string | null
           vendor_exported_at?: string | null
           vendor_key?: string | null
@@ -809,11 +819,16 @@ export type Database = {
           quantity?: number
           receipt_url?: string | null
           session_id?: string
+          shipped_at?: string | null
+          shipping_status?: string | null
           sinalite_order_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           subtotal_cents?: number | null
           tax_cents?: number | null
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          tracking_url?: string | null
           vendor_error_message?: string | null
           vendor_exported_at?: string | null
           vendor_key?: string | null
