@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@18.5.0';
 import { Resend } from 'https://esm.sh/resend@4.0.0';
 import jsPDF from 'https://esm.sh/jspdf@2.5.2';
+import { handleVendorFulfillment } from '../_shared/vendor-fulfillment.ts';
 
 // Helper function to get Stripe mode from database
 async function getStripeMode(): Promise<string> {
@@ -404,6 +405,17 @@ serve(async (req) => {
             }
           } catch (emailErr) {
             console.error('Failed to send receipt email:', emailErr);
+          }
+        }
+
+        // NEW: Handle vendor fulfillment (Option 1, 2, or 3 based on env config)
+        if (orderData) {
+          try {
+            console.log('[WEBHOOK] Initiating vendor fulfillment');
+            await handleVendorFulfillment(orderData);
+          } catch (fulfillmentErr) {
+            // Log error but don't block webhook response
+            console.error('[WEBHOOK] Vendor fulfillment failed (non-blocking):', fulfillmentErr);
           }
         }
       }
