@@ -101,21 +101,59 @@ serve(async (req) => {
           const products = categoryData.products;
           totalProducts += products.length;
 
-          // Process products in this category - use ONLY basic data from category response
-          // Skip individual product API calls to avoid CPU timeout
-          const productRecords = products.map((product: any) => {
+          // Process products in this category - fetch price from items endpoint
+          const productRecords = [];
+          
+          for (const product of products) {
             // Extract image URL from category listing data
             let imageUrl = null;
             if (product.image?.url) {
               imageUrl = product.image.url;
             }
 
-            return {
+            // Fetch price from items endpoint (all variants have same price)
+            let baseCostCents = 1000; // Default fallback
+            try {
+              const itemsResponse = await fetch(`${apiUrl}/products/${product.id}/items`, {
+                headers: {
+                  "Authorization": `Basic ${btoa(":" + apiKey)}`,
+                  "Accept": "application/json",
+                },
+              });
+              
+              if (itemsResponse.ok) {
+                const itemsData = await itemsResponse.json();
+                // Items are organized by color -> size -> {price, quantity, weight, gtin}
+                // All variants have same price, so grab first available price
+                if (itemsData && typeof itemsData === 'object') {
+                  const colors = Object.values(itemsData);
+                  for (const colorSizes of colors) {
+                    if (colorSizes && typeof colorSizes === 'object') {
+                      const sizes = Object.values(colorSizes as object);
+                      for (const sizeData of sizes) {
+                        if (sizeData && typeof sizeData === 'object' && 'price' in sizeData) {
+                          const price = (sizeData as any).price;
+                          if (typeof price === 'number' && price > 0) {
+                            baseCostCents = price; // Price is already in cents
+                            break;
+                          }
+                        }
+                      }
+                      if (baseCostCents !== 1000) break;
+                    }
+                  }
+                }
+              }
+            } catch (err) {
+              console.log(`[SYNC-SCALABLEPRESS] Could not fetch items for ${product.id}, using default price`);
+            }
+
+            productRecords.push({
               name: product.name || "Unnamed Product",
-              base_cost_cents: 1000, // Default $10, will be fetched on-demand
+              base_cost_cents: baseCostCents,
               category: category.name || "apparel",
               image_url: imageUrl,
-              description: null, // Will be fetched on-demand
+              description: null,
               vendor: "scalablepress",
               vendor_id: product.id,
               vendor_product_id: product.id,
@@ -125,10 +163,9 @@ serve(async (req) => {
                 categoryId: category.categoryId,
                 categoryType: category.type,
                 productUrl: product.url,
-                // Detailed pricing (colors, sizes, items) fetched on-demand in configurator
               }
-            };
-          });
+            });
+          }
 
           // Upsert products in batches of 50
           const batchSize = 50;
