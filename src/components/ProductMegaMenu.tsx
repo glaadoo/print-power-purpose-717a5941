@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp, Grid3X3 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type Category = {
   id: string;
@@ -24,8 +25,7 @@ export default function ProductMegaMenu({
   selectedCategory,
 }: ProductMegaMenuProps) {
   const navigate = useNavigate();
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   // Organize categories by parent
   const parentCategories = categories.filter((cat) => !cat.parent_id);
@@ -37,104 +37,108 @@ export default function ProductMegaMenu({
     return acc;
   }, {} as Record<string, Category[]>);
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpenMenu(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const handleCategoryClick = (slug: string) => {
     onCategorySelect(slug);
-    setOpenMenu(null);
   };
 
   const handleSubcategoryClick = (parentSlug: string, subSlug: string) => {
     navigate(`/products/${parentSlug}/${subSlug}`);
-    setOpenMenu(null);
-  };
-
-  const handleToggleMenu = (categoryId: string) => {
-    setOpenMenu((prev) => (prev === categoryId ? null : categoryId));
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent, categoryId: string) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      handleToggleMenu(categoryId);
-    }
   };
 
   return (
-    <div ref={menuRef} className="relative bg-white border-b border-gray-200 shadow-sm">
+    <div className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2 py-3 flex-wrap">
-          {/* Parent Categories with Mega Menu */}
-          {parentCategories.map((parent) => {
-            const subcategories = subcategoriesByParent[parent.id] || [];
-            const isOpen = openMenu === parent.id;
-            const isSelected = selectedCategory === parent.slug;
+        {/* Toggle Header */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-between py-4 text-gray-700 hover:text-blue-600 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Grid3X3 className="w-5 h-5" />
+            <span className="font-semibold">Browse Categories</span>
+          </div>
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5" />
+          ) : (
+            <ChevronDown className="w-5 h-5" />
+          )}
+        </button>
 
-            return (
-              <div 
-                key={parent.id} 
-                className="relative"
+        {/* Category Grid */}
+        {isExpanded && (
+          <div className="pb-6">
+            {/* All Products Button */}
+            <div className="mb-4">
+              <Button
+                variant={selectedCategory === "all" ? "default" : "outline"}
+                onClick={() => handleCategoryClick("all")}
+                className="w-full sm:w-auto"
               >
-                <button
-                  onClick={() => handleToggleMenu(parent.id)}
-                  onKeyDown={(e) => handleKeyDown(e, parent.id)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors",
-                    isSelected
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                  )}
-                  aria-expanded={isOpen}
-                  aria-haspopup="true"
-                >
-                  {parent.icon_emoji && <span>{parent.icon_emoji}</span>}
-                  {parent.name}
-                  <ChevronDown
-                    className={cn(
-                      "w-4 h-4 transition-transform",
-                      isOpen && "rotate-180"
-                    )}
-                  />
-                </button>
+                View All Products
+              </Button>
+            </div>
 
-                {/* Mega Menu Dropdown */}
-                {isOpen && subcategories.length > 0 && (
-                  <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 max-h-96 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                    <div className="px-4 py-2 border-b border-gray-200">
-                      <button
-                        onClick={() => handleCategoryClick(parent.slug)}
-                        className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                      >
-                        View All {parent.name}
-                      </button>
-                    </div>
-                    <div>
-                      {subcategories.map((sub) => (
-                        <button
-                          key={sub.id}
-                          onClick={() => handleSubcategoryClick(parent.slug, sub.slug)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          {sub.name}
-                        </button>
-                      ))}
-                    </div>
+            {/* Categories Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {parentCategories.map((parent) => {
+                const subcategories = subcategoriesByParent[parent.id] || [];
+                const isSelected = selectedCategory === parent.slug;
+
+                return (
+                  <div
+                    key={parent.id}
+                    className={cn(
+                      "bg-gray-50 rounded-xl p-4 border-2 transition-all hover:shadow-md",
+                      isSelected
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-transparent hover:border-gray-200"
+                    )}
+                  >
+                    {/* Parent Category Header */}
+                    <button
+                      onClick={() => handleCategoryClick(parent.slug)}
+                      className={cn(
+                        "w-full text-left flex items-center gap-2 font-semibold mb-3 transition-colors",
+                        isSelected ? "text-blue-600" : "text-gray-800 hover:text-blue-600"
+                      )}
+                    >
+                      {parent.icon_emoji && (
+                        <span className="text-xl">{parent.icon_emoji}</span>
+                      )}
+                      <span>{parent.name}</span>
+                    </button>
+
+                    {/* Subcategories List */}
+                    {subcategories.length > 0 && (
+                      <ul className="space-y-1.5">
+                        {subcategories.slice(0, 5).map((sub) => (
+                          <li key={sub.id}>
+                            <button
+                              onClick={() => handleSubcategoryClick(parent.slug, sub.slug)}
+                              className="w-full text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-white px-2 py-1 rounded transition-colors truncate"
+                            >
+                              {sub.name}
+                            </button>
+                          </li>
+                        ))}
+                        {subcategories.length > 5 && (
+                          <li>
+                            <button
+                              onClick={() => handleCategoryClick(parent.slug)}
+                              className="text-sm text-blue-600 hover:text-blue-700 px-2 py-1 font-medium"
+                            >
+                              +{subcategories.length - 5} more
+                            </button>
+                          </li>
+                        )}
+                      </ul>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
