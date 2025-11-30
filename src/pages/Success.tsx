@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home, Truck, ExternalLink } from "lucide-react";
 import Footer from "@/components/Footer";
+import UserDonationProgress from "@/components/UserDonationProgress";
 
 interface OrderDetails {
   order_number: string;
@@ -128,8 +129,8 @@ export default function Success() {
       <div className="max-w-3xl mx-auto">
         {/* Success Header */}
         <div className="bg-card border border-border rounded-2xl p-8 mb-6 text-center">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-12 h-12 text-primary" />
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#E6F9EC' }}>
+            <CheckCircle2 className="w-12 h-12" style={{ color: '#16A34A' }} />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Payment Successful!
@@ -140,6 +141,11 @@ export default function Success() {
           <div className="inline-flex items-center gap-2 bg-muted px-4 py-2 rounded-lg">
             <span className="text-sm text-muted-foreground">Order Number:</span>
             <span className="text-lg font-semibold text-foreground">{order_number}</span>
+          </div>
+          
+          {/* Donation Progress Barometer */}
+          <div className="mt-6">
+            <UserDonationProgress variant="light" />
           </div>
         </div>
 
