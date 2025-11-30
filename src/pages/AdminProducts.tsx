@@ -406,7 +406,7 @@ export default function AdminProducts() {
             Back to Admin
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Product Management</h1>
+            <h1 className="text-3xl font-bold text-white">Product Management</h1>
             <p className="text-white/60 mt-1">Sync products and manage pricing markups</p>
           </div>
         </div>
