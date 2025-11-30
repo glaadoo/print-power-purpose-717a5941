@@ -89,14 +89,18 @@ export default function Success() {
     };
 
     fetchOrderDetails();
+  }, [sessionId, searchParams]);
 
-    // Fetch user's total donated amount including current order
-    async function fetchUserDonations() {
+  // Separate effect to fetch user donations after order details are loaded
+  useEffect(() => {
+    if (!orderDetails?.customer_email) return;
+
+    const fetchUserDonations = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
         // Get customer email from session or current order
-        const customerEmail = session?.user?.email || orderDetails?.customer_email;
+        const customerEmail = session?.user?.email || orderDetails.customer_email;
         
         if (!customerEmail) {
           console.log("[SUCCESS] No customer email found, cannot fetch donation totals");
@@ -124,13 +128,10 @@ export default function Success() {
       } catch (error) {
         console.error("[SUCCESS] Error fetching user donations:", error);
       }
-    }
+    };
 
-    // Only fetch donations after order details are loaded
-    if (orderDetails) {
-      fetchUserDonations();
-    }
-  }, [sessionId, searchParams]);
+    fetchUserDonations();
+  }, [orderDetails]);
 
   if (loading) {
     return (
