@@ -96,6 +96,7 @@ serve(async (req) => {
         
         // Extract first available price from items data
         // Structure: { "color": { "size": { price, quantity, weight, gtin } } }
+        // NOTE: Scalable Press API returns price ALREADY IN CENTS (integer)
         let priceInCents = 0;
         
         if (itemsData && typeof itemsData === 'object') {
@@ -108,8 +109,9 @@ serve(async (req) => {
                 if (sizeData && typeof sizeData === 'object' && 'price' in sizeData) {
                   const price = (sizeData as any).price;
                   if (typeof price === 'number' && price > 0) {
-                    // Scalable Press returns price in dollars, convert to cents
-                    priceInCents = Math.round(price * 100);
+                    // Scalable Press returns price in CENTS already - do NOT multiply by 100
+                    // If price looks like dollars (< 100), convert to cents; otherwise use as-is
+                    priceInCents = price < 100 ? Math.round(price * 100) : Math.round(price);
                     break outerLoop;
                   }
                 }
