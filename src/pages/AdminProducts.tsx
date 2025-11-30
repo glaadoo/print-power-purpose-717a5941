@@ -51,6 +51,8 @@ export default function AdminProducts() {
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 0 });
   const [showPricingProducts, setShowPricingProducts] = useState(false);
   const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [fetchingMinPrices, setFetchingMinPrices] = useState(false);
+  const [minPriceProgress, setMinPriceProgress] = useState({ remaining: 0, updated: 0 });
 
   useEffect(() => {
     // Don't auto-load products - wait for user to click "Show Products" button
@@ -291,6 +293,60 @@ export default function AdminProducts() {
       setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
     } finally {
       setSyncing(null);
+    }
+  };
+
+  // Fetch minimum prices for SinaLite products
+  const handleFetchMinPrices = async () => {
+    setFetchingMinPrices(true);
+    toast.info("Fetching minimum prices from SinaLite... This may take a minute.");
+    
+    try {
+      let totalUpdated = 0;
+      let remaining = Infinity;
+      let iterations = 0;
+      const maxIterations = 20; // Safety limit
+      
+      // Keep fetching in batches until no more products need updating
+      while (remaining > 0 && iterations < maxIterations) {
+        iterations++;
+        
+        const { data, error } = await supabase.functions.invoke('fetch-sinalite-min-prices', {
+          body: { batchSize: 20 }
+        });
+        
+        if (error) throw error;
+        
+        if (data?.updated) {
+          totalUpdated += data.updated;
+        }
+        
+        remaining = data?.remaining || 0;
+        setMinPriceProgress({ remaining, updated: totalUpdated });
+        
+        if (data?.success && remaining === 0) {
+          break;
+        }
+        
+        // Small delay between batches
+        if (remaining > 0) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+      
+      toast.success(`Updated minimum prices for ${totalUpdated} products!`);
+      
+      // Reload products to show updated prices
+      if (showPricingProducts) {
+        loadProducts();
+      }
+      
+    } catch (error: any) {
+      console.error('Error fetching min prices:', error);
+      toast.error(`Failed to fetch min prices: ${error.message}`);
+    } finally {
+      setFetchingMinPrices(false);
+      setMinPriceProgress({ remaining: 0, updated: 0 });
     }
   };
 
@@ -745,7 +801,7 @@ export default function AdminProducts() {
                   )}
                   <Button
                     onClick={() => handleSync(vendor.name, vendor.functionName, vendor.name === "SinaLite" ? selectedStore : undefined)}
-                    disabled={!!syncing}
+                    disabled={!!syncing || fetchingMinPrices}
                     className="w-full bg-white/20 text-white hover:bg-white/30"
                   >
                     {syncing === `${vendor.name}-${vendor.name === "SinaLite" ? selectedStore : ""}` ? (
@@ -760,6 +816,25 @@ export default function AdminProducts() {
                       </>
                     )}
                   </Button>
+                  {vendor.name === "SinaLite" && (
+                    <Button
+                      onClick={handleFetchMinPrices}
+                      disabled={!!syncing || fetchingMinPrices}
+                      className="w-full mt-2 bg-green-600/30 text-white hover:bg-green-600/50 border border-green-500/30"
+                    >
+                      {fetchingMinPrices ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          Fetching Prices... ({minPriceProgress.updated} updated, {minPriceProgress.remaining} remaining)
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Fetch Min Prices
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
