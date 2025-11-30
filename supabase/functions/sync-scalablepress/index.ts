@@ -138,7 +138,7 @@ serve(async (req) => {
         });
 
         let itemsData = null;
-        let lowestPrice = 0;
+        let lowestPrice = 100; // Default to $1.00 (100 cents) minimum
         
         if (itemsResponse.ok) {
           itemsData = await itemsResponse.json();
@@ -148,13 +148,16 @@ serve(async (req) => {
           for (const colorData of Object.values(itemsData)) {
             for (const sizeData of Object.values(colorData as any)) {
               if (typeof sizeData === 'object' && sizeData !== null && 'price' in sizeData) {
-                allPrices.push((sizeData as any).price);
+                const price = (sizeData as any).price;
+                if (price > 0) {
+                  allPrices.push(price);
+                }
               }
             }
           }
           
           if (allPrices.length > 0) {
-            lowestPrice = Math.min(...allPrices);
+            lowestPrice = Math.max(Math.min(...allPrices), 100); // Ensure at least 100 cents ($1.00)
           }
         }
 
