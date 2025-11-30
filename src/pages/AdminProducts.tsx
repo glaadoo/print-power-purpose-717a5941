@@ -355,7 +355,9 @@ export default function AdminProducts() {
         await new Promise(r => setTimeout(r, 1000));
       }
       
-      toast.success(`Updated minimum prices for ${totalUpdated} products!`);
+      toast.success(`✅ COMPLETE! Updated minimum prices for ${totalUpdated} products!`, {
+        duration: 10000, // Show for 10 seconds
+      });
       
       // Reload products to show updated prices
       if (showPricingProducts) {
@@ -364,10 +366,13 @@ export default function AdminProducts() {
       
     } catch (error: any) {
       console.error('Error fetching min prices:', error);
-      toast.error(`Failed to fetch min prices: ${error.message}`);
+      toast.error(`❌ Failed to fetch min prices: ${error.message}`, {
+        duration: 10000,
+      });
     } finally {
       setFetchingMinPrices(false);
       setMinPriceProgress({ remaining: 0, updated: 0 });
+      toast.info("Min price fetch process finished.", { duration: 5000 });
     }
   };
 
