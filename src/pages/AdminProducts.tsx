@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Download, RefreshCw, Edit, Save, X, CheckSquare } from "lucide-react";
+import { ArrowLeft, Download, RefreshCw, Edit, Save, X, CheckSquare, Search } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, computeFinalPrice } from "@/lib/pricing-utils";
 import { withRetry, invokeWithRetry } from "@/lib/api-retry";
@@ -50,6 +50,7 @@ export default function AdminProducts() {
   const [generatingImages, setGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 0 });
   const [showPricingProducts, setShowPricingProducts] = useState(false);
+  const [productSearchQuery, setProductSearchQuery] = useState("");
 
   useEffect(() => {
     // Don't auto-load products - wait for user to click "Show Products" button
@@ -704,8 +705,34 @@ export default function AdminProducts() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
-              {products.map((product) => {
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                <Input
+                  placeholder="Search products by name, vendor, or category..."
+                  value={productSearchQuery}
+                  onChange={(e) => setProductSearchQuery(e.target.value)}
+                  className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                />
+              </div>
+              <p className="text-sm text-white/60">
+                Showing {products.filter(p => 
+                  !productSearchQuery || 
+                  p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                  p.vendor.toLowerCase().includes(productSearchQuery.toLowerCase())
+                ).length} of {products.length} products
+              </p>
+              <div className="grid gap-4">
+              {products
+                .filter(product => {
+                  if (!productSearchQuery) return true;
+                  const query = productSearchQuery.toLowerCase();
+                  return (
+                    product.name.toLowerCase().includes(query) ||
+                    product.vendor.toLowerCase().includes(query)
+                  );
+                })
+                .map((product) => {
                 const isSelected = selectedProducts.has(product.id);
                 const finalPrice = computeFinalPrice(
                   product.base_cost_cents,
@@ -771,6 +798,7 @@ export default function AdminProducts() {
                   </Card>
                 );
               })}
+              </div>
             </div>
           )}
         </div>
