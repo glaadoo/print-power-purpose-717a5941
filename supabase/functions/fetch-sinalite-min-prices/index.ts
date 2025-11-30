@@ -13,10 +13,11 @@ serve(async (req) => {
 
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const batchSize = body.batchSize || 20; // Process 20 products at a time
+    const batchSize = body.batchSize || 10; // Process 10 products at a time (reduced due to multiple API calls per product)
     const storeCode = body.storeCode || 9; // Default to US
+    const forceRefresh = body.forceRefresh || false; // Force refresh all products
 
-    console.log(`[FETCH-MIN-PRICES] Starting min price fetch for batch of ${batchSize} products`);
+    console.log(`[FETCH-MIN-PRICES] Starting min price fetch for batch of ${batchSize} products, forceRefresh=${forceRefresh}`);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -81,13 +82,18 @@ serve(async (req) => {
       throw new Error("No access token received");
     }
 
-    // Get products that need min_price updated (have default $20.00 or null)
-    const { data: products, error: fetchError } = await supabase
+    // Get products that need min_price updated
+    let query = supabase
       .from("products")
       .select("id, vendor_product_id, name, min_price_cents, base_cost_cents")
-      .eq("vendor", "sinalite")
-      .or("min_price_cents.eq.2000,min_price_cents.is.null")
-      .limit(batchSize);
+      .eq("vendor", "sinalite");
+    
+    if (!forceRefresh) {
+      // Only get products with default $20.00 or null
+      query = query.or("min_price_cents.eq.2000,min_price_cents.is.null");
+    }
+    
+    const { data: products, error: fetchError } = await query.limit(batchSize);
 
     if (fetchError) {
       throw fetchError;
@@ -110,66 +116,104 @@ serve(async (req) => {
     const updates: { id: string; min_price_cents: number; base_cost_cents: number }[] = [];
     let errors = 0;
 
-    // Fetch min price for each product using variants endpoint
+    // Helper function to extract price from variant object
+    const extractPrice = (variant: any): number | null => {
+      // Try multiple possible price field names
+      const price = variant.price ?? variant.unit_price ?? variant.base_price ?? variant.retail_price ?? variant.msrp;
+      if (typeof price === 'number' && price > 0) {
+        return price;
+      }
+      // Sometimes price is nested
+      if (variant.pricing && typeof variant.pricing.price === 'number') {
+        return variant.pricing.price;
+      }
+      return null;
+    };
+
+    // Fetch min price for each product using variants endpoint with pagination
     for (const product of products) {
       try {
         const productId = product.vendor_product_id;
-        const variantsUrl = `${apiBaseUrl}/variants/${productId}/0`;
-        
-        console.log(`[FETCH-MIN-PRICES] Fetching variants for ${product.name} (${productId})`);
-        
-        const variantsRes = await fetch(variantsUrl, {
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!variantsRes.ok) {
-          console.error(`[FETCH-MIN-PRICES] Variants fetch failed for ${productId}: ${variantsRes.status}`);
-          errors++;
-          continue;
-        }
-
-        const variants = await variantsRes.json();
-        
-        // Find minimum price from variants
         let minPrice = Infinity;
+        let offset = 0;
+        let hasMoreVariants = true;
+        const maxPages = 20; // Safety limit - max 20,000 variants
+        let pageCount = 0;
         
-        if (Array.isArray(variants)) {
-          for (const variant of variants) {
-            const price = variant.price || variant.unit_price || variant.base_price;
-            if (typeof price === 'number' && price > 0 && price < minPrice) {
+        console.log(`[FETCH-MIN-PRICES] Fetching ALL variants for ${product.name} (${productId})`);
+        
+        // Paginate through ALL variants
+        while (hasMoreVariants && pageCount < maxPages) {
+          const variantsUrl = `${apiBaseUrl}/variants/${productId}/${offset}`;
+          
+          const variantsRes = await fetch(variantsUrl, {
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!variantsRes.ok) {
+            console.error(`[FETCH-MIN-PRICES] Variants fetch failed for ${productId} at offset ${offset}: ${variantsRes.status}`);
+            break;
+          }
+
+          const variants = await variantsRes.json();
+          let variantList: any[] = [];
+          
+          // Handle different response formats
+          if (Array.isArray(variants)) {
+            variantList = variants;
+          } else if (variants && typeof variants === 'object') {
+            variantList = variants.data || variants.variants || Object.values(variants);
+            if (!Array.isArray(variantList)) {
+              variantList = [];
+            }
+          }
+          
+          console.log(`[FETCH-MIN-PRICES] ${product.name} offset ${offset}: got ${variantList.length} variants`);
+          
+          // No more variants if we got an empty array or less than 1000
+          if (variantList.length === 0) {
+            hasMoreVariants = false;
+            break;
+          }
+          
+          // Find minimum price in this batch
+          for (const variant of variantList) {
+            const price = extractPrice(variant);
+            if (price !== null && price < minPrice) {
               minPrice = price;
             }
           }
-        } else if (variants && typeof variants === 'object') {
-          // Handle object response format
-          const variantList = variants.data || variants.variants || Object.values(variants);
-          if (Array.isArray(variantList)) {
-            for (const variant of variantList) {
-              const price = variant.price || variant.unit_price || variant.base_price;
-              if (typeof price === 'number' && price > 0 && price < minPrice) {
-                minPrice = price;
-              }
-            }
+          
+          // If we got less than 1000 variants, we've reached the end
+          if (variantList.length < 1000) {
+            hasMoreVariants = false;
+          } else {
+            offset += 1000;
           }
+          
+          pageCount++;
+          
+          // Small delay between pages to avoid rate limiting
+          await new Promise(r => setTimeout(r, 50));
         }
 
         if (minPrice !== Infinity && minPrice > 0) {
           const minPriceCents = Math.round(minPrice * 100);
-          console.log(`[FETCH-MIN-PRICES] ${product.name}: min price = $${minPrice} (${minPriceCents} cents)`);
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: TRUE min price = $${minPrice.toFixed(2)} (${minPriceCents} cents) from ${pageCount} pages`);
           updates.push({
             id: product.id,
             min_price_cents: minPriceCents,
-            base_cost_cents: minPriceCents, // Also update base_cost_cents
+            base_cost_cents: minPriceCents,
           });
         } else {
-          console.log(`[FETCH-MIN-PRICES] ${product.name}: no valid price found in variants`);
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: no valid price found in any variants`);
         }
 
-        // Small delay to avoid rate limiting
-        await new Promise(r => setTimeout(r, 100));
+        // Delay between products to avoid rate limiting
+        await new Promise(r => setTimeout(r, 200));
         
       } catch (err) {
         console.error(`[FETCH-MIN-PRICES] Error for ${product.name}:`, err);
