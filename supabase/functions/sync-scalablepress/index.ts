@@ -11,178 +11,132 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Use streaming response to prevent client timeout
-  const encoder = new TextEncoder();
-  const stream = new TransformStream();
-  const writer = stream.writable.getWriter();
+  try {
+    console.log("[SYNC-SCALABLEPRESS] Starting fast product sync");
 
-  const sendProgress = async (message: string, data?: any) => {
-    const payload = JSON.stringify({ message, ...data, timestamp: new Date().toISOString() });
-    await writer.write(encoder.encode(`data: ${payload}\n\n`));
-  };
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-  // Start async processing
-  (async () => {
-    try {
-      console.log("[SYNC-SCALABLEPRESS] Starting optimized product sync (without prices)");
-      await sendProgress("Starting Scalable Press sync...");
+    const apiKey = Deno.env.get("SCALABLEPRESS_API_KEY");
+    const apiUrl = "https://api.scalablepress.com/v2";
 
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    if (!apiKey) {
+      console.error("[SYNC-SCALABLEPRESS] Missing SCALABLEPRESS_API_KEY");
+      return new Response(
+        JSON.stringify({ success: false, error: "API key not configured" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
+    }
 
-      const apiKey = Deno.env.get("SCALABLEPRESS_API_KEY");
-      const apiUrl = "https://api.scalablepress.com/v2";
+    // Step 1: Fetch all categories in parallel
+    console.log("[SYNC-SCALABLEPRESS] Fetching categories");
+    const categoriesResponse = await fetch(`${apiUrl}/categories`, {
+      headers: {
+        "Authorization": `Basic ${btoa(":" + apiKey)}`,
+        "Accept": "application/json",
+      },
+    });
 
-      if (!apiKey) {
-        console.error("[SYNC-SCALABLEPRESS] Missing SCALABLEPRESS_API_KEY");
-        await sendProgress("Error: API key not configured", { error: true, done: true });
-        await writer.close();
-        return;
-      }
+    if (!categoriesResponse.ok) {
+      const errorText = await categoriesResponse.text();
+      console.error("[SYNC-SCALABLEPRESS] Categories API error:", categoriesResponse.status, errorText);
+      return new Response(
+        JSON.stringify({ success: false, error: `Categories fetch failed: ${categoriesResponse.status}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
 
-      // Step 1: Fetch categories
-      await sendProgress("Fetching categories...");
-      console.log("[SYNC-SCALABLEPRESS] Fetching categories");
-      
-      const categoriesResponse = await fetch(`${apiUrl}/categories`, {
-        headers: {
-          "Authorization": `Basic ${btoa(":" + apiKey)}`,
-          "Accept": "application/json",
-        },
-      });
+    const categories = await categoriesResponse.json();
+    console.log(`[SYNC-SCALABLEPRESS] Found ${categories.length} categories`);
 
-      if (!categoriesResponse.ok) {
-        const errorText = await categoriesResponse.text();
-        console.error("[SYNC-SCALABLEPRESS] Categories API error:", categoriesResponse.status, errorText);
-        await sendProgress(`Error fetching categories: ${categoriesResponse.status}`, { error: true, done: true });
-        await writer.close();
-        return;
-      }
-
-      const categories = await categoriesResponse.json();
-      await sendProgress(`Found ${categories.length} categories`, { categoriesCount: categories.length });
-      console.log(`[SYNC-SCALABLEPRESS] Found ${categories.length} categories`);
-
-      // Step 2: Fetch products for each category and upsert immediately
-      // Do NOT fetch prices here - that's done separately via fetch-scalablepress-prices
-      
-      let totalSynced = 0;
-      let totalErrors = 0;
-      let totalProducts = 0;
-
-      for (let i = 0; i < categories.length; i++) {
-        const category = categories[i];
-        await sendProgress(`Processing category ${i + 1}/${categories.length}: ${category.name}`, {
-          progress: Math.round((i / categories.length) * 100)
+    // Step 2: Fetch all category products in PARALLEL (much faster!)
+    const categoryFetches = categories.map(async (category: any) => {
+      try {
+        const response = await fetch(`${apiUrl}/categories/${category.categoryId}`, {
+          headers: {
+            "Authorization": `Basic ${btoa(":" + apiKey)}`,
+            "Accept": "application/json",
+          },
         });
-        
-        try {
-          const productsResponse = await fetch(`${apiUrl}/categories/${category.categoryId}`, {
-            headers: {
-              "Authorization": `Basic ${btoa(":" + apiKey)}`,
-              "Accept": "application/json",
-            },
-          });
-
-          if (!productsResponse.ok) {
-            console.error(`[SYNC-SCALABLEPRESS] Failed to fetch category ${category.categoryId}`);
-            continue;
-          }
-
-          const categoryData = await productsResponse.json();
-          
-          if (!categoryData.products || !Array.isArray(categoryData.products)) {
-            continue;
-          }
-
-          const products = categoryData.products;
-          totalProducts += products.length;
-
-          // Process products - keep existing price if product exists, use 0 for new products
-          const productRecords = products.map((product: any) => {
-            // Extract image URL from category listing data
-            let imageUrl = null;
-            if (product.image?.url) {
-              imageUrl = product.image.url;
-            }
-
-            return {
-              name: product.name || "Unnamed Product",
-              // Don't set base_cost_cents here - let existing values stay or use SQL default
-              category: category.name || "apparel",
-              image_url: imageUrl,
-              description: null,
-              vendor: "scalablepress",
-              vendor_id: product.id,
-              vendor_product_id: product.id,
-              is_active: true,
-              pricing_data: {
-                style: product.style,
-                categoryId: category.categoryId,
-                categoryType: category.type,
-                productUrl: product.url,
-              }
-            };
-          });
-
-          // Upsert products in batches of 100 (faster without price fetching)
-          const batchSize = 100;
-          for (let j = 0; j < productRecords.length; j += batchSize) {
-            const batch = productRecords.slice(j, j + batchSize);
-            
-            // Use raw SQL to preserve existing base_cost_cents for existing products
-            for (const record of batch) {
-              const { error } = await supabase
-                .from("products")
-                .upsert(record, { 
-                  onConflict: "vendor,vendor_id",
-                  ignoreDuplicates: false 
-                });
-
-              if (error) {
-                console.error(`[SYNC-SCALABLEPRESS] Upsert error for ${record.name}:`, error);
-                totalErrors++;
-              } else {
-                totalSynced++;
-              }
-            }
-          }
-
-          console.log(`[SYNC-SCALABLEPRESS] Category ${category.name}: ${products.length} products processed`);
-          
-        } catch (err) {
-          console.error(`[SYNC-SCALABLEPRESS] Error processing category ${category.categoryId}:`, err);
-        }
+        if (!response.ok) return { category, products: [] };
+        const data = await response.json();
+        return { category, products: data.products || [] };
+      } catch {
+        return { category, products: [] };
       }
+    });
 
-      console.log(`[SYNC-SCALABLEPRESS] Sync complete: ${totalSynced} synced, ${totalErrors} errors out of ${totalProducts} total`);
-      
-      await sendProgress("Sync completed! Run 'Fetch Scalable Press Prices' to update prices.", { 
-        done: true,
+    const categoryResults = await Promise.all(categoryFetches);
+    
+    // Step 3: Collect all products into a single array
+    const allProducts: any[] = [];
+    for (const { category, products } of categoryResults) {
+      for (const product of products) {
+        allProducts.push({
+          name: product.name || "Unnamed Product",
+          category: category.name || "apparel",
+          image_url: product.image?.url || null,
+          description: null,
+          vendor: "scalablepress",
+          vendor_id: product.id,
+          vendor_product_id: product.id,
+          is_active: true,
+          base_cost_cents: 1000, // Default, will be updated by fetch-prices
+          pricing_data: {
+            style: product.style,
+            categoryId: category.categoryId,
+            categoryType: category.type,
+            productUrl: product.url,
+          }
+        });
+      }
+    }
+
+    console.log(`[SYNC-SCALABLEPRESS] Collected ${allProducts.length} products, batch upserting...`);
+
+    // Step 4: Batch upsert in chunks of 500 (very fast!)
+    const batchSize = 500;
+    let totalSynced = 0;
+    let totalErrors = 0;
+
+    for (let i = 0; i < allProducts.length; i += batchSize) {
+      const batch = allProducts.slice(i, i + batchSize);
+      const { error } = await supabase
+        .from("products")
+        .upsert(batch, { 
+          onConflict: "vendor,vendor_id",
+          ignoreDuplicates: false 
+        });
+
+      if (error) {
+        console.error(`[SYNC-SCALABLEPRESS] Batch upsert error:`, error);
+        totalErrors += batch.length;
+      } else {
+        totalSynced += batch.length;
+      }
+    }
+
+    console.log(`[SYNC-SCALABLEPRESS] Sync complete: ${totalSynced} synced, ${totalErrors} errors`);
+
+    return new Response(
+      JSON.stringify({ 
         success: true, 
         synced: totalSynced, 
-        total: totalProducts,
+        total: allProducts.length,
         errors: totalErrors,
-        vendor: "scalablepress"
-      });
-      
-      await writer.close();
-    } catch (error) {
-      console.error("[SYNC-SCALABLEPRESS] Fatal error:", error);
-      const message = error instanceof Error ? error.message : "Unknown error";
-      await sendProgress(`Fatal error: ${message}`, { error: true, done: true });
-      await writer.close();
-    }
-  })();
+        message: `Synced ${totalSynced} products. Run 'Fetch Product Prices' to update prices.`
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
-  return new Response(stream.readable, {
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      "Connection": "keep-alive",
-    },
-  });
+  } catch (error) {
+    console.error("[SYNC-SCALABLEPRESS] Fatal error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(
+      JSON.stringify({ success: false, error: message }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+    );
+  }
 });
