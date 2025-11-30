@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Download, RefreshCw, Edit, Save, X, CheckSquare, Search } from "lucide-react";
+import { ArrowLeft, Download, RefreshCw, Edit, Save, X, CheckSquare, Search, Check, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, computeFinalPrice } from "@/lib/pricing-utils";
 import { withRetry, invokeWithRetry } from "@/lib/api-retry";
@@ -53,6 +53,7 @@ export default function AdminProducts() {
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [fetchingMinPrices, setFetchingMinPrices] = useState(false);
   const [minPriceProgress, setMinPriceProgress] = useState({ remaining: 0, updated: 0 });
+  const [syncStatus, setSyncStatus] = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({});
 
   useEffect(() => {
     // Don't auto-load products - wait for user to click "Show Products" button
@@ -166,6 +167,7 @@ export default function AdminProducts() {
     const syncKey = storeCode ? `${vendor}-${storeCode}` : vendor;
     setSyncing(syncKey);
     setSyncResults((prev) => ({ ...prev, [syncKey]: null }));
+    setSyncStatus((prev) => ({ ...prev, [syncKey]: 'loading' }));
     
     try {
       const body = storeCode ? { storeCode } : undefined;
@@ -202,9 +204,11 @@ export default function AdminProducts() {
       if (data?.success) {
         const storeInfo = data.store ? ` (${data.store})` : '';
         toast.success(`${vendor}${storeInfo}: Synced ${data.synced} products successfully!`);
+        setSyncStatus((prev) => ({ ...prev, [syncKey]: 'success' }));
         loadProducts();
       } else {
         toast.warning(`${vendor}: ${data?.note || "Sync completed with issues"}`);
+        setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
       }
     } catch (error: any) {
       console.error(`Error syncing ${vendor}:`, error);
@@ -213,6 +217,7 @@ export default function AdminProducts() {
         : error.message;
       toast.error(`Failed to sync ${vendor}: ${errorMsg}`);
       setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
+      setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
     } finally {
       setSyncing(null);
     }
@@ -220,6 +225,7 @@ export default function AdminProducts() {
 
   // Handle streaming sync for Scalable Press
   const handleStreamingSync = async (syncKey: string, functionName: string) => {
+    setSyncStatus((prev) => ({ ...prev, [syncKey]: 'loading' }));
     try {
       const supabaseUrl = "https://wgohndthjgeqamfuldov.supabase.co";
       const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw";
@@ -276,9 +282,11 @@ export default function AdminProducts() {
               if (data.done) {
                 if (data.success) {
                   toast.success(`Scalable Press: Synced ${data.synced} products successfully!`);
+                  setSyncStatus((prev) => ({ ...prev, [syncKey]: 'success' }));
                   loadProducts();
                 } else if (data.error) {
                   toast.error(`Scalable Press sync failed: ${data.message}`);
+                  setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
                 }
               }
             } catch (e) {
@@ -291,6 +299,7 @@ export default function AdminProducts() {
       console.error('Streaming sync error:', error);
       toast.error(`Failed to sync Scalable Press: ${error.message}`);
       setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
+      setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
     } finally {
       setSyncing(null);
     }
@@ -826,11 +835,15 @@ export default function AdminProducts() {
                     </div>
                   )}
                   <Button
-                    onClick={() => handleSync(vendor.name, vendor.functionName, vendor.name === "SinaLite" ? selectedStore : undefined)}
+                    onClick={() => {
+                      const syncKey = vendor.name === "SinaLite" ? `${vendor.name}-${selectedStore}` : vendor.name;
+                      setSyncStatus((prev) => ({ ...prev, [syncKey]: 'idle' }));
+                      handleSync(vendor.name, vendor.functionName, vendor.name === "SinaLite" ? selectedStore : undefined);
+                    }}
                     disabled={!!syncing || fetchingMinPrices}
                     className="w-full bg-white/20 text-white hover:bg-white/30"
                   >
-                    {syncing === `${vendor.name}-${vendor.name === "SinaLite" ? selectedStore : ""}` ? (
+                    {syncing === `${vendor.name}-${vendor.name === "SinaLite" ? selectedStore : ""}` || syncing === vendor.name ? (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                         Syncing...
@@ -842,6 +855,28 @@ export default function AdminProducts() {
                       </>
                     )}
                   </Button>
+                  {/* Sync Status Indicator */}
+                  {(() => {
+                    const syncKey = vendor.name === "SinaLite" ? `${vendor.name}-${selectedStore}` : vendor.name;
+                    const status = syncStatus[syncKey];
+                    if (!status || status === 'idle') return null;
+                    return (
+                      <div className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-md text-sm ${
+                        status === 'loading' ? 'bg-blue-500/20 text-blue-300' :
+                        status === 'success' ? 'bg-green-500/20 text-green-300' :
+                        'bg-red-500/20 text-red-300'
+                      }`}>
+                        {status === 'loading' && <RefreshCw className="h-4 w-4 animate-spin" />}
+                        {status === 'success' && <Check className="h-4 w-4" />}
+                        {status === 'error' && <AlertTriangle className="h-4 w-4" />}
+                        <span>
+                          {status === 'loading' && 'Syncing products...'}
+                          {status === 'success' && 'Products synced successfully'}
+                          {status === 'error' && 'Sync failed'}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   {vendor.name === "SinaLite" && (
                     <div className="space-y-2 mt-2">
                       <Button
