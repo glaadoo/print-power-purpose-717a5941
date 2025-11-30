@@ -236,6 +236,26 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
             ) : (
               <span className="text-blue-600">Configure for Price</span>
             )
+          ) : product.vendor === 'scalablepress' ? (
+            // Scalable Press: extract min price from pricing_data items
+            (() => {
+              const pricingData = product.pricing_data;
+              if (pricingData?.items) {
+                // Find minimum price from all items (price is in cents)
+                const prices = Object.values(pricingData.items).flatMap((colorItems: any) =>
+                  Object.values(colorItems).map((item: any) => item?.price || Infinity)
+                );
+                const minPrice = Math.min(...prices);
+                if (minPrice !== Infinity && minPrice > 0) {
+                  return <>Regular Price: ${(minPrice / 100).toFixed(2)}</>;
+                }
+              }
+              // Fallback to base_cost_cents if pricing_data not available
+              if (product.base_cost_cents && product.base_cost_cents !== 1000) {
+                return <>Regular Price: ${(product.base_cost_cents / 100).toFixed(2)}</>;
+              }
+              return <span className="text-blue-600">Configure for Price</span>;
+            })()
           ) : (
             // Other vendors: show base cost, or "Configure for Price" if default
             product.base_cost_cents && product.base_cost_cents !== 1000 ? (
