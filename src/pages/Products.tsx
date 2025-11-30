@@ -690,7 +690,7 @@ export default function Products() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 animate-fade-in mb-12">
                   {paginatedProducts.map((product, index) => (
                     <div 
                       key={product.id}

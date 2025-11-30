@@ -441,7 +441,7 @@ export default function ProductSubcategory() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 animate-fade-in">
               {paginatedProducts.map((product, index) => (
                 <div 
                   key={product.id}
