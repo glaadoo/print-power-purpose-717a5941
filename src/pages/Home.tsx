@@ -204,128 +204,130 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <VistaprintNav />
 
-      {/* Welcome Section with Animated Kenzie */}
-      <section className="relative bg-white py-16 overflow-hidden">
-        {/* Subtle paw prints background */}
-        <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
-          {[...Array(8)].map((_, i) => (
-            <span
-              key={i}
-              className="absolute text-4xl"
-              style={{
-                left: `${10 + Math.random() * 80}%`,
-                top: `${10 + Math.random() * 80}%`,
-                transform: `rotate(${Math.random() * 360}deg)`,
-              }}
-            >
-              🐾
-            </span>
-          ))}
-        </div>
+      {/* Welcome Section with Animated Kenzie - Only show for non-authenticated users */}
+      {!isAuthenticated && (
+        <section className="relative bg-white py-16 overflow-hidden">
+          {/* Subtle paw prints background */}
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <span
+                key={i}
+                className="absolute text-4xl"
+                style={{
+                  left: `${10 + Math.random() * 80}%`,
+                  top: `${10 + Math.random() * 80}%`,
+                  transform: `rotate(${Math.random() * 360}deg)`,
+                }}
+              >
+                🐾
+              </span>
+            ))}
+          </div>
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-            {/* Kenzie Puppy */}
-            <div className="relative flex-shrink-0">
-              {/* Kenzie with gentle bounce */}
-              <div className="relative">
-                <img
-                  src={kenzieAnimated}
-                  alt="Kenzie the puppy"
-                  className="w-72 h-72 md:w-96 md:h-96 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite] mix-blend-multiply"
-                />
-                
-                {/* Floating hearts */}
-                <div className="absolute top-[25%] right-[22%] z-20 animate-[float_2s_ease-in-out_infinite]">
-                  <span className="text-lg">💛</span>
-                </div>
-                <div className="absolute top-[40%] left-[18%] z-20 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
-                  <span className="text-base">💙</span>
-                </div>
-                <div className="absolute top-[18%] left-[30%] z-20 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
-                  <span className="text-base">🧡</span>
-                </div>
-                
-                {/* Butterflies */}
-                <div className="absolute top-[15%] right-[25%] z-20 animate-[butterfly-orbit_4s_ease-in-out_infinite]">
-                  <span className="text-lg">🦋</span>
-                  <span className="absolute -top-2 right-0 text-xs animate-[sparkle_0.8s_ease-in-out_infinite]">✨</span>
-                </div>
-                
-                <div className="absolute top-[45%] left-[15%] z-20 animate-[butterfly-orbit_5s_ease-in-out_infinite_1s]">
-                  <span className="text-base">🦋</span>
-                  <span className="absolute -top-2 left-0 text-xs animate-[sparkle_0.6s_ease-in-out_infinite_0.2s]">✨</span>
-                </div>
-                
-                <div className="absolute top-[60%] right-[18%] z-20 animate-[butterfly-orbit_4.5s_ease-in-out_infinite_2s]">
-                  <span className="text-base">🦋</span>
-                  <span className="absolute -bottom-2 right-0 text-xs animate-[sparkle_0.7s_ease-in-out_infinite_0.4s]">✨</span>
-                </div>
-                
-                {/* Extra sparkles */}
-                <div className="absolute top-[30%] right-[35%] z-20 animate-[sparkle_1.2s_ease-in-out_infinite]">
-                  <span className="text-xs">✨</span>
-                </div>
-                <div className="absolute top-[55%] left-[25%] z-20 animate-[sparkle_1s_ease-in-out_infinite_0.5s]">
-                  <span className="text-xs">✨</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Content area */}
-            <div className="flex-1 text-center md:text-left relative">
-              {/* Floating dots connector */}
-              <div className="absolute -left-12 top-8 hidden md:block">
-                <span className="absolute left-0 top-0 text-amber-500 text-2xl animate-[speech-dot_1.5s_ease-in-out_infinite]">•</span>
-                <span className="absolute left-5 top-3 text-amber-500 text-xl animate-[speech-dot_1.5s_ease-in-out_infinite_0.2s]">•</span>
-                <span className="absolute left-9 top-5 text-amber-500 text-lg animate-[speech-dot_1.5s_ease-in-out_infinite_0.4s]">•</span>
-              </div>
-              
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 whitespace-nowrap">
-                Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">Print Power Purpose</span>
-              </h2>
-              <p className="text-lg text-gray-700 mb-2 font-medium">
-                Where every donation helps create meaningful change.
-              </p>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto md:mx-0">
-                We connect generous people with impactful nonprofits and help communities achieve their goals — one contribution at a time.
-              </p>
-
-              {/* Cause Icons */}
-              <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-8">
-                <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-                  <span className="text-xl">🏫</span>
-                  <span className="text-sm font-medium text-gray-700">Schools</span>
-                </div>
-                <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-                  <span className="text-xl">💚</span>
-                  <span className="text-sm font-medium text-gray-700">Nonprofits</span>
-                </div>
-                <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-                  <span className="text-xl">🌍</span>
-                  <span className="text-sm font-medium text-gray-700">Communities</span>
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              {/* Kenzie Puppy */}
+              <div className="relative flex-shrink-0">
+                {/* Kenzie with gentle bounce */}
+                <div className="relative">
+                  <img
+                    src={kenzieAnimated}
+                    alt="Kenzie the puppy"
+                    className="w-72 h-72 md:w-96 md:h-96 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite] mix-blend-multiply"
+                  />
+                  
+                  {/* Floating hearts */}
+                  <div className="absolute top-[25%] right-[22%] z-20 animate-[float_2s_ease-in-out_infinite]">
+                    <span className="text-lg">💛</span>
+                  </div>
+                  <div className="absolute top-[40%] left-[18%] z-20 animate-[float_2.5s_ease-in-out_infinite_0.3s]">
+                    <span className="text-base">💙</span>
+                  </div>
+                  <div className="absolute top-[18%] left-[30%] z-20 animate-[float_1.8s_ease-in-out_infinite_0.5s]">
+                    <span className="text-base">🧡</span>
+                  </div>
+                  
+                  {/* Butterflies */}
+                  <div className="absolute top-[15%] right-[25%] z-20 animate-[butterfly-orbit_4s_ease-in-out_infinite]">
+                    <span className="text-lg">🦋</span>
+                    <span className="absolute -top-2 right-0 text-xs animate-[sparkle_0.8s_ease-in-out_infinite]">✨</span>
+                  </div>
+                  
+                  <div className="absolute top-[45%] left-[15%] z-20 animate-[butterfly-orbit_5s_ease-in-out_infinite_1s]">
+                    <span className="text-base">🦋</span>
+                    <span className="absolute -top-2 left-0 text-xs animate-[sparkle_0.6s_ease-in-out_infinite_0.2s]">✨</span>
+                  </div>
+                  
+                  <div className="absolute top-[60%] right-[18%] z-20 animate-[butterfly-orbit_4.5s_ease-in-out_infinite_2s]">
+                    <span className="text-base">🦋</span>
+                    <span className="absolute -bottom-2 right-0 text-xs animate-[sparkle_0.7s_ease-in-out_infinite_0.4s]">✨</span>
+                  </div>
+                  
+                  {/* Extra sparkles */}
+                  <div className="absolute top-[30%] right-[35%] z-20 animate-[sparkle_1.2s_ease-in-out_infinite]">
+                    <span className="text-xs">✨</span>
+                  </div>
+                  <div className="absolute top-[55%] left-[25%] z-20 animate-[sparkle_1s_ease-in-out_infinite_0.5s]">
+                    <span className="text-xs">✨</span>
+                  </div>
                 </div>
               </div>
 
-              {/* CTA Button */}
-              <div className="flex justify-center md:justify-end">
-                <button
-                  onClick={() => {
-                    localStorage.setItem("ppp_access", "guest");
-                    nav("/select/nonprofit");
-                  }}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-lg animate-[button-glow_2s_ease-in-out_infinite]"
-                >
-                  Start Exploring
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </button>
+              {/* Content area */}
+              <div className="flex-1 text-center md:text-left relative">
+                {/* Floating dots connector */}
+                <div className="absolute -left-12 top-8 hidden md:block">
+                  <span className="absolute left-0 top-0 text-amber-500 text-2xl animate-[speech-dot_1.5s_ease-in-out_infinite]">•</span>
+                  <span className="absolute left-5 top-3 text-amber-500 text-xl animate-[speech-dot_1.5s_ease-in-out_infinite_0.2s]">•</span>
+                  <span className="absolute left-9 top-5 text-amber-500 text-lg animate-[speech-dot_1.5s_ease-in-out_infinite_0.4s]">•</span>
+                </div>
+                
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 whitespace-nowrap">
+                  Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">Print Power Purpose</span>
+                </h2>
+                <p className="text-lg text-gray-700 mb-2 font-medium">
+                  Where every donation helps create meaningful change.
+                </p>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto md:mx-0">
+                  We connect generous people with impactful nonprofits and help communities achieve their goals — one contribution at a time.
+                </p>
+
+                {/* Cause Icons */}
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-8">
+                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
+                    <span className="text-xl">🏫</span>
+                    <span className="text-sm font-medium text-gray-700">Schools</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
+                    <span className="text-xl">💚</span>
+                    <span className="text-sm font-medium text-gray-700">Nonprofits</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
+                    <span className="text-xl">🌍</span>
+                    <span className="text-sm font-medium text-gray-700">Communities</span>
+                  </div>
+                </div>
+
+                {/* CTA Button */}
+                <div className="flex justify-center md:justify-end">
+                  <button
+                    onClick={() => {
+                      localStorage.setItem("ppp_access", "guest");
+                      nav("/select/nonprofit");
+                    }}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-lg animate-[button-glow_2s_ease-in-out_infinite]"
+                  >
+                    Start Exploring
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Dashboard Header */}
       <section className="bg-gradient-to-br from-blue-50 to-white border-b border-gray-200 py-12">
