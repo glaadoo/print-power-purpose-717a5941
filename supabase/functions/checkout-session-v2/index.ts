@@ -297,20 +297,25 @@ serve(async (req) => {
     // Log final line items for debugging
     console.log("[PPP:STRIPE] Line items sent to Stripe:", JSON.stringify(lineItems, null, 2));
 
-    // Create Stripe Checkout Session with Stripe Tax enabled
+    // Create Stripe Checkout Session
     const origin = req.headers.get("origin") || "http://localhost:8080";
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
       
-      // Enable Stripe Tax for automatic tax calculation
-      automatic_tax: { enabled: true },
+      // 🔒 TEMPORARILY DISABLE STRIPE AUTOMATIC TAX
+      // When going live, UNCOMMENT this block.
+      /*
+      automatic_tax: {
+        enabled: true, // ← turn ON at launch
+      },
       
       // Collect shipping address for tax calculation
       shipping_address_collection: {
         allowed_countries: ["US", "CA"], // Adjust based on your business needs
       },
+      */
       
       success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/cancel`,
@@ -325,12 +330,13 @@ serve(async (req) => {
       },
     });
 
-    // Retrieve the session with expanded line items to get calculated tax
+    // 🔒 TAX RETRIEVAL TEMPORARILY DISABLED (since automatic_tax is off)
+    // When going live, UNCOMMENT this block to retrieve calculated tax from Stripe.
+    /*
     const expandedSession = await stripe.checkout.sessions.retrieve(session.id, {
       expand: ['total_details'],
     });
 
-    // Extract tax from Stripe's calculation
     const calculatedTaxCents = expandedSession.total_details?.amount_tax || 0;
     const finalTotalCents = expandedSession.amount_total || totalAmountCents;
 
@@ -341,8 +347,13 @@ serve(async (req) => {
       donationAmount,
       finalTotal: finalTotalCents,
     });
+    */
 
-    // Update order with Stripe session ID and calculated tax
+    // For now, no tax is applied
+    const calculatedTaxCents = 0;
+    const finalTotalCents = totalAmountCents; // subtotal + shipping + donation (no tax)
+
+    // Update order with Stripe session ID (no tax)
     await supabase
       .from("orders")
       .update({ 
