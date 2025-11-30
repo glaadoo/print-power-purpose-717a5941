@@ -90,28 +90,46 @@ export default function Success() {
 
     fetchOrderDetails();
 
-    // Fetch user's total donated amount
+    // Fetch user's total donated amount including current order
     async function fetchUserDonations() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session?.user?.email) return;
+        // Get customer email from session or current order
+        const customerEmail = session?.user?.email || orderDetails?.customer_email;
+        
+        if (!customerEmail) {
+          console.log("[SUCCESS] No customer email found, cannot fetch donation totals");
+          return;
+        }
+
+        console.log("[SUCCESS] Fetching donations for:", customerEmail);
 
         const { data: donations, error } = await supabase
           .from("donations")
           .select("amount_cents")
-          .eq("customer_email", session.user.email);
+          .eq("customer_email", customerEmail);
 
-        if (error) throw error;
+        if (error) {
+          console.error("[SUCCESS] Error fetching donations:", error);
+          throw error;
+        }
+
+        console.log("[SUCCESS] Donations found:", donations);
 
         const total = donations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0;
+        console.log("[SUCCESS] Total donated cents:", total);
+        
         setTotalDonatedCents(total);
       } catch (error) {
-        console.error("Error fetching user donations:", error);
+        console.error("[SUCCESS] Error fetching user donations:", error);
       }
     }
 
-    fetchUserDonations();
+    // Only fetch donations after order details are loaded
+    if (orderDetails) {
+      fetchUserDonations();
+    }
   }, [sessionId, searchParams]);
 
   if (loading) {
