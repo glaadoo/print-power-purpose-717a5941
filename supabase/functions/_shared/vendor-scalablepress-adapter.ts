@@ -21,8 +21,18 @@ export const scalablePressAdapter: VendorAdapter = {
       // Build order payload
       const orderPayload = buildScalablePressOrderPayload(order);
 
-      // TODO: Determine exact Scalable Press order submission endpoint
-      // This is a placeholder - update with actual endpoint
+      // ⚠️ CRITICAL: This endpoint is a PLACEHOLDER and returns 404
+      // Scalable Press API documentation must be reviewed to determine the correct endpoint
+      // Current error: "Unavailable - POST /v2/orders"
+      // 
+      // INVESTIGATION NEEDED:
+      // 1. Check https://scalablepress.com/docs for correct order submission endpoint
+      // 2. Verify API authentication method (Basic auth with API key)
+      // 3. Confirm payload structure matches Scalable Press requirements
+      // 4. Test endpoint with Postman/curl before enabling auto-fulfillment
+      //
+      // TEMPORARY WORKAROUND: Set VENDOR_FULFILLMENT_MODE=MANUAL_EXPORT or EMAIL_VENDOR
+      // in environment variables to bypass API submission until endpoint is corrected
       const orderUrl = `${apiBaseUrl}/orders`;
 
       console.log('[SCALABLEPRESS-ADAPTER] Submitting to Scalable Press');

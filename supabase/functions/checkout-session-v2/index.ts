@@ -118,6 +118,10 @@ serve(async (req) => {
     const orderItems = [];
     let subtotalCents = 0;
     const shippingItems: Array<{ productName: string; category?: string | null }> = [];
+    
+    // Track vendor for this order (assumes single-vendor orders)
+    let orderVendorKey: string | null = null;
+    let orderVendorName: string | null = null;
 
     for (const cartItem of cart.items) {
       // Fetch product with category
@@ -129,6 +133,18 @@ serve(async (req) => {
 
       if (!product) {
         throw new Error(`Product not found: ${cartItem.id}`);
+      }
+      
+      // Set order-level vendor from first item (assuming single-vendor orders)
+      if (!orderVendorKey) {
+        orderVendorKey = product.vendor;
+        // Map vendor key to display name
+        const vendorNames: Record<string, string> = {
+          'sinalite': 'SinaLite',
+          'scalablepress': 'Scalable Press',
+          'psrestful': 'PSRestful',
+        };
+        orderVendorName = vendorNames[product.vendor] || product.vendor;
       }
 
       // Collect for shipping calculation
@@ -219,7 +235,7 @@ serve(async (req) => {
     // Generate temporary session ID (will be replaced with Stripe session ID)
     const tempSessionId = crypto.randomUUID();
 
-    // Create order record FIRST
+    // Create order record FIRST with vendor info
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .insert({
@@ -236,6 +252,8 @@ serve(async (req) => {
         nonprofit_name: nonprofitName,
         nonprofit_ein: nonprofitEin,
         payment_mode: stripeMode,
+        vendor_key: orderVendorKey,
+        vendor_name: orderVendorName,
       })
       .select("id")
       .single();
@@ -305,17 +323,18 @@ serve(async (req) => {
       mode: "payment",
       
       // 🔒 TEMPORARILY DISABLE STRIPE AUTOMATIC TAX
-      // When going live, UNCOMMENT this block.
+      // When going live, UNCOMMENT the automatic_tax block below.
       /*
       automatic_tax: {
         enabled: true, // ← turn ON at launch
       },
-      
-      // Collect shipping address for tax calculation
-      shipping_address_collection: {
-        allowed_countries: ["US", "CA"], // Adjust based on your business needs
-      },
       */
+      
+      // ✅ CRITICAL: Keep shipping address collection ENABLED even with tax disabled
+      // This collects customer email and shipping details required for order fulfillment
+      shipping_address_collection: {
+        allowed_countries: ["US", "CA"],
+      },
       
       success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/cancel`,
