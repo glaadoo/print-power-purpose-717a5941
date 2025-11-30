@@ -16,7 +16,8 @@ import {
   CheckCircle,
   XCircle,
   BarChart3,
-  AlertTriangle
+  AlertTriangle,
+  UserPlus
 } from "lucide-react";
 import BulkImportDialog from "@/components/admin/BulkImportDialog";
 import { checkDuplicates, type DuplicateWarning } from "@/lib/nonprofit-utils";
@@ -343,7 +344,16 @@ export default function AdminNonprofits() {
             <h1 className="text-3xl font-bold">Nonprofit Management</h1>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              onClick={() => navigate("/admin/nonprofits/user-submitted")}
+              variant="outline"
+              size="sm"
+              className="bg-orange-500/20 border-orange-500/30 text-orange-300 hover:bg-orange-500/30"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              User Submissions
+            </Button>
             <Button
               onClick={() => navigate("/admin/nonprofit-analytics")}
               variant="outline"
