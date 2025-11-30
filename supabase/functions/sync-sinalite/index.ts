@@ -311,198 +311,83 @@ serve(async (req) => {
     }
 
     // Transform products - use product data directly without individual pricing calls
-    // The pricing will be handled by the global pricing engine based on base costs
+    // NO per-product API calls to avoid WORKER_LIMIT errors
     const rawProducts = products.data || products || [];
     const enabledProducts = rawProducts.filter((p: any) => p.enabled === 1);
     
-    console.log(`[SYNC-SINALITE] Processing ${enabledProducts.length} enabled products`);
-    console.log(`[SYNC-SINALITE] Sample product for ${storeName}:`, JSON.stringify(enabledProducts[0], null, 2).slice(0, 800));
-    
-    const productsToSync = [];
-    for (const p of enabledProducts) {
-      let baseCostCents = 2000; // Default $20.00 if no price found
-      let minPriceCents: number | null = null; // Minimum price across all configurations
-      let configurationData = null; // Store configuration options
+    console.log(`[SYNC-SINALITE] Processing ${enabledProducts.length} enabled products (fast sync mode)`);
+
+    // Build products array without per-product API calls
+    const productsToSync = enabledProducts.map((p: any) => {
+      // Use product-level price fields only (no config API calls)
+      let baseCostCents = 2000; // Default $20.00
       
-      // Strategy 1: Get configuration data (WITHOUT making expensive price API calls)
-      try {
-        console.log(`[SYNC-SINALITE] Fetching configuration data for product ${p.id}...`);
-        
-        // Get product configuration options
-        const configUrl = `${apiUrl}/${p.id}/${storeCode}`;
-        const configResponse = await fetch(configUrl, {
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "application/json"
-          }
-        });
-        
-        if (configResponse.ok) {
-          const configData = await configResponse.json();
-          configurationData = configData; // Store for pricing_data field
-          
-          // Try to extract min price from the combinations array if it contains price values
-          const combinations = configData[1];
-          if (Array.isArray(combinations) && combinations.length > 0) {
-            const prices: number[] = [];
-            for (const combo of combinations) {
-              if (combo && typeof combo === 'object' && combo.value) {
-                const val = parseFloat(combo.value);
-                // Only consider values that look like prices ($1 - $10000 range)
-                if (!isNaN(val) && val > 1 && val < 10000) {
-                  prices.push(val);
-                }
-              }
-            }
-            
-            if (prices.length > 0) {
-              const minPrice = Math.min(...prices);
-              minPriceCents = Math.round(minPrice * 100);
-              baseCostCents = minPriceCents;
-              console.log(`[SYNC-SINALITE] ✅ Product ${p.id} min price from combinations: $${(minPriceCents / 100).toFixed(2)}`);
-            }
-          }
-        }
-      } catch (err) {
-        console.warn(`[SYNC-SINALITE] Failed to fetch config data for product ${p.id}:`, err);
-      }
-      
-      // Strategy 2: Fallback to product-level price fields
-      if (minPriceCents === null) {
-        if (p.price && typeof p.price === 'number' && p.price > 0) {
-          baseCostCents = Math.round(p.price * 100);
-          minPriceCents = baseCostCents;
-          console.log(`[SYNC-SINALITE] Product ${p.id} using product.price: $${p.price.toFixed(2)}`);
-        } else if (p.base_price && typeof p.base_price === 'number' && p.base_price > 0) {
-          baseCostCents = Math.round(p.base_price * 100);
-          minPriceCents = baseCostCents;
-          console.log(`[SYNC-SINALITE] Product ${p.id} using product.base_price: $${p.base_price.toFixed(2)}`);
-        } else {
-          console.warn(`[SYNC-SINALITE] Product ${p.id} (${p.name}): No price field found, using default $${baseCostCents / 100}`);
-          minPriceCents = baseCostCents;
-        }
-      }
-      
-      // Skip products with unrealistic pricing
-      if (baseCostCents < 100 || baseCostCents > 100000) {
-        console.log(`[SYNC-SINALITE] Skipping product ${p.id}_${storeCode} (${p.name}) - unrealistic pricing: $${baseCostCents / 100}`);
-        continue;
+      if (p.price && typeof p.price === 'number' && p.price > 0) {
+        baseCostCents = Math.round(p.price * 100);
+      } else if (p.base_price && typeof p.base_price === 'number' && p.base_price > 0) {
+        baseCostCents = Math.round(p.base_price * 100);
       }
 
       // Extract image URL from various possible locations
       let imageUrl = null;
-      const imageExtractionLog: any = {
-        productId: p.id,
-        productName: p.name,
-        rawImageFields: {}
-      };
-      
-      if (p.image_url) {
-        imageUrl = p.image_url;
-        imageExtractionLog.source = 'image_url';
-        imageExtractionLog.rawImageFields.image_url = p.image_url;
-      } else if (p.imageUrl) {
-        imageUrl = p.imageUrl;
-        imageExtractionLog.source = 'imageUrl';
-        imageExtractionLog.rawImageFields.imageUrl = p.imageUrl;
-      } else if (p.thumbnail) {
-        imageUrl = p.thumbnail;
-        imageExtractionLog.source = 'thumbnail';
-        imageExtractionLog.rawImageFields.thumbnail = p.thumbnail;
-      } else if (p.image) {
-        imageUrl = typeof p.image === 'string' ? p.image : p.image?.url || p.image?.src;
-        imageExtractionLog.source = 'image';
-        imageExtractionLog.rawImageFields.image = p.image;
-      } else if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+      if (p.image_url) imageUrl = p.image_url;
+      else if (p.imageUrl) imageUrl = p.imageUrl;
+      else if (p.thumbnail) imageUrl = p.thumbnail;
+      else if (p.image) imageUrl = typeof p.image === 'string' ? p.image : p.image?.url || p.image?.src;
+      else if (p.images && Array.isArray(p.images) && p.images.length > 0) {
         imageUrl = typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url || p.images[0]?.src;
-        imageExtractionLog.source = 'images[0]';
-        imageExtractionLog.rawImageFields.images = p.images;
-      }
-      
-      imageExtractionLog.extractedUrl = imageUrl;
-      imageExtractionLog.success = !!imageUrl;
-      
-      // Log EVERY product's image extraction attempt
-      console.log(`[SYNC-SINALITE] 🖼️  IMAGE EXTRACTION:`, JSON.stringify(imageExtractionLog, null, 2));
-      
-      // If no image found, log all available fields to help debug
-      if (!imageUrl) {
-        console.warn(`[SYNC-SINALITE] ⚠️  NO IMAGE FOUND for product ${p.id} (${p.name})`);
-        console.warn(`[SYNC-SINALITE] 📋 All fields in product:`, Object.keys(p));
-        console.warn(`[SYNC-SINALITE] 🔍 Full product data:`, JSON.stringify(p, null, 2).slice(0, 1000));
       }
 
-      productsToSync.push({
+      return {
         name: `${p.name || "Unnamed Product"} (${storeName})`,
         description: p.description || p.sku || null,
         base_cost_cents: baseCostCents,
-        min_price_cents: minPriceCents, // Minimum price across all configurations
+        min_price_cents: baseCostCents,
         category: p.category || "Uncategorized",
         image_url: imageUrl,
         vendor: "sinalite",
-        vendor_id: `${p.id}_${storeCode}`, // Unique ID per store
+        vendor_id: `${p.id}_${storeCode}`,
         vendor_product_id: p.id.toString(),
-        pricing_data: configurationData || p, // Store configuration data, fallback to product data
-      });
-    }
+        pricing_data: p, // Store raw product data
+      };
+    }).filter((p: any) => p.base_cost_cents >= 100 && p.base_cost_cents <= 100000);
     
     console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync`);
 
-    let synced = 0;
-    let imagesFound = 0;
-    let imagesMissing = 0;
-    let imagesPreserved = 0;
+    // Batch fetch existing products to preserve images (one query instead of N)
+    const vendorIds = productsToSync.map((p: any) => p.vendor_id);
+    const { data: existingProducts } = await supabase
+      .from("products")
+      .select("vendor_id, image_url")
+      .eq("vendor", "sinalite")
+      .in("vendor_id", vendorIds);
     
-    for (const product of productsToSync) {
-      if (product.image_url) imagesFound++;
-      else imagesMissing++;
-      
-      // Check if product already exists with an image_url
-      const { data: existingProduct } = await supabase
-        .from("products")
-        .select("image_url")
-        .eq("vendor", product.vendor)
-        .eq("vendor_id", product.vendor_id)
-        .maybeSingle();
-      
-      // Preserve existing image_url if present, don't overwrite with null/empty
-      if (existingProduct?.image_url && !product.image_url) {
-        product.image_url = existingProduct.image_url;
-        imagesPreserved++;
-        console.log(`[SYNC-SINALITE] 🔒 Preserving existing image for:`, product.vendor_id);
-      }
-      
-      console.log(`[SYNC-SINALITE] 💾 Upserting product:`, {
-        vendor_id: product.vendor_id,
-        name: product.name,
-        has_image: !!product.image_url,
-        image_url: product.image_url,
-        preserved: existingProduct?.image_url && !product.image_url
-      });
-      
-      const { error } = await supabase
-        .from("products")
-        .upsert(
-          product,
-          { onConflict: "vendor,vendor_id" }
-        );
+    const existingImageMap = new Map(
+      (existingProducts || []).map((p: any) => [p.vendor_id, p.image_url])
+    );
 
-      if (error) {
-        console.error("[SYNC-SINALITE] ❌ Error upserting product:", product.vendor_id, error);
-      } else {
-        synced++;
+    // Preserve existing images
+    let imagesPreserved = 0;
+    for (const product of productsToSync) {
+      const existingImage = existingImageMap.get(product.vendor_id);
+      if (existingImage && !product.image_url) {
+        product.image_url = existingImage;
+        imagesPreserved++;
       }
     }
-    
-    console.log(`[SYNC-SINALITE] 📊 IMAGE STATISTICS:`, {
-      totalProducts: productsToSync.length,
-      imagesPreserved,
-      imagesFound,
-      imagesMissing,
-      percentageWithImages: Math.round((imagesFound / productsToSync.length) * 100) + '%'
-    });
 
-    console.log(`[SYNC-SINALITE] Successfully synced ${synced}/${productsToSync.length} products`);
+    // Batch upsert all products
+    const { error: upsertError, count } = await supabase
+      .from("products")
+      .upsert(productsToSync, { onConflict: "vendor,vendor_id", count: "exact" });
+
+    if (upsertError) {
+      console.error("[SYNC-SINALITE] Batch upsert error:", upsertError);
+      throw upsertError;
+    }
+
+    const synced = count || productsToSync.length;
+    console.log(`[SYNC-SINALITE] Successfully synced ${synced} products, preserved ${imagesPreserved} images`);
 
     return new Response(
       JSON.stringify({ 
