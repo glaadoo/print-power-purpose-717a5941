@@ -666,17 +666,28 @@ export default function AdminProducts() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-white">Product Pricing & Markups</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-white">Product Pricing & Markups</h2>
+            {showPricingProducts && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPricingProducts(false)}
+                className="rounded-full"
+              >
+                Hide Products
+              </Button>
+            )}
+          </div>
           {!showPricingProducts ? (
             <Card className="bg-white/5 border-white/20">
               <CardContent className="py-8 text-center">
                 <p className="text-white/60 mb-4">Click the button below to load products for pricing configuration.</p>
                 <Button
                   onClick={() => {
+                    setLoading(true);
                     setShowPricingProducts(true);
-                    if (products.length === 0) {
-                      loadProducts();
-                    }
+                    loadProducts();
                   }}
                   className="rounded-full"
                 >
