@@ -112,6 +112,34 @@ export default function AdminUserSubmittedNonprofits() {
     }
   };
 
+  const sendStatusNotification = async (
+    recipientEmail: string | undefined,
+    nonprofitName: string,
+    status: "approved" | "rejected",
+    notes?: string
+  ) => {
+    if (!recipientEmail) return;
+    
+    try {
+      const { error } = await supabase.functions.invoke("send-submission-status-notification", {
+        body: {
+          recipientEmail,
+          nonprofitName,
+          status,
+          adminNotes: notes
+        }
+      });
+      
+      if (error) {
+        console.error("Failed to send notification:", error);
+      } else {
+        console.log(`Status notification sent to ${recipientEmail}`);
+      }
+    } catch (err) {
+      console.error("Error sending notification:", err);
+    }
+  };
+
   const handleApprove = async (submission: UserSubmittedNonprofit) => {
     setProcessing(true);
     try {
@@ -143,7 +171,15 @@ export default function AdminUserSubmittedNonprofits() {
 
       if (updateError) throw updateError;
 
-      toast.success("Nonprofit approved and added to main list!");
+      // 3. Send email notification to submitter
+      await sendStatusNotification(
+        submission.submitted_by_email,
+        submission.name,
+        "approved",
+        adminNotes
+      );
+
+      toast.success("Nonprofit approved and notification sent!");
       setSubmissions(submissions.map(s => 
         s.id === submission.id ? { ...s, status: "approved" } : s
       ));
@@ -161,7 +197,7 @@ export default function AdminUserSubmittedNonprofits() {
     }
   };
 
-  const handleReject = async (id: string) => {
+  const handleReject = async (submission: UserSubmittedNonprofit) => {
     setProcessing(true);
     try {
       const { error } = await supabase
@@ -171,17 +207,25 @@ export default function AdminUserSubmittedNonprofits() {
           admin_notes: adminNotes || null,
           reviewed_at: new Date().toISOString()
         })
-        .eq("id", id);
+        .eq("id", submission.id);
 
       if (error) throw error;
 
-      toast.success("Submission rejected");
+      // Send email notification to submitter
+      await sendStatusNotification(
+        submission.submitted_by_email,
+        submission.name,
+        "rejected",
+        adminNotes
+      );
+
+      toast.success("Submission rejected and notification sent");
       setSubmissions(submissions.map(s => 
-        s.id === id ? { ...s, status: "rejected" } : s
+        s.id === submission.id ? { ...s, status: "rejected" } : s
       ));
       setSelected((prev) => {
         const next = new Set(prev);
-        next.delete(id);
+        next.delete(submission.id);
         return next;
       });
       setDetailModal(null);
@@ -486,7 +530,7 @@ export default function AdminUserSubmittedNonprofits() {
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={() => handleReject(submission.id)}
+                                onClick={() => handleReject(submission)}
                                 disabled={processing}
                               >
                                 <XCircle className="h-4 w-4" />
@@ -588,7 +632,7 @@ export default function AdminUserSubmittedNonprofits() {
               <>
                 <Button
                   variant="destructive"
-                  onClick={() => handleReject(detailModal.id)}
+                  onClick={() => handleReject(detailModal)}
                   disabled={processing}
                 >
                   <XCircle className="mr-2 h-4 w-4" />
