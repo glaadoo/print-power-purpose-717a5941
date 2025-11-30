@@ -413,6 +413,22 @@ export default function AdminProducts() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6 admin-dark-theme">
+      {/* Global sync loading overlay */}
+      {syncing && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-gray-800 border border-white/20 rounded-xl p-8 shadow-2xl text-center max-w-md">
+            <RefreshCw className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">Syncing Products</h3>
+            <p className="text-white/60">
+              {syncing.includes("SinaLite") && "Syncing SinaLite products..."}
+              {syncing.includes("Scalable") && "Syncing Scalable Press products..."}
+              {syncing.includes("PsRestful") && "Syncing PsRestful products..."}
+            </p>
+            <p className="text-white/40 text-sm mt-2">This may take a few minutes. Please wait...</p>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button
@@ -645,7 +661,7 @@ export default function AdminProducts() {
                   )}
                   <Button
                     onClick={() => handleSync(vendor.name, vendor.functionName, vendor.name === "SinaLite" ? selectedStore : undefined)}
-                    disabled={syncing === `${vendor.name}-${vendor.name === "SinaLite" ? selectedStore : ""}`}
+                    disabled={!!syncing}
                     className="w-full bg-white/20 text-white hover:bg-white/30"
                   >
                     {syncing === `${vendor.name}-${vendor.name === "SinaLite" ? selectedStore : ""}` ? (
