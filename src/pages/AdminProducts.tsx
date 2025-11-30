@@ -131,7 +131,24 @@ export default function AdminProducts() {
       
       setProducts(result);
       console.log(`Successfully loaded ${result.length} products`);
-      toast.success(`Loaded ${result.length} products`);
+      
+      // Count products by vendor and show separate notifications
+      const sinaliteCount = result.filter(p => p.vendor === 'sinalite').length;
+      const scalableCount = result.filter(p => p.vendor === 'scalablepress').length;
+      const otherCount = result.length - sinaliteCount - scalableCount;
+      
+      if (sinaliteCount > 0) {
+        toast.success(`Successfully loaded ${sinaliteCount} Sinalite products.`);
+      }
+      if (scalableCount > 0) {
+        toast.success(`Successfully loaded ${scalableCount} Scalable Press products.`);
+      }
+      if (otherCount > 0) {
+        toast.success(`Successfully loaded ${otherCount} other products.`);
+      }
+      if (result.length === 0) {
+        toast.info("No products found in database.");
+      }
     } catch (err: any) {
       console.error("Error loading products after retries:", err);
       toast.error(`Failed to load products: ${err?.message || 'Database timeout - try refreshing'}`);
