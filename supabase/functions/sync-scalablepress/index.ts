@@ -24,7 +24,7 @@ serve(async (req) => {
   // Start async processing
   (async () => {
     try {
-      console.log("[SYNC-SCALABLEPRESS] Starting product sync with streaming");
+      console.log("[SYNC-SCALABLEPRESS] Starting optimized product sync");
       await sendProgress("Starting Scalable Press sync...");
 
       const supabase = createClient(
@@ -65,12 +65,19 @@ serve(async (req) => {
       await sendProgress(`Found ${categories.length} categories`, { categoriesCount: categories.length });
       console.log(`[SYNC-SCALABLEPRESS] Found ${categories.length} categories`);
 
-      // Step 2: Fetch products for each category
-      let allProducts: any[] = [];
+      // Step 2: Fetch products for each category and upsert immediately
+      // This approach: fetch category products -> upsert batch -> move to next category
+      // Avoids accumulating 6300 products in memory and reduces API calls
       
+      let totalSynced = 0;
+      let totalErrors = 0;
+      let totalProducts = 0;
+
       for (let i = 0; i < categories.length; i++) {
         const category = categories[i];
-        await sendProgress(`Fetching category ${i + 1}/${categories.length}: ${category.name}`);
+        await sendProgress(`Processing category ${i + 1}/${categories.length}: ${category.name}`, {
+          progress: Math.round((i / categories.length) * 100)
+        });
         
         try {
           const productsResponse = await fetch(`${apiUrl}/categories/${category.categoryId}`, {
@@ -80,187 +87,84 @@ serve(async (req) => {
             },
           });
 
-          if (productsResponse.ok) {
-            const categoryData = await productsResponse.json();
-            
-            if (categoryData.products && Array.isArray(categoryData.products)) {
-              allProducts = allProducts.concat(
-                categoryData.products.map((p: any) => ({
-                  ...p,
-                  categoryName: category.name,
-                  categoryId: category.categoryId
-                }))
-              );
-            }
+          if (!productsResponse.ok) {
+            console.error(`[SYNC-SCALABLEPRESS] Failed to fetch category ${category.categoryId}`);
+            continue;
           }
-        } catch (err) {
-          console.error(`[SYNC-SCALABLEPRESS] Error fetching products for ${category.categoryId}:`, err);
-        }
-      }
 
-      await sendProgress(`Total products found: ${allProducts.length}`, { totalProducts: allProducts.length });
-      console.log(`[SYNC-SCALABLEPRESS] Total products fetched: ${allProducts.length}`);
+          const categoryData = await productsResponse.json();
+          
+          if (!categoryData.products || !Array.isArray(categoryData.products)) {
+            continue;
+          }
 
-      if (allProducts.length === 0) {
-        await sendProgress("No products found", { done: true, synced: 0, total: 0 });
-        await writer.close();
-        return;
-      }
+          const products = categoryData.products;
+          totalProducts += products.length;
 
-      // Step 3: Process products in batches with progress updates
-      let synced = 0;
-      let errors = 0;
-      const batchSize = 10;
-
-      for (let i = 0; i < allProducts.length; i += batchSize) {
-        const batch = allProducts.slice(i, i + batchSize);
-        const batchNum = Math.floor(i / batchSize) + 1;
-        const totalBatches = Math.ceil(allProducts.length / batchSize);
-        
-        await sendProgress(`Processing batch ${batchNum}/${totalBatches} (${i + 1}-${Math.min(i + batchSize, allProducts.length)} of ${allProducts.length})`, {
-          progress: Math.round((i / allProducts.length) * 100),
-          synced,
-          errors
-        });
-
-        // Process batch concurrently
-        const batchPromises = batch.map(async (product) => {
-          try {
-            // Fetch detailed product information
-            const detailsResponse = await fetch(`${apiUrl}/products/${product.id}`, {
-              headers: {
-                "Authorization": `Basic ${btoa(":" + apiKey)}`,
-                "Accept": "application/json",
-              },
-            });
-
-            let productDetails = product;
-            if (detailsResponse.ok) {
-              productDetails = await detailsResponse.json();
+          // Process products in this category - use ONLY basic data from category response
+          // Skip individual product API calls to avoid CPU timeout
+          const productRecords = products.map((product: any) => {
+            // Extract image URL from category listing data
+            let imageUrl = null;
+            if (product.image?.url) {
+              imageUrl = product.image.url;
             }
 
-            // Fetch item pricing information
-            const itemsResponse = await fetch(`${apiUrl}/products/${product.id}/items`, {
-              headers: {
-                "Authorization": `Basic ${btoa(":" + apiKey)}`,
-                "Accept": "application/json",
-              },
-            });
-
-            let itemsData = null;
-            let lowestPrice = 100; // Default to $1.00 (100 cents) minimum
-            
-            if (itemsResponse.ok) {
-              itemsData = await itemsResponse.json();
-              
-              // Extract lowest price from all color/size combinations
-              const allPrices: number[] = [];
-              for (const colorData of Object.values(itemsData)) {
-                for (const sizeData of Object.values(colorData as any)) {
-                  if (typeof sizeData === 'object' && sizeData !== null && 'price' in sizeData) {
-                    const price = (sizeData as any).price;
-                    if (price > 0) {
-                      allPrices.push(price);
-                    }
-                  }
-                }
-              }
-              
-              if (allPrices.length > 0) {
-                lowestPrice = Math.max(Math.min(...allPrices), 100);
-              }
-            }
-
-            // Fetch availability information
-            const availabilityResponse = await fetch(`${apiUrl}/products/${product.id}/availability`, {
-              headers: {
-                "Authorization": `Basic ${btoa(":" + apiKey)}`,
-                "Accept": "application/json",
-              },
-            });
-
-            let availabilityData = null;
-            if (availabilityResponse.ok) {
-              availabilityData = await availabilityResponse.json();
-            }
-
-            // Extract colors and sizes for pricing_data
-            const colors = productDetails.colors || [];
-            const sizes = colors.length > 0 ? colors[0].sizes || [] : [];
-            
-            // Extract image from multiple possible locations
-            let firstColorImage = null;
-            
-            if (productDetails.images && Array.isArray(productDetails.images) && productDetails.images.length > 0) {
-              firstColorImage = productDetails.images[0].url || productDetails.images[0];
-            } else if (colors.length > 0 && colors[0].images?.length > 0) {
-              firstColorImage = colors[0].images[0].url || colors[0].images[0];
-            } else if (product.image?.url) {
-              firstColorImage = product.image.url;
-            } else if (productDetails.image?.url) {
-              firstColorImage = productDetails.image.url;
-            }
-
-            // Build product data object
-            const productData = {
-              name: productDetails.name || product.name || "Unnamed Product",
-              base_cost_cents: lowestPrice,
-              category: product.categoryName || "apparel",
-              image_url: firstColorImage,
-              description: productDetails.description || productDetails.comments || null,
+            return {
+              name: product.name || "Unnamed Product",
+              base_cost_cents: 1000, // Default $10, will be fetched on-demand
+              category: category.name || "apparel",
+              image_url: imageUrl,
+              description: null, // Will be fetched on-demand
               vendor: "scalablepress",
               vendor_id: product.id,
               vendor_product_id: product.id,
-              is_active: productDetails.available !== false,
+              is_active: true,
               pricing_data: {
-                style: productDetails.properties?.style || product.style,
-                brand: productDetails.properties?.brand,
-                material: productDetails.properties?.material,
-                colors: colors.map((c: any) => ({
-                  name: c.name,
-                  hex: c.hex,
-                  sizes: c.sizes,
-                  images: c.images
-                })),
-                sizes: sizes,
-                items: itemsData,
-                availability: availabilityData,
-                productUrl: product.url
+                style: product.style,
+                categoryId: category.categoryId,
+                categoryType: category.type,
+                productUrl: product.url,
+                // Detailed pricing (colors, sizes, items) fetched on-demand in configurator
               }
             };
+          });
 
-            // Upsert to database
+          // Upsert products in batches of 50
+          const batchSize = 50;
+          for (let j = 0; j < productRecords.length; j += batchSize) {
+            const batch = productRecords.slice(j, j + batchSize);
+            
             const { error } = await supabase
               .from("products")
-              .upsert(productData, { 
+              .upsert(batch, { 
                 onConflict: "vendor,vendor_id",
                 ignoreDuplicates: false 
               });
 
             if (error) {
-              console.error(`[SYNC-SCALABLEPRESS] Error upserting product ${productData.vendor_id}:`, error);
-              return { success: false };
+              console.error(`[SYNC-SCALABLEPRESS] Batch upsert error:`, error);
+              totalErrors += batch.length;
+            } else {
+              totalSynced += batch.length;
             }
-            return { success: true };
-          } catch (err) {
-            console.error("[SYNC-SCALABLEPRESS] Error processing product:", err);
-            return { success: false };
           }
-        });
 
-        const results = await Promise.all(batchPromises);
-        synced += results.filter(r => r.success).length;
-        errors += results.filter(r => !r.success).length;
+          console.log(`[SYNC-SCALABLEPRESS] Category ${category.name}: ${products.length} products processed`);
+          
+        } catch (err) {
+          console.error(`[SYNC-SCALABLEPRESS] Error processing category ${category.categoryId}:`, err);
+        }
       }
 
-      console.log(`[SYNC-SCALABLEPRESS] Sync complete: ${synced} synced, ${errors} errors`);
+      console.log(`[SYNC-SCALABLEPRESS] Sync complete: ${totalSynced} synced, ${totalErrors} errors out of ${totalProducts} total`);
       
       await sendProgress("Sync completed!", { 
         done: true,
         success: true, 
-        synced, 
-        total: allProducts.length,
-        errors,
+        synced: totalSynced, 
+        total: totalProducts,
+        errors: totalErrors,
         vendor: "scalablepress"
       });
       
