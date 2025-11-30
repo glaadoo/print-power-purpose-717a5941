@@ -56,6 +56,8 @@ export default function AdminProducts() {
   const [fetchingScalablePrices, setFetchingScalablePrices] = useState(false);
   const [scalablePriceProgress, setScalablePriceProgress] = useState({ remaining: 0, updated: 0 });
   const [syncStatus, setSyncStatus] = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({});
+  // Persistent status messages per button - only cleared on page refresh or button re-click
+  const [buttonMessages, setButtonMessages] = useState<Record<string, { type: 'loading' | 'success' | 'error'; text: string }>>({});
 
   useEffect(() => {
     // Don't auto-load products - wait for user to click "Show Products" button
@@ -167,17 +169,15 @@ export default function AdminProducts() {
 
   const handleSync = async (vendor: string, functionName: string, storeCode?: number) => {
     const syncKey = storeCode ? `${vendor}-${storeCode}` : vendor;
+    const buttonKey = `sync-${syncKey}`;
     setSyncing(syncKey);
     setSyncResults((prev) => ({ ...prev, [syncKey]: null }));
     setSyncStatus((prev) => ({ ...prev, [syncKey]: 'loading' }));
+    setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'loading', text: `Syncing ${vendor} products...` } }));
     
     try {
       const body = storeCode ? { storeCode } : undefined;
       
-      // Show a toast that sync is starting
-      toast.info(`Syncing ${vendor} products...`);
-      
-      // Use retry logic with longer timeouts for sync operations
       const { data, error } = await invokeWithRetry(
         supabase,
         functionName,
@@ -186,7 +186,6 @@ export default function AdminProducts() {
           maxAttempts: 2,
           initialDelayMs: 2000,
           shouldRetry: (error: any) => {
-            // Retry on timeout or network errors
             const msg = error?.message?.toLowerCase() || '';
             return msg.includes('timeout') || msg.includes('fetch') || msg.includes('network');
           }
@@ -201,10 +200,12 @@ export default function AdminProducts() {
         const storeInfo = data.store ? ` (${data.store})` : '';
         toast.success(`${vendor}${storeInfo}: Synced ${data.synced} products successfully!`);
         setSyncStatus((prev) => ({ ...prev, [syncKey]: 'success' }));
+        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `${vendor} products synced successfully. ${data.synced} products updated.` } }));
         loadProducts();
       } else {
         toast.warning(`${vendor}: ${data?.note || "Sync completed with issues"}`);
         setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
+        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: `Failed to sync ${vendor} products. Please try again.` } }));
       }
     } catch (error: any) {
       console.error(`Error syncing ${vendor}:`, error);
@@ -214,6 +215,7 @@ export default function AdminProducts() {
       toast.error(`Failed to sync ${vendor}: ${errorMsg}`);
       setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
       setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
+      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: `Failed to sync ${vendor} products. Please try again.` } }));
     } finally {
       setSyncing(null);
     }
@@ -221,20 +223,17 @@ export default function AdminProducts() {
 
   // Fetch minimum prices for SinaLite products
   const handleFetchMinPrices = async (forceRefresh = false) => {
+    const buttonKey = forceRefresh ? 'sinalite-force-refresh' : 'sinalite-fetch-prices';
     setFetchingMinPrices(true);
-    toast.info(forceRefresh 
-      ? "Force refreshing ALL minimum prices from SinaLite... This may take several minutes."
-      : "Fetching minimum prices from SinaLite... This may take a minute."
-    );
+    setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'loading', text: forceRefresh ? 'Force refreshing ALL SinaLite prices...' : 'Syncing SinaLite product prices...' } }));
     
     try {
       let totalUpdated = 0;
       let remaining = Infinity;
       let iterations = 0;
-      const maxIterations = forceRefresh ? 50 : 20; // More iterations for force refresh
-      const batchSize = forceRefresh ? 5 : 10; // Smaller batches for force refresh (more API calls per product)
+      const maxIterations = forceRefresh ? 50 : 20;
+      const batchSize = forceRefresh ? 5 : 10;
       
-      // For force refresh, first count all sinalite products
       if (forceRefresh) {
         const { count } = await supabase
           .from('products')
@@ -244,7 +243,6 @@ export default function AdminProducts() {
         setMinPriceProgress({ remaining, updated: 0 });
       }
       
-      // Keep fetching in batches until no more products need updating
       while ((forceRefresh ? iterations * batchSize < (remaining + totalUpdated + batchSize) : remaining > 0) && iterations < maxIterations) {
         iterations++;
         
@@ -269,43 +267,35 @@ export default function AdminProducts() {
           break;
         }
         
-        // If we processed fewer than batchSize and it's force refresh, we're done
         if (forceRefresh && data?.processed < batchSize) {
           break;
         }
         
-        // Small delay between batches
         await new Promise(r => setTimeout(r, 1000));
       }
       
-      toast.success(`✅ COMPLETE! Updated minimum prices for ${totalUpdated} products!`, {
-        duration: 10000, // Show for 10 seconds
-      });
+      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `SinaLite product prices synced successfully. Updated ${totalUpdated} products.` } }));
+      toast.success(`Updated minimum prices for ${totalUpdated} products!`);
       
-      // Reload products to show updated prices
       if (showPricingProducts) {
         loadProducts();
       }
       
     } catch (error: any) {
       console.error('Error fetching min prices:', error);
-      toast.error(`❌ Failed to fetch min prices: ${error.message}`, {
-        duration: 10000,
-      });
+      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: 'Failed to sync SinaLite product prices. Please try again.' } }));
+      toast.error(`Failed to fetch min prices: ${error.message}`);
     } finally {
       setFetchingMinPrices(false);
       setMinPriceProgress({ remaining: 0, updated: 0 });
-      toast.info("Min price fetch process finished.", { duration: 5000 });
     }
   };
 
   // Fetch prices for Scalable Press products
   const handleFetchScalablePrices = async (forceRefresh = false) => {
+    const buttonKey = forceRefresh ? 'scalablepress-force-refresh' : 'scalablepress-fetch-prices';
     setFetchingScalablePrices(true);
-    toast.info(forceRefresh 
-      ? "Force refreshing ALL Scalable Press prices... This may take several minutes."
-      : "Fetching Scalable Press prices... This may take a minute."
-    );
+    setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'loading', text: forceRefresh ? 'Force refreshing ALL Scalable Press prices...' : 'Syncing Scalable Press product prices...' } }));
     
     try {
       let totalUpdated = 0;
@@ -314,7 +304,6 @@ export default function AdminProducts() {
       const maxIterations = forceRefresh ? 100 : 50;
       const batchSize = 10;
       
-      // Keep fetching in batches until no more products need updating
       while (remaining > 0 && iterations < maxIterations) {
         iterations++;
         
@@ -335,28 +324,23 @@ export default function AdminProducts() {
           break;
         }
         
-        // Small delay between batches
         await new Promise(r => setTimeout(r, 500));
       }
       
-      toast.success(`✅ COMPLETE! Updated prices for ${totalUpdated} Scalable Press products!`, {
-        duration: 10000,
-      });
+      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `Scalable Press product prices synced successfully. Updated ${totalUpdated} products.` } }));
+      toast.success(`Updated prices for ${totalUpdated} Scalable Press products!`);
       
-      // Reload products to show updated prices
       if (showPricingProducts) {
         loadProducts();
       }
       
     } catch (error: any) {
       console.error('Error fetching Scalable Press prices:', error);
-      toast.error(`❌ Failed to fetch prices: ${error.message}`, {
-        duration: 10000,
-      });
+      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: 'Failed to sync Scalable Press product prices. Please try again.' } }));
+      toast.error(`Failed to fetch prices: ${error.message}`);
     } finally {
       setFetchingScalablePrices(false);
       setScalablePriceProgress({ remaining: 0, updated: 0 });
-      toast.info("Scalable Press price fetch process finished.", { duration: 5000 });
     }
   };
 
@@ -812,7 +796,9 @@ export default function AdminProducts() {
                   <Button
                     onClick={() => {
                       const syncKey = vendor.name === "SinaLite" ? `${vendor.name}-${selectedStore}` : vendor.name;
+                      const buttonKey = `sync-${syncKey}`;
                       setSyncStatus((prev) => ({ ...prev, [syncKey]: 'idle' }));
+                      setButtonMessages(prev => ({ ...prev, [buttonKey]: undefined as any }));
                       handleSync(vendor.name, vendor.functionName, vendor.name === "SinaLite" ? selectedStore : undefined);
                     }}
                     disabled={!!syncing || fetchingMinPrices || fetchingScalablePrices}
@@ -833,83 +819,154 @@ export default function AdminProducts() {
                   {/* Sync Status Indicator */}
                   {(() => {
                     const syncKey = vendor.name === "SinaLite" ? `${vendor.name}-${selectedStore}` : vendor.name;
-                    const status = syncStatus[syncKey];
-                    if (!status || status === 'idle') return null;
+                    const buttonKey = `sync-${syncKey}`;
+                    const msg = buttonMessages[buttonKey];
+                    if (!msg) return null;
                     return (
                       <div className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-md text-sm ${
-                        status === 'loading' ? 'bg-blue-500/20 text-blue-300' :
-                        status === 'success' ? 'bg-green-500/20 text-green-300' :
+                        msg.type === 'loading' ? 'bg-blue-500/20 text-blue-300' :
+                        msg.type === 'success' ? 'bg-green-500/20 text-green-300' :
                         'bg-red-500/20 text-red-300'
                       }`}>
-                        {status === 'loading' && <RefreshCw className="h-4 w-4 animate-spin" />}
-                        {status === 'success' && <Check className="h-4 w-4" />}
-                        {status === 'error' && <AlertTriangle className="h-4 w-4" />}
-                        <span>
-                          {status === 'loading' && 'Syncing products...'}
-                          {status === 'success' && 'Products synced successfully'}
-                          {status === 'error' && 'Sync failed'}
-                        </span>
+                        {msg.type === 'loading' && <RefreshCw className="h-4 w-4 animate-spin" />}
+                        {msg.type === 'success' && <Check className="h-4 w-4" />}
+                        {msg.type === 'error' && <AlertTriangle className="h-4 w-4" />}
+                        <span>{msg.text}</span>
                       </div>
                     );
                   })()}
                   {vendor.name === "SinaLite" && (
                     <div className="space-y-2 mt-2">
-                      <Button
-                        onClick={() => handleFetchMinPrices(false)}
-                        disabled={!!syncing || fetchingMinPrices}
-                        className="w-full bg-green-600/30 text-white hover:bg-green-600/50 border border-green-500/30"
-                      >
-                        {fetchingMinPrices ? (
-                          <>
-                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                            Fetching... ({minPriceProgress.updated} updated, {minPriceProgress.remaining} left)
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                            Fetch New Min Prices
-                          </>
+                      <div>
+                        <Button
+                          onClick={() => handleFetchMinPrices(false)}
+                          disabled={!!syncing || fetchingMinPrices}
+                          className="w-full bg-green-600/30 text-white hover:bg-green-600/50 border border-green-500/30"
+                        >
+                          {buttonMessages['sinalite-fetch-prices']?.type === 'loading' ? (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                              Fetching... ({minPriceProgress.updated} updated, {minPriceProgress.remaining} left)
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              Fetch New Min Prices
+                            </>
+                          )}
+                        </Button>
+                        {buttonMessages['sinalite-fetch-prices'] && (
+                          <div className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-md text-sm ${
+                            buttonMessages['sinalite-fetch-prices'].type === 'loading' ? 'bg-blue-500/20 text-blue-300' :
+                            buttonMessages['sinalite-fetch-prices'].type === 'success' ? 'bg-green-500/20 text-green-300' :
+                            'bg-red-500/20 text-red-300'
+                          }`}>
+                            {buttonMessages['sinalite-fetch-prices'].type === 'loading' && <RefreshCw className="h-4 w-4 animate-spin" />}
+                            {buttonMessages['sinalite-fetch-prices'].type === 'success' && <Check className="h-4 w-4" />}
+                            {buttonMessages['sinalite-fetch-prices'].type === 'error' && <AlertTriangle className="h-4 w-4" />}
+                            <span>{buttonMessages['sinalite-fetch-prices'].text}</span>
+                          </div>
                         )}
-                      </Button>
-                      <Button
-                        onClick={() => handleFetchMinPrices(true)}
-                        disabled={!!syncing || fetchingMinPrices}
-                        variant="outline"
-                        className="w-full text-yellow-400 border-yellow-500/30 hover:bg-yellow-600/20"
-                      >
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Force Refresh ALL Prices
-                      </Button>
+                      </div>
+                      <div>
+                        <Button
+                          onClick={() => handleFetchMinPrices(true)}
+                          disabled={!!syncing || fetchingMinPrices}
+                          variant="outline"
+                          className="w-full text-yellow-400 border-yellow-500/30 hover:bg-yellow-600/20"
+                        >
+                          {buttonMessages['sinalite-force-refresh']?.type === 'loading' ? (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                              Refreshing... ({minPriceProgress.updated} updated, {minPriceProgress.remaining} left)
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              Force Refresh ALL Prices
+                            </>
+                          )}
+                        </Button>
+                        {buttonMessages['sinalite-force-refresh'] && (
+                          <div className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-md text-sm ${
+                            buttonMessages['sinalite-force-refresh'].type === 'loading' ? 'bg-blue-500/20 text-blue-300' :
+                            buttonMessages['sinalite-force-refresh'].type === 'success' ? 'bg-green-500/20 text-green-300' :
+                            'bg-red-500/20 text-red-300'
+                          }`}>
+                            {buttonMessages['sinalite-force-refresh'].type === 'loading' && <RefreshCw className="h-4 w-4 animate-spin" />}
+                            {buttonMessages['sinalite-force-refresh'].type === 'success' && <Check className="h-4 w-4" />}
+                            {buttonMessages['sinalite-force-refresh'].type === 'error' && <AlertTriangle className="h-4 w-4" />}
+                            <span>{buttonMessages['sinalite-force-refresh'].text}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                   {vendor.name === "Scalable Press" && (
                     <div className="space-y-2 mt-2">
-                      <Button
-                        onClick={() => handleFetchScalablePrices(false)}
-                        disabled={!!syncing || fetchingScalablePrices}
-                        className="w-full bg-purple-600/30 text-white hover:bg-purple-600/50 border border-purple-500/30"
-                      >
-                        {fetchingScalablePrices ? (
-                          <>
-                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                            Fetching... ({scalablePriceProgress.updated} updated, {scalablePriceProgress.remaining} left)
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                            Fetch Product Prices
-                          </>
+                      <div>
+                        <Button
+                          onClick={() => handleFetchScalablePrices(false)}
+                          disabled={!!syncing || fetchingScalablePrices}
+                          className="w-full bg-purple-600/30 text-white hover:bg-purple-600/50 border border-purple-500/30"
+                        >
+                          {buttonMessages['scalablepress-fetch-prices']?.type === 'loading' ? (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                              Fetching... ({scalablePriceProgress.updated} updated, {scalablePriceProgress.remaining} left)
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              Fetch Product Prices
+                            </>
+                          )}
+                        </Button>
+                        {buttonMessages['scalablepress-fetch-prices'] && (
+                          <div className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-md text-sm ${
+                            buttonMessages['scalablepress-fetch-prices'].type === 'loading' ? 'bg-blue-500/20 text-blue-300' :
+                            buttonMessages['scalablepress-fetch-prices'].type === 'success' ? 'bg-green-500/20 text-green-300' :
+                            'bg-red-500/20 text-red-300'
+                          }`}>
+                            {buttonMessages['scalablepress-fetch-prices'].type === 'loading' && <RefreshCw className="h-4 w-4 animate-spin" />}
+                            {buttonMessages['scalablepress-fetch-prices'].type === 'success' && <Check className="h-4 w-4" />}
+                            {buttonMessages['scalablepress-fetch-prices'].type === 'error' && <AlertTriangle className="h-4 w-4" />}
+                            <span>{buttonMessages['scalablepress-fetch-prices'].text}</span>
+                          </div>
                         )}
-                      </Button>
-                      <Button
-                        onClick={() => handleFetchScalablePrices(true)}
-                        disabled={!!syncing || fetchingScalablePrices}
-                        variant="outline"
-                        className="w-full text-yellow-400 border-yellow-500/30 hover:bg-yellow-600/20"
-                      >
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Force Refresh ALL Prices
-                      </Button>
+                      </div>
+                      <div>
+                        <Button
+                          onClick={() => handleFetchScalablePrices(true)}
+                          disabled={!!syncing || fetchingScalablePrices}
+                          variant="outline"
+                          className="w-full text-yellow-400 border-yellow-500/30 hover:bg-yellow-600/20"
+                        >
+                          {buttonMessages['scalablepress-force-refresh']?.type === 'loading' ? (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                              Refreshing... ({scalablePriceProgress.updated} updated, {scalablePriceProgress.remaining} left)
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              Force Refresh ALL Prices
+                            </>
+                          )}
+                        </Button>
+                        {buttonMessages['scalablepress-force-refresh'] && (
+                          <div className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-md text-sm ${
+                            buttonMessages['scalablepress-force-refresh'].type === 'loading' ? 'bg-blue-500/20 text-blue-300' :
+                            buttonMessages['scalablepress-force-refresh'].type === 'success' ? 'bg-green-500/20 text-green-300' :
+                            'bg-red-500/20 text-red-300'
+                          }`}>
+                            {buttonMessages['scalablepress-force-refresh'].type === 'loading' && <RefreshCw className="h-4 w-4 animate-spin" />}
+                            {buttonMessages['scalablepress-force-refresh'].type === 'success' && <Check className="h-4 w-4" />}
+                            {buttonMessages['scalablepress-force-refresh'].type === 'error' && <AlertTriangle className="h-4 w-4" />}
+                            <span>{buttonMessages['scalablepress-force-refresh'].text}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </CardContent>
