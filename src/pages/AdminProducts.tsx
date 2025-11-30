@@ -393,7 +393,7 @@ export default function AdminProducts() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6 admin-dark-theme">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button
@@ -490,7 +490,7 @@ export default function AdminProducts() {
           <div className="mb-8">
             <Card className="bg-white/10 backdrop-blur-md border-white/20">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                   <CheckSquare className="h-5 w-5" />
                   Bulk Markup Update
                 </CardTitle>
@@ -593,7 +593,7 @@ export default function AdminProducts() {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Sync Products from Vendors</h2>
+          <h2 className="text-xl font-semibold mb-4 text-white">Sync Products from Vendors</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {vendors.map((vendor) => (
               <Card key={vendor.name} className={`${vendor.color} border backdrop-blur-sm`}>
