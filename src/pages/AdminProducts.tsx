@@ -174,14 +174,8 @@ export default function AdminProducts() {
     try {
       const body = storeCode ? { storeCode } : undefined;
       
-      // Show a toast that this might take a while
-      toast.info(`Syncing ${vendor} products... This may take a few minutes.`);
-      
-      // For Scalable Press, use streaming to handle long-running sync
-      if (functionName === 'sync-scalablepress') {
-        await handleStreamingSync(syncKey, functionName);
-        return;
-      }
+      // Show a toast that sync is starting
+      toast.info(`Syncing ${vendor} products...`);
       
       // Use retry logic with longer timeouts for sync operations
       const { data, error } = await invokeWithRetry(
@@ -218,88 +212,6 @@ export default function AdminProducts() {
         ? 'Sync is taking longer than expected. The sync may still be running in the background. Please wait a minute and refresh the product list.'
         : error.message;
       toast.error(`Failed to sync ${vendor}: ${errorMsg}`);
-      setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
-      setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
-    } finally {
-      setSyncing(null);
-    }
-  };
-
-  // Handle streaming sync for Scalable Press
-  const handleStreamingSync = async (syncKey: string, functionName: string) => {
-    setSyncStatus((prev) => ({ ...prev, [syncKey]: 'loading' }));
-    try {
-      const supabaseUrl = "https://wgohndthjgeqamfuldov.supabase.co";
-      const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw";
-      
-      const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': anonKey,
-          'Authorization': `Bearer ${anonKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
-      }
-
-      const decoder = new TextDecoder();
-      let lastProgress = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              lastProgress = data.message;
-              
-              // Update sync results with progress
-              setSyncResults((prev) => ({ 
-                ...prev, 
-                [syncKey]: { 
-                  ...data, 
-                  inProgress: !data.done 
-                } 
-              }));
-              
-              // Show progress toast periodically
-              if (data.progress !== undefined && data.progress % 25 === 0) {
-                toast.info(`Scalable Press: ${data.progress}% complete`);
-              }
-              
-              // Handle completion
-              if (data.done) {
-                if (data.success) {
-                  toast.success(`Scalable Press: Synced ${data.synced} products successfully!`);
-                  setSyncStatus((prev) => ({ ...prev, [syncKey]: 'success' }));
-                  loadProducts();
-                } else if (data.error) {
-                  toast.error(`Scalable Press sync failed: ${data.message}`);
-                  setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
-                }
-              }
-            } catch (e) {
-              console.error('Error parsing SSE data:', e);
-            }
-          }
-        }
-      }
-    } catch (error: any) {
-      console.error('Streaming sync error:', error);
-      toast.error(`Failed to sync Scalable Press: ${error.message}`);
       setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
       setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
     } finally {
