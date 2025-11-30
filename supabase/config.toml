@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.fetch-sinalite-min-prices]
 verify_jwt = false
+
+[functions.fetch-scalablepress-prices]
+verify_jwt = false
