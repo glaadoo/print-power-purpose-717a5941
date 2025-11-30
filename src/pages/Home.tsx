@@ -227,16 +227,6 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
             {/* Kenzie Puppy */}
             <div className="relative flex-shrink-0">
-              {/* Woof woof bubble */}
-              <div className="absolute -top-6 right-0 z-20">
-                <div className="relative bg-white rounded-2xl px-4 py-2 shadow-lg border-2 border-amber-200">
-                  <span className="text-lg font-bold text-amber-600 whitespace-nowrap">
-                    Woof woof! 🐕
-                  </span>
-                  <div className="absolute -bottom-2 left-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-white" />
-                </div>
-              </div>
-              
               {/* Kenzie with gentle bounce */}
               <div className="relative">
                 <img
