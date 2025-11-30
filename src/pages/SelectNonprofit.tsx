@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/Footer";
 import UserDonationProgress from "@/components/UserDonationProgress";
+import SubmitNonprofitForm from "@/components/SubmitNonprofitForm";
 
 type Nonprofit = {
   id: string;
@@ -212,7 +213,7 @@ export default function SelectNonprofit() {
 
   // Fetch nonprofits data on mount
   useEffect(() => {
-    document.title = "Choose Your Nonprofit - Print Power Purpose";
+    document.title = "Pick a Cause. Create Change. - Print Power Purpose";
     
     let alive = true;
     (async () => {
@@ -974,10 +975,10 @@ export default function SelectNonprofit() {
           </Button>
           <div className="text-center">
             <h1 className="text-4xl font-bold text-primary mb-2">
-              Select a Nonprofit
+              Pick a Cause. Create Change.
             </h1>
-            <p className="text-muted-foreground">
-              Choose a nonprofit organization to support with your purchase
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Your purchase helps a nonprofit continue its mission—choose the one you want to empower.
             </p>
           </div>
         </div>
@@ -986,6 +987,11 @@ export default function SelectNonprofit() {
         <UserDonationProgress variant="light" className="mb-8" />
 
         {body}
+
+        {/* Submit Nonprofit Section */}
+        <div className="mt-16 max-w-2xl mx-auto">
+          <SubmitNonprofitForm />
+        </div>
       </main>
 
       {/* Floating Back to Top Button with Progress Indicator */}

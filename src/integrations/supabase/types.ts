@@ -1453,6 +1453,66 @@ export type Database = {
         }
         Relationships: []
       }
+      user_submitted_nonprofits: {
+        Row: {
+          admin_notes: string | null
+          city: string | null
+          contact_email: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          ein: string | null
+          id: string
+          name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          state: string | null
+          status: string
+          submitted_by_email: string | null
+          submitted_by_user_id: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          city?: string | null
+          contact_email?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          ein?: string | null
+          id?: string
+          name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          submitted_by_email?: string | null
+          submitted_by_user_id?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          city?: string | null
+          contact_email?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          ein?: string | null
+          id?: string
+          name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          submitted_by_email?: string | null
+          submitted_by_user_id?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       video_metadata: {
         Row: {
           created_at: string | null
