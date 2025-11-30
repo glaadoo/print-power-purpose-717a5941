@@ -37,7 +37,7 @@ export default function AdminProducts() {
   const [syncResults, setSyncResults] = useState<Record<string, any>>({});
   const [selectedStore, setSelectedStore] = useState<6 | 9>(9);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editForm, setEditForm] = useState({
     markup_fixed_cents: 0,
@@ -49,9 +49,10 @@ export default function AdminProducts() {
   const [bulkMarkupValue, setBulkMarkupValue] = useState<string>("");
   const [generatingImages, setGeneratingImages] = useState(false);
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 0 });
+  const [showPricingProducts, setShowPricingProducts] = useState(false);
 
   useEffect(() => {
-    loadProducts();
+    // Don't auto-load products - wait for user to click "Show Products" button
     loadPricingSettings();
   }, []);
 
@@ -665,8 +666,25 @@ export default function AdminProducts() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4">Product Pricing & Markups</h2>
-          {loading ? (
+          <h2 className="text-xl font-semibold mb-4 text-white">Product Pricing & Markups</h2>
+          {!showPricingProducts ? (
+            <Card className="bg-white/5 border-white/20">
+              <CardContent className="py-8 text-center">
+                <p className="text-white/60 mb-4">Click the button below to load products for pricing configuration.</p>
+                <Button
+                  onClick={() => {
+                    setShowPricingProducts(true);
+                    if (products.length === 0) {
+                      loadProducts();
+                    }
+                  }}
+                  className="rounded-full"
+                >
+                  Show Products for Product Pricing & Markup
+                </Button>
+              </CardContent>
+            </Card>
+          ) : loading ? (
             <div className="text-center py-8 text-white/60">Loading products...</div>
           ) : products.length === 0 ? (
             <Card className="bg-white/5 border-white/20">
