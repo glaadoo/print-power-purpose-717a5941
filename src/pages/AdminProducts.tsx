@@ -707,12 +707,12 @@ export default function AdminProducts() {
           ) : (
             <div className="space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 pointer-events-none z-10" />
                 <Input
-                  placeholder="Search products by name, vendor, or category..."
+                  placeholder="Search products by name or vendor..."
                   value={productSearchQuery}
                   onChange={(e) => setProductSearchQuery(e.target.value)}
-                  className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 />
               </div>
               <p className="text-sm text-white/60">
