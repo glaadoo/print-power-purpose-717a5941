@@ -361,7 +361,11 @@ export default function Checkout() {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.priceCents * item.quantity), 0);
   const shippingCents = calculateOrderShipping(cartItems.map(item => ({ name: item.name, category: null })));
   const shippingLabel = getShippingTierLabel(shippingCents);
-  const total = subtotal + shippingCents + donation;
+  
+  // Tax will be calculated by Stripe based on shipping address
+  // We show an estimate here or "Calculated at next step"
+  const estimatedTaxCents = 0; // Could estimate ~8% for display: Math.round(subtotal * 0.08)
+  const total = subtotal + shippingCents + donation; // Note: + estimatedTaxCents if showing estimate
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -562,10 +566,18 @@ export default function Checkout() {
                 <span>${(donation / 100).toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-2xl font-bold text-blue-600">
-              <span>Total</span>
+            {/* Tax notice - calculated by Stripe based on shipping address */}
+            <div className="flex justify-between text-sm text-gray-500 italic mb-2">
+              <span>Tax</span>
+              <span>Calculated at checkout</span>
+            </div>
+            <div className="flex justify-between text-2xl font-bold text-blue-600 border-t border-gray-300 pt-3">
+              <span>Total (before tax)</span>
               <span>${(total / 100).toFixed(2)}</span>
             </div>
+            <p className="text-xs text-gray-500 italic mt-2">
+              * Sales tax will be calculated based on your shipping address and added during checkout.
+            </p>
           </div>
 
           {/* Legal Consent Checkbox */}
