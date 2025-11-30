@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home, Truck, ExternalLink } from "lucide-react";
+import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home, Truck, ExternalLink, Target } from "lucide-react";
 import Footer from "@/components/Footer";
-import UserDonationProgress from "@/components/UserDonationProgress";
+import { motion } from "framer-motion";
+import { MILESTONE_TIERS } from "@/lib/milestone-tiers";
 
 interface OrderDetails {
   order_number: string;
@@ -30,6 +31,7 @@ export default function Success() {
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [totalDonatedCents, setTotalDonatedCents] = useState(0);
 
   const sessionId = searchParams.get("session_id");
 
@@ -87,6 +89,29 @@ export default function Success() {
     };
 
     fetchOrderDetails();
+
+    // Fetch user's total donated amount
+    async function fetchUserDonations() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user?.email) return;
+
+        const { data: donations, error } = await supabase
+          .from("donations")
+          .select("amount_cents")
+          .eq("customer_email", session.user.email);
+
+        if (error) throw error;
+
+        const total = donations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0;
+        setTotalDonatedCents(total);
+      } catch (error) {
+        console.error("Error fetching user donations:", error);
+      }
+    }
+
+    fetchUserDonations();
   }, [sessionId, searchParams]);
 
   if (loading) {
@@ -143,9 +168,68 @@ export default function Success() {
             <span className="text-lg font-semibold text-foreground">{order_number}</span>
           </div>
           
-          {/* Donation Progress Barometer */}
-          <div className="mt-6">
-            <UserDonationProgress variant="light" />
+          {/* Donation Progress - $777 Milestone Focus */}
+          <div className="mt-6 p-6 rounded-xl bg-gradient-to-br from-blue-50 to-white border border-blue-100">
+            <div className="flex items-center gap-2 mb-4">
+              <Target className="h-5 w-5 text-blue-600" />
+              <h3 className="font-semibold text-gray-900">Your Giving Journey</h3>
+            </div>
+            
+            {/* Progress toward $777 */}
+            <div className="mb-4">
+              <div className="flex justify-between items-baseline mb-2">
+                <span className="text-sm text-gray-600">
+                  You've donated <span className="font-semibold text-blue-600">${((totalDonatedCents || 0) / 100).toFixed(2)}</span> of $777
+                </span>
+                <span className="text-sm text-gray-600">
+                  ${Math.max(0, (77700 - (totalDonatedCents || 0)) / 100).toFixed(2)} left to reach $777
+                </span>
+              </div>
+              
+              {/* Blue Progress Bar */}
+              <div className="relative h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, ((totalDonatedCents || 0) / 77700) * 100)}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                />
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                {Math.min(100, Math.round(((totalDonatedCents || 0) / 77700) * 100))}% toward the $777 Platinum milestone
+              </p>
+            </div>
+
+            {/* Milestone Markers */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-xs font-medium text-gray-500 mb-3">Milestone Tiers</p>
+              <div className="grid grid-cols-5 gap-2">
+                {MILESTONE_TIERS.map((tier) => {
+                  const isAchieved = (totalDonatedCents || 0) >= tier.amountCents;
+                  const is777 = tier.amountCents === 77700;
+                  return (
+                    <div
+                      key={tier.id}
+                      className={`flex flex-col items-center p-2 rounded-lg transition-all ${
+                        isAchieved 
+                          ? `${tier.colors.bg} ${tier.colors.border} border` 
+                          : is777
+                            ? "bg-blue-50 border-2 border-blue-300"
+                            : "bg-gray-100 opacity-50"
+                      }`}
+                    >
+                      <span className={`text-xl ${!isAchieved && !is777 && "grayscale"}`}>{tier.icon}</span>
+                      <span className={`text-[10px] font-medium mt-1 ${
+                        isAchieved ? tier.colors.text : is777 ? "text-blue-600 font-semibold" : "text-gray-400"
+                      }`}>
+                        ${(tier.amountCents / 100).toFixed(0)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
