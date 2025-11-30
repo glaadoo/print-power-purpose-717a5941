@@ -118,18 +118,25 @@ export default function VistaprintNav() {
               
               {/* Products Dropdown */}
               <div className="relative" ref={productsMenuRef}>
-                <button 
-                  onClick={() => setProductsMenuOpen(!productsMenuOpen)}
-                  className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-                    isActive("/products") || location.pathname.startsWith("/product/")
-                      ? "text-blue-600" 
-                      : "text-gray-700 hover:text-blue-600"
-                  }`}
-                >
-                  <Package className="w-4 h-4" />
-                  Products
-                  <ChevronDown className={`w-4 h-4 transition-transform ${productsMenuOpen ? "rotate-180" : ""}`} />
-                </button>
+                <div className="flex items-center">
+                  <Link 
+                    to="/products"
+                    className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                      isActive("/products") || location.pathname.startsWith("/product/")
+                        ? "text-blue-600" 
+                        : "text-gray-700 hover:text-blue-600"
+                    }`}
+                  >
+                    <Package className="w-4 h-4" />
+                    Products
+                  </Link>
+                  <button 
+                    onClick={() => setProductsMenuOpen(!productsMenuOpen)}
+                    className="p-1 text-gray-700 hover:text-blue-600 transition-colors"
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform ${productsMenuOpen ? "rotate-180" : ""}`} />
+                  </button>
+                </div>
 
                 {/* Products Dropdown Menu */}
                 {productsMenuOpen && (
