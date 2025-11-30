@@ -16,9 +16,7 @@ export default function VistaprintNav() {
   const [userName, setUserName] = useState<string | null>(null);
   const [loadingUserName, setLoadingUserName] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [productsMenuOpen, setProductsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const productsMenuRef = useRef<HTMLDivElement>(null);
   
   const isHomePage = location.pathname === "/";
   const { unseenCount: unseenMilestones } = useUnseenMilestones();
@@ -78,9 +76,6 @@ export default function VistaprintNav() {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
       }
-      if (productsMenuRef.current && !productsMenuRef.current.contains(event.target as Node)) {
-        setProductsMenuOpen(false);
-      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -116,92 +111,17 @@ export default function VistaprintNav() {
                 Home
               </Link>
               
-              {/* Products Dropdown */}
-              <div className="relative" ref={productsMenuRef}>
-                <div className="flex items-center">
-                  <Link 
-                    to="/products"
-                    className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-                      isActive("/products") || location.pathname.startsWith("/product/")
-                        ? "text-blue-600" 
-                        : "text-gray-700 hover:text-blue-600"
-                    }`}
-                  >
-                    <Package className="w-4 h-4" />
-                    Products
-                  </Link>
-                  <button 
-                    onClick={() => setProductsMenuOpen(!productsMenuOpen)}
-                    className="p-1 text-gray-700 hover:text-blue-600 transition-colors"
-                  >
-                    <ChevronDown className={`w-4 h-4 transition-transform ${productsMenuOpen ? "rotate-180" : ""}`} />
-                  </button>
-                </div>
-
-                {/* Products Dropdown Menu */}
-                {productsMenuOpen && (
-                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                    <button
-                      onClick={() => {
-                        navigate("/products");
-                        setProductsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
-                    >
-                      All Products
-                    </button>
-                    <div className="border-t border-gray-200 my-2"></div>
-                    <div className="px-4 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                      Categories
-                    </div>
-                    <button
-                      onClick={() => {
-                        navigate("/products");
-                        setProductsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Business Cards
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/products");
-                        setProductsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Flyers & Brochures
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/products");
-                        setProductsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Signs & Banners
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/products");
-                        setProductsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Apparel
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/products");
-                        setProductsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Promotional Items
-                    </button>
-                  </div>
-                )}
-              </div>
+              <Link 
+                to="/products"
+                className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                  isActive("/products") || location.pathname.startsWith("/product/")
+                    ? "text-blue-600" 
+                    : "text-gray-700 hover:text-blue-600"
+                }`}
+              >
+                <Package className="w-4 h-4" />
+                Products
+              </Link>
               
               <Link 
                 to="/select/nonprofit" 
