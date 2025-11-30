@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Star, Scale, ChevronDown } from "lucide-react";
+import { Heart, Star, Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useComparison } from "@/context/ComparisonContext";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import useToggle from "@/hooks/useToggle";
 
 type ProductCardProps = {
   product: {
@@ -18,6 +16,7 @@ type ProductCardProps = {
     generated_image_url?: string | null;
     pricing_data?: any;
     base_cost_cents: number;
+    min_price_cents?: number | null;
     category?: string | null;
   };
   categorySlug?: string;
@@ -36,7 +35,6 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
   const isProductFavorite = isFavorite(product.id);
   const { add: addToComparison, remove: removeFromComparison, isInComparison, canAddMore } = useComparison();
   const isInCompare = isInComparison(product.id);
-  const { open: descriptionOpen, toggle: toggleDescription } = useToggle(false);
 
   // Check authentication
   useEffect(() => {
@@ -199,22 +197,11 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
           {product.name}
         </h3>
         
-        {/* Description Toggle - hide in compact mode */}
-        {!compact && product.description && (
-          <Collapsible open={descriptionOpen} onOpenChange={toggleDescription}>
-            <CollapsibleTrigger 
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors mb-2"
-            >
-              <span>{descriptionOpen ? 'Hide Details' : 'Show Details'}</span>
-              <ChevronDown className={`w-3 h-3 transition-transform ${descriptionOpen ? 'rotate-180' : ''}`} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="animate-accordion-down">
-              <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                {product.description}
-              </p>
-            </CollapsibleContent>
-          </Collapsible>
+        {/* Description - show inline for non-SinaLite, hide Show Details for SinaLite */}
+        {!compact && product.description && product.vendor !== 'sinalite' && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+            {product.description}
+          </p>
         )}
         
         {/* Rating - hide in compact mode */}
@@ -240,7 +227,11 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
         
         {/* Price */}
         <p className={`font-bold text-gray-900 mb-2 ${compact ? 'text-sm' : 'text-xl mb-3'}`}>
-          ${(product.base_cost_cents / 100).toFixed(2)}
+          {product.vendor === 'sinalite' && product.min_price_cents ? (
+            <>Starting at ${(product.min_price_cents / 100).toFixed(2)}</>
+          ) : (
+            <>${(product.base_cost_cents / 100).toFixed(2)}</>
+          )}
         </p>
         
         {/* CTA Button */}

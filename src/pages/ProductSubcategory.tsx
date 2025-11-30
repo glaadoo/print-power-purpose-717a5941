@@ -19,6 +19,7 @@ type ProductRow = {
   name: string;
   description?: string | null;
   base_cost_cents: number;
+  min_price_cents?: number | null;
   price_override_cents?: number | null;
   image_url?: string | null;
   category?: string | null;

@@ -983,6 +983,7 @@ export type Database = {
           is_active: boolean | null
           markup_fixed_cents: number | null
           markup_percent: number | null
+          min_price_cents: number | null
           name: string
           price_override_cents: number | null
           pricing_data: Json | null
@@ -1001,6 +1002,7 @@ export type Database = {
           is_active?: boolean | null
           markup_fixed_cents?: number | null
           markup_percent?: number | null
+          min_price_cents?: number | null
           name: string
           price_override_cents?: number | null
           pricing_data?: Json | null
@@ -1019,6 +1021,7 @@ export type Database = {
           is_active?: boolean | null
           markup_fixed_cents?: number | null
           markup_percent?: number | null
+          min_price_cents?: number | null
           name?: string
           price_override_cents?: number | null
           pricing_data?: Json | null
