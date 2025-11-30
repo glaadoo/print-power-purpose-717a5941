@@ -535,13 +535,22 @@ export default function Checkout() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl font-semibold text-gray-900">$</span>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={(donation / 100).toFixed(2)}
                   onChange={(e) => {
-                    const usd = parseFloat(e.target.value || "0");
-                    setDonation(Math.max(0, Math.round(usd * 100)));
+                    const value = e.target.value.replace(/[^0-9.]/g, '');
+                    const usd = parseFloat(value || "0");
+                    if (!isNaN(usd)) {
+                      setDonation(Math.max(0, Math.round(usd * 100)));
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const value = e.target.value.replace(/[^0-9.]/g, '');
+                    const usd = parseFloat(value || "0");
+                    if (!isNaN(usd)) {
+                      setDonation(Math.max(0, Math.round(usd * 100)));
+                    }
                   }}
                   className="w-full p-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="0.00"
