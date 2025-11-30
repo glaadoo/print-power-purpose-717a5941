@@ -173,8 +173,8 @@ export default function Success() {
       <div className="max-w-3xl mx-auto">
         {/* Success Header */}
         <div className="bg-card border border-border rounded-2xl p-8 mb-6 text-center">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#E6F9EC' }}>
-            <CheckCircle2 className="w-12 h-12" style={{ color: '#16A34A' }} />
+          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Payment Successful!
