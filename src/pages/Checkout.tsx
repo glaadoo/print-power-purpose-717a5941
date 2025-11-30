@@ -104,6 +104,9 @@ export default function Checkout() {
   const [donation, setDonation] = useState<number>(
     Math.max(0, Math.round(Number(merged.donationUsd || 0) * 100))
   );
+  const [donationInput, setDonationInput] = useState<string>(
+    (Math.max(0, Number(merged.donationUsd || 0))).toFixed(2)
+  );
 
   // Legal consent state
   const [legalConsent, setLegalConsent] = useState(false);
@@ -537,19 +540,23 @@ export default function Checkout() {
                 <input
                   type="text"
                   inputMode="decimal"
-                  value={(donation / 100).toFixed(2)}
+                  value={donationInput}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9.]/g, '');
+                    setDonationInput(value);
                     const usd = parseFloat(value || "0");
                     if (!isNaN(usd)) {
                       setDonation(Math.max(0, Math.round(usd * 100)));
                     }
                   }}
-                  onBlur={(e) => {
-                    const value = e.target.value.replace(/[^0-9.]/g, '');
-                    const usd = parseFloat(value || "0");
+                  onBlur={() => {
+                    const usd = parseFloat(donationInput || "0");
                     if (!isNaN(usd)) {
+                      setDonationInput(usd.toFixed(2));
                       setDonation(Math.max(0, Math.round(usd * 100)));
+                    } else {
+                      setDonationInput("0.00");
+                      setDonation(0);
                     }
                   }}
                   className="w-full p-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
