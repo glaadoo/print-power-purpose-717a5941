@@ -77,3 +77,12 @@ verify_jwt = false
 
 [functions.delete-canada-products]
 verify_jwt = false
+
+[functions.sync-scalablepress]
+verify_jwt = false
+
+[functions.sync-sinalite]
+verify_jwt = false
+
+[functions.sync-psrestful]
+verify_jwt = false
