@@ -4,6 +4,34 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { computeGlobalPricing, type PricingSettings } from "../_shared/pricing.ts";
 import { calculateOrderShipping, getShippingTierLabel } from "../_shared/shipping-tiers.ts";
 
+/**
+ * CHECKOUT SESSION V2 - PRICING & TAX LOGIC
+ * 
+ * This edge function creates Stripe Checkout sessions with proper pricing and tax calculation.
+ * 
+ * KEY PRICING RULES:
+ * - Product prices are computed using computeGlobalPricing() from _shared/pricing.ts
+ * - Shipping is calculated per order using calculateOrderShipping() from _shared/shipping-tiers.ts
+ * - Donations are optional and added as separate line items
+ * 
+ * STRIPE TAX INTEGRATION:
+ * - automatic_tax: { enabled: true } enables Stripe Tax
+ * - shipping_address_collection collects address for tax calculation
+ * - After session creation, we retrieve the expanded session to get calculated tax
+ * - Tax amount is stored in orders.tax_cents for record keeping
+ * 
+ * IMPORTANT: To change tax behavior or pricing rules:
+ * 1. Tax rules are managed in Stripe Dashboard > Settings > Tax
+ * 2. Product pricing logic is in ../shared/pricing.ts (computeGlobalPricing)
+ * 3. Shipping tiers are defined in ../shared/shipping-tiers.ts
+ * 4. Line items MUST use unit_amount in CENTS with quantity (never double-multiply)
+ * 
+ * DEBUGGING NOTES:
+ * - All amounts are logged in console with [PPP:PRICING:CHECKOUT] and [PPP:STRIPE:TAX] prefixes
+ * - Check line items payload sent to Stripe for unit_amount × quantity correctness
+ * - Verify tax is calculated by checking expandedSession.total_details.amount_tax
+ */
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -155,16 +183,18 @@ serve(async (req) => {
     const shippingLabel = getShippingTierLabel(shippingCents);
     console.log("[PPP:SHIPPING] Calculated shipping:", { shippingCents, shippingLabel, items: shippingItems });
 
-    const taxCents = 0;
+    // Tax will be calculated by Stripe automatically
+    const taxCents = 0; // Placeholder - Stripe Tax will compute this
     const donationAmount = donationCents || 0;
+    // Note: totalAmountCents here is BEFORE Stripe Tax is applied
     const totalAmountCents = subtotalCents + shippingCents + taxCents + donationAmount;
 
-    console.log("[PPP:PRICING:CHECKOUT] Order totals:", {
+    console.log("[PPP:PRICING:CHECKOUT] Order totals (before Stripe Tax):", {
       subtotalCents,
       shippingCents,
-      taxCents,
+      taxCents: "will be calculated by Stripe",
       donationAmount,
-      totalAmountCents,
+      totalAmountCents: "before tax",
     });
 
     // Generate order number
@@ -223,18 +253,20 @@ serve(async (req) => {
     });
 
     // Build Stripe line items using computed final prices
+    // CRITICAL: Each cart item becomes exactly ONE line_item entry
+    // unit_amount is in CENTS, quantity handles multiples
     const lineItems = orderItems.map((item) => ({
       price_data: {
         currency: "usd",
         product_data: {
           name: item.product_name,
         },
-        unit_amount: item.final_price_per_unit_cents, // USE COMPUTED FINAL PRICE
+        unit_amount: item.final_price_per_unit_cents, // Per-unit price in CENTS
       },
-      quantity: item.quantity,
+      quantity: item.quantity, // Stripe multiplies unit_amount × quantity
     }));
 
-    // Add shipping line item
+    // Add shipping as a separate line item (added exactly once)
     if (shippingCents > 0) {
       lineItems.push({
         price_data: {
@@ -242,13 +274,13 @@ serve(async (req) => {
           product_data: {
             name: shippingLabel,
           },
-          unit_amount: shippingCents,
+          unit_amount: shippingCents, // Total shipping in CENTS
         },
         quantity: 1,
       });
     }
 
-    // Add donation if present
+    // Add donation if present (added exactly once)
     if (donationAmount > 0) {
       lineItems.push({
         price_data: {
@@ -256,18 +288,30 @@ serve(async (req) => {
           product_data: {
             name: "Donation to Nonprofit",
           },
-          unit_amount: donationAmount,
+          unit_amount: donationAmount, // Donation in CENTS
         },
         quantity: 1,
       });
     }
 
-    // Create Stripe Checkout Session
+    // Log final line items for debugging
+    console.log("[PPP:STRIPE] Line items sent to Stripe:", JSON.stringify(lineItems, null, 2));
+
+    // Create Stripe Checkout Session with Stripe Tax enabled
     const origin = req.headers.get("origin") || "http://localhost:8080";
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
+      
+      // Enable Stripe Tax for automatic tax calculation
+      automatic_tax: { enabled: true },
+      
+      // Collect shipping address for tax calculation
+      shipping_address_collection: {
+        allowed_countries: ["US", "CA"], // Adjust based on your business needs
+      },
+      
       success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/cancel`,
       metadata: {
@@ -281,10 +325,31 @@ serve(async (req) => {
       },
     });
 
-    // Update order with Stripe session ID
+    // Retrieve the session with expanded line items to get calculated tax
+    const expandedSession = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ['total_details'],
+    });
+
+    // Extract tax from Stripe's calculation
+    const calculatedTaxCents = expandedSession.total_details?.amount_tax || 0;
+    const finalTotalCents = expandedSession.amount_total || totalAmountCents;
+
+    console.log("[PPP:STRIPE:TAX] Tax calculated by Stripe:", {
+      subtotalCents,
+      shippingCents,
+      taxCents: calculatedTaxCents,
+      donationAmount,
+      finalTotal: finalTotalCents,
+    });
+
+    // Update order with Stripe session ID and calculated tax
     await supabase
       .from("orders")
-      .update({ session_id: session.id })
+      .update({ 
+        session_id: session.id,
+        tax_cents: calculatedTaxCents,
+        amount_total_cents: finalTotalCents,
+      })
       .eq("id", orderId);
 
     console.log("[PPP:PRICING:CHECKOUT] Stripe session created:", {
@@ -292,6 +357,8 @@ serve(async (req) => {
       orderId,
       orderNumber,
       url: session.url,
+      taxCents: calculatedTaxCents,
+      finalTotal: finalTotalCents,
     });
 
     return new Response(
@@ -299,6 +366,8 @@ serve(async (req) => {
         url: session.url,
         orderId,
         orderNumber,
+        taxCents: calculatedTaxCents,
+        totalCents: finalTotalCents,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
