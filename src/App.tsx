@@ -855,14 +855,19 @@ export default function App() {
       </AnimatePresence>
 
       {/* Global floating components - wrapped in error boundaries */}
-      <RouteBoundary name="KenzieChat">
-        <KenzieChat />
-      </RouteBoundary>
+      {/* Hide Kenzie chat on admin pages */}
+      {!location.pathname.startsWith('/admin') && (
+        <>
+          <RouteBoundary name="KenzieChat">
+            <KenzieChat />
+          </RouteBoundary>
 
-      {/* Chatbot widget - show on all pages */}
-      <RouteBoundary name="ChatbotWidget">
-        <ChatbotWidget />
-      </RouteBoundary>
+          {/* Chatbot widget - show on all pages except admin */}
+          <RouteBoundary name="ChatbotWidget">
+            <ChatbotWidget />
+          </RouteBoundary>
+        </>
+      )}
 
       {/* Comparison Bar - floating bar for product comparison */}
       <RouteBoundary name="ComparisonBar">
