@@ -227,8 +227,12 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
         
         {/* Price */}
         <p className={`font-bold text-gray-900 mb-2 ${compact ? 'text-sm' : 'text-xl mb-3'}`}>
-          {product.vendor === 'sinalite' && product.min_price_cents ? (
-            <>Starting at ${(product.min_price_cents / 100).toFixed(2)}</>
+          {product.vendor === 'sinalite' ? (
+            product.min_price_cents ? (
+              <>Starting at ${(product.min_price_cents / 100).toFixed(2)}</>
+            ) : (
+              <>Starting at ${(product.base_cost_cents / 100).toFixed(2)}</>
+            )
           ) : (
             <>${(product.base_cost_cents / 100).toFixed(2)}</>
           )}
