@@ -53,6 +53,8 @@ export default function AdminProducts() {
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [fetchingMinPrices, setFetchingMinPrices] = useState(false);
   const [minPriceProgress, setMinPriceProgress] = useState({ remaining: 0, updated: 0 });
+  const [fetchingScalablePrices, setFetchingScalablePrices] = useState(false);
+  const [scalablePriceProgress, setScalablePriceProgress] = useState({ remaining: 0, updated: 0 });
   const [syncStatus, setSyncStatus] = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({});
 
   useEffect(() => {
@@ -382,6 +384,67 @@ export default function AdminProducts() {
       setFetchingMinPrices(false);
       setMinPriceProgress({ remaining: 0, updated: 0 });
       toast.info("Min price fetch process finished.", { duration: 5000 });
+    }
+  };
+
+  // Fetch prices for Scalable Press products
+  const handleFetchScalablePrices = async (forceRefresh = false) => {
+    setFetchingScalablePrices(true);
+    toast.info(forceRefresh 
+      ? "Force refreshing ALL Scalable Press prices... This may take several minutes."
+      : "Fetching Scalable Press prices... This may take a minute."
+    );
+    
+    try {
+      let totalUpdated = 0;
+      let remaining = Infinity;
+      let iterations = 0;
+      const maxIterations = forceRefresh ? 100 : 50;
+      const batchSize = 10;
+      
+      // Keep fetching in batches until no more products need updating
+      while (remaining > 0 && iterations < maxIterations) {
+        iterations++;
+        
+        const { data, error } = await supabase.functions.invoke('fetch-scalablepress-prices', {
+          body: { batchSize, forceRefresh }
+        });
+        
+        if (error) throw error;
+        
+        if (data?.updated) {
+          totalUpdated += data.updated;
+        }
+        
+        remaining = data?.remaining || 0;
+        setScalablePriceProgress({ remaining, updated: totalUpdated });
+        
+        if (data?.success && data?.remaining === 0) {
+          break;
+        }
+        
+        // Small delay between batches
+        await new Promise(r => setTimeout(r, 500));
+      }
+      
+      toast.success(`✅ COMPLETE! Updated prices for ${totalUpdated} Scalable Press products!`, {
+        duration: 10000,
+      });
+      
+      // Reload products to show updated prices
+      if (showPricingProducts) {
+        loadProducts();
+      }
+      
+    } catch (error: any) {
+      console.error('Error fetching Scalable Press prices:', error);
+      toast.error(`❌ Failed to fetch prices: ${error.message}`, {
+        duration: 10000,
+      });
+    } finally {
+      setFetchingScalablePrices(false);
+      setScalablePriceProgress({ remaining: 0, updated: 0 });
+      toast.info("Scalable Press price fetch process finished.", { duration: 5000 });
     }
   };
 
@@ -840,7 +903,7 @@ export default function AdminProducts() {
                       setSyncStatus((prev) => ({ ...prev, [syncKey]: 'idle' }));
                       handleSync(vendor.name, vendor.functionName, vendor.name === "SinaLite" ? selectedStore : undefined);
                     }}
-                    disabled={!!syncing || fetchingMinPrices}
+                    disabled={!!syncing || fetchingMinPrices || fetchingScalablePrices}
                     className="w-full bg-white/20 text-white hover:bg-white/30"
                   >
                     {syncing === `${vendor.name}-${vendor.name === "SinaLite" ? selectedStore : ""}` || syncing === vendor.name ? (
@@ -899,6 +962,36 @@ export default function AdminProducts() {
                       <Button
                         onClick={() => handleFetchMinPrices(true)}
                         disabled={!!syncing || fetchingMinPrices}
+                        variant="outline"
+                        className="w-full text-yellow-400 border-yellow-500/30 hover:bg-yellow-600/20"
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Force Refresh ALL Prices
+                      </Button>
+                    </div>
+                  )}
+                  {vendor.name === "Scalable Press" && (
+                    <div className="space-y-2 mt-2">
+                      <Button
+                        onClick={() => handleFetchScalablePrices(false)}
+                        disabled={!!syncing || fetchingScalablePrices}
+                        className="w-full bg-purple-600/30 text-white hover:bg-purple-600/50 border border-purple-500/30"
+                      >
+                        {fetchingScalablePrices ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            Fetching... ({scalablePriceProgress.updated} updated, {scalablePriceProgress.remaining} left)
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Fetch Product Prices
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => handleFetchScalablePrices(true)}
+                        disabled={!!syncing || fetchingScalablePrices}
                         variant="outline"
                         className="w-full text-yellow-400 border-yellow-500/30 hover:bg-yellow-600/20"
                       >

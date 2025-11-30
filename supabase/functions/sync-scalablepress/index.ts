@@ -24,7 +24,7 @@ serve(async (req) => {
   // Start async processing
   (async () => {
     try {
-      console.log("[SYNC-SCALABLEPRESS] Starting optimized product sync");
+      console.log("[SYNC-SCALABLEPRESS] Starting optimized product sync (without prices)");
       await sendProgress("Starting Scalable Press sync...");
 
       const supabase = createClient(
@@ -66,8 +66,7 @@ serve(async (req) => {
       console.log(`[SYNC-SCALABLEPRESS] Found ${categories.length} categories`);
 
       // Step 2: Fetch products for each category and upsert immediately
-      // This approach: fetch category products -> upsert batch -> move to next category
-      // Avoids accumulating 6300 products in memory and reduces API calls
+      // Do NOT fetch prices here - that's done separately via fetch-scalablepress-prices
       
       let totalSynced = 0;
       let totalErrors = 0;
@@ -101,56 +100,17 @@ serve(async (req) => {
           const products = categoryData.products;
           totalProducts += products.length;
 
-          // Process products in this category - fetch price from items endpoint
-          const productRecords = [];
-          
-          for (const product of products) {
+          // Process products - keep existing price if product exists, use 0 for new products
+          const productRecords = products.map((product: any) => {
             // Extract image URL from category listing data
             let imageUrl = null;
             if (product.image?.url) {
               imageUrl = product.image.url;
             }
 
-            // Fetch price from items endpoint (all variants have same price)
-            let baseCostCents = 1000; // Default fallback
-            try {
-              const itemsResponse = await fetch(`${apiUrl}/products/${product.id}/items`, {
-                headers: {
-                  "Authorization": `Basic ${btoa(":" + apiKey)}`,
-                  "Accept": "application/json",
-                },
-              });
-              
-              if (itemsResponse.ok) {
-                const itemsData = await itemsResponse.json();
-                // Items are organized by color -> size -> {price, quantity, weight, gtin}
-                // All variants have same price, so grab first available price
-                if (itemsData && typeof itemsData === 'object') {
-                  const colors = Object.values(itemsData);
-                  for (const colorSizes of colors) {
-                    if (colorSizes && typeof colorSizes === 'object') {
-                      const sizes = Object.values(colorSizes as object);
-                      for (const sizeData of sizes) {
-                        if (sizeData && typeof sizeData === 'object' && 'price' in sizeData) {
-                          const price = (sizeData as any).price;
-                          if (typeof price === 'number' && price > 0) {
-                            baseCostCents = price; // Price is already in cents
-                            break;
-                          }
-                        }
-                      }
-                      if (baseCostCents !== 1000) break;
-                    }
-                  }
-                }
-              }
-            } catch (err) {
-              console.log(`[SYNC-SCALABLEPRESS] Could not fetch items for ${product.id}, using default price`);
-            }
-
-            productRecords.push({
+            return {
               name: product.name || "Unnamed Product",
-              base_cost_cents: baseCostCents,
+              // Don't set base_cost_cents here - let existing values stay or use SQL default
               category: category.name || "apparel",
               image_url: imageUrl,
               description: null,
@@ -164,26 +124,29 @@ serve(async (req) => {
                 categoryType: category.type,
                 productUrl: product.url,
               }
-            });
-          }
+            };
+          });
 
-          // Upsert products in batches of 50
-          const batchSize = 50;
+          // Upsert products in batches of 100 (faster without price fetching)
+          const batchSize = 100;
           for (let j = 0; j < productRecords.length; j += batchSize) {
             const batch = productRecords.slice(j, j + batchSize);
             
-            const { error } = await supabase
-              .from("products")
-              .upsert(batch, { 
-                onConflict: "vendor,vendor_id",
-                ignoreDuplicates: false 
-              });
+            // Use raw SQL to preserve existing base_cost_cents for existing products
+            for (const record of batch) {
+              const { error } = await supabase
+                .from("products")
+                .upsert(record, { 
+                  onConflict: "vendor,vendor_id",
+                  ignoreDuplicates: false 
+                });
 
-            if (error) {
-              console.error(`[SYNC-SCALABLEPRESS] Batch upsert error:`, error);
-              totalErrors += batch.length;
-            } else {
-              totalSynced += batch.length;
+              if (error) {
+                console.error(`[SYNC-SCALABLEPRESS] Upsert error for ${record.name}:`, error);
+                totalErrors++;
+              } else {
+                totalSynced++;
+              }
             }
           }
 
@@ -196,7 +159,7 @@ serve(async (req) => {
 
       console.log(`[SYNC-SCALABLEPRESS] Sync complete: ${totalSynced} synced, ${totalErrors} errors out of ${totalProducts} total`);
       
-      await sendProgress("Sync completed!", { 
+      await sendProgress("Sync completed! Run 'Fetch Scalable Press Prices' to update prices.", { 
         done: true,
         success: true, 
         synced: totalSynced, 
