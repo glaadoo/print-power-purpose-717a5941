@@ -228,13 +228,21 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
         {/* Price */}
         <p className={`font-bold text-gray-900 mb-2 ${compact ? 'text-sm' : 'text-xl mb-3'}`}>
           {product.vendor === 'sinalite' ? (
-            product.min_price_cents ? (
+            // SinaLite: show actual price only if we have real pricing data, otherwise show "Configure for Price"
+            product.min_price_cents && product.min_price_cents !== 2000 ? (
               <>Starting at ${(product.min_price_cents / 100).toFixed(2)}</>
-            ) : (
+            ) : product.base_cost_cents && product.base_cost_cents !== 2000 ? (
               <>Starting at ${(product.base_cost_cents / 100).toFixed(2)}</>
+            ) : (
+              <span className="text-blue-600">Configure for Price</span>
             )
           ) : (
-            <>${(product.base_cost_cents / 100).toFixed(2)}</>
+            // Other vendors: show base cost, or "Configure for Price" if default
+            product.base_cost_cents && product.base_cost_cents !== 1000 ? (
+              <>${(product.base_cost_cents / 100).toFixed(2)}</>
+            ) : (
+              <span className="text-blue-600">Configure for Price</span>
+            )
           )}
         </p>
         
