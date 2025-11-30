@@ -297,22 +297,36 @@ export default function AdminProducts() {
   };
 
   // Fetch minimum prices for SinaLite products
-  const handleFetchMinPrices = async () => {
+  const handleFetchMinPrices = async (forceRefresh = false) => {
     setFetchingMinPrices(true);
-    toast.info("Fetching minimum prices from SinaLite... This may take a minute.");
+    toast.info(forceRefresh 
+      ? "Force refreshing ALL minimum prices from SinaLite... This may take several minutes."
+      : "Fetching minimum prices from SinaLite... This may take a minute."
+    );
     
     try {
       let totalUpdated = 0;
       let remaining = Infinity;
       let iterations = 0;
-      const maxIterations = 20; // Safety limit
+      const maxIterations = forceRefresh ? 50 : 20; // More iterations for force refresh
+      const batchSize = forceRefresh ? 5 : 10; // Smaller batches for force refresh (more API calls per product)
+      
+      // For force refresh, first count all sinalite products
+      if (forceRefresh) {
+        const { count } = await supabase
+          .from('products')
+          .select('id', { count: 'exact', head: true })
+          .eq('vendor', 'sinalite');
+        remaining = count || 0;
+        setMinPriceProgress({ remaining, updated: 0 });
+      }
       
       // Keep fetching in batches until no more products need updating
-      while (remaining > 0 && iterations < maxIterations) {
+      while ((forceRefresh ? iterations * batchSize < (remaining + totalUpdated + batchSize) : remaining > 0) && iterations < maxIterations) {
         iterations++;
         
         const { data, error } = await supabase.functions.invoke('fetch-sinalite-min-prices', {
-          body: { batchSize: 20 }
+          body: { batchSize, forceRefresh }
         });
         
         if (error) throw error;
@@ -321,17 +335,24 @@ export default function AdminProducts() {
           totalUpdated += data.updated;
         }
         
-        remaining = data?.remaining || 0;
+        if (forceRefresh) {
+          remaining = Math.max(0, remaining - batchSize);
+        } else {
+          remaining = data?.remaining || 0;
+        }
         setMinPriceProgress({ remaining, updated: totalUpdated });
         
-        if (data?.success && remaining === 0) {
+        if (data?.success && data?.remaining === 0 && !forceRefresh) {
+          break;
+        }
+        
+        // If we processed fewer than batchSize and it's force refresh, we're done
+        if (forceRefresh && data?.processed < batchSize) {
           break;
         }
         
         // Small delay between batches
-        if (remaining > 0) {
-          await new Promise(r => setTimeout(r, 500));
-        }
+        await new Promise(r => setTimeout(r, 1000));
       }
       
       toast.success(`Updated minimum prices for ${totalUpdated} products!`);
@@ -817,23 +838,34 @@ export default function AdminProducts() {
                     )}
                   </Button>
                   {vendor.name === "SinaLite" && (
-                    <Button
-                      onClick={handleFetchMinPrices}
-                      disabled={!!syncing || fetchingMinPrices}
-                      className="w-full mt-2 bg-green-600/30 text-white hover:bg-green-600/50 border border-green-500/30"
-                    >
-                      {fetchingMinPrices ? (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          Fetching Prices... ({minPriceProgress.updated} updated, {minPriceProgress.remaining} remaining)
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          Fetch Min Prices
-                        </>
-                      )}
-                    </Button>
+                    <div className="space-y-2 mt-2">
+                      <Button
+                        onClick={() => handleFetchMinPrices(false)}
+                        disabled={!!syncing || fetchingMinPrices}
+                        className="w-full bg-green-600/30 text-white hover:bg-green-600/50 border border-green-500/30"
+                      >
+                        {fetchingMinPrices ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            Fetching... ({minPriceProgress.updated} updated, {minPriceProgress.remaining} left)
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Fetch New Min Prices
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => handleFetchMinPrices(true)}
+                        disabled={!!syncing || fetchingMinPrices}
+                        variant="outline"
+                        className="w-full text-yellow-400 border-yellow-500/30 hover:bg-yellow-600/20"
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Force Refresh ALL Prices
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
