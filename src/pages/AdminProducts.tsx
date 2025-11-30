@@ -169,7 +169,13 @@ export default function AdminProducts() {
       const body = storeCode ? { storeCode } : undefined;
       
       // Show a toast that this might take a while
-      toast.info(`Syncing ${vendor} products... This may take up to 2 minutes.`);
+      toast.info(`Syncing ${vendor} products... This may take a few minutes.`);
+      
+      // For Scalable Press, use streaming to handle long-running sync
+      if (functionName === 'sync-scalablepress') {
+        await handleStreamingSync(syncKey, functionName);
+        return;
+      }
       
       // Use retry logic with longer timeouts for sync operations
       const { data, error } = await invokeWithRetry(
@@ -204,6 +210,84 @@ export default function AdminProducts() {
         ? 'Sync is taking longer than expected. The sync may still be running in the background. Please wait a minute and refresh the product list.'
         : error.message;
       toast.error(`Failed to sync ${vendor}: ${errorMsg}`);
+      setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
+    } finally {
+      setSyncing(null);
+    }
+  };
+
+  // Handle streaming sync for Scalable Press
+  const handleStreamingSync = async (syncKey: string, functionName: string) => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co";
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+          'Authorization': `Bearer ${anonKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      const decoder = new TextDecoder();
+      let lastProgress = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              lastProgress = data.message;
+              
+              // Update sync results with progress
+              setSyncResults((prev) => ({ 
+                ...prev, 
+                [syncKey]: { 
+                  ...data, 
+                  inProgress: !data.done 
+                } 
+              }));
+              
+              // Show progress toast periodically
+              if (data.progress !== undefined && data.progress % 25 === 0) {
+                toast.info(`Scalable Press: ${data.progress}% complete`);
+              }
+              
+              // Handle completion
+              if (data.done) {
+                if (data.success) {
+                  toast.success(`Scalable Press: Synced ${data.synced} products successfully!`);
+                  loadProducts();
+                } else if (data.error) {
+                  toast.error(`Scalable Press sync failed: ${data.message}`);
+                }
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Streaming sync error:', error);
+      toast.error(`Failed to sync Scalable Press: ${error.message}`);
       setSyncResults((prev) => ({ ...prev, [syncKey]: { success: false, error: error.message } }));
     } finally {
       setSyncing(null);
