@@ -259,21 +259,24 @@ serve(async (req) => {
           }
         }
         
-        // Create donation record if donation amount > 0
-        if (causeId && donationCents > 0 && orderData) {
+        // Create donation record if donation amount > 0 (for either cause or nonprofit)
+        if (donationCents > 0 && orderData && (causeId || nonprofitId)) {
           const { error: donationError } = await supabase
             .from('donations')
             .insert({
               order_id: orderData.id,
-              cause_id: causeId,
+              cause_id: causeId || null,
               amount_cents: donationCents,
               customer_email: session.customer_details?.email || null,
+              nonprofit_id: nonprofitId || null,
+              nonprofit_name: session.metadata?.nonprofit_name || null,
+              nonprofit_ein: session.metadata?.nonprofit_ein || null,
             });
           
           if (donationError) {
             console.error('Error creating donation record:', donationError);
           } else {
-            console.log(`Donation record created successfully`);
+            console.log(`Donation record created successfully: ${donationCents} cents to ${causeId ? 'cause:' + causeId : 'nonprofit:' + nonprofitId}`);
           }
         }
         

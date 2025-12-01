@@ -30,6 +30,9 @@ type DirectBody = {
   unitAmountCents: number;   // integer >= 50
   quantity?: number;         // integer >= 1
   causeId: string;
+  nonprofitId?: string;      // explicit nonprofit ID (optional)
+  nonprofitName?: string;    // nonprofit name (optional)
+  nonprofitEin?: string;     // nonprofit EIN (optional)
   donationUsd?: number;      // >= 0
   currency?: string;         // default 'usd'
   successPath?: string;      // '/success' or absolute URL
@@ -456,24 +459,59 @@ serve(async (req) => {
     form.set("metadata[donation_cents]", String(donationCents));
     form.set("metadata[cause_id]", d.causeId);
     
-    // Fetch cause name from Supabase
-    let causeName = "";
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    // Include nonprofit metadata if provided
+    if (d.nonprofitId) {
+      form.set("metadata[nonprofit_id]", d.nonprofitId);
+    }
+    if (d.nonprofitName) {
+      form.set("metadata[nonprofit_name]", d.nonprofitName);
+    }
+    if (d.nonprofitEin) {
+      form.set("metadata[nonprofit_ein]", d.nonprofitEin);
+    }
+    
+    // Fetch cause name from Supabase (or nonprofit name if it's a nonprofit donation)
+    let causeName = d.nonprofitName || "";
+    if (!causeName && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const supaHeaders = {
         "Content-Type": "application/json",
         "apikey": SUPABASE_SERVICE_ROLE_KEY,
         "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       };
       try {
+        // First try to look up as a cause
         const causeResp = await fetch(
           `${SUPABASE_URL}/rest/v1/causes?select=id,name&id=eq.${encodeURIComponent(d.causeId)}&limit=1`,
           { headers: supaHeaders }
         );
         const causeArr = await causeResp.json();
         const cause = Array.isArray(causeArr) ? causeArr[0] : null;
-        if (cause?.name) causeName = cause.name;
+        if (cause?.name) {
+          causeName = cause.name;
+        } else if (!d.nonprofitName) {
+          // If not found in causes, try nonprofits table
+          const nonprofitResp = await fetch(
+            `${SUPABASE_URL}/rest/v1/nonprofits?select=id,name,ein&id=eq.${encodeURIComponent(d.causeId)}&limit=1`,
+            { headers: supaHeaders }
+          );
+          const nonprofitArr = await nonprofitResp.json();
+          const nonprofit = Array.isArray(nonprofitArr) ? nonprofitArr[0] : null;
+          if (nonprofit?.name) {
+            causeName = nonprofit.name;
+            // Also set nonprofit metadata if found
+            if (!d.nonprofitId) {
+              form.set("metadata[nonprofit_id]", nonprofit.id);
+            }
+            if (nonprofit.name) {
+              form.set("metadata[nonprofit_name]", nonprofit.name);
+            }
+            if (nonprofit.ein) {
+              form.set("metadata[nonprofit_ein]", nonprofit.ein);
+            }
+          }
+        }
       } catch (e) {
-        console.error("Failed to fetch cause name:", e);
+        console.error("Failed to fetch cause/nonprofit name:", e);
       }
     }
     if (causeName) {

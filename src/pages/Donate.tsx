@@ -163,7 +163,10 @@ export default function Donate() {
             body: {
               productName: `Donation to ${nonprofit.name}`,
               unitAmountCents: Math.round(finalAmount * 100),
-              causeId: nonprofit.id,
+              causeId: nonprofit.id, // Use nonprofit ID as causeId for legacy compatibility
+              nonprofitId: nonprofit.id, // Also pass explicit nonprofit ID
+              nonprofitName: nonprofit.name,
+              nonprofitEin: nonprofit.ein,
               donationUsd: finalAmount,
               currency: "usd",
               successPath: `/?payment=success`,
