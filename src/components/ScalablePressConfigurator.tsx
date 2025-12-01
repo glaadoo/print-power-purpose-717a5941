@@ -71,16 +71,21 @@ export default function ScalablePressConfigurator({
   // Initialize with first available color and size
   useEffect(() => {
     if (colors.length > 0 && !selectedColor) {
-      const firstColor = colors[0].name;
-      setSelectedColor(firstColor);
+      const firstColor = colors[0];
+      setSelectedColor(firstColor.name);
       
-      const colorKey = findColorKey(firstColor);
+      const colorKey = findColorKey(firstColor.name);
       const firstColorSizes = colorKey && items[colorKey] ? Object.keys(items[colorKey]) : [];
       if (firstColorSizes.length > 0) {
         setSelectedSize(firstColorSizes[0]);
       }
+      
+      // Notify parent about initial color selection with images
+      if (onColorChange) {
+        onColorChange({ name: firstColor.name, images: firstColor.images || [] });
+      }
     }
-  }, [colors, items, selectedColor]);
+  }, [colors, items, selectedColor, onColorChange]);
 
   // Update price and notify completion when selection changes
   useEffect(() => {

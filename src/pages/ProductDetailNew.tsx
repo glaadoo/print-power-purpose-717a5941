@@ -249,6 +249,10 @@ export default function ProductDetailNew() {
     if (color.images && color.images.length > 0) {
       setSelectedColorImages(color.images);
       setGallerySelectedIndex(0); // Reset to first image of new color
+    } else {
+      // Clear color-specific images to show default product image
+      setSelectedColorImages([]);
+      setGallerySelectedIndex(0);
     }
   };
 
@@ -418,7 +422,7 @@ export default function ProductDetailNew() {
               )}
               
               {/* Configuration for Scalable Press Products */}
-              {product.vendor === 'scalablepress' && product.pricing_data && product.pricing_data.colors && product.pricing_data.items && (
+              {product.vendor === 'scalablepress' && product.pricing_data && (product.pricing_data.colors || product.pricing_data.items) && (
                 <div className="border border-border rounded-lg p-4 bg-muted/30">
                   <h3 className="font-semibold mb-4">Product Options</h3>
                   <ScalablePressConfigurator
