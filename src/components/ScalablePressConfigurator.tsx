@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import StockNotificationForm from "@/components/StockNotificationForm";
 import { getColorHex } from "@/lib/utils";
+import { ImageOff } from "lucide-react";
 
 interface ScalablePressConfiguratorProps {
   productId: string;
@@ -227,9 +228,12 @@ export default function ScalablePressConfigurator({
                     />
                   ) : (
                     <div 
-                      className="w-full h-full"
+                      className="w-full h-full flex flex-col items-center justify-center"
                       style={{ backgroundColor: getColorHex(color.name, color.hex) }}
-                    />
+                    >
+                      <ImageOff className="w-5 h-5 text-white/70 drop-shadow-md" />
+                      <span className="text-[8px] text-white/80 font-medium mt-0.5 drop-shadow-md">No image</span>
+                    </div>
                   )}
                   
                   {selectedColor === color.name && (
