@@ -105,7 +105,7 @@ export default function ScalablePressConfigurator({
     if (colors.length > 0 && !selectedColor) {
       let colorToSelect = colors[0];
       
-      // Try to find a color that has stock and images (prefer one with images matching main product)
+      // Try to find a color that has stock and images
       const colorsWithStock = colors.filter((c: any) => {
         const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === c.name.toLowerCase());
         const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
@@ -126,15 +126,12 @@ export default function ScalablePressConfigurator({
         setSelectedSize(firstInStockSize);
       }
       
-      // Notify parent about initial color selection with images (or fallback to main image)
+      // Notify parent about initial color selection with images (no fallback)
       if (onColorChange) {
-        const images = (colorToSelect.images && colorToSelect.images.length > 0) 
-          ? colorToSelect.images 
-          : (mainProductImage ? [mainProductImage] : []);
-        onColorChange({ name: colorToSelect.name, images });
+        onColorChange({ name: colorToSelect.name, images: colorToSelect.images || [] });
       }
     }
-  }, [colors, items, selectedColor, onColorChange, availability, mainProductImage]);
+  }, [colors, items, selectedColor, onColorChange, availability]);
 
   // Check if entire color is out of stock (all sizes have 0 stock)
   const isColorOutOfStock = (colorName: string): boolean => {
@@ -235,14 +232,11 @@ export default function ScalablePressConfigurator({
     const firstInStockSize = findFirstInStockSize(colorName);
     setSelectedSize(firstInStockSize);
     
-    // Notify parent about color change with images (or fallback to main image)
+    // Notify parent about color change with images (no fallback - show "no image" if none)
     if (onColorChange) {
       const colorObj = colors.find((c: any) => c.name === colorName);
       if (colorObj) {
-        const images = (colorObj.images && colorObj.images.length > 0) 
-          ? colorObj.images 
-          : (mainProductImage ? [mainProductImage] : []);
-        onColorChange({ name: colorName, images });
+        onColorChange({ name: colorName, images: colorObj.images || [] });
       }
     }
   };
@@ -292,13 +286,6 @@ export default function ScalablePressConfigurator({
                   {colorImage ? (
                     <img 
                       src={colorImage} 
-                      alt={color.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : mainProductImage ? (
-                    <img 
-                      src={mainProductImage} 
                       alt={color.name}
                       className="w-full h-full object-cover"
                       loading="lazy"
