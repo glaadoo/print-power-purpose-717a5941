@@ -354,26 +354,66 @@ serve(async (req) => {
     
     console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync`);
 
-    // Preserve existing images
+    // Fetch existing products to preserve custom configurations
     const vendorIds = productsToSync.map((p: any) => p.vendor_id);
-    const { data: existingProducts } = await supabase
+    const { data: existingProducts, error: fetchError } = await supabase
       .from("products")
-      .select("vendor_id, image_url")
+      .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url")
       .eq("vendor", "sinalite")
       .in("vendor_id", vendorIds);
-    
-    const existingImageMap = new Map(
-      (existingProducts || []).map((p: any) => [p.vendor_id, p.image_url])
-    );
 
+    if (fetchError) {
+      console.error("[SYNC-SINALITE] Error fetching existing products:", fetchError);
+    }
+
+    // Create a map of existing product customizations to preserve
+    const existingCustomizations = new Map<string, any>();
+    if (existingProducts) {
+      for (const product of existingProducts) {
+        existingCustomizations.set(product.vendor_id, {
+          markup_fixed_cents: product.markup_fixed_cents,
+          markup_percent: product.markup_percent,
+          price_override_cents: product.price_override_cents,
+          image_url: product.image_url,
+          generated_image_url: product.generated_image_url,
+        });
+      }
+      console.log(`[SYNC-SINALITE] Found ${existingCustomizations.size} existing products with potential customizations to preserve`);
+    }
+
+    // Merge new data with existing customizations
     let imagesPreserved = 0;
+    let markupsPreserved = 0;
     for (const product of productsToSync) {
-      const existingImage = existingImageMap.get(product.vendor_id);
-      if (existingImage && !product.image_url) {
-        product.image_url = existingImage;
-        imagesPreserved++;
+      const existing = existingCustomizations.get(product.vendor_id);
+      if (existing) {
+        // Preserve custom markups if they were set
+        if (existing.markup_fixed_cents !== null) {
+          product.markup_fixed_cents = existing.markup_fixed_cents;
+          markupsPreserved++;
+        }
+        if (existing.markup_percent !== null) {
+          product.markup_percent = existing.markup_percent;
+        }
+        if (existing.price_override_cents !== null) {
+          product.price_override_cents = existing.price_override_cents;
+        }
+        // Preserve custom/generated images - only use API image if no custom image exists
+        if (existing.image_url && !product.image_url) {
+          product.image_url = existing.image_url;
+          imagesPreserved++;
+        } else if (existing.image_url && existing.image_url !== product.image_url) {
+          // Keep existing custom image if it differs from API image
+          product.image_url = existing.image_url;
+          imagesPreserved++;
+        }
+        if (existing.generated_image_url) {
+          product.generated_image_url = existing.generated_image_url;
+        }
       }
     }
+    
+    console.log(`[SYNC-SINALITE] Preserving ${imagesPreserved} custom images and ${markupsPreserved} custom markups`);
 
     // Batch upsert all products
     const { error: upsertError, count } = await supabase
@@ -403,6 +443,7 @@ serve(async (req) => {
         store: storeName,
         storeCode,
         imagesPreserved,
+        markupsPreserved,
         minPricesFetching: !skipMinPrices,
         note: !skipMinPrices ? "Min prices are being fetched in the background" : undefined
       }),
