@@ -107,15 +107,29 @@ export default function ScalablePressConfigurator({
     }
   }, [colors, items, selectedColor, onColorChange, availability]);
 
+  // Check if entire color is out of stock (all sizes have 0 stock)
+  const isColorOutOfStock = (colorName: string): boolean => {
+    const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === colorName.toLowerCase());
+    if (!availabilityColorKey || !availability[availabilityColorKey]) return false;
+    
+    const colorStocks = availability[availabilityColorKey];
+    const allSizesOutOfStock = Object.values(colorStocks).every((qty: any) => qty === 0);
+    return allSizesOutOfStock;
+  };
+
   // Update price and notify completion when selection changes
   useEffect(() => {
     const isComplete = !!(selectedColor && selectedSize);
     const colorKey = findColorKey(selectedColor);
     
-    // Check stock status and notify parent
+    // Check stock status - both for specific variant AND entire color
     const availabilityColorKey = selectedColor ? Object.keys(availability).find(key => key.toLowerCase() === selectedColor.toLowerCase()) : null;
     const stockQty = availabilityColorKey && selectedSize ? availability[availabilityColorKey]?.[selectedSize] : undefined;
-    const isOutOfStock = stockQty !== undefined && stockQty === 0;
+    const variantOutOfStock = stockQty !== undefined && stockQty === 0;
+    const colorFullyOutOfStock = selectedColor ? isColorOutOfStock(selectedColor) : false;
+    
+    // Either the specific variant is out of stock, OR the entire color is out of stock
+    const isOutOfStock = variantOutOfStock || colorFullyOutOfStock;
     
     // Notify parent about stock status
     if (onStockStatusChange) {
