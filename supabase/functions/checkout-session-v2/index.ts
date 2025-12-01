@@ -141,38 +141,54 @@ serve(async (req) => {
         const selectedColor = cartItem.configuration?.color;
         const selectedSize = cartItem.configuration?.size;
         
-        if (selectedColor && selectedSize) {
+        if (selectedColor) {
           // Find matching color key (case-insensitive)
           const availabilityColorKey = Object.keys(availability).find(
             key => key.toLowerCase() === selectedColor.toLowerCase()
           );
           
           if (availabilityColorKey) {
-            const stockQty = availability[availabilityColorKey]?.[selectedSize];
+            // First check if entire color is out of stock (all sizes = 0)
+            const colorStocks = availability[availabilityColorKey];
+            const allSizesOutOfStock = Object.values(colorStocks).every((qty: any) => qty === 0);
             
-            // Check if out of stock (quantity is 0)
-            if (stockQty !== undefined && stockQty === 0) {
-              console.error("[PPP:CHECKOUT] Out of stock item detected:", {
+            if (allSizesOutOfStock) {
+              console.error("[PPP:CHECKOUT] Color completely out of stock:", {
                 productId: product.id,
                 productName: product.name,
-                color: selectedColor,
-                size: selectedSize,
-                stockQty
+                color: selectedColor
               });
-              throw new Error(`"${product.name}" in ${selectedColor}/${selectedSize} is out of stock and cannot be purchased.`);
+              throw new Error(`"${product.name}" in color "${selectedColor}" is completely out of stock and cannot be purchased.`);
             }
             
-            // Optionally check if requested quantity exceeds available stock
-            if (stockQty !== undefined && cartItem.quantity > stockQty) {
-              console.error("[PPP:CHECKOUT] Insufficient stock:", {
-                productId: product.id,
-                productName: product.name,
-                color: selectedColor,
-                size: selectedSize,
-                requested: cartItem.quantity,
-                available: stockQty
-              });
-              throw new Error(`Only ${stockQty} units of "${product.name}" in ${selectedColor}/${selectedSize} are available. Please reduce quantity.`);
+            // Then check specific size stock
+            if (selectedSize) {
+              const stockQty = colorStocks?.[selectedSize];
+              
+              // Check if out of stock (quantity is 0)
+              if (stockQty !== undefined && stockQty === 0) {
+                console.error("[PPP:CHECKOUT] Out of stock item detected:", {
+                  productId: product.id,
+                  productName: product.name,
+                  color: selectedColor,
+                  size: selectedSize,
+                  stockQty
+                });
+                throw new Error(`"${product.name}" in ${selectedColor}/${selectedSize} is out of stock and cannot be purchased.`);
+              }
+              
+              // Optionally check if requested quantity exceeds available stock
+              if (stockQty !== undefined && cartItem.quantity > stockQty) {
+                console.error("[PPP:CHECKOUT] Insufficient stock:", {
+                  productId: product.id,
+                  productName: product.name,
+                  color: selectedColor,
+                  size: selectedSize,
+                  requested: cartItem.quantity,
+                  available: stockQty
+                });
+                throw new Error(`Only ${stockQty} units of "${product.name}" in ${selectedColor}/${selectedSize} are available. Please reduce quantity.`);
+              }
             }
           }
         }
