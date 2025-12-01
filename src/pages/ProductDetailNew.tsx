@@ -465,6 +465,7 @@ export default function ProductDetailNew() {
                     productId={product.id}
                     productName={product.name}
                     pricingData={product.pricing_data}
+                    mainProductImage={product.image_url || undefined}
                     onPriceChange={setConfiguredPriceCents}
                     onConfigChange={setProductConfig}
                     onColorChange={handleScalablePressColorChange}
