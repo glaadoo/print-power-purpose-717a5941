@@ -176,36 +176,97 @@ export default function AdminProducts() {
     setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'loading', text: `Syncing ${vendor} products...` } }));
     
     try {
-      const body = storeCode ? { storeCode } : undefined;
-      
-      const { data, error } = await invokeWithRetry(
-        supabase,
-        functionName,
-        { body },
-        {
-          maxAttempts: 2,
-          initialDelayMs: 2000,
-          shouldRetry: (error: any) => {
-            const msg = error?.message?.toLowerCase() || '';
-            return msg.includes('timeout') || msg.includes('fetch') || msg.includes('network');
+      // Handle Scalable Press with pagination
+      if (functionName === 'sync-scalablepress') {
+        let offset = 0;
+        let totalSynced = 0;
+        let totalProducts = 0;
+        let hasMore = true;
+        let iterations = 0;
+        const maxIterations = 50; // Safety limit
+        
+        while (hasMore && iterations < maxIterations) {
+          iterations++;
+          setButtonMessages(prev => ({ 
+            ...prev, 
+            [buttonKey]: { 
+              type: 'loading', 
+              text: `Syncing Scalable Press... ${totalSynced}${totalProducts ? `/${totalProducts}` : ''} products` 
+            } 
+          }));
+          
+          const { data, error } = await invokeWithRetry(
+            supabase,
+            functionName,
+            { body: { offset, limit: 500 } },
+            {
+              maxAttempts: 2,
+              initialDelayMs: 2000,
+              shouldRetry: (error: any) => {
+                const msg = error?.message?.toLowerCase() || '';
+                return msg.includes('timeout') || msg.includes('fetch') || msg.includes('network');
+              }
+            }
+          );
+          
+          if (error) throw error;
+          
+          if (data?.success) {
+            totalSynced += data.synced || 0;
+            totalProducts = data.total || totalProducts;
+            hasMore = data.hasMore || false;
+            offset = data.nextOffset || offset + 500;
+            
+            console.log(`[SCALABLEPRESS-SYNC] Batch complete: ${totalSynced}/${totalProducts}, hasMore: ${hasMore}`);
+          } else {
+            throw new Error(data?.error || 'Sync failed');
+          }
+          
+          // Small delay between batches
+          if (hasMore) {
+            await new Promise(r => setTimeout(r, 1000));
           }
         }
-      );
-      
-      if (error) throw error;
-      
-      setSyncResults((prev) => ({ ...prev, [syncKey]: data }));
-      
-      if (data?.success) {
-        const storeInfo = data.store ? ` (${data.store})` : '';
-        toast.success(`${vendor}${storeInfo}: Synced ${data.synced} products successfully!`);
+        
+        setSyncResults((prev) => ({ ...prev, [syncKey]: { success: true, synced: totalSynced, total: totalProducts } }));
+        toast.success(`Scalable Press: Synced ${totalSynced} products successfully!`);
         setSyncStatus((prev) => ({ ...prev, [syncKey]: 'success' }));
-        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `${vendor} products synced successfully. ${data.synced} products updated.` } }));
+        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `Scalable Press products synced successfully. ${totalSynced} products updated.` } }));
         loadProducts();
+        
       } else {
-        toast.warning(`${vendor}: ${data?.note || "Sync completed with issues"}`);
-        setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
-        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: `Failed to sync ${vendor} products. Please try again.` } }));
+        // Original logic for SinaLite and other vendors
+        const body = storeCode ? { storeCode } : undefined;
+        
+        const { data, error } = await invokeWithRetry(
+          supabase,
+          functionName,
+          { body },
+          {
+            maxAttempts: 2,
+            initialDelayMs: 2000,
+            shouldRetry: (error: any) => {
+              const msg = error?.message?.toLowerCase() || '';
+              return msg.includes('timeout') || msg.includes('fetch') || msg.includes('network');
+            }
+          }
+        );
+        
+        if (error) throw error;
+        
+        setSyncResults((prev) => ({ ...prev, [syncKey]: data }));
+        
+        if (data?.success) {
+          const storeInfo = data.store ? ` (${data.store})` : '';
+          toast.success(`${vendor}${storeInfo}: Synced ${data.synced} products successfully!`);
+          setSyncStatus((prev) => ({ ...prev, [syncKey]: 'success' }));
+          setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `${vendor} products synced successfully. ${data.synced} products updated.` } }));
+          loadProducts();
+        } else {
+          toast.warning(`${vendor}: ${data?.note || "Sync completed with issues"}`);
+          setSyncStatus((prev) => ({ ...prev, [syncKey]: 'error' }));
+          setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: `Failed to sync ${vendor} products. Please try again.` } }));
+        }
       }
     } catch (error: any) {
       console.error(`Error syncing ${vendor}:`, error);
