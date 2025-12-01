@@ -4,21 +4,11 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Input validation schema
 const donationSchema = z.object({
-  causeId: z.string().uuid({ message: "Invalid cause ID format" }),
-  causeName: z.string().trim().min(1).max(200, { message: "Cause name must be 1-200 characters" }),
+  nonprofitId: z.string().uuid({ message: "Invalid nonprofit ID format" }),
+  nonprofitName: z.string().trim().min(1).max(200, { message: "Nonprofit name must be 1-200 characters" }),
+  nonprofitEin: z.string().trim().max(20).optional(),
   amountCents: z.number().int().positive().min(100).max(1000000, { message: "Amount must be between $1 and $10,000" }),
   customerEmail: z.string().email().max(255, { message: "Invalid email address" }),
-  firstName: z.string().trim().min(1).max(100, { message: "First name required, max 100 characters" }),
-  lastName: z.string().trim().min(1).max(100, { message: "Last name required, max 100 characters" }),
-  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, { message: "Invalid phone number format" }).optional(),
-  address: z.object({
-    street: z.string().trim().min(1).max(200, { message: "Street required, max 200 characters" }),
-    apartment: z.string().trim().max(100).optional(),
-    city: z.string().trim().min(1).max(100, { message: "City required, max 100 characters" }),
-    state: z.string().length(2).regex(/^[A-Z]{2}$/, { message: "State must be 2-letter code" }),
-    zipCode: z.string().regex(/^\d{5}(-\d{4})?$/, { message: "Invalid ZIP code format" }),
-    country: z.string().length(2).default('US')
-  }).optional()
 });
 
 // Rate limiting
@@ -134,14 +124,11 @@ serve(async (req) => {
     }
 
     const {
-      causeId,
-      causeName,
+      nonprofitId,
+      nonprofitName,
+      nonprofitEin,
       amountCents,
       customerEmail,
-      firstName,
-      lastName,
-      phone,
-      address,
     } = validatedData;
 
     // Get the origin for redirect URLs
@@ -159,23 +146,13 @@ serve(async (req) => {
     } else {
       customer = await stripe.customers.create({
         email: customerEmail,
-        name: `${firstName} ${lastName}`.trim(),
-        phone: phone || undefined,
-        address: address ? {
-          line1: address.street,
-          line2: address.apartment || undefined,
-          city: address.city,
-          state: address.state,
-          postal_code: address.zipCode,
-          country: address.country === "United States" ? "US" : address.country,
-        } : undefined,
       });
     }
 
     // Create a product for this monthly donation
     const product = await stripe.products.create({
-      name: `Monthly Donation to ${causeName}`,
-      description: `Recurring monthly donation supporting ${causeName}`,
+      name: `Monthly Donation to ${nonprofitName}`,
+      description: `Recurring monthly donation supporting ${nonprofitName}`,
     });
 
     // Create a price for the monthly subscription
@@ -198,13 +175,15 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      success_url: `${origin}/donate?cause=${causeId}&payment=success`,
-      cancel_url: `${origin}/donate?cause=${causeId}`,
+      success_url: `${origin}/donate?nonprofit=${nonprofitId}&payment=success`,
+      cancel_url: `${origin}/donate?nonprofit=${nonprofitId}`,
       metadata: {
-        cause_id: causeId,
-        cause_name: causeName,
+        nonprofit_id: nonprofitId,
+        nonprofit_name: nonprofitName,
+        nonprofit_ein: nonprofitEin || "",
         customer_email: customerEmail,
         donation_type: "monthly_recurring",
+        donation_cents: String(amountCents),
       },
     });
 
