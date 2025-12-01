@@ -4,6 +4,16 @@ import StockNotificationForm from "@/components/StockNotificationForm";
 import { getColorHex } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
 
+// Helper to get display name (primary color before "/")
+const getDisplayColorName = (colorName: string): string => {
+  if (!colorName) return '';
+  const parts = colorName.split('/');
+  // Capitalize first letter of each word
+  return parts[0].split(' ').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
+};
+
 interface ScalablePressConfiguratorProps {
   productId: string;
   productName: string;
@@ -162,7 +172,7 @@ export default function ScalablePressConfigurator({
             console.log('[ScalablePressConfigurator] Using custom price:', customPrice.custom_price_cents);
             onPriceChange(customPrice.custom_price_cents);
             onConfigChange({
-              color: selectedColor,
+              color: getDisplayColorName(selectedColor),
               size: selectedSize,
             });
             
@@ -178,7 +188,7 @@ export default function ScalablePressConfigurator({
         // Use default API price if no custom price found
         onPriceChange(defaultPriceCents);
         onConfigChange({
-          color: selectedColor,
+          color: getDisplayColorName(selectedColor),
           size: selectedSize,
         });
         
@@ -228,7 +238,7 @@ export default function ScalablePressConfigurator({
       {/* Color Selection with Product Images */}
       <div>
         <label className="block text-sm font-semibold text-foreground mb-3">
-          Color: {selectedColor && <span className="text-primary font-medium">{selectedColor}</span>}
+          Color: {selectedColor && <span className="text-primary font-medium">{getDisplayColorName(selectedColor)}</span>}
         </label>
         <div className="flex flex-wrap gap-3">
           {colors.map((color: any) => {
@@ -254,8 +264,8 @@ export default function ScalablePressConfigurator({
                     }
                     ${!hasStock ? 'opacity-50' : ''}
                   `}
-                  title={`${color.name}${!hasStock ? ' (Out of Stock)' : ''}`}
-                  aria-label={`Select ${color.name}`}
+                  title={`${getDisplayColorName(color.name)}${!hasStock ? ' (Out of Stock)' : ''}`}
+                  aria-label={`Select ${getDisplayColorName(color.name)}`}
                 >
                   {colorImage ? (
                     <img 
@@ -288,7 +298,7 @@ export default function ScalablePressConfigurator({
                     <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border border-white shadow-sm" />
                   )}
                 </button>
-                <span className="text-xs text-foreground font-medium text-center max-w-20 truncate">{color.name}</span>
+                <span className="text-xs text-foreground font-medium text-center max-w-20 truncate">{getDisplayColorName(color.name)}</span>
                 <span className={`text-[10px] font-semibold ${hasStock ? 'text-green-500' : 'text-red-400'}`}>
                   {hasStock ? 'In Stock' : 'Out of Stock'}
                 </span>
