@@ -1,6 +1,6 @@
 export default function KenzieHelpButton() {
   const handleClick = () => {
-    // Open the Kenzie chat widget
+    // Open the kenzie-AI chat widget
     if (window.kenzieOpenChat) {
       window.kenzieOpenChat();
     } else {
@@ -26,7 +26,7 @@ export default function KenzieHelpButton() {
         "
       >
         <span className="text-2xl animate-pulse">🐾</span>
-        <span>Need Help? Ask Kenzie</span>
+        <span>Need Help? Ask kenzie-AI</span>
       </button>
     </div>
   );

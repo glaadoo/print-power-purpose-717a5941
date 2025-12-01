@@ -16,7 +16,7 @@ type FlowState = "initial" | "awaiting_option" | "awaiting_email_orders" | "awai
 const STARTER_MESSAGES: Msg[] = [
   {
     role: "assistant",
-    content: `Woof! I'm Kenzie 🐾 How can I help you today?`,
+    content: `Woof! I'm kenzie-AI 🐾 How can I help you today?`,
     buttons: [
       { label: "Products", action: "products" },
       { label: "Causes", action: "causes" },
@@ -399,7 +399,7 @@ export default function KenzieChat() {
     const lower = text.toLowerCase();
     const isGreet = /^(hi|hello|hey|hiya|howdy|yo|sup|good (morning|afternoon|evening))\b/.test(lower);
     if (isGreet) {
-      const quick = "Hi there! I'm Kenzie 🐾 — how can I help today?\n\nWhat should I help you with?";
+      const quick = "Hi there! I'm kenzie-AI 🐾 — how can I help today?\n\nWhat should I help you with?";
       setMessages((prev) => [
         ...prev,
         { role: "user", content: text },

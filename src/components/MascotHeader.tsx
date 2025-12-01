@@ -6,7 +6,7 @@ export default function MascotHeader() {
       <div className="max-w-7xl mx-auto flex flex-col items-center">
         <img
           src={kenzieMascot}
-          alt="Kenzie - Print Power Purpose Mascot"
+          alt="kenzie-AI - Print Power Purpose Mascot"
           className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 object-contain drop-shadow-lg"
         />
       </div>

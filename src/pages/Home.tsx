@@ -181,7 +181,7 @@ export default function Home() {
     };
   }, []);
 
-  // ===== original staged reveal logic for Kenzie card =====
+  // ===== original staged reveal logic for kenzie-AI card =====
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
   useEffect(() => {
     const t1 = setTimeout(() => setStep(1), 150);
@@ -204,7 +204,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <VistaprintNav />
 
-      {/* Welcome Section with Animated Kenzie - Only show for non-authenticated users */}
+      {/* Welcome Section with Animated kenzie-AI - Only show for non-authenticated users */}
       {!isAuthenticated && (
         <section className="relative bg-white py-16 overflow-hidden">
           {/* Subtle paw prints background */}
@@ -226,13 +226,13 @@ export default function Home() {
 
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-              {/* Kenzie Puppy */}
+              {/* kenzie-AI Puppy */}
               <div className="relative flex-shrink-0">
-                {/* Kenzie with gentle bounce */}
+                {/* kenzie-AI with gentle bounce */}
                 <div className="relative">
                   <img
                     src={kenzieAnimated}
-                    alt="Kenzie the puppy"
+                    alt="kenzie-AI the puppy"
                     className="w-72 h-72 md:w-96 md:h-96 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite] mix-blend-multiply"
                   />
                   
@@ -336,7 +336,7 @@ export default function Home() {
             <div className="flex items-center gap-6">
               <img
                 src={kenzieMascot}
-                alt="Kenzie - Print Power Purpose Mascot"
+                alt="kenzie-AI - Print Power Purpose Mascot"
                 className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
               />
               <div>
@@ -368,7 +368,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Kenzie Journey Section - Only show for authenticated users */}
+      {/* kenzie-AI Journey Section - Only show for authenticated users */}
       {isAuthenticated && <KenzieJourneySection />}
 
       {/* User Donation Progress - Only show for authenticated users */}
