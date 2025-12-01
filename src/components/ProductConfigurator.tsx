@@ -62,9 +62,9 @@ export function ProductConfigurator({
   const [validatingOptions, setValidatingOptions] = useState(false); // Track pre-validation state
   const [preValidationComplete, setPreValidationComplete] = useState(false); // Track if pre-validation is done
   const [customQuantity, setCustomQuantity] = useState<string>("100"); // For variable_qty products
+  const [manualPriceFetch, setManualPriceFetch] = useState(0); // Trigger manual price fetch for variable qty
   const lastChangedOptionRef = useRef<{ group: string; optionId: number } | null>(null);
   const preValidationRunRef = useRef(false); // Prevent multiple pre-validation runs
-  const quantityDebounceRef = useRef<NodeJS.Timeout | null>(null); // Debounce quantity input
   
   // Use refs to store callbacks to avoid dependency issues causing stale closures
   const onPriceChangeRef = useRef(onPriceChange);
@@ -419,11 +419,12 @@ export function ProductConfigurator({
       return;
     }
     
-    // Debounce for variable qty products (user might be typing)
-    const debounceDelay = isVariableQty ? 600 : 0;
+    // For variable qty products, only fetch when button is clicked (manualPriceFetch changes)
+    // For non-variable qty products, fetch immediately when selections change
+    const debounceDelay = 0;
     
     const timeoutId = setTimeout(() => {
-      console.log('[ProductConfigurator] Executing price fetch after debounce, customQuantity:', customQuantity);
+      console.log('[ProductConfigurator] Executing price fetch, customQuantity:', customQuantity);
       
       const fetchPrice = async () => {
         const variantKey = optionIds.sort((a, b) => a - b).join('-');
@@ -707,7 +708,9 @@ export function ProductConfigurator({
     }, debounceDelay);
     
     return () => clearTimeout(timeoutId);
-  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, productId, userInteracted, isVariableQty, customQuantity]);
+    // Note: customQuantity is intentionally NOT in dependencies - we only refetch when button is clicked (manualPriceFetch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, productId, userInteracted, isVariableQty, manualPriceFetch]);
 
   const handleOptionChange = (group: string, optionId: string) => {
     console.log('[ProductConfigurator] handleOptionChange called:', { group, optionId });
@@ -845,24 +848,28 @@ export function ProductConfigurator({
                   const value = e.target.value;
                   setCustomQuantity(value);
                   setUserInteracted(true);
-                  // Clear any pending debounce
-                  if (quantityDebounceRef.current) {
-                    clearTimeout(quantityDebounceRef.current);
-                  }
-                }}
-                onBlur={() => {
-                  // Trigger price fetch immediately when user leaves the field
-                  console.log('[ProductConfigurator] Quantity input blur, triggering fetch');
                 }}
                 onKeyDown={(e) => {
                   // Trigger price fetch when user presses Enter
                   if (e.key === 'Enter') {
-                    console.log('[ProductConfigurator] Enter pressed, quantity:', customQuantity);
+                    console.log('[ProductConfigurator] Enter pressed, triggering price fetch');
+                    setManualPriceFetch(prev => prev + 1);
                   }
                 }}
                 className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40"
                 placeholder={`Enter quantity (${minQty.toLocaleString()} - ${maxQty.toLocaleString()})`}
               />
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('[ProductConfigurator] Check Price clicked, quantity:', customQuantity);
+                  setManualPriceFetch(prev => prev + 1);
+                }}
+                disabled={fetchingPrice}
+                className="w-full mt-2 px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {fetchingPrice ? 'Checking...' : 'Check Price'}
+              </button>
             </div>
           );
         }
