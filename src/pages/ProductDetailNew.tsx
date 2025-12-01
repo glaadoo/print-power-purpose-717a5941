@@ -498,7 +498,10 @@ export default function ProductDetailNew() {
                 <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
                   <p className="text-sm text-red-600 dark:text-red-400 font-semibold flex items-center gap-2">
                     <span className="inline-block w-3 h-3 bg-red-500 rounded-full"></span>
-                    This item is currently out of stock and cannot be added to cart
+                    Selected configuration is out of stock
+                  </p>
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                    Please select a different color or size to continue.
                   </p>
                 </div>
               )}

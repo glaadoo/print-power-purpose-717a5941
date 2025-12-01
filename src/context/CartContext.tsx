@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type CartItem = {
   id: string;             // product id
+  cartItemId: string;     // unique cart item id (productId + configuration hash)
   name: string;
   priceCents: number;     // per-unit price in cents
   quantity: number;
@@ -13,6 +14,17 @@ export type CartItem = {
   artworkFileName?: string | null; // Uploaded artwork file name
 };
 
+// Generate a unique cart item ID from product ID and configuration
+function generateCartItemId(productId: string, configuration?: Record<string, any>): string {
+  if (!configuration || Object.keys(configuration).length === 0) {
+    return productId;
+  }
+  // Sort keys for consistent hashing
+  const sortedKeys = Object.keys(configuration).sort();
+  const configString = sortedKeys.map(k => `${k}:${configuration[k]}`).join('|');
+  return `${productId}::${configString}`;
+}
+
 type CartState = {
   items: CartItem[];
 };
@@ -21,9 +33,9 @@ type CartAPI = {
   items: CartItem[];
   count: number;                 // total quantity
   totalCents: number;            // subtotal (no shipping/tax here)
-  add: (item: Omit<CartItem, "quantity">, qty?: number) => void;
-  setQty: (productId: string, qty: number) => void;
-  remove: (productId: string) => void;
+  add: (item: Omit<CartItem, "quantity" | "cartItemId">, qty?: number) => void;
+  setQty: (cartItemId: string, qty: number) => void;
+  remove: (cartItemId: string) => void;
   clear: () => void;
 };
 
@@ -74,29 +86,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   // actions
-  function add(item: Omit<CartItem, "quantity">, qty = 1) {
+  function add(item: Omit<CartItem, "quantity" | "cartItemId">, qty = 1) {
     setState((s) => {
-      const i = s.items.findIndex((x) => x.id === item.id);
+      // Generate unique cart item ID based on product ID + configuration
+      const cartItemId = generateCartItemId(item.id, item.configuration);
+      
+      // Find existing item by cartItemId (not just product ID)
+      const i = s.items.findIndex((x) => x.cartItemId === cartItemId);
       if (i === -1) {
-        return { items: [...s.items, { ...item, quantity: Math.max(1, qty) }] };
+        // New unique configuration - add as new item
+        return { items: [...s.items, { ...item, cartItemId, quantity: Math.max(1, qty) }] };
       }
+      // Same configuration exists - update quantity
       const next = [...s.items];
       next[i] = { ...next[i], quantity: Math.max(1, next[i].quantity + qty) };
       return { items: next };
     });
   }
 
-  function setQty(productId: string, qty: number) {
+  function setQty(cartItemId: string, qty: number) {
     setState((s) => {
       const next = s.items.map((it) =>
-        it.id === productId ? { ...it, quantity: Math.max(0, Math.floor(qty)) } : it
+        it.cartItemId === cartItemId ? { ...it, quantity: Math.max(0, Math.floor(qty)) } : it
       ).filter((it) => it.quantity > 0);
       return { items: next };
     });
   }
 
-  function remove(productId: string) {
-    setState((s) => ({ items: s.items.filter((it) => it.id !== productId) }));
+  function remove(cartItemId: string) {
+    setState((s) => ({ items: s.items.filter((it) => it.cartItemId !== cartItemId) }));
   }
 
   function clear() {

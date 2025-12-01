@@ -71,16 +71,33 @@ export default function ScalablePressConfigurator({
     ? availability[availabilityColorKey][selectedSize]
     : undefined;
 
-  // Initialize with first available color and size
+  // Helper to find first in-stock size for a color
+  const findFirstInStockSize = (colorName: string): string => {
+    const colorKey = findColorKey(colorName);
+    const sizes = colorKey && items[colorKey] ? Object.keys(items[colorKey]) : [];
+    const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === colorName.toLowerCase());
+    
+    // Find first size with stock > 0
+    for (const size of sizes) {
+      const stockQty = availabilityColorKey ? availability[availabilityColorKey]?.[size] : undefined;
+      if (stockQty === undefined || stockQty > 0) {
+        return size;
+      }
+    }
+    // If all sizes are out of stock, return the first size anyway (user will see out of stock message)
+    return sizes[0] || "";
+  };
+
+  // Initialize with first available color and first IN-STOCK size
   useEffect(() => {
     if (colors.length > 0 && !selectedColor) {
       const firstColor = colors[0];
       setSelectedColor(firstColor.name);
       
-      const colorKey = findColorKey(firstColor.name);
-      const firstColorSizes = colorKey && items[colorKey] ? Object.keys(items[colorKey]) : [];
-      if (firstColorSizes.length > 0) {
-        setSelectedSize(firstColorSizes[0]);
+      // Select first in-stock size for this color
+      const firstInStockSize = findFirstInStockSize(firstColor.name);
+      if (firstInStockSize) {
+        setSelectedSize(firstInStockSize);
       }
       
       // Notify parent about initial color selection with images
@@ -88,7 +105,7 @@ export default function ScalablePressConfigurator({
         onColorChange({ name: firstColor.name, images: firstColor.images || [] });
       }
     }
-  }, [colors, items, selectedColor, onColorChange]);
+  }, [colors, items, selectedColor, onColorChange, availability]);
 
   // Update price and notify completion when selection changes
   useEffect(() => {
@@ -171,14 +188,9 @@ export default function ScalablePressConfigurator({
   const handleColorChange = (colorName: string) => {
     setSelectedColor(colorName);
     
-    // Reset size to first available for new color
-    const colorKey = findColorKey(colorName);
-    const newColorSizes = colorKey && items[colorKey] ? Object.keys(items[colorKey]) : [];
-    if (newColorSizes.length > 0) {
-      setSelectedSize(newColorSizes[0]);
-    } else {
-      setSelectedSize("");
-    }
+    // Reset size to first IN-STOCK size for new color
+    const firstInStockSize = findFirstInStockSize(colorName);
+    setSelectedSize(firstInStockSize);
     
     // Notify parent about color change with images
     if (onColorChange) {
