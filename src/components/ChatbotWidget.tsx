@@ -24,7 +24,7 @@ export default function ChatbotWidget() {
   }, []);
 
   const handleClick = () => {
-    // Trigger the KenzieChat to open using the global function
+    // Trigger the kenzie-AI chat to open using the global function
     if (window.kenzieOpenChat) {
       window.kenzieOpenChat();
     }
@@ -50,7 +50,7 @@ export default function ChatbotWidget() {
         </div>
       </div>
 
-      {/* Kenzie dog button */}
+      {/* kenzie-AI dog button */}
       <motion.button
         onClick={handleClick}
         className="w-18 h-18 rounded-full bg-white shadow-lg hover:shadow-2xl transition-all flex items-center justify-center overflow-hidden border-2 border-amber-200"

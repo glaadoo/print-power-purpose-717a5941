@@ -226,7 +226,7 @@ export default function VistaprintNav() {
               {/* Dropdown Menu */}
               {menuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                  {/* Chat with Kenzie - Available to everyone */}
+                  {/* Chat with kenzie-AI - Available to everyone */}
                   <button
                     onClick={() => {
                       if (window.kenzieOpenChat) {
@@ -239,7 +239,7 @@ export default function VistaprintNav() {
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    Chat with Kenzie
+                    Chat with kenzie-AI
                   </button>
                   
                   <div className="border-t border-gray-200 my-2"></div>

@@ -15,7 +15,7 @@ export default function Welcome() {
   const [loading, setLoading] = useState(true);
   const { open: menuOpen, toggle: toggleMenu } = useToggle(false);
 
-  // Staged reveal logic for Kenzie card
+  // Staged reveal logic for kenzie-AI card
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
   useEffect(() => {
     const t1 = setTimeout(() => setStep(1), 150);
@@ -180,7 +180,7 @@ export default function Welcome() {
         <div className="relative min-h-[calc(100svh-64px)] flex items-center justify-center px-4 py-0 -mt-3 sm:-mt-4">
           <div className="w-full max-w-5xl mx-auto">
 
-            {/* Kenzie onboarding card */}
+            {/* kenzie-AI onboarding card */}
             <div className="flex justify-center px-4">
               <div className="w-full max-w-[1200px]">
                 <div className="p-3 sm:p-4">
@@ -210,7 +210,7 @@ export default function Welcome() {
                       <div className="w-20 h-20 sm:w-28 sm:h-28 mx-auto">
                         <img
                           src="/IMG_4805.jpeg"
-                          alt="Kenzie the mascot"
+                          alt="kenzie-AI the mascot"
                           className="w-full h-full object-cover rounded-full shadow-lg"
                           loading="lazy"
                           decoding="async"
@@ -226,7 +226,7 @@ export default function Welcome() {
                         className="typewriter-nocaret mx-auto text-lg sm:text-2xl"
                         style={{ fontFamily: "'Pacifico', cursive" }}
                       >
-                        Hi! I'm your mascot Kenzie 🐾
+                        Hi! I'm your mascot kenzie-AI 🐾
                       </div>
                     )}
                     {step >= 3 && (

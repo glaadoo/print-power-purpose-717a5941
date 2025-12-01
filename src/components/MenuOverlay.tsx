@@ -219,7 +219,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
               {/* Bottom divider */}
               <div className="mt-6 border-t border-white/15" />
 
-              {/* Chat with Kenzie CTA */}
+              {/* Chat with kenzie-AI CTA */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0, transition: { delay: 0.15 } }}
@@ -237,7 +237,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                     border border-white/30
                   "
                 >
-                  Kenzie
+                  kenzie-AI
                 </button>
               </motion.div>
 

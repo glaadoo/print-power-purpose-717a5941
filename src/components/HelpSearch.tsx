@@ -202,7 +202,7 @@ export default function HelpSearch({ onOpenChat }: HelpSearchProps) {
           }}
           className="text-sm text-primary hover:underline mb-2"
         >
-          Chat with Kenzie 🐾
+          Chat with kenzie-AI 🐾
         </button>
       )}
       <p className="text-xs text-muted-foreground">
