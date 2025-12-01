@@ -180,8 +180,8 @@ serve(async (req) => {
           }
 
           // Extract colors with images from product detail
-          const colors: any[] = [];
-          if (productDetail?.colors && Array.isArray(productDetail.colors)) {
+          let colors: any[] = [];
+          if (productDetail?.colors && Array.isArray(productDetail.colors) && productDetail.colors.length > 0) {
             for (const color of productDetail.colors) {
               colors.push({
                 name: color.name,
@@ -190,6 +190,29 @@ serve(async (req) => {
                 sizes: color.sizes || [],
               });
             }
+          }
+          
+          // If colors array is empty but items has data, derive colors from items keys
+          if (colors.length === 0 && items && typeof items === 'object' && Object.keys(items).length > 0) {
+            const itemColorKeys = Object.keys(items);
+            colors = itemColorKeys.map(colorKey => {
+              // Capitalize color name parts (e.g., "black/stone" -> "Black/Stone")
+              const formattedName = colorKey.split('/').map(part => 
+                part.charAt(0).toUpperCase() + part.slice(1)
+              ).join('/');
+              
+              // Get available sizes for this color
+              const sizesData = items[colorKey];
+              const sizes = sizesData && typeof sizesData === 'object' ? Object.keys(sizesData) : [];
+              
+              return {
+                name: formattedName,
+                hex: null,
+                images: [],
+                sizes,
+              };
+            });
+            console.log(`[SYNC-SCALABLEPRESS] Product ${product.id}: derived ${colors.length} colors from items keys`);
           }
 
           // Calculate base cost from items (use minimum price)
