@@ -52,6 +52,7 @@ export default function Products() {
   const [sortBy, setSortBy] = useState<"name-asc" | "price-low" | "price-high" | "rating-high" | "most-reviewed">("name-asc");
   const [reviewStats, setReviewStats] = useState<Record<string, { avgRating: number; count: number }>>({});
   const [ratingFilter, setRatingFilter] = useState<"all" | "4plus" | "has-reviews">("all");
+  const [vendorFilter, setVendorFilter] = useState<"all" | "sinalite" | "scalablepress">("all");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -426,7 +427,12 @@ export default function Products() {
     // Exclude Canada products
     filtered = filtered.filter(product => !product.name.toLowerCase().includes('canada'));
     
-    // Show products from all vendors (SinaLite, Scalable Press, etc.)
+    // Apply vendor filter
+    if (vendorFilter === "sinalite") {
+      filtered = filtered.filter(product => product.vendor === "sinalite");
+    } else if (vendorFilter === "scalablepress") {
+      filtered = filtered.filter(product => product.vendor === "scalablepress");
+    }
     
     // Apply rating filter
     if (ratingFilter === "4plus") {
@@ -546,7 +552,7 @@ export default function Products() {
   // Reset to page 1 when filters/search/category changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, sortBy, selectedCategory, ratingFilter]);
+  }, [searchTerm, sortBy, selectedCategory, ratingFilter, vendorFilter]);
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -663,6 +669,17 @@ export default function Products() {
                   <SelectItem value="has-reviews">Has Reviews</SelectItem>
                 </SelectContent>
               </Select>
+              
+              <Select value={vendorFilter} onValueChange={(val: any) => setVendorFilter(val)}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Filter by vendor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Vendors</SelectItem>
+                  <SelectItem value="sinalite">SinaLite</SelectItem>
+                  <SelectItem value="scalablepress">Scalable Press</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Products Grid */}
@@ -684,6 +701,7 @@ export default function Products() {
                   setSearchTerm("");
                   setSelectedCategory("all");
                   setRatingFilter("all");
+                  setVendorFilter("all");
                 }}>
                   Clear Filters
                 </Button>
