@@ -42,7 +42,7 @@ export default function Cart() {
     async function validateCartItems() {
       if (items.length === 0) return;
       
-      const invalidIds: string[] = [];
+      const invalidCartItemIds: string[] = [];
       
       for (const item of items) {
         const { data, error } = await supabase
@@ -52,13 +52,13 @@ export default function Cart() {
           .maybeSingle();
         
         if (error || !data) {
-          invalidIds.push(item.id);
+          invalidCartItemIds.push(item.cartItemId);
         }
       }
       
-      if (invalidIds.length > 0) {
-        invalidIds.forEach(id => remove(id));
-        toast.error(`${invalidIds.length} invalid product(s) removed from cart.`);
+      if (invalidCartItemIds.length > 0) {
+        invalidCartItemIds.forEach(cartItemId => remove(cartItemId));
+        toast.error(`${invalidCartItemIds.length} invalid product(s) removed from cart.`);
       }
     }
     
@@ -143,7 +143,7 @@ export default function Cart() {
               <div className="absolute inset-0 z-10 p-6 md:p-8 flex flex-col">
                 <ul className="divide-y divide-gray-200 mb-6">
                   {detailed.map((it) => (
-                    <li key={it.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white rounded-lg px-4 mb-4 shadow-sm">
+                    <li key={it.cartItemId} className="py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white rounded-lg px-4 mb-4 shadow-sm">
                       {it.imageUrl ? (
                         <img
                           src={it.imageUrl}
@@ -163,6 +163,17 @@ export default function Cart() {
                         <div className="text-sm text-gray-600">
                           ${(it.priceCents / 100).toFixed(2)} each
                         </div>
+                        
+                        {/* Configuration Details */}
+                        {it.configuration && Object.keys(it.configuration).length > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {Object.entries(it.configuration).map(([key, value]) => (
+                              <span key={key} className="mr-2 capitalize">
+                                {key}: <span className="font-medium">{String(value)}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         
                         {/* Artwork Preview */}
                         {it.artworkUrl && (
@@ -189,7 +200,7 @@ export default function Cart() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setUploadingForItemId(it.id);
+                                    setUploadingForItemId(it.cartItemId);
                                     setConfirmDialogOpen(true);
                                   }}
                                   className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 hover:bg-blue-50 rounded transition-colors"
@@ -205,7 +216,7 @@ export default function Cart() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
                           className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-900 flex items-center justify-center text-xl font-semibold"
-                          onClick={() => setQty(it.id, Math.max(1, it.quantity - 1))}
+                          onClick={() => setQty(it.cartItemId, Math.max(1, it.quantity - 1))}
                           aria-label="Decrease quantity"
                         >
                           −
@@ -215,13 +226,13 @@ export default function Cart() {
                           type="number"
                           min={1}
                           value={it.quantity}
-                          onChange={(e) => setQty(it.id, Number(e.target.value || 1))}
+                          onChange={(e) => setQty(it.cartItemId, Number(e.target.value || 1))}
                           className="w-14 h-10 rounded-lg bg-white border border-gray-300 text-gray-900 text-center outline-none font-semibold"
                         />
 
                         <button
                           className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-900 flex items-center justify-center text-xl font-semibold"
-                          onClick={() => setQty(it.id, it.quantity + 1)}
+                          onClick={() => setQty(it.cartItemId, it.quantity + 1)}
                           aria-label="Increase quantity"
                         >
                           +
@@ -229,7 +240,7 @@ export default function Cart() {
 
                         <button 
                           className="ml-2 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
-                          onClick={() => remove(it.id)}
+                          onClick={() => remove(it.cartItemId)}
                           aria-label="Remove item"
                         >
                           <X size={20} />
@@ -304,7 +315,7 @@ export default function Cart() {
           
           {/* Current Artwork Preview */}
           {uploadingForItemId && (() => {
-            const currentItem = items.find(i => i.id === uploadingForItemId);
+            const currentItem = items.find(i => i.cartItemId === uploadingForItemId);
             return currentItem?.artworkUrl ? (
               <div className="my-4 space-y-2">
                 <p className="text-sm font-medium text-gray-700">Current Artwork:</p>
@@ -355,12 +366,12 @@ export default function Cart() {
           </DialogHeader>
           {uploadingForItemId && (
             <ArtworkUpload
-              productId={uploadingForItemId}
-              productName={items.find(i => i.id === uploadingForItemId)?.name || "Product"}
+              productId={items.find(i => i.cartItemId === uploadingForItemId)?.id || uploadingForItemId}
+              productName={items.find(i => i.cartItemId === uploadingForItemId)?.name || "Product"}
               onUploadComplete={(fileUrl, fileName) => {
                 // Update cart item with new artwork
                 const updatedItems = items.map(item => 
-                  item.id === uploadingForItemId 
+                  item.cartItemId === uploadingForItemId 
                     ? { ...item, artworkUrl: fileUrl, artworkFileName: fileName }
                     : item
                 );
