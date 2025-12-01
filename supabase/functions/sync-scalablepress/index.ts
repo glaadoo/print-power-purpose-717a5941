@@ -45,11 +45,14 @@ serve(async (req) => {
       );
     }
 
+    // Correct auth format for Scalable Press: `:apiKey` (colon before key)
+    const authHeader = `Basic ${btoa(":" + apiKey)}`;
+    
     // Step 1: Fetch all categories
     console.log("[SYNC-SCALABLEPRESS] Fetching categories");
     const categoriesResponse = await fetch(`${apiUrl}/categories`, {
       headers: {
-        "Authorization": `Basic ${btoa(apiKey + ":")}`,
+        "Authorization": authHeader,
         "Accept": "application/json",
       },
     });
@@ -71,7 +74,7 @@ serve(async (req) => {
       try {
         const response = await fetch(`${apiUrl}/categories/${category.categoryId}`, {
           headers: {
-            "Authorization": `Basic ${btoa(apiKey + ":")}`,
+            "Authorization": authHeader,
             "Accept": "application/json",
           },
         });
@@ -137,19 +140,19 @@ serve(async (req) => {
           const [productDetailRes, availabilityRes, itemsRes] = await Promise.all([
             fetch(`${apiUrl}/products/${product.id}`, {
               headers: {
-                "Authorization": `Basic ${btoa(apiKey + ":")}`,
+                "Authorization": authHeader,
                 "Accept": "application/json",
               },
             }),
             fetch(`${apiUrl}/products/${product.id}/availability`, {
               headers: {
-                "Authorization": `Basic ${btoa(apiKey + ":")}`,
+                "Authorization": authHeader,
                 "Accept": "application/json",
               },
             }),
             fetch(`${apiUrl}/products/${product.id}/items`, {
               headers: {
-                "Authorization": `Basic ${btoa(apiKey + ":")}`,
+                "Authorization": authHeader,
                 "Accept": "application/json",
               },
             }),
@@ -172,6 +175,8 @@ serve(async (req) => {
           // Parse items (pricing by color/size)
           if (itemsRes.ok) {
             items = await itemsRes.json();
+          } else {
+            console.log(`[SYNC-SCALABLEPRESS] Product ${product.id}: items endpoint returned ${itemsRes.status}`);
           }
 
           // Extract colors with images from product detail
@@ -189,21 +194,30 @@ serve(async (req) => {
 
           // Calculate base cost from items (use minimum price)
           let baseCostCents = 1000; // Default fallback
-          if (items && typeof items === 'object') {
+          if (items && typeof items === 'object' && Object.keys(items).length > 0) {
             const allPrices: number[] = [];
             Object.values(items).forEach((colorData: any) => {
-              if (typeof colorData === 'object') {
+              if (typeof colorData === 'object' && colorData !== null) {
                 Object.values(colorData).forEach((sizeData: any) => {
-                  if (sizeData && typeof sizeData.price === 'number') {
-                    // Scalable Press returns prices in cents
-                    allPrices.push(sizeData.price);
+                  if (sizeData && typeof sizeData === 'object' && 'price' in sizeData) {
+                    const price = sizeData.price;
+                    if (typeof price === 'number' && price > 0) {
+                      // If price looks like dollars (< 100), convert to cents; otherwise use as-is
+                      const priceInCents = price < 100 ? Math.round(price * 100) : Math.round(price);
+                      allPrices.push(priceInCents);
+                    }
                   }
                 });
               }
             });
             if (allPrices.length > 0) {
               baseCostCents = Math.min(...allPrices);
+              console.log(`[SYNC-SCALABLEPRESS] Product ${product.id}: found ${allPrices.length} prices, min=$${(baseCostCents/100).toFixed(2)}`);
+            } else {
+              console.log(`[SYNC-SCALABLEPRESS] Product ${product.id}: no valid prices in items data`);
             }
+          } else {
+            console.log(`[SYNC-SCALABLEPRESS] Product ${product.id}: items endpoint returned empty or invalid data`);
           }
 
           // Construct pricing_data with full configuration
