@@ -454,7 +454,13 @@ export default function Home() {
 
             {/* Donor Stories Card */}
             <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Milestone Donor Stories</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                Every $777 milestone sparks a new story. ✨
+              </h2>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                When an organization hits $777, they unlock a 7-day window to film their impact. 
+                Show the world what they&apos;ve accomplished — and let their community see the difference they helped create.
+              </p>
               {featuredVideos.length > 0 ? (
                 <div className="relative">
                   <Carousel
