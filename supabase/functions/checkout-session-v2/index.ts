@@ -124,15 +124,58 @@ serve(async (req) => {
     let orderVendorName: string | null = null;
 
     for (const cartItem of cart.items) {
-      // Fetch product with category
+      // Fetch product with category and pricing_data for stock validation
       const { data: product } = await supabase
         .from("products")
-        .select("id, name, vendor, base_cost_cents, category")
+        .select("id, name, vendor, base_cost_cents, category, pricing_data")
         .eq("id", cartItem.id)
         .single();
 
       if (!product) {
         throw new Error(`Product not found: ${cartItem.id}`);
+      }
+      
+      // Validate stock for Scalable Press products
+      if (product.vendor === 'scalablepress' && product.pricing_data && cartItem.configuration) {
+        const availability = product.pricing_data?.availability || {};
+        const selectedColor = cartItem.configuration?.color;
+        const selectedSize = cartItem.configuration?.size;
+        
+        if (selectedColor && selectedSize) {
+          // Find matching color key (case-insensitive)
+          const availabilityColorKey = Object.keys(availability).find(
+            key => key.toLowerCase() === selectedColor.toLowerCase()
+          );
+          
+          if (availabilityColorKey) {
+            const stockQty = availability[availabilityColorKey]?.[selectedSize];
+            
+            // Check if out of stock (quantity is 0)
+            if (stockQty !== undefined && stockQty === 0) {
+              console.error("[PPP:CHECKOUT] Out of stock item detected:", {
+                productId: product.id,
+                productName: product.name,
+                color: selectedColor,
+                size: selectedSize,
+                stockQty
+              });
+              throw new Error(`"${product.name}" in ${selectedColor}/${selectedSize} is out of stock and cannot be purchased.`);
+            }
+            
+            // Optionally check if requested quantity exceeds available stock
+            if (stockQty !== undefined && cartItem.quantity > stockQty) {
+              console.error("[PPP:CHECKOUT] Insufficient stock:", {
+                productId: product.id,
+                productName: product.name,
+                color: selectedColor,
+                size: selectedSize,
+                requested: cartItem.quantity,
+                available: stockQty
+              });
+              throw new Error(`Only ${stockQty} units of "${product.name}" in ${selectedColor}/${selectedSize} are available. Please reduce quantity.`);
+            }
+          }
+        }
       }
       
       // Set order-level vendor from first item (assuming single-vendor orders)

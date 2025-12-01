@@ -60,6 +60,8 @@ export default function ProductDetailNew() {
   const [selectedColorImages, setSelectedColorImages] = useState<any[]>([]);
   const [gallerySelectedIndex, setGallerySelectedIndex] = useState(0);
   const [selectedColorName, setSelectedColorName] = useState<string>("");
+  const [isOutOfStock, setIsOutOfStock] = useState(false);
+  const [stockQuantity, setStockQuantity] = useState<number | undefined>(undefined);
 
   // Fetch product by ID from Supabase
   useEffect(() => {
@@ -158,7 +160,10 @@ export default function ProductDetailNew() {
   // Check if artwork is uploaded (required for all products)
   const hasArtwork = artworkFileUrl && artworkFileName;
   
-  const canAddToCart = (!requiresConfiguration || isConfigured) && hasArtwork;
+  // For Scalable Press products, also check stock status
+  const isScalablePressOutOfStock = product?.vendor === 'scalablepress' && isOutOfStock;
+  
+  const canAddToCart = (!requiresConfiguration || isConfigured) && hasArtwork && !isScalablePressOutOfStock;
 
   // Calculate price
   let unitCents: number;
@@ -432,6 +437,10 @@ export default function ProductDetailNew() {
                     onPriceChange={setConfiguredPriceCents}
                     onConfigChange={setProductConfig}
                     onColorChange={handleScalablePressColorChange}
+                    onStockStatusChange={(outOfStock, qty) => {
+                      setIsOutOfStock(outOfStock);
+                      setStockQuantity(qty);
+                    }}
                   />
                 </div>
               )}
@@ -483,6 +492,15 @@ export default function ProductDetailNew() {
                 <p className="text-sm text-amber-600 dark:text-amber-400 font-semibold">
                   ⚠️ Please upload your artwork before adding to cart
                 </p>
+              )}
+              
+              {isScalablePressOutOfStock && (
+                <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400 font-semibold flex items-center gap-2">
+                    <span className="inline-block w-3 h-3 bg-red-500 rounded-full"></span>
+                    This item is currently out of stock and cannot be added to cart
+                  </p>
+                </div>
               )}
 
               {/* Action Buttons */}

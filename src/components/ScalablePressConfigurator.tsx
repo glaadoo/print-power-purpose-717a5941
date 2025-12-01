@@ -13,6 +13,7 @@ interface ScalablePressConfiguratorProps {
   onSelectionComplete?: (isComplete: boolean) => void;
   onVariantKeyChange?: (variantKey: string) => void;
   onColorChange?: (color: { name: string; images?: any[] }) => void;
+  onStockStatusChange?: (isOutOfStock: boolean, stockQuantity?: number) => void;
 }
 
 const getStockStatus = (quantity: number | undefined): { status: string; color: string; label: string } => {
@@ -31,6 +32,7 @@ export default function ScalablePressConfigurator({
   onSelectionComplete,
   onVariantKeyChange,
   onColorChange,
+  onStockStatusChange,
 }: ScalablePressConfiguratorProps) {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -93,6 +95,16 @@ export default function ScalablePressConfigurator({
     const isComplete = !!(selectedColor && selectedSize);
     const colorKey = findColorKey(selectedColor);
     
+    // Check stock status and notify parent
+    const availabilityColorKey = selectedColor ? Object.keys(availability).find(key => key.toLowerCase() === selectedColor.toLowerCase()) : null;
+    const stockQty = availabilityColorKey && selectedSize ? availability[availabilityColorKey]?.[selectedSize] : undefined;
+    const isOutOfStock = stockQty !== undefined && stockQty === 0;
+    
+    // Notify parent about stock status
+    if (onStockStatusChange) {
+      onStockStatusChange(isOutOfStock, stockQty);
+    }
+    
     if (isComplete && colorKey && items[colorKey]?.[selectedSize]) {
       const priceData = items[colorKey][selectedSize];
       const defaultPriceCents = priceData.price || 0;
@@ -100,7 +112,7 @@ export default function ScalablePressConfigurator({
       // Generate variant key: "color-size" (e.g., "red-small")
       const variantKey = `${selectedColor.toLowerCase().replace(/\s+/g, '-')}-${selectedSize.toLowerCase()}`;
       
-      console.log('[ScalablePressConfigurator] Price update:', { selectedColor, selectedSize, colorKey, defaultPriceCents, variantKey });
+      console.log('[ScalablePressConfigurator] Price update:', { selectedColor, selectedSize, colorKey, defaultPriceCents, variantKey, isOutOfStock, stockQty });
       
       // Check for custom price in database first
       const checkCustomPrice = async () => {
@@ -154,7 +166,7 @@ export default function ScalablePressConfigurator({
     
     // Notify parent about selection completion status
     onSelectionComplete?.(isComplete);
-  }, [selectedColor, selectedSize, items, productId, onPriceChange, onConfigChange, onSelectionComplete, onVariantKeyChange]);
+  }, [selectedColor, selectedSize, items, productId, availability, onPriceChange, onConfigChange, onSelectionComplete, onVariantKeyChange, onStockStatusChange]);
 
   const handleColorChange = (colorName: string) => {
     setSelectedColor(colorName);
