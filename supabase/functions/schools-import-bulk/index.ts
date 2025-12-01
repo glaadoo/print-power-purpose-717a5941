@@ -119,7 +119,8 @@ serve(async (req) => {
         name: school.name,
         city: school.city,
         state: school.state,
-        zip: school.zip,
+        // Ensure ZIP codes are 5 digits with leading zeros if needed
+        zip: school.zip.toString().padStart(5, '0'),
         address_line1: school.address_line1 || `${school.city}, ${school.state}`,
         slug: generateSlug(school.name, school.city, school.state),
         district: school.district || null,
