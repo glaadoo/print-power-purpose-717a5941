@@ -458,7 +458,7 @@ export default function Home() {
                 Every $777 milestone sparks a new story. ✨
               </h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                When an organization hits $777, they unlock a 7-day window to film their impact. 
+                When an organization hits $777 in donation amount, they unlock a 7-day window to film their impact. 
                 Show the world what they&apos;ve accomplished — and let their community see the difference they helped create.
               </p>
               {featuredVideos.length > 0 ? (
