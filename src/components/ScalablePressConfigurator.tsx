@@ -18,7 +18,6 @@ interface ScalablePressConfiguratorProps {
   productId: string;
   productName: string;
   pricingData: any;
-  mainProductImage?: string | null;
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
   onSelectionComplete?: (isComplete: boolean) => void;
@@ -38,7 +37,6 @@ export default function ScalablePressConfigurator({
   productId,
   productName,
   pricingData,
-  mainProductImage,
   onPriceChange,
   onConfigChange,
   onSelectionComplete,
@@ -100,23 +98,34 @@ export default function ScalablePressConfigurator({
     return sizes[0] || "";
   };
 
-  // Initialize with the color that matches the main product image, or first available color with stock
+  // Initialize with the first color that has images, or first available color
   useEffect(() => {
     if (colors.length > 0 && !selectedColor) {
-      let colorToSelect = colors[0];
+      // First, try to find a color with images (preferred for display)
+      let colorToSelect = colors.find((c: any) => c.images && c.images.length > 0) || colors[0];
       
-      // Try to find a color that has stock and images
-      const colorsWithStock = colors.filter((c: any) => {
-        const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === c.name.toLowerCase());
-        const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
-        return colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
-      });
-      
-      if (colorsWithStock.length > 0) {
-        // Prefer colors that have images
-        const colorsWithImages = colorsWithStock.filter((c: any) => c.images && c.images.length > 0);
-        colorToSelect = colorsWithImages.length > 0 ? colorsWithImages[0] : colorsWithStock[0];
+      // If we have availability data, prefer colors that are in stock AND have images
+      if (Object.keys(availability).length > 0) {
+        const colorsWithStockAndImages = colors.filter((c: any) => {
+          const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === c.name.toLowerCase());
+          const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
+          const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
+          const hasImages = c.images && c.images.length > 0;
+          return hasStock && hasImages;
+        });
+        
+        if (colorsWithStockAndImages.length > 0) {
+          colorToSelect = colorsWithStockAndImages[0];
+        } else {
+          // Fall back to any color with images
+          const colorsWithImages = colors.filter((c: any) => c.images && c.images.length > 0);
+          if (colorsWithImages.length > 0) {
+            colorToSelect = colorsWithImages[0];
+          }
+        }
       }
+      
+      console.log('[ScalablePressConfigurator] Initial color selected:', colorToSelect.name, 'has images:', !!(colorToSelect.images && colorToSelect.images.length > 0));
       
       setSelectedColor(colorToSelect.name);
       
@@ -126,17 +135,20 @@ export default function ScalablePressConfigurator({
         setSelectedSize(firstInStockSize);
       }
       
-      // Notify parent about initial color selection with images (no fallback)
+      // Notify parent about initial color selection with images
       if (onColorChange) {
         onColorChange({ name: colorToSelect.name, images: colorToSelect.images || [] });
       }
     }
-  }, [colors, items, selectedColor, onColorChange, availability]);
+  }, [colors.length, availability, selectedColor]);
 
   // Check if entire color is out of stock (all sizes have 0 stock)
+  // If no availability data exists, assume in stock (don't block users)
   const isColorOutOfStock = (colorName: string): boolean => {
+    if (Object.keys(availability).length === 0) return false; // No availability data = assume in stock
+    
     const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === colorName.toLowerCase());
-    if (!availabilityColorKey || !availability[availabilityColorKey]) return false;
+    if (!availabilityColorKey || !availability[availabilityColorKey]) return false; // Color not in availability = assume in stock
     
     const colorStocks = availability[availabilityColorKey];
     const allSizesOutOfStock = Object.values(colorStocks).every((qty: any) => qty === 0);
@@ -148,10 +160,13 @@ export default function ScalablePressConfigurator({
     const isComplete = !!(selectedColor && selectedSize);
     const colorKey = findColorKey(selectedColor);
     
-    // Check stock status - both for specific variant AND entire color
+    // Check stock status - only mark as out of stock if we have explicit data showing 0
     const availabilityColorKey = selectedColor ? Object.keys(availability).find(key => key.toLowerCase() === selectedColor.toLowerCase()) : null;
     const stockQty = availabilityColorKey && selectedSize ? availability[availabilityColorKey]?.[selectedSize] : undefined;
-    const variantOutOfStock = stockQty !== undefined && stockQty === 0;
+    
+    // Only consider out of stock if we have explicit data showing 0
+    // undefined means no data = assume in stock
+    const variantOutOfStock = stockQty === 0;
     const colorFullyOutOfStock = selectedColor ? isColorOutOfStock(selectedColor) : false;
     
     // Either the specific variant is out of stock, OR the entire color is out of stock
