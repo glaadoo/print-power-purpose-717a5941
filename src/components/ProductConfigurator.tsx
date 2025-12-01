@@ -556,13 +556,16 @@ export function ProductConfigurator({
             }
             
             if (priceValue && priceValue > 0) {
-              // SinaLite POST endpoint returns TOTAL price for the requested quantity
-              // Do NOT multiply by quantity - the API already calculates the total
-              const priceCents = Math.round(priceValue * 100);
-              console.log('[ProductConfigurator] Variable qty price (total from API):', {
+              // SinaLite API returns PER-UNIT price (ignores qty parameter in response)
+              // We must multiply by requested quantity to get total
+              const qty = parseInt(customQuantity) || 1;
+              const perUnitCents = Math.round(priceValue * 100);
+              const priceCents = perUnitCents * qty;
+              console.log('[ProductConfigurator] Variable qty price calculation:', {
                 apiPrice: priceValue,
-                requestedQty: customQuantity,
-                priceCents
+                perUnitCents,
+                requestedQty: qty,
+                totalPriceCents: priceCents
               });
               setPriceError(null);
               onPriceChangeRef.current(priceCents);
