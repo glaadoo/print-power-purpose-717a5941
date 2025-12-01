@@ -35,9 +35,18 @@ export default function ScalablePressConfigurator({
   const [selectedSize, setSelectedSize] = useState<string>("");
 
   // Extract available colors and sizes from pricing data
-  const colors = pricingData?.colors || [];
+  const rawColors = pricingData?.colors || [];
   const items = pricingData?.items || {};
   const availability = pricingData?.availability || {};
+  
+  // If colors array is empty but items has data, derive colors from items keys
+  const colors = rawColors.length > 0 
+    ? rawColors 
+    : Object.keys(items).map(colorKey => ({ 
+        name: colorKey.split('/').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('/'),
+        hex: null,
+        images: []
+      }));
 
   // Helper to find matching color key (case-insensitive)
   const findColorKey = (colorName: string) => {
