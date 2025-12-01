@@ -400,11 +400,14 @@ export function ProductConfigurator({
       return;
     }
     
-    // For variable qty products, we don't need qty option selected
-    const nonQtyOptionCount = optionGroups.filter(g => {
-      const isQty = g.group.toLowerCase().includes('qty') || g.group.toLowerCase().includes('quantity');
-      return !isQty || !isVariableQty;
-    }).length;
+    // For variable qty products, validate customQuantity is a valid number
+    if (isVariableQty) {
+      const qty = parseInt(customQuantity);
+      if (isNaN(qty) || qty < 1) {
+        console.log('[ProductConfigurator] Skipping price fetch: invalid customQuantity', customQuantity);
+        return;
+      }
+    }
     
     // Only fetch if we have selections for all required groups
     if (!isVariableQty && optionIds.length !== optionGroups.length) {
@@ -415,96 +418,181 @@ export function ProductConfigurator({
       console.log('[ProductConfigurator] Skipping price fetch: some IDs are falsy');
       return;
     }
-
-    const fetchPrice = async () => {
-      const variantKey = optionIds.sort((a, b) => a - b).join('-');
+    
+    // Debounce for variable qty products (user might be typing)
+    const debounceDelay = isVariableQty ? 600 : 0;
+    
+    const timeoutId = setTimeout(() => {
+      console.log('[ProductConfigurator] Executing price fetch after debounce, customQuantity:', customQuantity);
       
-      console.log('[ProductConfigurator] ===== PRICE FETCH START =====');
-      console.log('[ProductConfigurator] Variant key:', variantKey);
-      console.log('[ProductConfigurator] Vendor product ID:', vendorProductId);
-      console.log('[ProductConfigurator] Store code:', storeCode);
-      console.log('[ProductConfigurator] Option IDs:', optionIds);
-      
-      // CRITICAL: Prevent API call with empty variantKey
-      if (!variantKey || variantKey.trim() === '') {
-        console.log('[ProductConfigurator] Skipping price fetch: empty variantKey');
-        return;
-      }
-      
-      // Notify parent of variant key change
-      if (onVariantKeyChangeRef.current) {
-        onVariantKeyChangeRef.current(variantKey);
-      }
-      
-      // PRIORITY 1: Check for custom price in database
-      console.log('[ProductConfigurator] Checking for custom price:', { productId, variantKey });
-      try {
-        const { data: customPrice, error: customPriceError } = await supabase
-          .from('product_configuration_prices')
-          .select('custom_price_cents')
-          .eq('product_id', productId)
-          .eq('variant_key', variantKey)
-          .maybeSingle();
+      const fetchPrice = async () => {
+        const variantKey = optionIds.sort((a, b) => a - b).join('-');
         
-        if (customPriceError) {
-          console.error('[ProductConfigurator] Error checking custom price:', customPriceError);
-        } else if (customPrice && customPrice.custom_price_cents > 0) {
-          console.log('[ProductConfigurator] Using custom price from database:', customPrice.custom_price_cents);
-          setPriceError(null);
-          setFetchingPrice(false);
-          onPriceChangeRef.current(customPrice.custom_price_cents);
+        console.log('[ProductConfigurator] ===== PRICE FETCH START =====');
+        console.log('[ProductConfigurator] Variant key:', variantKey);
+        console.log('[ProductConfigurator] Vendor product ID:', vendorProductId);
+        console.log('[ProductConfigurator] Store code:', storeCode);
+        console.log('[ProductConfigurator] Option IDs:', optionIds);
+        
+        // CRITICAL: Prevent API call with empty variantKey
+        if (!variantKey || variantKey.trim() === '') {
+          console.log('[ProductConfigurator] Skipping price fetch: empty variantKey');
           return;
         }
-      } catch (err) {
-        console.error('[ProductConfigurator] Exception checking custom price:', err);
-      }
-      
-      // PRIORITY 2: Check global cache
-      // For variable qty products, cache key includes the custom quantity
-      const cache = getPriceCache();
-      const cacheKey = isVariableQty && customQuantity ? `${variantKey}-${customQuantity}` : variantKey;
-      if (cache[cacheKey]) {
-        console.log('[ProductConfigurator] Using cached price for:', cacheKey);
-        setPriceError(null); // Clear any previous errors when using cached price
-        setFetchingPrice(false);
-        onPriceChangeRef.current(cache[cacheKey]);
-        return;
-      }
-      
-      // PRIORITY 3: Fetch from API
-      setFetchingPrice(true);
-      setPriceError(null);
-      
-      // For variable quantity products, use POST with productOptions
-      // For fixed quantity products, use PRICEBYKEY
-      const usePost = isVariableQty && customQuantity;
-      
-      if (usePost) {
-        // Build productOptions array with ONLY non-qty option IDs
-        // The quantity is passed separately for variable_qty products
-        const productOptions: number[] = [];
-        optionGroups.forEach(group => {
-          const isQty = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
-          if (!isQty) {
-            // Add only non-qty option IDs
-            const optId = selectedOptions[group.group];
-            if (optId) productOptions.push(optId);
+        
+        // Notify parent of variant key change
+        if (onVariantKeyChangeRef.current) {
+          onVariantKeyChangeRef.current(variantKey);
+        }
+        
+        // PRIORITY 1: Check for custom price in database
+        console.log('[ProductConfigurator] Checking for custom price:', { productId, variantKey });
+        try {
+          const { data: customPrice, error: customPriceError } = await supabase
+            .from('product_configuration_prices')
+            .select('custom_price_cents')
+            .eq('product_id', productId)
+            .eq('variant_key', variantKey)
+            .maybeSingle();
+          
+          if (customPriceError) {
+            console.error('[ProductConfigurator] Error checking custom price:', customPriceError);
+          } else if (customPrice && customPrice.custom_price_cents > 0) {
+            console.log('[ProductConfigurator] Using custom price from database:', customPrice.custom_price_cents);
+            setPriceError(null);
+            setFetchingPrice(false);
+            onPriceChangeRef.current(customPrice.custom_price_cents);
+            return;
           }
-        });
+        } catch (err) {
+          console.error('[ProductConfigurator] Exception checking custom price:', err);
+        }
         
-        const quantityValue = parseInt(customQuantity) || 100;
+        // PRIORITY 2: Check global cache
+        // For variable qty products, cache key includes the custom quantity
+        const cache = getPriceCache();
+        const cacheKey = isVariableQty && customQuantity ? `${variantKey}-${customQuantity}` : variantKey;
+        if (cache[cacheKey]) {
+          console.log('[ProductConfigurator] Using cached price for:', cacheKey);
+          setPriceError(null);
+          setFetchingPrice(false);
+          onPriceChangeRef.current(cache[cacheKey]);
+          return;
+        }
         
-        console.log('[ProductConfigurator] Calling sinalite-price with POST (variable qty)...');
+        // PRIORITY 3: Fetch from API
+        setFetchingPrice(true);
+        setPriceError(null);
+        
+        // For variable quantity products, use POST with productOptions
+        // For fixed quantity products, use PRICEBYKEY
+        const usePost = isVariableQty && customQuantity;
+        
+        if (usePost) {
+          // Build productOptions array with ONLY non-qty option IDs
+          const productOptions: number[] = [];
+          optionGroups.forEach(group => {
+            const isQty = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
+            if (!isQty) {
+              const optId = selectedOptions[group.group];
+              if (optId) productOptions.push(optId);
+            }
+          });
+          
+          const quantityValue = parseInt(customQuantity) || 100;
+          
+          console.log('[ProductConfigurator] Calling sinalite-price with POST (variable qty)...');
+          console.log('[ProductConfigurator] Request body:', {
+            productId: vendorProductId,
+            storeCode: storeCode,
+            productOptions: productOptions,
+            quantity: quantityValue,
+            method: 'POST'
+          });
+          
+          try {
+            const startTime = Date.now();
+            const { data, error } = await invokeWithRetry(
+              supabase,
+              'sinalite-price',
+              {
+                body: {
+                  productId: vendorProductId,
+                  storeCode: storeCode,
+                  productOptions: productOptions,
+                  quantity: quantityValue,
+                  method: 'POST'
+                },
+              },
+              {
+                maxAttempts: 2,
+                initialDelayMs: 500,
+                shouldRetry: (err: any) => err?.status === 503 || err?.status >= 500
+              }
+            );
+            
+            const endTime = Date.now();
+            console.log('[ProductConfigurator] POST completed in', endTime - startTime, 'ms');
+            console.log('[ProductConfigurator] Response:', data);
+            
+            if (error) {
+              console.error('[ProductConfigurator] POST error:', error);
+              setPriceError('Error loading price. Please try again.');
+              setFetchingPrice(false);
+              return;
+            }
+            
+            // POST response may have different structure - check for price
+            let priceValue = null;
+            if (data && typeof data === 'object') {
+              if (data.price !== undefined) {
+                priceValue = parseFloat(data.price);
+              } else if (Array.isArray(data) && data[0]?.price !== undefined) {
+                priceValue = parseFloat(data[0].price);
+              } else if (data.total !== undefined) {
+                priceValue = parseFloat(data.total);
+              }
+            }
+            
+            if (priceValue && priceValue > 0) {
+              // SinaLite POST endpoint returns TOTAL price for the requested quantity
+              // Do NOT multiply by quantity - the API already calculates the total
+              const priceCents = Math.round(priceValue * 100);
+              console.log('[ProductConfigurator] Variable qty price (total from API):', {
+                apiPrice: priceValue,
+                requestedQty: customQuantity,
+                priceCents
+              });
+              setPriceError(null);
+              onPriceChangeRef.current(priceCents);
+              setPriceCache(`${variantKey}-${customQuantity}`, priceCents);
+            } else {
+              console.warn('[ProductConfigurator] No price in POST response:', data);
+              setPriceError('Price unavailable for this quantity. Try a different amount.');
+            }
+            setFetchingPrice(false);
+            return;
+          } catch (err: any) {
+            console.error('[ProductConfigurator] POST exception:', err);
+            setPriceError('Error loading price. Please try again.');
+            setFetchingPrice(false);
+            return;
+          }
+        }
+        
+        console.log('[ProductConfigurator] Calling sinalite-price edge function...');
         console.log('[ProductConfigurator] Request body:', {
           productId: vendorProductId,
           storeCode: storeCode,
-          productOptions: productOptions,
-          quantity: quantityValue,
-          method: 'POST'
+          variantKey: variantKey,
+          method: 'PRICEBYKEY'
         });
         
+        // Fetch from Sinalite API with retry logic
         try {
           const startTime = Date.now();
+          console.log('[ProductConfigurator] invokeWithRetry starting...');
+          
           const { data, error } = await invokeWithRetry(
             supabase,
             'sinalite-price',
@@ -512,217 +600,113 @@ export function ProductConfigurator({
               body: {
                 productId: vendorProductId,
                 storeCode: storeCode,
-                productOptions: productOptions,
-                quantity: quantityValue,
-                method: 'POST'
+                variantKey: variantKey,
+                method: 'PRICEBYKEY'
               },
             },
             {
               maxAttempts: 2,
               initialDelayMs: 500,
-              shouldRetry: (err: any) => err?.status === 503 || err?.status >= 500
+              shouldRetry: (err: any) => {
+                if (err?.status >= 400 && err?.status < 500 && err?.status !== 429) {
+                  return false;
+                }
+                return err?.status === 503 || err?.status >= 500;
+              }
             }
           );
           
           const endTime = Date.now();
-          console.log('[ProductConfigurator] POST completed in', endTime - startTime, 'ms');
-          console.log('[ProductConfigurator] Response:', data);
-          
+          console.log('[ProductConfigurator] invokeWithRetry completed in', endTime - startTime, 'ms');
+          console.log('[ProductConfigurator] Response data:', data);
+          console.log('[ProductConfigurator] Response error:', error);
+
           if (error) {
-            console.error('[ProductConfigurator] POST error:', error);
-            setPriceError('Error loading price. Please try again.');
+            console.error('[ProductConfigurator] Price fetch error:', error);
+            
+            if (error.message?.includes('503') || error.message?.includes('Service Unavailable')) {
+              setPriceError('Pricing service temporarily unavailable. Please try again in a moment.');
+            } else if (error.message?.includes('Network connection lost') || error.message?.includes('Failed to fetch')) {
+              setPriceError('Connection issue. Please check your internet and try again.');
+            } else if (error.message?.includes('Invalid productId')) {
+              setPriceError('Product configuration error. Please contact support.');
+            } else {
+              setPriceError(`Unable to load price${error.message ? ': ' + error.message : ''}`);
+            }
+            
             setFetchingPrice(false);
             return;
           }
-          
-          // POST response may have different structure - check for price
-          let priceValue = null;
-          if (data && typeof data === 'object') {
-            if (data.price !== undefined) {
-              priceValue = parseFloat(data.price);
-            } else if (Array.isArray(data) && data[0]?.price !== undefined) {
-              priceValue = parseFloat(data[0].price);
-            } else if (data.total !== undefined) {
-              priceValue = parseFloat(data.total);
-            }
-          }
-          
-          if (priceValue && priceValue > 0) {
-            // SinaLite POST endpoint returns TOTAL price for the requested quantity
-            // Do NOT multiply by quantity - the API already calculates the total
-            const priceCents = Math.round(priceValue * 100);
-            console.log('[ProductConfigurator] Variable qty price (total from API):', {
-              apiPrice: priceValue,
-              requestedQty: customQuantity,
-              priceCents
-            });
+
+          // CRITICAL: Clear error state FIRST before processing valid price
+          if (data && Array.isArray(data) && data.length > 0 && data[0].price) {
+            const priceFloat = parseFloat(data[0].price);
+            const priceCents = Math.round(priceFloat * 100);
+            console.log('[ProductConfigurator] Price received:', priceCents);
+            
             setPriceError(null);
+            setFetchingPrice(false);
+            
+            setPriceCache(variantKey, priceCents);
             onPriceChangeRef.current(priceCents);
-            setPriceCache(`${variantKey}-${customQuantity}`, priceCents);
+            
+            if (onPackageInfoChangeRef.current) {
+              onPackageInfoChangeRef.current(null);
+            }
+            
+            return;
           } else {
-            console.warn('[ProductConfigurator] No price in POST response:', data);
-            setPriceError('Price unavailable for this quantity. Try a different amount.');
+            console.warn('[ProductConfigurator] No price in response:', data);
+            
+            if (lastChangedOptionRef.current) {
+              const failedId = lastChangedOptionRef.current.optionId;
+              const failedGroup = lastChangedOptionRef.current.group;
+              
+              setFailedOptionIds(prev => {
+                const newSet = new Set(prev);
+                newSet.add(failedId);
+                return newSet;
+              });
+              
+              const group = optionGroups.find(g => g.group === failedGroup);
+              if (group) {
+                const nextValidOption = group.options.find(opt => 
+                  opt.id !== failedId && !failedOptionIds.has(opt.id)
+                );
+                if (nextValidOption) {
+                  setSelectedOptions(prev => ({
+                    ...prev,
+                    [failedGroup]: nextValidOption.id
+                  }));
+                  lastChangedOptionRef.current = null;
+                  return;
+                }
+              }
+            }
+            
+            setPriceError('This configuration is not available. Please try a different quantity or option.');
+            setFetchingPrice(false);
           }
-          setFetchingPrice(false);
-          return;
         } catch (err: any) {
-          console.error('[ProductConfigurator] POST exception:', err);
-          setPriceError('Error loading price. Please try again.');
-          setFetchingPrice(false);
-          return;
-        }
-      }
-      
-      console.log('[ProductConfigurator] Calling sinalite-price edge function...');
-      console.log('[ProductConfigurator] Request body:', {
-        productId: vendorProductId,
-        storeCode: storeCode,
-        variantKey: variantKey,
-        method: 'PRICEBYKEY'
-      });
-      
-      // Fetch from Sinalite API with retry logic for resilience
-      try {
-        const startTime = Date.now();
-        console.log('[ProductConfigurator] invokeWithRetry starting...');
-        
-        const { data, error } = await invokeWithRetry(
-          supabase,
-          'sinalite-price',
-          {
-            body: {
-              productId: vendorProductId,
-              storeCode: storeCode,
-              variantKey: variantKey,
-              method: 'PRICEBYKEY'
-            },
-          },
-          {
-            maxAttempts: 2,
-            initialDelayMs: 500,
-            shouldRetry: (err: any) => {
-              // Don't retry on 4xx errors (except 429 rate limit)
-              if (err?.status >= 400 && err?.status < 500 && err?.status !== 429) {
-                return false;
-              }
-              // Retry on 503 Service Unavailable
-              return err?.status === 503 || err?.status >= 500;
-            }
-          }
-        );
-        
-        const endTime = Date.now();
-        console.log('[ProductConfigurator] invokeWithRetry completed in', endTime - startTime, 'ms');
-        console.log('[ProductConfigurator] Response data:', data);
-        console.log('[ProductConfigurator] Response error:', error);
-
-        if (error) {
-          console.error('[ProductConfigurator] Price fetch error:', error);
-          console.error('[ProductConfigurator] Error details:', {
-            message: error.message,
-            status: error.status,
-            vendorProductId,
-            variantKey,
-            storeCode
-          });
+          console.error('[ProductConfigurator] Price fetch exception:', err);
           
-          // User-friendly error messages with more context
-          if (error.message?.includes('503') || error.message?.includes('Service Unavailable')) {
-            setPriceError('Pricing service temporarily unavailable. Please try again in a moment.');
-          } else if (error.message?.includes('Network connection lost') || error.message?.includes('Failed to fetch')) {
-            setPriceError('Connection issue. Please check your internet and try again.');
-          } else if (error.message?.includes('Invalid productId')) {
-            setPriceError('Product configuration error. Please contact support.');
-            console.error('[ProductConfigurator] Invalid vendor product ID:', vendorProductId);
+          if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable')) {
+            setPriceError('Pricing service temporarily down. Please try again shortly.');
+          } else if (err?.message?.includes('Network') || err?.message?.includes('fetch')) {
+            setPriceError('Connection problem. Please check your internet.');
+          } else if (err?.message?.includes('timeout')) {
+            setPriceError('Price request timed out. Please try again.');
           } else {
-            setPriceError(`Unable to load price${error.message ? ': ' + error.message : ''}`);
+            setPriceError(`Error loading price${err?.message ? ': ' + err.message : ''}`);
           }
-          
           setFetchingPrice(false);
-          return;
         }
+      };
 
-        // CRITICAL: Clear error state FIRST before processing valid price
-        if (data && Array.isArray(data) && data.length > 0 && data[0].price) {
-          const priceFloat = parseFloat(data[0].price);
-          const priceCents = Math.round(priceFloat * 100);
-          console.log('[ProductConfigurator] Price received:', priceCents);
-          
-          // Clear error IMMEDIATELY when valid price received
-          setPriceError(null);
-          setFetchingPrice(false);
-          
-          setPriceCache(variantKey, priceCents);
-          onPriceChangeRef.current(priceCents);
-          
-          if (onPackageInfoChangeRef.current) {
-            onPackageInfoChangeRef.current(null);
-          }
-          
-          console.log('[ProductConfigurator] Error state cleared, price updated');
-          return; // Exit early to prevent further processing
-        } else {
-          console.warn('[ProductConfigurator] No price in response:', data);
-          // This configuration combination doesn't exist in SinaLite's system
-          // Mark the last changed option as failed and hide it
-          if (lastChangedOptionRef.current) {
-            const failedId = lastChangedOptionRef.current.optionId;
-            const failedGroup = lastChangedOptionRef.current.group;
-            console.log('[ProductConfigurator] Marking option as failed:', failedId, 'in group:', failedGroup);
-            
-            setFailedOptionIds(prev => {
-              const newSet = new Set(prev);
-              newSet.add(failedId);
-              return newSet;
-            });
-            
-            // Auto-select next valid option in the same group
-            const group = optionGroups.find(g => g.group === failedGroup);
-            if (group) {
-              const nextValidOption = group.options.find(opt => 
-                opt.id !== failedId && !failedOptionIds.has(opt.id)
-              );
-              if (nextValidOption) {
-                console.log('[ProductConfigurator] Auto-selecting next valid option:', nextValidOption.id);
-                setSelectedOptions(prev => ({
-                  ...prev,
-                  [failedGroup]: nextValidOption.id
-                }));
-                lastChangedOptionRef.current = null;
-                return; // Will trigger another price fetch with valid option
-              }
-            }
-          }
-          
-          setPriceError('This configuration is not available. Please try a different quantity or option.');
-          setFetchingPrice(false);
-        }
-      } catch (err: any) {
-        console.error('[ProductConfigurator] Price fetch exception:', err);
-        console.error('[ProductConfigurator] Exception details:', {
-          name: err?.name,
-          message: err?.message,
-          stack: err?.stack,
-          vendorProductId,
-          variantKey,
-          storeCode
-        });
-        
-        // Handle caught exceptions with user-friendly messages
-        if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable')) {
-          setPriceError('Pricing service temporarily down. Please try again shortly.');
-        } else if (err?.message?.includes('Network') || err?.message?.includes('fetch')) {
-          setPriceError('Connection problem. Please check your internet.');
-        } else if (err?.message?.includes('timeout')) {
-          setPriceError('Price request timed out. Please try again.');
-        } else {
-          setPriceError(`Error loading price${err?.message ? ': ' + err.message : ''}`);
-        }
-        setFetchingPrice(false);
-      }
-    };
-
-    fetchPrice();
+      fetchPrice();
+    }, debounceDelay);
+    
+    return () => clearTimeout(timeoutId);
   }, [selectedOptions, optionGroups.length, vendorProductId, storeCode, productId, userInteracted, isVariableQty, customQuantity]);
 
   const handleOptionChange = (group: string, optionId: string) => {
@@ -861,15 +845,20 @@ export function ProductConfigurator({
                   const value = e.target.value;
                   setCustomQuantity(value);
                   setUserInteracted(true);
-                  
-                  // Debounce the price fetch
+                  // Clear any pending debounce
                   if (quantityDebounceRef.current) {
                     clearTimeout(quantityDebounceRef.current);
                   }
-                  quantityDebounceRef.current = setTimeout(() => {
-                    // Trigger price fetch by updating a dummy state or just rely on the useEffect
-                    setSelectedOptions(prev => ({ ...prev })); // Force re-render to trigger price fetch
-                  }, 800);
+                }}
+                onBlur={() => {
+                  // Trigger price fetch immediately when user leaves the field
+                  console.log('[ProductConfigurator] Quantity input blur, triggering fetch');
+                }}
+                onKeyDown={(e) => {
+                  // Trigger price fetch when user presses Enter
+                  if (e.key === 'Enter') {
+                    console.log('[ProductConfigurator] Enter pressed, quantity:', customQuantity);
+                  }
                 }}
                 className="w-full bg-white text-black border-white/20 focus:ring-2 focus:ring-white/40"
                 placeholder={`Enter quantity (${minQty.toLocaleString()} - ${maxQty.toLocaleString()})`}
