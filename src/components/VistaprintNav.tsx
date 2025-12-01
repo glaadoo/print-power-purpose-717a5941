@@ -168,8 +168,8 @@ export default function VistaprintNav() {
 
           {/* Right: Utility Items */}
           <div className="flex items-center gap-4">
-            {/* Wishlist - Hidden on home page */}
-            {!isHomePage && (
+            {/* Wishlist - Show when authenticated or not on home page */}
+            {(isAuthenticated || !isHomePage) && (
               <button 
                 onClick={() => navigate("/favorites")}
                 className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -184,8 +184,8 @@ export default function VistaprintNav() {
               </button>
             )}
 
-            {/* Cart - Hidden on home page */}
-            {!isHomePage && (
+            {/* Cart - Show when authenticated or not on home page */}
+            {(isAuthenticated || !isHomePage) && (
               <button 
                 onClick={() => navigate("/cart")}
                 className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
