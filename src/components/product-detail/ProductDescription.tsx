@@ -12,14 +12,23 @@ export default function ProductDescription({ description, productName }: Product
     const bulletPoints: string[] = [];
     let introText = "";
     
+    if (!text || text.trim().length === 0) {
+      return { bulletPoints, introText };
+    }
+    
+    // Normalize line breaks and clean up text
+    const normalizedText = text
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\. +/g, '.\n') // Add line break after periods followed by spaces (common in single-line descriptions)
+      .trim();
+    
     // First, check if description contains semicolons (common pattern for feature lists)
-    if (text.includes(';')) {
-      const parts = text.split(';').map(part => part.trim()).filter(part => part.length > 0);
+    if (normalizedText.includes(';')) {
+      const parts = normalizedText.split(';').map(part => part.trim()).filter(part => part.length > 0);
       parts.forEach(part => {
-        // Clean up the part and add as bullet point
         const cleanPart = part.replace(/^[•\-\*]\s*/, '').trim();
         if (cleanPart.length > 0) {
-          // Capitalize first letter
           bulletPoints.push(cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1));
         }
       });
@@ -27,33 +36,42 @@ export default function ProductDescription({ description, productName }: Product
     }
     
     // Split by line breaks or bullet points
-    const lines = text.split(/[\n\r]+|(?=[•\-\*]\s)/).filter(line => line.trim());
+    const lines = normalizedText.split(/\n+|(?=[•\-\*]\s)/).map(line => line.trim()).filter(line => line.length > 0);
     
-    lines.forEach(line => {
-      const trimmedLine = line.trim();
-      // Check if line starts with bullet point indicators
-      if (trimmedLine.match(/^[•\-\*]\s*/)) {
-        bulletPoints.push(trimmedLine.replace(/^[•\-\*]\s*/, ''));
-      } else if (trimmedLine.length > 0) {
-        // Check if it looks like a feature (contains colon or is short)
-        if ((trimmedLine.includes(':') && trimmedLine.length < 100) || trimmedLine.length < 80) {
-          bulletPoints.push(trimmedLine);
-        } else {
-          // Longer text becomes intro
-          introText = trimmedLine;
+    // If we have multiple lines, treat them as bullet points
+    if (lines.length > 1) {
+      lines.forEach(line => {
+        const cleanLine = line.replace(/^[•\-\*]\s*/, '').trim();
+        if (cleanLine.length > 0) {
+          // Remove trailing period for consistency, then add back if needed
+          const formattedLine = cleanLine.replace(/\.+$/, '');
+          bulletPoints.push(formattedLine.charAt(0).toUpperCase() + formattedLine.slice(1));
         }
-      }
-    });
+      });
+      return { bulletPoints, introText };
+    }
     
-    // If we only have one long text and no bullet points, try to split by commas
-    if (bulletPoints.length === 0 && introText.length > 100 && introText.includes(',')) {
-      const commaParts = introText.split(',').map(p => p.trim()).filter(p => p.length > 3);
-      if (commaParts.length >= 3) {
+    // Single line - check if it's a long text that should be split
+    const singleLine = lines[0] || normalizedText;
+    
+    // Try to split by commas if it's a long feature list
+    if (singleLine.length > 80 && singleLine.includes(',')) {
+      const commaParts = singleLine.split(',').map(p => p.trim()).filter(p => p.length > 3);
+      if (commaParts.length >= 2) {
         commaParts.forEach(part => {
-          bulletPoints.push(part.charAt(0).toUpperCase() + part.slice(1));
+          const cleanPart = part.replace(/\.+$/, '');
+          bulletPoints.push(cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1));
         });
-        introText = "";
+        return { bulletPoints, introText };
       }
+    }
+    
+    // If still a single line that's short, show as intro text
+    if (singleLine.length < 200) {
+      introText = singleLine;
+    } else {
+      // Long text without clear separators - show as intro
+      introText = singleLine;
     }
     
     return { bulletPoints, introText };
