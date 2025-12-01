@@ -317,6 +317,17 @@ export default function Donate() {
                 </div>
               </div>
 
+              {/* $777 Milestone Story Feature */}
+              <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Every $777 milestone sparks a new story. ✨
+                </h3>
+                <p className="text-white/90 text-sm leading-relaxed">
+                  When an organization hits $777, they unlock a 7-day window to film their impact. 
+                  Show the world what they've accomplished — and let their community see the difference they helped create.
+                </p>
+              </div>
+
               {/* Recent Donations */}
               <div className="space-y-4">
                 <h3 className="text-xl font-bold">Recent Donations</h3>
