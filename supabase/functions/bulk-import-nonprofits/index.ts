@@ -173,11 +173,14 @@ serve(async (req) => {
       );
     }
 
-    // Build set of EINs we are about to insert (only non-null values)
+    // Build set of EINs and names we are about to insert
     const eins = inputNonprofits
       .map((n) => n.ein)
       .filter((e: string | null): e is string => !!e);
+    
+    const names = inputNonprofits.map((n) => n.name);
 
+    // Check for existing EINs
     let existingEins = new Set<string>();
     if (eins.length > 0) {
       const { data: existing, error: dupErr } = await supabase
@@ -185,14 +188,30 @@ serve(async (req) => {
         .select('ein')
         .in('ein', eins);
       if (dupErr) {
-        console.error('Duplicate check error:', dupErr);
+        console.error('Duplicate EIN check error:', dupErr);
         throw dupErr;
       }
       existingEins = new Set((existing || []).map((r: any) => r.ein).filter(Boolean));
     }
 
-    // Filter out duplicates by EIN (keep rows with null EINs)
-    const toInsert = inputNonprofits.filter((n) => !n.ein || !existingEins.has(n.ein));
+    // Check for existing names
+    let existingNames = new Set<string>();
+    if (names.length > 0) {
+      const { data: existing, error: dupErr } = await supabase
+        .from('nonprofits')
+        .select('name')
+        .in('name', names);
+      if (dupErr) {
+        console.error('Duplicate name check error:', dupErr);
+        throw dupErr;
+      }
+      existingNames = new Set((existing || []).map((r: any) => r.name).filter(Boolean));
+    }
+
+    // Filter out duplicates by EIN or name
+    const toInsert = inputNonprofits.filter((n) => 
+      (!n.ein || !existingEins.has(n.ein)) && !existingNames.has(n.name)
+    );
 
     if (toInsert.length === 0) {
       return new Response(
