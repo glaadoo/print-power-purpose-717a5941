@@ -160,6 +160,11 @@ export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess, 
         school[field] = val;
       });
 
+      // Fix ZIP code: pad with leading zeros if needed (CSV parsers drop leading zeros)
+      if (school.zip) {
+        school.zip = school.zip.toString().padStart(5, '0');
+      }
+
       // Required fields
       if (school.name && school.city && school.state && school.zip) {
         schools.push({
