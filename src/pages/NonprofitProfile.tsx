@@ -126,8 +126,8 @@ export default function NonprofitProfile() {
             Every $777 milestone sparks a new story. ✨
           </h3>
           <p className="text-white/90 leading-relaxed">
-            When an organization hits $777, they unlock a 7-day window to film their impact. 
-            Show the world what they've accomplished — and let their community see the difference they helped create.
+            When an organization hits $777 in donation amount, they unlock a 7-day window to film their impact. 
+            Show the world what they&apos;ve accomplished — and let their community see the difference they helped create.
           </p>
         </div>
 
