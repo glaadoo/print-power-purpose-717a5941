@@ -390,7 +390,7 @@ export default function SelectSchool() {
                   </p>
                 </div>
                 
-                {/* Kenzie Animation */}
+                {/* kenzie-AI Animation */}
                 <button
                   onClick={() => {
                     const kenzieWidget = document.querySelector('[data-kenzie-chat]');
@@ -399,7 +399,7 @@ export default function SelectSchool() {
                     }
                   }}
                   className="group p-2 rounded-full bg-blue-50 hover:bg-blue-100 transition-all hover:scale-110"
-                  aria-label="Get help from Kenzie"
+                  aria-label="Get help from kenzie-AI"
                 >
                   <PawPrint className="h-6 w-6 text-blue-600 transition-colors animate-pulse" />
                 </button>

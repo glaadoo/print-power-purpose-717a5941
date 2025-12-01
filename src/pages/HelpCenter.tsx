@@ -117,7 +117,7 @@ export default function HelpCenter() {
               How can we help you today?
             </h1>
             <p className="text-base md:text-lg opacity-90">
-              Find answers to frequently asked questions below, or chat with Kenzie.
+              Find answers to frequently asked questions below, or chat with kenzie-AI.
             </p>
           </div>
 
