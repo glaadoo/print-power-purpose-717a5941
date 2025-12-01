@@ -18,6 +18,7 @@ interface ScalablePressConfiguratorProps {
   productId: string;
   productName: string;
   pricingData: any;
+  mainProductImage?: string; // Fallback image when color-specific images are missing
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
   onSelectionComplete?: (isComplete: boolean) => void;
@@ -37,6 +38,7 @@ export default function ScalablePressConfigurator({
   productId,
   productName,
   pricingData,
+  mainProductImage,
   onPriceChange,
   onConfigChange,
   onSelectionComplete,
@@ -135,9 +137,12 @@ export default function ScalablePressConfigurator({
         setSelectedSize(firstInStockSize);
       }
       
-      // Notify parent about initial color selection with images
+      // Notify parent about initial color selection with images (use main product image as fallback)
       if (onColorChange) {
-        onColorChange({ name: colorToSelect.name, images: colorToSelect.images || [] });
+        const colorImages = colorToSelect.images && colorToSelect.images.length > 0 
+          ? colorToSelect.images 
+          : (mainProductImage ? [mainProductImage] : []);
+        onColorChange({ name: colorToSelect.name, images: colorImages });
       }
     }
   }, [colors.length, availability, selectedColor]);
@@ -247,11 +252,14 @@ export default function ScalablePressConfigurator({
     const firstInStockSize = findFirstInStockSize(colorName);
     setSelectedSize(firstInStockSize);
     
-    // Notify parent about color change with images (no fallback - show "no image" if none)
+    // Notify parent about color change with images (use main product image as fallback if no color-specific images)
     if (onColorChange) {
       const colorObj = colors.find((c: any) => c.name === colorName);
       if (colorObj) {
-        onColorChange({ name: colorName, images: colorObj.images || [] });
+        const colorImages = colorObj.images && colorObj.images.length > 0 
+          ? colorObj.images 
+          : (mainProductImage ? [mainProductImage] : []);
+        onColorChange({ name: colorName, images: colorImages });
       }
     }
   };
@@ -278,9 +286,10 @@ export default function ScalablePressConfigurator({
             const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
             
             // Get the first image for this color
+            // Use color-specific image if available, otherwise fallback to main product image
             const colorImage = color.images && color.images.length > 0 
               ? (typeof color.images[0] === 'string' ? color.images[0] : color.images[0]?.url)
-              : null;
+              : mainProductImage || null;
             
             return (
               <div key={color.name} className="flex flex-col items-center gap-1">
