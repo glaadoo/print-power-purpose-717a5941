@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 import Footer from "@/components/Footer";
+import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ interface ProfileData {
   zip_code: string;
   country: string;
   birth_date: string | null;
+  avatar_url: string | null;
 }
 
 export default function AccountDetails() {
@@ -47,6 +49,7 @@ export default function AccountDetails() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [profile, setProfile] = useState<ProfileData>({
     first_name: "",
     last_name: "",
@@ -57,6 +60,7 @@ export default function AccountDetails() {
     zip_code: "",
     country: "United States",
     birth_date: null,
+    avatar_url: null,
   });
   const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
 
@@ -107,12 +111,14 @@ export default function AccountDetails() {
           zip_code: data.zip_code || "",
           country: data.country || "United States",
           birth_date: data.birth_date || null,
+          avatar_url: data.avatar_url || null,
         });
         if (data.birth_date) {
           setBirthDate(new Date(data.birth_date));
         }
       }
 
+      setUserId(session.user.id);
       setLoading(false);
     };
 
@@ -345,6 +351,15 @@ export default function AccountDetails() {
           <TabsContent value="details">
             <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
+              
+              {/* Profile Picture */}
+              <div className="flex justify-center pb-4 border-b border-gray-200">
+                <ProfilePictureUpload
+                  userId={userId}
+                  currentAvatarUrl={profile.avatar_url}
+                  onAvatarUpdated={(url) => setProfile({ ...profile, avatar_url: url || null })}
+                />
+              </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
