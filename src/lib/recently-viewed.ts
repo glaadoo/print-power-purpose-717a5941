@@ -8,6 +8,7 @@ export type RecentlyViewedProduct = {
   name: string;
   image_url?: string | null;
   category?: string | null;
+  subcategory?: string | null;
   viewedAt: number;
 };
 
@@ -19,6 +20,7 @@ export function addRecentlyViewed(product: {
   name: string;
   image_url?: string | null;
   category?: string | null;
+  subcategory?: string | null;
 }) {
   try {
     const existing = getRecentlyViewed();

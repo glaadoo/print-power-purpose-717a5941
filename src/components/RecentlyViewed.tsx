@@ -12,6 +12,7 @@ type ProductDetails = RecentlyViewedProduct & {
   base_cost_cents?: number;
   pricing_data?: any;
   description?: string | null;
+  subcategory?: string | null;
 };
 
 function RecentlyViewedCard({ product, onClick }: { product: ProductDetails; onClick: () => void }) {
@@ -121,15 +122,15 @@ export default function RecentlyViewed() {
 
       if (error) throw error;
 
-      // Merge with recently viewed data (to preserve order and viewedAt)
+      // Merge with recently viewed data (to preserve order, viewedAt, and subcategory from localStorage)
       const enriched = recent
         .map(recentProduct => {
           const fullProduct = data?.find(p => p.id === recentProduct.id);
           if (!fullProduct) return null;
           
           return {
-            ...recentProduct,
-            ...fullProduct
+            ...fullProduct,
+            ...recentProduct, // Preserve localStorage data (subcategory, viewedAt) over DB data
           };
         })
         .filter(Boolean) as ProductDetails[];
@@ -144,8 +145,13 @@ export default function RecentlyViewed() {
     }
   };
 
-  const handleProductClick = (productId: string) => {
-    navigate(`/products/${productId}`);
+  const handleProductClick = (product: ProductDetails) => {
+    // Generate slug from name
+    const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const categorySlug = slugify(product.category || 'uncategorized');
+    const subcategorySlug = product.subcategory ? slugify(product.subcategory) : 'all';
+    const productSlug = slugify(product.name);
+    navigate(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: { productId: product.id } });
   };
 
   const scrollLeft = () => {
@@ -225,7 +231,7 @@ export default function RecentlyViewed() {
           <RecentlyViewedCard 
             key={product.id} 
             product={product} 
-            onClick={() => handleProductClick(product.id)} 
+            onClick={() => handleProductClick(product)} 
           />
         ))}
       </div>
