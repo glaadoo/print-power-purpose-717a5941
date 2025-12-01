@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, User, Shield, Eye, EyeOff, Calendar, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, User, Shield, Eye, EyeOff, Calendar, Save, Loader2, Mail } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -13,6 +13,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 import Footer from "@/components/Footer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Password validation schema
 const passwordSchema = z.string()
@@ -60,6 +68,13 @@ export default function AccountDetails() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  
+  // Email change state
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailChangePassword, setEmailChangePassword] = useState("");
+  const [changingEmail, setChangingEmail] = useState(false);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -207,6 +222,87 @@ export default function AccountDetails() {
     setChangingPassword(false);
   };
 
+  const handleChangeEmail = async () => {
+    if (!newEmail) {
+      toast.error("Please enter a new email address");
+      return;
+    }
+
+    if (!emailChangePassword) {
+      toast.error("Please enter your password to confirm this change");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (newEmail === userEmail) {
+      toast.error("New email must be different from current email");
+      return;
+    }
+
+    setChangingEmail(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.email) {
+        toast.error("Session expired. Please sign in again.");
+        setChangingEmail(false);
+        return;
+      }
+
+      // Verify password first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: session.user.email,
+        password: emailChangePassword,
+      });
+
+      if (signInError) {
+        toast.error("Incorrect password");
+        setChangingEmail(false);
+        return;
+      }
+
+      // Update email - Supabase will send verification to new email
+      const { error: updateError } = await supabase.auth.updateUser({
+        email: newEmail,
+      }, {
+        emailRedirectTo: `${window.location.origin}/account`,
+      });
+
+      if (updateError) {
+        toast.error(updateError.message || "Failed to update email");
+      } else {
+        // Send notification email
+        try {
+          await supabase.functions.invoke('send-verification-email', {
+            body: { 
+              email: userEmail, 
+              type: 'email_change',
+              newEmail: newEmail,
+              firstName: profile.first_name
+            }
+          });
+        } catch (emailError) {
+          console.log('[AccountDetails] Notification email failed:', emailError);
+        }
+
+        setEmailVerificationSent(true);
+        toast.success("Verification email sent to your new address!");
+        setNewEmail("");
+        setEmailChangePassword("");
+      }
+    } catch (error: any) {
+      toast.error("An error occurred while changing email");
+    }
+
+    setChangingEmail(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -273,14 +369,28 @@ export default function AccountDetails() {
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={userEmail}
-                  disabled
-                  className="bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
-                />
-                <p className="text-xs text-gray-500">Email cannot be changed</p>
+                <div className="flex gap-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    value={userEmail}
+                    disabled
+                    className="bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEmailDialog(true)}
+                    className="shrink-0"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Change
+                  </Button>
+                </div>
+                {emailVerificationSent && (
+                  <p className="text-xs text-green-600">
+                    A verification link was sent to your new email address. Please check your inbox.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -493,6 +603,70 @@ export default function AccountDetails() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Email Change Dialog */}
+      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Email Address</DialogTitle>
+            <DialogDescription>
+              Enter your new email address and current password. A verification link will be sent to your new email.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-email">New Email Address</Label>
+              <Input
+                id="new-email"
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="Enter new email address"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email-password">Current Password</Label>
+              <Input
+                id="email-password"
+                type="password"
+                value={emailChangePassword}
+                onChange={(e) => setEmailChangePassword(e.target.value)}
+                placeholder="Enter your password to confirm"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEmailDialog(false);
+                setNewEmail("");
+                setEmailChangePassword("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleChangeEmail}
+              disabled={changingEmail}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {changingEmail ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Email"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <Footer />
     </div>
   );
