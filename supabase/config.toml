@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.fetch-scalablepress-prices]
 verify_jwt = false
+
+[functions.send-verification-email]
+verify_jwt = false

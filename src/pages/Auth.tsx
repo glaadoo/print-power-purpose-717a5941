@@ -75,6 +75,8 @@ export default function Auth() {
     country: "United States",
   });
   const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
   console.log('[Auth] State initialized');
 
   useEffect(() => {
@@ -227,11 +229,24 @@ export default function Auth() {
           toast.error(error.message);
         }
       } else {
-        // Set access flag for authenticated user
+        // Send welcome/verification email
+        try {
+          await supabase.functions.invoke('send-verification-email', {
+            body: { 
+              email: signUpData.email, 
+              type: 'signup',
+              firstName: signUpData.firstName 
+            }
+          });
+        } catch (emailError) {
+          console.log('[Auth] Verification email send failed:', emailError);
+        }
+        
+        // Show verification message
+        setVerificationEmail(signUpData.email);
+        setShowVerificationMessage(true);
         localStorage.setItem("ppp_access", "user");
-        toast.success("Account created! You can now sign in.");
-        setMode("signin");
-        setSignInEmail(signUpData.email);
+        toast.success("Account created! Please check your email.");
       }
     } catch (error: any) {
       if (error.message === 'Connection timeout') {
@@ -248,6 +263,87 @@ export default function Auth() {
 
   if (session) {
     return null;
+  }
+
+  // Show verification message after signup
+  if (showVerificationMessage) {
+    return (
+      <div className="min-h-screen bg-gray-50 relative z-10">
+        <header className="sticky top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between bg-white border-b border-gray-200 shadow-sm">
+          <button
+            onClick={() => navigate("/")}
+            className="size-9 rounded-full border border-gray-300 bg-white hover:bg-gray-50 grid place-items-center transition-colors"
+            aria-label="Back to home"
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-700" />
+          </button>
+          
+          <span className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase text-blue-600">
+            Email Verification
+          </span>
+          
+          <div className="w-9" />
+        </header>
+
+        <div className="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4">
+          <div className="w-full max-w-md mx-auto">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8 text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Check Your Email</h2>
+              
+              <p className="text-gray-600 mb-6">
+                We've sent a welcome email to <strong className="text-gray-900">{verificationEmail}</strong>.
+              </p>
+              
+              <p className="text-sm text-gray-500 mb-8">
+                Your account has been created successfully. You can now sign in with your credentials.
+              </p>
+              
+              <div className="space-y-3">
+                <Button
+                  onClick={() => {
+                    setShowVerificationMessage(false);
+                    setMode("signin");
+                    setSignInEmail(verificationEmail);
+                  }}
+                  className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Continue to Sign In
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    toast.info("Resending welcome email...");
+                    try {
+                      await supabase.functions.invoke('send-verification-email', {
+                        body: { 
+                          email: verificationEmail, 
+                          type: 'signup',
+                          firstName: signUpData.firstName 
+                        }
+                      });
+                      toast.success("Welcome email resent!");
+                    } catch (error) {
+                      toast.error("Failed to resend email. Please try again.");
+                    }
+                  }}
+                  className="w-full"
+                >
+                  Resend Email
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   console.log('[Auth] Rendering return JSX');
