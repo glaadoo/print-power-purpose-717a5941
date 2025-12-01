@@ -1033,6 +1033,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          birth_date: string | null
           city: string
           country: string
           created_at: string
@@ -1046,6 +1047,7 @@ export type Database = {
           zip_code: string
         }
         Insert: {
+          birth_date?: string | null
           city: string
           country?: string
           created_at?: string
@@ -1059,6 +1061,7 @@ export type Database = {
           zip_code: string
         }
         Update: {
+          birth_date?: string | null
           city?: string
           country?: string
           created_at?: string
