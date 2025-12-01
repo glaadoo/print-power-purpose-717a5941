@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 import Footer from "@/components/Footer";
 import ProfilePictureUpload from "@/components/ProfilePictureUpload";
+import TwoFactorAuth from "@/components/TwoFactorAuth";
 import {
   Dialog,
   DialogContent,
@@ -614,6 +615,11 @@ export default function AccountDetails() {
                   )}
                 </Button>
               </div>
+            </div>
+
+            {/* Two-Factor Authentication */}
+            <div className="mt-6">
+              <TwoFactorAuth />
             </div>
           </TabsContent>
         </Tabs>
