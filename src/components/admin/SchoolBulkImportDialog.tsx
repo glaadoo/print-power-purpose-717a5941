@@ -79,8 +79,11 @@ export default function SchoolBulkImportDialog({ open, onOpenChange, onSuccess, 
     // NCES format: MSTATE or LSTATE
     if (upper === 'MSTATE' || upper === 'LSTATE') return 'state';
     
-    // NCES format: MZIP or LZIP
+    // NCES format: MZIP or LZIP (NOT MZIP4, MZIP5, etc - those are ZIP+4 extensions)
     if (upper === 'MZIP' || upper === 'LZIP') return 'zip';
+    
+    // Explicitly skip MZIP4, MZIP5, LZIP4, LZIP5 (those are ZIP+4 codes, not base ZIP)
+    if (upper === 'MZIP4' || upper === 'LZIP4' || upper === 'MZIP5' || upper === 'LZIP5') return null;
     
     // NCES format: MSTREET1 or LSTREET1
     if (upper === 'MSTREET1' || upper === 'LSTREET1') return 'address_line1';
