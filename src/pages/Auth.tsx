@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, CalendarIcon } from "lucide-react";
 import VideoBackground from "@/components/VideoBackground";
 import { Session } from "@supabase/supabase-js";
 import { z } from "zod";
 import Footer from "@/components/Footer";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 // Password validation schema with strong security requirements
 const passwordSchema = z.string()
@@ -70,6 +74,7 @@ export default function Auth() {
     zipCode: "",
     country: "United States",
   });
+  const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
   console.log('[Auth] State initialized');
 
   useEffect(() => {
@@ -204,6 +209,7 @@ export default function Auth() {
             state: signUpData.state,
             zip_code: signUpData.zipCode,
             country: signUpData.country,
+            birth_date: birthDate ? format(birthDate, "yyyy-MM-dd") : null,
           }
         }
       });
@@ -396,6 +402,35 @@ export default function Auth() {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-gray-700">Birth Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-white border-gray-300",
+                            !birthDate && "text-gray-500"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {birthDate ? format(birthDate, "PPP") : "Select your birth date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={birthDate}
+                          onSelect={setBirthDate}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-gray-700">Phone</Label>
