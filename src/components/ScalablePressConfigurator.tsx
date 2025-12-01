@@ -137,12 +137,9 @@ export default function ScalablePressConfigurator({
         setSelectedSize(firstInStockSize);
       }
       
-      // Notify parent about initial color selection with images (use main product image as fallback)
+      // Notify parent about initial color selection with images (no fallback - show "no image" if none)
       if (onColorChange) {
-        const colorImages = colorToSelect.images && colorToSelect.images.length > 0 
-          ? colorToSelect.images 
-          : (mainProductImage ? [mainProductImage] : []);
-        onColorChange({ name: colorToSelect.name, images: colorImages });
+        onColorChange({ name: colorToSelect.name, images: colorToSelect.images || [] });
       }
     }
   }, [colors.length, availability, selectedColor]);
@@ -252,14 +249,11 @@ export default function ScalablePressConfigurator({
     const firstInStockSize = findFirstInStockSize(colorName);
     setSelectedSize(firstInStockSize);
     
-    // Notify parent about color change with images (use main product image as fallback if no color-specific images)
+    // Notify parent about color change with images (no fallback - show "no image" if none)
     if (onColorChange) {
       const colorObj = colors.find((c: any) => c.name === colorName);
       if (colorObj) {
-        const colorImages = colorObj.images && colorObj.images.length > 0 
-          ? colorObj.images 
-          : (mainProductImage ? [mainProductImage] : []);
-        onColorChange({ name: colorName, images: colorImages });
+        onColorChange({ name: colorName, images: colorObj.images || [] });
       }
     }
   };
@@ -286,10 +280,10 @@ export default function ScalablePressConfigurator({
             const hasStock = colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
             
             // Get the first image for this color
-            // Use color-specific image if available, otherwise fallback to main product image
+            // Only use color-specific images - no fallback to main product image (would be misleading)
             const colorImage = color.images && color.images.length > 0 
               ? (typeof color.images[0] === 'string' ? color.images[0] : color.images[0]?.url)
-              : mainProductImage || null;
+              : null;
             
             return (
               <div key={color.name} className="flex flex-col items-center gap-1">
