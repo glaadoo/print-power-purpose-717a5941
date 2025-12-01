@@ -92,12 +92,13 @@ export default function ProductDetailNew() {
         setProduct(data as ProductRow);
         setLoading(false); // Allow page to render immediately
         
-        // Track as recently viewed
+        // Track as recently viewed with category/subcategory for proper navigation
         addRecentlyViewed({
           id: data.id,
           name: data.name,
           image_url: data.image_url,
-          category: data.category
+          category: data.category,
+          subcategory: subcategory || 'all'
         });
 
         // Load supplementary data in background (non-blocking)
@@ -258,7 +259,12 @@ export default function ProductDetailNew() {
 
   // Handle color change from ScalablePressConfigurator
   const handleScalablePressColorChange = (color: { name: string; images?: any[] }) => {
-    setSelectedColorName(color.name);
+    // Get display name (primary color before "/")
+    const displayName = color.name ? color.name.split('/')[0].split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ') : color.name;
+    
+    setSelectedColorName(displayName);
     if (color.images && color.images.length > 0) {
       setSelectedColorImages(color.images);
       setGallerySelectedIndex(0); // Reset to first image of new color
@@ -442,6 +448,7 @@ export default function ProductDetailNew() {
                     productId={product.id}
                     productName={product.name}
                     pricingData={product.pricing_data}
+                    mainProductImage={product.image_url}
                     onPriceChange={setConfiguredPriceCents}
                     onConfigChange={setProductConfig}
                     onColorChange={handleScalablePressColorChange}

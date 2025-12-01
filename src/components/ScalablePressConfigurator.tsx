@@ -18,6 +18,7 @@ interface ScalablePressConfiguratorProps {
   productId: string;
   productName: string;
   pricingData: any;
+  mainProductImage?: string | null;
   onPriceChange: (priceCents: number) => void;
   onConfigChange: (config: Record<string, string>) => void;
   onSelectionComplete?: (isComplete: boolean) => void;
@@ -37,6 +38,7 @@ export default function ScalablePressConfigurator({
   productId,
   productName,
   pricingData,
+  mainProductImage,
   onPriceChange,
   onConfigChange,
   onSelectionComplete,
@@ -98,24 +100,41 @@ export default function ScalablePressConfigurator({
     return sizes[0] || "";
   };
 
-  // Initialize with first available color and first IN-STOCK size
+  // Initialize with the color that matches the main product image, or first available color with stock
   useEffect(() => {
     if (colors.length > 0 && !selectedColor) {
-      const firstColor = colors[0];
-      setSelectedColor(firstColor.name);
+      let colorToSelect = colors[0];
+      
+      // Try to find a color that has stock and images (prefer one with images matching main product)
+      const colorsWithStock = colors.filter((c: any) => {
+        const availabilityColorKey = Object.keys(availability).find(key => key.toLowerCase() === c.name.toLowerCase());
+        const colorAvailability = availabilityColorKey ? availability[availabilityColorKey] : null;
+        return colorAvailability && Object.values(colorAvailability).some((qty: any) => qty > 0);
+      });
+      
+      if (colorsWithStock.length > 0) {
+        // Prefer colors that have images
+        const colorsWithImages = colorsWithStock.filter((c: any) => c.images && c.images.length > 0);
+        colorToSelect = colorsWithImages.length > 0 ? colorsWithImages[0] : colorsWithStock[0];
+      }
+      
+      setSelectedColor(colorToSelect.name);
       
       // Select first in-stock size for this color
-      const firstInStockSize = findFirstInStockSize(firstColor.name);
+      const firstInStockSize = findFirstInStockSize(colorToSelect.name);
       if (firstInStockSize) {
         setSelectedSize(firstInStockSize);
       }
       
-      // Notify parent about initial color selection with images
+      // Notify parent about initial color selection with images (or fallback to main image)
       if (onColorChange) {
-        onColorChange({ name: firstColor.name, images: firstColor.images || [] });
+        const images = (colorToSelect.images && colorToSelect.images.length > 0) 
+          ? colorToSelect.images 
+          : (mainProductImage ? [mainProductImage] : []);
+        onColorChange({ name: colorToSelect.name, images });
       }
     }
-  }, [colors, items, selectedColor, onColorChange, availability]);
+  }, [colors, items, selectedColor, onColorChange, availability, mainProductImage]);
 
   // Check if entire color is out of stock (all sizes have 0 stock)
   const isColorOutOfStock = (colorName: string): boolean => {
@@ -216,11 +235,14 @@ export default function ScalablePressConfigurator({
     const firstInStockSize = findFirstInStockSize(colorName);
     setSelectedSize(firstInStockSize);
     
-    // Notify parent about color change with images
+    // Notify parent about color change with images (or fallback to main image)
     if (onColorChange) {
       const colorObj = colors.find((c: any) => c.name === colorName);
       if (colorObj) {
-        onColorChange({ name: colorName, images: colorObj.images });
+        const images = (colorObj.images && colorObj.images.length > 0) 
+          ? colorObj.images 
+          : (mainProductImage ? [mainProductImage] : []);
+        onColorChange({ name: colorName, images });
       }
     }
   };
@@ -270,6 +292,13 @@ export default function ScalablePressConfigurator({
                   {colorImage ? (
                     <img 
                       src={colorImage} 
+                      alt={color.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : mainProductImage ? (
+                    <img 
+                      src={mainProductImage} 
                       alt={color.name}
                       className="w-full h-full object-cover"
                       loading="lazy"
