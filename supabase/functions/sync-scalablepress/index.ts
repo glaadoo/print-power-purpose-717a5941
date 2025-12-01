@@ -15,7 +15,19 @@ serve(async (req) => {
   }
 
   try {
-    console.log("[SYNC-SCALABLEPRESS] Starting comprehensive product sync with configuration data");
+    // Parse request body for pagination parameters
+    let offset = 0;
+    let limit = 500; // Process 500 products per run to avoid timeout
+    
+    try {
+      const body = await req.json();
+      offset = body.offset || 0;
+      limit = body.limit || 500;
+    } catch {
+      // Use defaults if no body
+    }
+
+    console.log(`[SYNC-SCALABLEPRESS] Starting sync with offset=${offset}, limit=${limit}`);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -89,17 +101,35 @@ serve(async (req) => {
     }
 
     const allProducts = Array.from(productMap.values());
-    console.log(`[SYNC-SCALABLEPRESS] Found ${allProducts.length} unique products, now fetching configuration data...`);
+    const totalProducts = allProducts.length;
+    console.log(`[SYNC-SCALABLEPRESS] Found ${totalProducts} unique products total`);
 
-    // Step 3: Fetch detailed product data (colors, sizes, availability, items) for each product
-    // Process in batches to avoid rate limiting
-    const batchSize = 5;
+    // Apply pagination - only process a slice of products
+    const productsToProcess = allProducts.slice(offset, offset + limit);
+    console.log(`[SYNC-SCALABLEPRESS] Processing products ${offset} to ${offset + productsToProcess.length} (of ${totalProducts})`);
+
+    if (productsToProcess.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          synced: 0, 
+          total: totalProducts,
+          offset,
+          limit,
+          hasMore: false,
+          message: "No more products to sync"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Step 3: Fetch detailed product data for the batch
+    const batchSize = 10; // Process 10 products at a time
     const productsWithConfig: any[] = [];
     let fetchedCount = 0;
-    let errorCount = 0;
 
-    for (let i = 0; i < allProducts.length; i += batchSize) {
-      const batch = allProducts.slice(i, i + batchSize);
+    for (let i = 0; i < productsToProcess.length; i += batchSize) {
+      const batch = productsToProcess.slice(i, i + batchSize);
       
       const batchResults = await Promise.all(batch.map(async (product: any) => {
         try {
@@ -132,8 +162,6 @@ serve(async (req) => {
           // Parse product details
           if (productDetailRes.ok) {
             productDetail = await productDetailRes.json();
-          } else {
-            console.log(`[SYNC-SCALABLEPRESS] Failed to fetch details for ${product.id}:`, productDetailRes.status);
           }
 
           // Parse availability
@@ -233,11 +261,11 @@ serve(async (req) => {
       productsWithConfig.push(...batchResults);
       fetchedCount += batch.length;
       
-      console.log(`[SYNC-SCALABLEPRESS] Processed ${fetchedCount}/${allProducts.length} products`);
+      console.log(`[SYNC-SCALABLEPRESS] Processed ${fetchedCount}/${productsToProcess.length} products in this batch`);
       
       // Small delay between batches to avoid rate limiting
-      if (i + batchSize < allProducts.length) {
-        await delay(200);
+      if (i + batchSize < productsToProcess.length) {
+        await delay(100);
       }
     }
 
@@ -265,15 +293,23 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[SYNC-SCALABLEPRESS] Sync complete: ${totalSynced} synced, ${totalErrors} errors`);
+    const nextOffset = offset + productsToProcess.length;
+    const hasMore = nextOffset < totalProducts;
+
+    console.log(`[SYNC-SCALABLEPRESS] Batch complete: ${totalSynced} synced, ${totalErrors} errors, hasMore: ${hasMore}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         synced: totalSynced, 
-        total: productsWithConfig.length,
+        total: totalProducts,
+        offset,
+        nextOffset: hasMore ? nextOffset : null,
+        hasMore,
         errors: totalErrors,
-        message: `Synced ${totalSynced} products with full configuration data (colors, sizes, availability, pricing).`
+        message: hasMore 
+          ? `Synced ${totalSynced} products (${offset}-${nextOffset} of ${totalProducts}). Run again to continue.`
+          : `Sync complete! ${totalSynced} products synced.`
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
