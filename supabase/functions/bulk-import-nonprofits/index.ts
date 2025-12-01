@@ -180,32 +180,44 @@ serve(async (req) => {
     
     const names = inputNonprofits.map((n) => n.name);
 
-    // Check for existing EINs
+    // Check for existing EINs in batches to avoid URL length limits
     let existingEins = new Set<string>();
     if (eins.length > 0) {
-      const { data: existing, error: dupErr } = await supabase
-        .from('nonprofits')
-        .select('ein')
-        .in('ein', eins);
-      if (dupErr) {
-        console.error('Duplicate EIN check error:', dupErr);
-        throw dupErr;
+      const batchSize = 50;
+      for (let i = 0; i < eins.length; i += batchSize) {
+        const batch = eins.slice(i, i + batchSize);
+        const { data: existing, error: dupErr } = await supabase
+          .from('nonprofits')
+          .select('ein')
+          .in('ein', batch);
+        if (dupErr) {
+          console.error('Duplicate EIN check error:', dupErr);
+          throw dupErr;
+        }
+        (existing || []).forEach((r: any) => {
+          if (r.ein) existingEins.add(r.ein);
+        });
       }
-      existingEins = new Set((existing || []).map((r: any) => r.ein).filter(Boolean));
     }
 
-    // Check for existing names
+    // Check for existing names in batches to avoid URL length limits
     let existingNames = new Set<string>();
     if (names.length > 0) {
-      const { data: existing, error: dupErr } = await supabase
-        .from('nonprofits')
-        .select('name')
-        .in('name', names);
-      if (dupErr) {
-        console.error('Duplicate name check error:', dupErr);
-        throw dupErr;
+      const batchSize = 50;
+      for (let i = 0; i < names.length; i += batchSize) {
+        const batch = names.slice(i, i + batchSize);
+        const { data: existing, error: dupErr } = await supabase
+          .from('nonprofits')
+          .select('name')
+          .in('name', batch);
+        if (dupErr) {
+          console.error('Duplicate name check error:', dupErr);
+          throw dupErr;
+        }
+        (existing || []).forEach((r: any) => {
+          if (r.name) existingNames.add(r.name);
+        });
       }
-      existingNames = new Set((existing || []).map((r: any) => r.name).filter(Boolean));
     }
 
     // Filter out duplicates by EIN or name
