@@ -598,25 +598,29 @@ export default function ProductDetailNew() {
           {/* Product Details Section */}
           <div className="mt-12 border-t border-border pt-8">
             <h2 className="text-2xl font-bold mb-6">Product Details</h2>
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <p>
-                {product.description || 
-                  "High-quality printing with fast turnaround times. Every order supports a cause of your choice."}
+            {product.description ? (
+              <ProductDescription 
+                description={product.description} 
+                productName={product.name}
+              />
+            ) : (
+              <p className="text-muted-foreground">
+                High-quality printing with fast turnaround times. Every order supports a cause of your choice.
               </p>
-              {packageInfo && (
-                <div className="mt-4 p-4 bg-muted rounded-lg">
-                  <h4 className="font-semibold mb-2">Package Information</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {packageInfo["total weight"] && (
-                      <div><span className="font-medium">Weight:</span> {packageInfo["total weight"]} lbs</div>
-                    )}
-                    {packageInfo["box size"] && (
-                      <div><span className="font-medium">Box Size:</span> {packageInfo["box size"]}"</div>
-                    )}
-                  </div>
+            )}
+            {packageInfo && (
+              <div className="mt-4 p-4 bg-muted rounded-lg">
+                <h4 className="font-semibold mb-2">Package Information</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {packageInfo["total weight"] && (
+                    <div><span className="font-medium">Weight:</span> {packageInfo["total weight"]} lbs</div>
+                  )}
+                  {packageInfo["box size"] && (
+                    <div><span className="font-medium">Box Size:</span> {packageInfo["box size"]}"</div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Related Products */}
