@@ -306,15 +306,70 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[SYNC-SCALABLEPRESS] Collected ${productsWithConfig.length} products with configuration, batch upserting...`);
+    console.log(`[SYNC-SCALABLEPRESS] Collected ${productsWithConfig.length} products with configuration`);
 
-    // Step 4: Batch upsert in chunks
+    // Step 4: Fetch existing products to preserve custom configurations
+    const vendorIds = productsWithConfig.map(p => p.vendor_id);
+    const { data: existingProducts, error: fetchError } = await supabase
+      .from("products")
+      .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url")
+      .eq("vendor", "scalablepress")
+      .in("vendor_id", vendorIds);
+
+    if (fetchError) {
+      console.error("[SYNC-SCALABLEPRESS] Error fetching existing products:", fetchError);
+    }
+
+    // Create a map of existing product customizations to preserve
+    const existingCustomizations = new Map<string, any>();
+    if (existingProducts) {
+      for (const product of existingProducts) {
+        existingCustomizations.set(product.vendor_id, {
+          markup_fixed_cents: product.markup_fixed_cents,
+          markup_percent: product.markup_percent,
+          price_override_cents: product.price_override_cents,
+          image_url: product.image_url,
+          generated_image_url: product.generated_image_url,
+        });
+      }
+      console.log(`[SYNC-SCALABLEPRESS] Found ${existingCustomizations.size} existing products with potential customizations to preserve`);
+    }
+
+    // Merge new data with existing customizations
+    const productsToUpsert = productsWithConfig.map(product => {
+      const existing = existingCustomizations.get(product.vendor_id);
+      if (existing) {
+        // Preserve custom markups if they were set
+        if (existing.markup_fixed_cents !== null) {
+          product.markup_fixed_cents = existing.markup_fixed_cents;
+        }
+        if (existing.markup_percent !== null) {
+          product.markup_percent = existing.markup_percent;
+        }
+        if (existing.price_override_cents !== null) {
+          product.price_override_cents = existing.price_override_cents;
+        }
+        // Preserve custom/generated images - only use API image if no custom image exists
+        if (existing.image_url && existing.image_url !== product.image_url) {
+          // Keep existing custom image unless the new one is non-null and existing is null
+          product.image_url = existing.image_url;
+        }
+        if (existing.generated_image_url) {
+          product.generated_image_url = existing.generated_image_url;
+        }
+      }
+      return product;
+    });
+
+    console.log(`[SYNC-SCALABLEPRESS] Batch upserting ${productsToUpsert.length} products (with preserved customizations)...`);
+
+    // Step 5: Batch upsert in chunks
     const upsertBatchSize = 100;
     let totalSynced = 0;
     let totalErrors = 0;
 
-    for (let i = 0; i < productsWithConfig.length; i += upsertBatchSize) {
-      const batch = productsWithConfig.slice(i, i + upsertBatchSize);
+    for (let i = 0; i < productsToUpsert.length; i += upsertBatchSize) {
+      const batch = productsToUpsert.slice(i, i + upsertBatchSize);
       const { error } = await supabase
         .from("products")
         .upsert(batch, { 
