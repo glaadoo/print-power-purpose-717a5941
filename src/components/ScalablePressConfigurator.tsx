@@ -55,13 +55,26 @@ export default function ScalablePressConfigurator({
   const availability = pricingData?.availability || {};
   
   // If colors array is empty but items has data, derive colors from items keys
+  // Try to associate main product image with matching color or default to "black"
   const colors = rawColors.length > 0 
     ? rawColors 
-    : Object.keys(items).map(colorKey => ({ 
-        name: colorKey.split('/').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('/'),
-        hex: null,
-        images: []
-      }));
+    : Object.keys(items).map(colorKey => {
+        const colorName = colorKey.split('/').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('/');
+        const baseColor = colorKey.toLowerCase().split('/')[0];
+        
+        // Check if main product image URL contains this color name (case-insensitive)
+        // OR if this is "black" (common default color for product photos)
+        const mainImageMatchesColor = mainProductImage && (
+          mainProductImage.toLowerCase().includes(baseColor) ||
+          baseColor === 'black'
+        );
+        
+        return { 
+          name: colorName,
+          hex: null,
+          images: mainImageMatchesColor ? [mainProductImage] : []
+        };
+      });
 
   // Helper to find matching color key (case-insensitive)
   const findColorKey = (colorName: string) => {
