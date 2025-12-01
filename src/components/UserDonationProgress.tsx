@@ -31,23 +31,32 @@ export default function UserDonationProgress({
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user?.email) {
+          console.log('[UserDonationProgress] No session or email found');
           setLoading(false);
           return;
         }
 
-        setUserEmail(session.user.email);
+        const userEmail = session.user.email;
+        setUserEmail(userEmail);
+        console.log('[UserDonationProgress] Fetching donations for:', userEmail);
 
+        // Fetch donations from donations table
         const { data: donations, error } = await supabase
           .from("donations")
           .select("amount_cents")
-          .eq("customer_email", session.user.email);
+          .eq("customer_email", userEmail);
 
-        if (error) throw error;
+        if (error) {
+          console.error('[UserDonationProgress] Error fetching donations:', error);
+          throw error;
+        }
 
+        console.log('[UserDonationProgress] Donations fetched:', donations);
         const total = donations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0;
+        console.log('[UserDonationProgress] Total donated cents:', total);
         setTotalDonatedCents(total);
       } catch (error) {
-        console.error("Error fetching user donations:", error);
+        console.error("[UserDonationProgress] Error fetching user donations:", error);
       } finally {
         setLoading(false);
       }

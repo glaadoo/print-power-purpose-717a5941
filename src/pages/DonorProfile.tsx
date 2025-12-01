@@ -56,10 +56,12 @@ export default function DonorProfile() {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user?.email) {
+          console.log('[DonorProfile] No user email, redirecting to auth');
           navigate("/auth");
           return;
         }
 
+        console.log('[DonorProfile] Fetching donations for:', user.email);
         setUserEmail(user.email);
 
         // Fetch user name from profiles
@@ -80,17 +82,22 @@ export default function DonorProfile() {
           .eq("customer_email", user.email)
           .order("created_at", { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('[DonorProfile] Error fetching donations:', error);
+          throw error;
+        }
 
+        console.log('[DonorProfile] Donations fetched:', donationData);
         setDonations(donationData || []);
         
         const total = (donationData || []).reduce(
           (sum, d) => sum + (d.amount_cents || 0), 
           0
         );
+        console.log('[DonorProfile] Total donated cents:', total);
         setTotalDonatedCents(total);
       } catch (error) {
-        console.error("Error fetching donor data:", error);
+        console.error("[DonorProfile] Error fetching donor data:", error);
       } finally {
         setLoading(false);
       }
