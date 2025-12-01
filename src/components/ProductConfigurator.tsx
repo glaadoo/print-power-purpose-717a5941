@@ -470,15 +470,22 @@ export function ProductConfigurator({
         }
         
         // PRIORITY 2: Check global cache
-        // For variable qty products, cache key includes the custom quantity
+        // For variable qty products with manual fetch (button click), SKIP cache to always get fresh prices
         const cache = getPriceCache();
         const cacheKey = isVariableQty && customQuantity ? `${variantKey}-${customQuantity}` : variantKey;
-        if (cache[cacheKey]) {
+        
+        // Skip cache for variable qty products - always fetch fresh when Check Price is clicked
+        if (!isVariableQty && cache[cacheKey]) {
           console.log('[ProductConfigurator] Using cached price for:', cacheKey);
           setPriceError(null);
           setFetchingPrice(false);
           onPriceChangeRef.current(cache[cacheKey]);
           return;
+        }
+        
+        // For variable qty, log that we're fetching fresh
+        if (isVariableQty) {
+          console.log('[ProductConfigurator] Variable qty product - fetching fresh price for:', cacheKey);
         }
         
         // PRIORITY 3: Fetch from API
