@@ -72,11 +72,11 @@ export default function ChatbotWidget() {
             repeatDelay: 0.5
           }
         }}
-        aria-label="Chat with Kenzie"
+        aria-label="Chat with kenzie-AI"
       >
         <img 
           src={kenziePuppy} 
-          alt="Kenzie" 
+          alt="kenzie-AI"
           className="w-16 h-16 object-contain"
         />
       </motion.button>

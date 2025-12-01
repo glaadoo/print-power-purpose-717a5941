@@ -164,8 +164,8 @@ const handler = async (req: Request): Promise<Response> => {
                 </a>
               </p>
               
-              <p><strong>Meet Kenzie 🐾</strong><br>
-              Our friendly mascot is ready to help you get started. Kenzie will guide you through selecting what you're printing for today!</p>
+              <p><strong>Meet kenzie-AI 🐾</strong><br>
+              Our friendly mascot is ready to help you get started. kenzie-AI will guide you through selecting what you're printing for today!</p>
               
               <p>If you have any questions, our team is here to help. Just reply to this email.</p>
               

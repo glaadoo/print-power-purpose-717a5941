@@ -45,7 +45,7 @@ export default function KenzieJourneySection() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-          {/* Kenzie Puppy */}
+          {/* kenzie-AI Puppy */}
           <div className="relative flex-shrink-0">
             {/* Woof woof bubble */}
             <div 
@@ -63,12 +63,12 @@ export default function KenzieJourneySection() {
               </div>
             </div>
             
-            {/* Kenzie standing still - only tail area animates */}
+            {/* kenzie-AI standing still - only tail area animates */}
             <div className="relative">
               {/* The puppy - with gentle bounce */}
               <img
                 src={kenziePuppy}
-                alt="Kenzie the puppy"
+                alt="kenzie-AI the puppy"
                 className="w-72 h-72 md:w-96 md:h-96 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite]"
               />
               
@@ -140,7 +140,7 @@ export default function KenzieJourneySection() {
               
               {/* Free-floating text - no box */}
               <p className="text-xl md:text-2xl font-medium text-gray-800 px-6">
-                Hi! I'm <span className="text-amber-500 font-bold">Kenzie</span>. 
+                Hi! I'm <span className="text-amber-500 font-bold">kenzie-AI</span>. 
                 <span className="block mt-1 text-gray-600">
                   I'm here to guide you! <span className="inline-block animate-[paw-wiggle_1.5s_ease-in-out_infinite]">🐾</span>
                 </span>
@@ -148,7 +148,7 @@ export default function KenzieJourneySection() {
             </div>
 
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-              Your Kenzie Journey Starts Here
+              Your kenzie-AI Journey Starts Here
             </h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto md:mx-0">
               Let me help you create amazing prints that support causes you care about!
