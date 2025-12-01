@@ -188,7 +188,7 @@ serve(async (req) => {
       }
     }
 
-    const systemPrompt = `You are Kenzie 🐾, the friendly pup mascot and AI assistant for Print Power Purpose.
+    const systemPrompt = `You are kenzie-AI 🐾, the friendly pup mascot and AI assistant for Print Power Purpose.
 
 PERSONALITY & TONE:
 - Speak clearly, calmly, and encouragingly
