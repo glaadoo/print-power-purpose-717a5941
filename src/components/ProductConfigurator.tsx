@@ -220,6 +220,7 @@ export function ProductConfigurator({
 
     // CRITICAL FIX: Check if selectedOptions already has valid selections for current groups
     // This prevents resetting user selections when component re-renders or remounts
+    // BUT: If defaultVariantKey is provided and selections don't match it, re-initialize
     const currentGroupNames = optionGroups.map(g => g.group);
     const hasExistingSelections = currentGroupNames.length > 0 && 
       currentGroupNames.every(groupName => {
@@ -230,7 +231,16 @@ export function ProductConfigurator({
         return group?.options.some(opt => opt.id === selection);
       });
     
-    if (hasExistingSelections) {
+    // If defaultVariantKey is provided, check if current selections match it
+    const shouldUseDefaultKey = defaultVariantKey && (() => {
+      const defaultOptionIds = defaultVariantKey.split('-').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+      const currentOptionIds = Object.values(selectedOptions).sort((a, b) => a - b);
+      const defaultSorted = defaultOptionIds.sort((a, b) => a - b);
+      // If current selections don't match default, we should re-initialize
+      return JSON.stringify(currentOptionIds) !== JSON.stringify(defaultSorted);
+    })();
+    
+    if (hasExistingSelections && !shouldUseDefaultKey) {
       console.log('[ProductConfigurator] Skipping re-initialization, valid selections already exist:', selectedOptions);
       // Still mark as interacted to enable price fetching
       if (!userInteracted) {
