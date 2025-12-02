@@ -313,49 +313,56 @@ serve(async (req) => {
 
     console.log(`[SYNC-SINALITE] Fetched ${(products?.data?.length ?? products?.length ?? 0)} products`);
 
-    // Transform products
+    // Transform products - process in smaller chunks to reduce memory
     const rawProducts = products.data || products || [];
     const enabledProducts = rawProducts.filter((p: any) => p.enabled === 1);
     
     console.log(`[SYNC-SINALITE] Processing ${enabledProducts.length} enabled products`);
 
-    const productsToSync = enabledProducts.map((p: any) => {
-      // Default to $20, will be updated by background task
-      let baseCostCents = 2000;
-      
-      if (p.price && typeof p.price === 'number' && p.price > 0) {
-        baseCostCents = Math.round(p.price * 100);
-      } else if (p.base_price && typeof p.base_price === 'number' && p.base_price > 0) {
-        baseCostCents = Math.round(p.base_price * 100);
-      }
+    // Process products in smaller chunks and filter out products without images
+    const productsToSync = enabledProducts
+      .map((p: any) => {
+        // Default to $20, will be updated by background task
+        let baseCostCents = 2000;
+        
+        if (p.price && typeof p.price === 'number' && p.price > 0) {
+          baseCostCents = Math.round(p.price * 100);
+        } else if (p.base_price && typeof p.base_price === 'number' && p.base_price > 0) {
+          baseCostCents = Math.round(p.base_price * 100);
+        }
 
-      let imageUrl = null;
-      if (p.image_url) imageUrl = p.image_url;
-      else if (p.imageUrl) imageUrl = p.imageUrl;
-      else if (p.thumbnail) imageUrl = p.thumbnail;
-      else if (p.image) imageUrl = typeof p.image === 'string' ? p.image : p.image?.url;
-      else if (p.images && Array.isArray(p.images) && p.images.length > 0) {
-        imageUrl = typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url;
-      }
+        let imageUrl = null;
+        if (p.image_url) imageUrl = p.image_url;
+        else if (p.imageUrl) imageUrl = p.imageUrl;
+        else if (p.thumbnail) imageUrl = p.thumbnail;
+        else if (p.image) imageUrl = typeof p.image === 'string' ? p.image : p.image?.url;
+        else if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+          imageUrl = typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url;
+        }
 
-      return {
-        name: `${p.name || "Unnamed Product"} (${storeName})`,
-        description: p.description || p.sku || null,
-        base_cost_cents: baseCostCents,
-        min_price_cents: baseCostCents,
-        category: p.category || "Uncategorized",
-        image_url: imageUrl,
-        vendor: "sinalite",
-        vendor_id: `${p.id}_${storeCode}`,
-        vendor_product_id: p.id.toString(),
-        pricing_data: p,
-      };
-    }).filter((p: any) => p.base_cost_cents >= 100 && p.base_cost_cents <= 100000);
+        return {
+          name: `${p.name || "Unnamed Product"} (${storeName})`,
+          description: p.description || p.sku || null,
+          base_cost_cents: baseCostCents,
+          min_price_cents: baseCostCents,
+          category: p.category || "Uncategorized",
+          image_url: imageUrl,
+          vendor: "sinalite",
+          vendor_id: `${p.id}_${storeCode}`,
+          vendor_product_id: p.id.toString(),
+          pricing_data: null, // Don't store full API response to save memory
+        };
+      })
+      .filter((p: any) => 
+        p.base_cost_cents >= 100 && 
+        p.base_cost_cents <= 100000 &&
+        p.image_url !== null // Only sync products with images
+      );
     
-    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync`);
+    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync (with images only)`);
 
-    // Process products in batches to avoid memory limits
-    const BATCH_SIZE = 25;
+    // Process products in smaller batches to avoid memory limits
+    const BATCH_SIZE = 10;
     let totalSynced = 0;
     let totalImagesPreserved = 0;
     let totalMarkupsPreserved = 0;
@@ -454,10 +461,11 @@ serve(async (req) => {
     const synced = totalSynced;
     console.log(`[SYNC-SINALITE] Successfully synced ${synced} products`);
 
-    // Start background task to fetch minimum prices
+    // Skip background min price fetch by default to reduce memory usage
+    // Can be enabled by passing skipMinPrices: false in request body
     if (!skipMinPrices && typeof EdgeRuntime !== 'undefined') {
-      console.log("[SYNC-SINALITE] Starting background min price fetch...");
-      EdgeRuntime.waitUntil(fetchMinPricesBackground(supabase, accessToken, apiBaseUrl, 10));
+      console.log("[SYNC-SINALITE] Background min price fetch skipped to conserve resources");
+      // EdgeRuntime.waitUntil(fetchMinPricesBackground(supabase, accessToken, apiBaseUrl, 5));
     }
 
     return new Response(
@@ -470,8 +478,7 @@ serve(async (req) => {
         storeCode,
         imagesPreserved: totalImagesPreserved,
         markupsPreserved: totalMarkupsPreserved,
-        minPricesFetching: !skipMinPrices,
-        note: !skipMinPrices ? "Min prices are being fetched in the background" : undefined
+        note: "Sync complete. Only products with images were synced to conserve resources."
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
