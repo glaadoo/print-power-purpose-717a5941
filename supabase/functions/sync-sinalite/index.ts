@@ -321,9 +321,21 @@ serve(async (req) => {
 
     // Process products and filter out products without valid prices
     const productsToSync = enabledProducts
-      .map((p: any) => {
+      .map((p: any, index: number) => {
         // Extract price from API - use default $20 if no price found
         let baseCostCents = 2000; // Default $20.00
+        
+        // Log first product for debugging
+        if (index === 0) {
+          console.log(`[SYNC-SINALITE] Sample product data:`, JSON.stringify({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            base_price: p.base_price,
+            minPrice: p.minPrice,
+            allKeys: Object.keys(p)
+          }));
+        }
         
         if (p.price && typeof p.price === 'number' && p.price > 0) {
           baseCostCents = Math.round(p.price * 100);
@@ -355,10 +367,13 @@ serve(async (req) => {
           pricing_data: null, // Don't store full API response to save memory
         };
       })
-      .filter((p: any) => 
-        p.base_cost_cents >= 100 && 
-        p.base_cost_cents <= 100000
-      );
+      .filter((p: any) => {
+        const isValid = p.base_cost_cents >= 100 && p.base_cost_cents <= 100000;
+        if (!isValid) {
+          console.log(`[SYNC-SINALITE] Filtering out product: ${p.name} with price ${p.base_cost_cents}`);
+        }
+        return isValid;
+      });
     
     console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync (with valid prices $1-$1000)`);
 
