@@ -910,16 +910,21 @@ export function ProductConfigurator({
         const currentValue = selectedOptions[group.group];
         const stringValue = currentValue ? String(currentValue) : "";
         
-        // Filter out options that have been marked as failed (no valid price)
-        const validOptions = group.options.filter(opt => !failedOptionIds.has(opt.id));
+        // Check if this is the quantity group
+        const isQtyGroup = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
         
-        // Skip rendering if no valid options remain
-        if (validOptions.length === 0) {
+        // Only filter failed options for quantity groups (where pre-validation runs)
+        // Non-quantity groups should always show ALL options from API
+        const validOptions = isQtyGroup 
+          ? group.options.filter(opt => !failedOptionIds.has(opt.id))
+          : group.options;
+        
+        // Skip rendering only if a quantity group has zero valid options
+        // Non-quantity groups always render
+        if (isQtyGroup && validOptions.length === 0) {
+          console.warn('[ProductConfigurator] Qty group has no valid options after filtering');
           return null;
         }
-        
-        // Check if this is the quantity group and we have variable quantity
-        const isQtyGroup = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
         
         // For variable quantity products, show an input field for qty instead of select
         if (isVariableQty && isQtyGroup) {
