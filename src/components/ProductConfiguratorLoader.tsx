@@ -28,6 +28,8 @@ export default function ProductConfiguratorLoader({
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [fetchingRef, setFetchingRef] = useState(false);
+  // CRITICAL: Lift selection state to parent to persist across child remounts
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
 
   const fetchPricingOptions = async () => {
     console.log('[ProductConfiguratorLoader] fetchPricingOptions called', { 
@@ -454,6 +456,8 @@ export default function ProductConfiguratorLoader({
             onQuantityOptionsChange={onQuantityOptionsChange}
             onVariantKeyChange={onVariantKeyChange}
             defaultVariantKey={defaultVariantKey}
+            selectedOptions={selectedOptions}
+            onSelectedOptionsChange={setSelectedOptions}
           />
         )
       )}
