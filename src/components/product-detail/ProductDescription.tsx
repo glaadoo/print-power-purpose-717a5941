@@ -1,88 +1,148 @@
 import React from "react";
-import { Info, CheckCircle2, Sparkles } from "lucide-react";
+import { Info, CheckCircle2, Sparkles, Package, Ruler, Shirt, AlertCircle, FileText } from "lucide-react";
 
 interface ProductDescriptionProps {
   description: string;
   productName?: string;
 }
 
+interface ParsedSection {
+  title: string;
+  icon: React.ReactNode;
+  items: string[];
+}
+
+const SECTION_KEYWORDS: Record<string, { keywords: string[]; icon: React.ReactNode }> = {
+  'Features': {
+    keywords: ['feature', 'includes', 'benefits', 'highlights', 'specifications'],
+    icon: <Sparkles className="w-4 h-4" />
+  },
+  'Material': {
+    keywords: ['material', 'made from', 'fabric', 'composition', 'constructed'],
+    icon: <Package className="w-4 h-4" />
+  },
+  'Size & Dimensions': {
+    keywords: ['size', 'dimension', 'measurement', 'fit', 'width', 'height', 'length'],
+    icon: <Ruler className="w-4 h-4" />
+  },
+  'Care Instructions': {
+    keywords: ['care', 'wash', 'clean', 'maintain', 'dry', 'iron'],
+    icon: <Shirt className="w-4 h-4" />
+  },
+  'Notes': {
+    keywords: ['note', 'important', 'please', 'warning', 'caution'],
+    icon: <AlertCircle className="w-4 h-4" />
+  }
+};
+
 export default function ProductDescription({ description, productName }: ProductDescriptionProps) {
-  // Parse description into structured content
-  const parseDescription = (text: string) => {
-    const bulletPoints: string[] = [];
-    let introText = "";
+  const parseDescription = (text: string): { sections: ParsedSection[]; generalPoints: string[] } => {
+    const sections: ParsedSection[] = [];
+    const generalPoints: string[] = [];
     
     if (!text || text.trim().length === 0) {
-      return { bulletPoints, introText };
+      return { sections, generalPoints };
     }
     
-    // Normalize line breaks and clean up text
-    const normalizedText = text
+    // Clean and normalize text
+    let normalizedText = text
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
-      .replace(/\. +/g, '.\n') // Add line break after periods followed by spaces (common in single-line descriptions)
+      .replace(/\s{2,}/g, ' ')
       .trim();
     
-    // First, check if description contains semicolons (common pattern for feature lists)
+    // Split into individual items by various delimiters
+    let items: string[] = [];
+    
+    // Check for semicolons (common in product descriptions)
     if (normalizedText.includes(';')) {
-      const parts = normalizedText.split(';').map(part => part.trim()).filter(part => part.length > 0);
-      parts.forEach(part => {
-        const cleanPart = part.replace(/^[•\-\*]\s*/, '').trim();
-        if (cleanPart.length > 0) {
-          bulletPoints.push(cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1));
-        }
-      });
-      return { bulletPoints, introText };
+      items = normalizedText.split(';').map(s => s.trim()).filter(s => s.length > 0);
+    } 
+    // Check for bullet points or line breaks
+    else if (normalizedText.includes('\n') || normalizedText.includes('•') || normalizedText.includes('-')) {
+      items = normalizedText
+        .split(/[\n•\-\*]+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 3);
+    }
+    // Check for periods followed by capital letters (sentences)
+    else if (/\.\s+[A-Z]/.test(normalizedText)) {
+      items = normalizedText
+        .split(/(?<=\.)\s+(?=[A-Z])/)
+        .map(s => s.trim().replace(/\.+$/, ''))
+        .filter(s => s.length > 3);
+    }
+    // Long comma-separated list
+    else if (normalizedText.includes(',') && normalizedText.length > 100) {
+      items = normalizedText
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 3);
+    }
+    // Single block of text - try to break intelligently
+    else {
+      items = [normalizedText];
     }
     
-    // Split by line breaks or bullet points
-    const lines = normalizedText.split(/\n+|(?=[•\-\*]\s)/).map(line => line.trim()).filter(line => line.length > 0);
-    
-    // If we have multiple lines, treat them as bullet points
-    if (lines.length > 1) {
-      lines.forEach(line => {
-        const cleanLine = line.replace(/^[•\-\*]\s*/, '').trim();
-        if (cleanLine.length > 0) {
-          // Remove trailing period for consistency, then add back if needed
-          const formattedLine = cleanLine.replace(/\.+$/, '');
-          bulletPoints.push(formattedLine.charAt(0).toUpperCase() + formattedLine.slice(1));
-        }
-      });
-      return { bulletPoints, introText };
-    }
-    
-    // Single line - check if it's a long text that should be split
-    const singleLine = lines[0] || normalizedText;
-    
-    // Try to split by commas if it's a long feature list
-    if (singleLine.length > 80 && singleLine.includes(',')) {
-      const commaParts = singleLine.split(',').map(p => p.trim()).filter(p => p.length > 3);
-      if (commaParts.length >= 2) {
-        commaParts.forEach(part => {
-          const cleanPart = part.replace(/\.+$/, '');
-          bulletPoints.push(cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1));
-        });
-        return { bulletPoints, introText };
+    // Clean up items
+    items = items.map(item => {
+      let cleaned = item
+        .replace(/^[•\-\*\d\.]+\s*/, '') // Remove leading bullets/numbers
+        .replace(/\.+$/, '') // Remove trailing periods
+        .replace(/\s+/g, ' ') // Normalize spaces
+        .trim();
+      
+      // Capitalize first letter
+      if (cleaned.length > 0) {
+        cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
       }
-    }
+      
+      return cleaned;
+    }).filter(item => item.length > 2);
     
-    // If still a single line that's short, show as intro text
-    if (singleLine.length < 200) {
-      introText = singleLine;
-    } else {
-      // Long text without clear separators - show as intro
-      introText = singleLine;
-    }
+    // Categorize items into sections
+    const categorizedItems = new Map<string, string[]>();
     
-    return { bulletPoints, introText };
+    items.forEach(item => {
+      const lowerItem = item.toLowerCase();
+      let matched = false;
+      
+      for (const [sectionName, config] of Object.entries(SECTION_KEYWORDS)) {
+        if (config.keywords.some(keyword => lowerItem.includes(keyword))) {
+          if (!categorizedItems.has(sectionName)) {
+            categorizedItems.set(sectionName, []);
+          }
+          categorizedItems.get(sectionName)!.push(item);
+          matched = true;
+          break;
+        }
+      }
+      
+      if (!matched) {
+        generalPoints.push(item);
+      }
+    });
+    
+    // Convert to sections array
+    categorizedItems.forEach((sectionItems, sectionName) => {
+      const config = SECTION_KEYWORDS[sectionName];
+      sections.push({
+        title: sectionName,
+        icon: config.icon,
+        items: sectionItems
+      });
+    });
+    
+    return { sections, generalPoints };
   };
 
-  const { bulletPoints, introText } = parseDescription(description);
+  const { sections, generalPoints } = parseDescription(description);
+  const hasContent = sections.length > 0 || generalPoints.length > 0;
   
-  // If description is very short or simple, show it cleanly
-  if (description.length < 150 && bulletPoints.length === 0) {
+  // Simple display for very short descriptions
+  if (description.length < 100 && sections.length === 0 && generalPoints.length <= 1) {
     return (
-      <div className="rounded-xl border border-border bg-gradient-to-br from-muted/30 to-muted/10 p-5">
+      <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
             <Info className="w-5 h-5 text-primary" />
@@ -97,41 +157,63 @@ export default function ProductDescription({ description, productName }: Product
   }
 
   return (
-    <div className="rounded-xl border border-border bg-gradient-to-br from-muted/30 to-muted/10 overflow-hidden">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-border/50 bg-muted/20">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h4 className="font-semibold text-foreground">Product Features</h4>
+    <div className="space-y-4">
+      {/* General Features Section */}
+      {generalPoints.length > 0 && (
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="px-5 py-3 border-b border-border/50 bg-muted/30">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              <h4 className="font-semibold text-foreground text-sm">Product Details</h4>
+            </div>
+          </div>
+          <div className="p-5">
+            <ul className="space-y-2.5">
+              {generalPoints.map((point, idx) => (
+                <li key={idx} className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                  </div>
+                  <span className="text-muted-foreground text-sm leading-relaxed">{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
       
-      {/* Content */}
-      <div className="p-5 space-y-4">
-        {/* Intro text if present */}
-        {introText && (
-          <p className="text-muted-foreground leading-relaxed">{introText}</p>
-        )}
-        
-        {/* Features/Bullet points */}
-        {bulletPoints.length > 0 && (
-          <ul className="grid gap-3">
-            {bulletPoints.map((point, idx) => (
-              <li key={idx} className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center mt-0.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+      {/* Categorized Sections */}
+      {sections.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2">
+          {sections.map((section, idx) => (
+            <div key={idx} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="px-4 py-3 border-b border-border/50 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <span className="text-primary">{section.icon}</span>
+                  <h4 className="font-semibold text-foreground text-sm">{section.title}</h4>
                 </div>
-                <span className="text-muted-foreground leading-relaxed">{point}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        
-        {/* If no structured content was parsed, show raw description nicely */}
-        {!introText && bulletPoints.length === 0 && (
+              </div>
+              <div className="p-4">
+                <ul className="space-y-2">
+                  {section.items.map((item, itemIdx) => (
+                    <li key={itemIdx} className="flex items-start gap-2.5">
+                      <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary/60 mt-2" />
+                      <span className="text-muted-foreground text-sm leading-relaxed">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Fallback if no structured content */}
+      {!hasContent && description && (
+        <div className="rounded-xl border border-border bg-card p-5">
           <p className="text-muted-foreground leading-relaxed">{description}</p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

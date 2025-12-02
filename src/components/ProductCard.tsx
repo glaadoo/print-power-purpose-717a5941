@@ -6,6 +6,20 @@ import { toast } from "sonner";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useComparison } from "@/context/ComparisonContext";
 
+// Clean description for card preview - remove special chars, normalize spacing
+const cleanDescriptionPreview = (text: string): string => {
+  if (!text) return '';
+  
+  return text
+    .replace(/[;•\-\*]+/g, ', ') // Replace bullets/semicolons with commas
+    .replace(/\n+/g, ' ') // Replace newlines with spaces
+    .replace(/\s{2,}/g, ' ') // Normalize multiple spaces
+    .replace(/,\s*,/g, ',') // Remove double commas
+    .replace(/^,\s*/, '') // Remove leading comma
+    .replace(/,\s*$/, '') // Remove trailing comma
+    .trim();
+};
+
 type ProductCardProps = {
   product: {
     id: string;
@@ -214,10 +228,10 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
           {product.name}
         </h3>
         
-        {/* Description - show inline for non-SinaLite, hide Show Details for SinaLite */}
+        {/* Description - clean, truncated preview */}
         {!compact && product.description && product.vendor !== 'sinalite' && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-            {product.description}
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+            {cleanDescriptionPreview(product.description)}
           </p>
         )}
         
