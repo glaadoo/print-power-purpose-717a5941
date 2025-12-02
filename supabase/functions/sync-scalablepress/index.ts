@@ -257,10 +257,30 @@ serve(async (req) => {
             availability,
           };
 
+          // Determine best image URL with multiple fallbacks:
+          // 1. Main product image from category listing
+          // 2. Main product image from product detail
+          // 3. First color's first image from product detail
+          let imageUrl = product.image?.url || productDetail?.image?.url || null;
+          
+          if (!imageUrl && colors.length > 0) {
+            // Try to get image from first color with images
+            for (const color of colors) {
+              if (color.images && color.images.length > 0) {
+                const firstImage = color.images[0];
+                imageUrl = typeof firstImage === 'string' ? firstImage : firstImage?.url || null;
+                if (imageUrl) {
+                  console.log(`[SYNC-SCALABLEPRESS] Product ${product.id}: using color image from "${color.name}"`);
+                  break;
+                }
+              }
+            }
+          }
+
           return {
             name: product.name || "Unnamed Product",
             category: product.category,
-            image_url: product.image?.url || productDetail?.image?.url || null,
+            image_url: imageUrl,
             description: productDetail?.description || null,
             vendor: "scalablepress",
             vendor_id: product.id,
