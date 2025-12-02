@@ -13,7 +13,7 @@ serve(async (req) => {
 
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const batchSize = body.batchSize || 10; // Process 10 products at a time (reduced due to multiple API calls per product)
+    const batchSize = body.batchSize || 5; // Process 5 products at a time (reduced due to multiple API calls per product)
     const storeCode = body.storeCode || 9; // Default to US
     const forceRefresh = body.forceRefresh || false; // Force refresh all products
 
@@ -116,104 +116,156 @@ serve(async (req) => {
     const updates: { id: string; min_price_cents: number; base_cost_cents: number }[] = [];
     let errors = 0;
 
-    // Helper function to extract price from variant object
-    const extractPrice = (variant: any): number | null => {
-      // Try multiple possible price field names
-      const price = variant.price ?? variant.unit_price ?? variant.base_price ?? variant.retail_price ?? variant.msrp;
-      if (typeof price === 'number' && price > 0) {
-        return price;
-      }
-      // Sometimes price is nested
-      if (variant.pricing && typeof variant.pricing.price === 'number') {
-        return variant.pricing.price;
-      }
-      return null;
-    };
-
-    // Fetch min price for each product using variants endpoint with pagination
+    // Fetch min price for each product by getting options and calculating prices
     for (const product of products) {
       try {
         const productId = product.vendor_product_id;
-        let minPrice = Infinity;
-        let offset = 0;
-        let hasMoreVariants = true;
-        const maxPages = 20; // Safety limit - max 20,000 variants
-        let pageCount = 0;
         
-        console.log(`[FETCH-MIN-PRICES] Fetching ALL variants for ${product.name} (${productId})`);
+        console.log(`[FETCH-MIN-PRICES] Fetching options for ${product.name} (${productId})`);
         
-        // Paginate through ALL variants
-        while (hasMoreVariants && pageCount < maxPages) {
-          const variantsUrl = `${apiBaseUrl}/variants/${productId}/${offset}`;
-          
-          const variantsRes = await fetch(variantsUrl, {
-            headers: {
-              "Authorization": `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
-          });
+        // Step 1: Get product configuration options
+        const optionsUrl = `${apiBaseUrl}/product/${productId}/${storeCode}`;
+        const optionsRes = await fetch(optionsUrl, {
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-          if (!variantsRes.ok) {
-            console.error(`[FETCH-MIN-PRICES] Variants fetch failed for ${productId} at offset ${offset}: ${variantsRes.status}`);
-            break;
-          }
-
-          const variants = await variantsRes.json();
-          let variantList: any[] = [];
-          
-          // Handle different response formats
-          if (Array.isArray(variants)) {
-            variantList = variants;
-          } else if (variants && typeof variants === 'object') {
-            variantList = variants.data || variants.variants || Object.values(variants);
-            if (!Array.isArray(variantList)) {
-              variantList = [];
-            }
-          }
-          
-          console.log(`[FETCH-MIN-PRICES] ${product.name} offset ${offset}: got ${variantList.length} variants`);
-          
-          // No more variants if we got an empty array or less than 1000
-          if (variantList.length === 0) {
-            hasMoreVariants = false;
-            break;
-          }
-          
-          // Find minimum price in this batch
-          for (const variant of variantList) {
-            const price = extractPrice(variant);
-            if (price !== null && price < minPrice) {
-              minPrice = price;
-            }
-          }
-          
-          // If we got less than 1000 variants, we've reached the end
-          if (variantList.length < 1000) {
-            hasMoreVariants = false;
-          } else {
-            offset += 1000;
-          }
-          
-          pageCount++;
-          
-          // Small delay between pages to avoid rate limiting
-          await new Promise(r => setTimeout(r, 50));
+        if (!optionsRes.ok) {
+          console.error(`[FETCH-MIN-PRICES] Options fetch failed for ${productId}: ${optionsRes.status}`);
+          errors++;
+          continue;
         }
 
-        if (minPrice !== Infinity && minPrice > 0) {
-          const minPriceCents = Math.round(minPrice * 100);
-          console.log(`[FETCH-MIN-PRICES] ${product.name}: TRUE min price = $${minPrice.toFixed(2)} (${minPriceCents} cents) from ${pageCount} pages`);
+        const optionsData = await optionsRes.json();
+        
+        // Parse options - response is [options[], combinations[], metadata[]]
+        if (!Array.isArray(optionsData) || optionsData.length < 1) {
+          console.error(`[FETCH-MIN-PRICES] Invalid options response for ${productId}`);
+          errors++;
+          continue;
+        }
+
+        const options = optionsData[0] || [];
+        
+        // Group options by category
+        const optionsByGroup: Record<string, { id: number; name: string }[]> = {};
+        for (const opt of options) {
+          const group = opt.group || 'other';
+          if (!optionsByGroup[group]) {
+            optionsByGroup[group] = [];
+          }
+          optionsByGroup[group].push({ id: opt.id, name: opt.name });
+        }
+
+        console.log(`[FETCH-MIN-PRICES] ${product.name} has groups: ${Object.keys(optionsByGroup).join(', ')}`);
+
+        // Step 2: Find minimum qty and size options (smallest values typically = lowest price)
+        const qtyOptions = optionsByGroup['qty'] || [];
+        const sizeOptions = optionsByGroup['size'] || [];
+        const turnaroundOptions = optionsByGroup['Turnaround'] || [];
+
+        // Sort qty options to find smallest
+        qtyOptions.sort((a, b) => {
+          const numA = parseInt(a.name) || 999999;
+          const numB = parseInt(b.name) || 999999;
+          return numA - numB;
+        });
+
+        // Sort size options to find smallest (by area if possible)
+        sizeOptions.sort((a, b) => {
+          const parseSize = (name: string) => {
+            const match = name.match(/(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)/i);
+            if (match) {
+              return parseFloat(match[1]) * parseFloat(match[2]);
+            }
+            return 999999;
+          };
+          return parseSize(a.name) - parseSize(b.name);
+        });
+
+        // Find standard turnaround (usually cheapest)
+        const standardTurnaround = turnaroundOptions.find(t => 
+          t.name.includes('2 - 4') || t.name.includes('Standard') || t.name.includes('Business Days')
+        ) || turnaroundOptions[0];
+
+        // Build minimum configuration
+        const minOptions: number[] = [];
+        
+        if (qtyOptions.length > 0) {
+          minOptions.push(qtyOptions[0].id);
+          console.log(`[FETCH-MIN-PRICES] Using min qty: ${qtyOptions[0].name} (id: ${qtyOptions[0].id})`);
+        }
+        
+        if (sizeOptions.length > 0) {
+          minOptions.push(sizeOptions[0].id);
+          console.log(`[FETCH-MIN-PRICES] Using min size: ${sizeOptions[0].name} (id: ${sizeOptions[0].id})`);
+        }
+        
+        if (standardTurnaround) {
+          minOptions.push(standardTurnaround.id);
+          console.log(`[FETCH-MIN-PRICES] Using turnaround: ${standardTurnaround.name} (id: ${standardTurnaround.id})`);
+        }
+
+        // Add any other required groups (first option of each)
+        for (const [group, opts] of Object.entries(optionsByGroup)) {
+          if (group !== 'qty' && group !== 'size' && group !== 'Turnaround' && opts.length > 0) {
+            minOptions.push(opts[0].id);
+          }
+        }
+
+        if (minOptions.length === 0) {
+          console.error(`[FETCH-MIN-PRICES] No options found for ${productId}`);
+          errors++;
+          continue;
+        }
+
+        // Step 3: Call POST /price to get actual price
+        const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
+        const priceRes = await fetch(priceUrl, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ productOptions: minOptions }),
+        });
+
+        if (!priceRes.ok) {
+          console.error(`[FETCH-MIN-PRICES] Price fetch failed for ${productId}: ${priceRes.status}`);
+          errors++;
+          continue;
+        }
+
+        const priceData = await priceRes.json();
+        console.log(`[FETCH-MIN-PRICES] Price response for ${product.name}:`, JSON.stringify(priceData));
+
+        // Extract price from response
+        let price = 0;
+        if (priceData.price && parseFloat(priceData.price) > 0) {
+          price = parseFloat(priceData.price);
+        } else if (priceData.unit_price && parseFloat(priceData.unit_price) > 0) {
+          price = parseFloat(priceData.unit_price);
+        } else if (priceData.total_price && parseFloat(priceData.total_price) > 0) {
+          price = parseFloat(priceData.total_price);
+        }
+
+        if (price > 0) {
+          const minPriceCents = Math.round(price * 100);
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: min price = $${price.toFixed(2)} (${minPriceCents} cents)`);
           updates.push({
             id: product.id,
             min_price_cents: minPriceCents,
             base_cost_cents: minPriceCents,
           });
         } else {
-          console.log(`[FETCH-MIN-PRICES] ${product.name}: no valid price found in any variants`);
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: no valid price found in response`);
+          errors++;
         }
 
         // Delay between products to avoid rate limiting
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 300));
         
       } catch (err) {
         console.error(`[FETCH-MIN-PRICES] Error for ${product.name}:`, err);
