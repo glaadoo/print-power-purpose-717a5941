@@ -42,6 +42,9 @@ type ProductConfiguratorProps = {
   onQuantityOptionsChange?: (options: string[]) => void;
   onVariantKeyChange?: (variantKey: string) => void;
   defaultVariantKey?: string | null;
+  // CRITICAL: Controlled selection state from parent to persist across remounts
+  selectedOptions?: Record<string, number>;
+  onSelectedOptionsChange?: (options: Record<string, number>) => void;
 };
 
 export function ProductConfigurator({
@@ -55,8 +58,28 @@ export function ProductConfigurator({
   onQuantityOptionsChange,
   onVariantKeyChange,
   defaultVariantKey,
+  selectedOptions: controlledSelectedOptions,
+  onSelectedOptionsChange,
 }: ProductConfiguratorProps) {
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
+  // Use controlled state from parent if provided, otherwise use local state
+  const [localSelectedOptions, setLocalSelectedOptions] = useState<Record<string, number>>({});
+  const selectedOptions = controlledSelectedOptions ?? localSelectedOptions;
+  const setSelectedOptions = (newOptions: Record<string, number> | ((prev: Record<string, number>) => Record<string, number>)) => {
+    if (typeof newOptions === 'function') {
+      const updated = newOptions(selectedOptions);
+      if (onSelectedOptionsChange) {
+        onSelectedOptionsChange(updated);
+      } else {
+        setLocalSelectedOptions(updated);
+      }
+    } else {
+      if (onSelectedOptionsChange) {
+        onSelectedOptionsChange(newOptions);
+      } else {
+        setLocalSelectedOptions(newOptions);
+      }
+    }
+  };
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
   const [userInteracted, setUserInteracted] = useState(false); // Track if user has manually changed options
@@ -187,21 +210,32 @@ export function ProductConfigurator({
     }));
   }, [pricingData]);
 
-  // Track if initial setup has been done to prevent re-initialization on re-renders
-  const initialSetupDoneRef = useRef(false);
-
   // Initialize with first option from each group - or use defaultVariantKey if provided
-  // CRITICAL: Only run once on initial mount, not on every optionGroups change
+  // CRITICAL: Only run once when selectedOptions is empty, not on every optionGroups change
   useEffect(() => {
     if (optionGroups.length === 0) {
       console.log('[ProductConfigurator] No option groups available');
       return;
     }
 
-    // CRITICAL FIX: Prevent re-initialization after first setup
-    // This was causing selected options to reset when user changed selections
-    if (initialSetupDoneRef.current) {
-      console.log('[ProductConfigurator] Skipping re-initialization, already set up');
+    // CRITICAL FIX: Check if selectedOptions already has valid selections for current groups
+    // This prevents resetting user selections when component re-renders or remounts
+    const currentGroupNames = optionGroups.map(g => g.group);
+    const hasExistingSelections = currentGroupNames.length > 0 && 
+      currentGroupNames.every(groupName => {
+        const selection = selectedOptions[groupName];
+        if (!selection) return false;
+        // Verify the selection is a valid option ID for this group
+        const group = optionGroups.find(g => g.group === groupName);
+        return group?.options.some(opt => opt.id === selection);
+      });
+    
+    if (hasExistingSelections) {
+      console.log('[ProductConfigurator] Skipping re-initialization, valid selections already exist:', selectedOptions);
+      // Still mark as interacted to enable price fetching
+      if (!userInteracted) {
+        setTimeout(() => setUserInteracted(true), 100);
+      }
       return;
     }
 
@@ -246,7 +280,6 @@ export function ProductConfigurator({
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
-    initialSetupDoneRef.current = true; // Mark setup as complete
     
     // CRITICAL FIX: Immediately notify parent of the initial variant key
     // This enables admin price fields for the default configuration without requiring manual changes
@@ -273,7 +306,7 @@ export function ProductConfigurator({
     setTimeout(() => {
       setUserInteracted(true);
     }, 100);
-  }, [optionGroups, defaultVariantKey, pricingData]);
+  }, [optionGroups, defaultVariantKey, pricingData, selectedOptions, userInteracted]);
 
   // Pre-validate quantity options on mount to hide invalid ones
   // SKIP for variable quantity products - they use input fields, not dropdowns
