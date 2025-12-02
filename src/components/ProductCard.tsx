@@ -30,7 +30,24 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
   const [user, setUser] = useState<any>(null);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
-  const imageSrc = product.image_url || null;
+  // Try image_url first, then fallback to first color image from pricing_data (for Scalable Press)
+  const getImageUrl = () => {
+    if (product.image_url) return product.image_url;
+    if (product.generated_image_url) return product.generated_image_url;
+    
+    // Fallback: try to get image from pricing_data colors (Scalable Press)
+    if (product.pricing_data?.colors?.length > 0) {
+      for (const color of product.pricing_data.colors) {
+        if (color.images && color.images.length > 0) {
+          const firstImage = color.images[0];
+          const url = typeof firstImage === 'string' ? firstImage : firstImage?.url;
+          if (url) return url;
+        }
+      }
+    }
+    return null;
+  };
+  const imageSrc = getImageUrl();
   const { isFavorite, toggleFavorite: toggleFavoriteContext } = useFavorites();
   const isProductFavorite = isFavorite(product.id);
   const { add: addToComparison, remove: removeFromComparison, isInComparison, canAddMore } = useComparison();
