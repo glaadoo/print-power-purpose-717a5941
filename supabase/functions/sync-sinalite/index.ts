@@ -354,78 +354,104 @@ serve(async (req) => {
     
     console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync`);
 
-    // Fetch existing products to preserve custom configurations
-    const vendorIds = productsToSync.map((p: any) => p.vendor_id);
-    const { data: existingProducts, error: fetchError } = await supabase
-      .from("products")
-      .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url")
-      .eq("vendor", "sinalite")
-      .in("vendor_id", vendorIds);
+    // Process products in batches to avoid memory limits
+    const BATCH_SIZE = 25;
+    let totalSynced = 0;
+    let totalImagesPreserved = 0;
+    let totalMarkupsPreserved = 0;
+    
+    for (let i = 0; i < productsToSync.length; i += BATCH_SIZE) {
+      const batch = productsToSync.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(productsToSync.length / BATCH_SIZE);
+      
+      console.log(`[SYNC-SINALITE] Processing batch ${batchNum}/${totalBatches} (${batch.length} products)`);
+      
+      // Fetch existing products for this batch to preserve custom configurations
+      const batchVendorIds = batch.map((p: any) => p.vendor_id);
+      const { data: existingProducts, error: fetchError } = await supabase
+        .from("products")
+        .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url")
+        .eq("vendor", "sinalite")
+        .in("vendor_id", batchVendorIds);
 
-    if (fetchError) {
-      console.error("[SYNC-SINALITE] Error fetching existing products:", fetchError);
-    }
-
-    // Create a map of existing product customizations to preserve
-    const existingCustomizations = new Map<string, any>();
-    if (existingProducts) {
-      for (const product of existingProducts) {
-        existingCustomizations.set(product.vendor_id, {
-          markup_fixed_cents: product.markup_fixed_cents,
-          markup_percent: product.markup_percent,
-          price_override_cents: product.price_override_cents,
-          image_url: product.image_url,
-          generated_image_url: product.generated_image_url,
-        });
+      if (fetchError) {
+        console.error(`[SYNC-SINALITE] Error fetching existing products for batch ${batchNum}:`, fetchError);
       }
-      console.log(`[SYNC-SINALITE] Found ${existingCustomizations.size} existing products with potential customizations to preserve`);
-    }
 
-    // Merge new data with existing customizations
-    let imagesPreserved = 0;
-    let markupsPreserved = 0;
-    for (const product of productsToSync) {
-      const existing = existingCustomizations.get(product.vendor_id);
-      if (existing) {
-        // Preserve custom markups if they were set
-        if (existing.markup_fixed_cents !== null) {
-          product.markup_fixed_cents = existing.markup_fixed_cents;
-          markupsPreserved++;
+      // Create a map of existing product customizations to preserve
+      const existingCustomizations = new Map<string, any>();
+      if (existingProducts) {
+        for (const product of existingProducts) {
+          existingCustomizations.set(product.vendor_id, {
+            markup_fixed_cents: product.markup_fixed_cents,
+            markup_percent: product.markup_percent,
+            price_override_cents: product.price_override_cents,
+            image_url: product.image_url,
+            generated_image_url: product.generated_image_url,
+          });
         }
-        if (existing.markup_percent !== null) {
-          product.markup_percent = existing.markup_percent;
+      }
+
+      // Merge new data with existing customizations
+      let batchImagesPreserved = 0;
+      let batchMarkupsPreserved = 0;
+      for (const product of batch) {
+        const existing = existingCustomizations.get(product.vendor_id);
+        if (existing) {
+          // Preserve custom markups if they were set
+          if (existing.markup_fixed_cents !== null) {
+            product.markup_fixed_cents = existing.markup_fixed_cents;
+            batchMarkupsPreserved++;
+          }
+          if (existing.markup_percent !== null) {
+            product.markup_percent = existing.markup_percent;
+          }
+          if (existing.price_override_cents !== null) {
+            product.price_override_cents = existing.price_override_cents;
+          }
+          // Preserve custom/generated images - only use API image if no custom image exists
+          if (existing.image_url && !product.image_url) {
+            product.image_url = existing.image_url;
+            batchImagesPreserved++;
+          } else if (existing.image_url && existing.image_url !== product.image_url) {
+            // Keep existing custom image if it differs from API image
+            product.image_url = existing.image_url;
+            batchImagesPreserved++;
+          }
+          if (existing.generated_image_url) {
+            product.generated_image_url = existing.generated_image_url;
+          }
         }
-        if (existing.price_override_cents !== null) {
-          product.price_override_cents = existing.price_override_cents;
-        }
-        // Preserve custom/generated images - only use API image if no custom image exists
-        if (existing.image_url && !product.image_url) {
-          product.image_url = existing.image_url;
-          imagesPreserved++;
-        } else if (existing.image_url && existing.image_url !== product.image_url) {
-          // Keep existing custom image if it differs from API image
-          product.image_url = existing.image_url;
-          imagesPreserved++;
-        }
-        if (existing.generated_image_url) {
-          product.generated_image_url = existing.generated_image_url;
-        }
+      }
+      
+      totalImagesPreserved += batchImagesPreserved;
+      totalMarkupsPreserved += batchMarkupsPreserved;
+
+      // Upsert this batch
+      const { error: upsertError, count } = await supabase
+        .from("products")
+        .upsert(batch, { onConflict: "vendor,vendor_id", count: "exact" });
+
+      if (upsertError) {
+        console.error(`[SYNC-SINALITE] Batch ${batchNum} upsert error:`, upsertError);
+        throw upsertError;
+      }
+
+      const batchSynced = count || batch.length;
+      totalSynced += batchSynced;
+      console.log(`[SYNC-SINALITE] Batch ${batchNum}/${totalBatches} complete: ${batchSynced} products synced`);
+      
+      // Small delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < productsToSync.length) {
+        await new Promise(r => setTimeout(r, 100));
       }
     }
     
-    console.log(`[SYNC-SINALITE] Preserving ${imagesPreserved} custom images and ${markupsPreserved} custom markups`);
+    console.log(`[SYNC-SINALITE] All batches complete. Total synced: ${totalSynced} products`);
+    console.log(`[SYNC-SINALITE] Preserved ${totalImagesPreserved} custom images and ${totalMarkupsPreserved} custom markups`);
 
-    // Batch upsert all products
-    const { error: upsertError, count } = await supabase
-      .from("products")
-      .upsert(productsToSync, { onConflict: "vendor,vendor_id", count: "exact" });
-
-    if (upsertError) {
-      console.error("[SYNC-SINALITE] Batch upsert error:", upsertError);
-      throw upsertError;
-    }
-
-    const synced = count || productsToSync.length;
+    const synced = totalSynced;
     console.log(`[SYNC-SINALITE] Successfully synced ${synced} products`);
 
     // Start background task to fetch minimum prices
@@ -442,8 +468,8 @@ serve(async (req) => {
         vendor: "sinalite",
         store: storeName,
         storeCode,
-        imagesPreserved,
-        markupsPreserved,
+        imagesPreserved: totalImagesPreserved,
+        markupsPreserved: totalMarkupsPreserved,
         minPricesFetching: !skipMinPrices,
         note: !skipMinPrices ? "Min prices are being fetched in the background" : undefined
       }),
