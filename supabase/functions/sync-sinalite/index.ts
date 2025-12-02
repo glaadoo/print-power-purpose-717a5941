@@ -319,16 +319,18 @@ serve(async (req) => {
     
     console.log(`[SYNC-SINALITE] Processing ${enabledProducts.length} enabled products`);
 
-    // Process products in smaller chunks and filter out products without images
+    // Process products and filter out products without valid prices
     const productsToSync = enabledProducts
       .map((p: any) => {
-        // Default to $20, will be updated by background task
-        let baseCostCents = 2000;
+        // Extract price from API - if no valid price, set to 0 for filtering
+        let baseCostCents = 0;
         
         if (p.price && typeof p.price === 'number' && p.price > 0) {
           baseCostCents = Math.round(p.price * 100);
         } else if (p.base_price && typeof p.base_price === 'number' && p.base_price > 0) {
           baseCostCents = Math.round(p.base_price * 100);
+        } else if (p.minPrice && typeof p.minPrice === 'number' && p.minPrice > 0) {
+          baseCostCents = Math.round(p.minPrice * 100);
         }
 
         let imageUrl = null;
@@ -355,11 +357,11 @@ serve(async (req) => {
       })
       .filter((p: any) => 
         p.base_cost_cents >= 100 && 
-        p.base_cost_cents <= 100000 &&
-        p.image_url !== null // Only sync products with images
+        p.base_cost_cents <= 100000
+        // Include all products with valid prices, regardless of image availability
       );
     
-    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync (with images only)`);
+    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync (with valid prices)`);
 
     // Process products in smaller batches to avoid memory limits
     const BATCH_SIZE = 10;
@@ -478,7 +480,7 @@ serve(async (req) => {
         storeCode,
         imagesPreserved: totalImagesPreserved,
         markupsPreserved: totalMarkupsPreserved,
-        note: "Sync complete. Only products with images were synced to conserve resources."
+        note: "Sync complete. Only products with valid prices were synced."
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
