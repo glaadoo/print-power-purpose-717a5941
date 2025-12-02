@@ -322,8 +322,8 @@ serve(async (req) => {
     // Process products and filter out products without valid prices
     const productsToSync = enabledProducts
       .map((p: any) => {
-        // Extract price from API - if no valid price, set to 0 for filtering
-        let baseCostCents = 0;
+        // Extract price from API - use default $20 if no price found
+        let baseCostCents = 2000; // Default $20.00
         
         if (p.price && typeof p.price === 'number' && p.price > 0) {
           baseCostCents = Math.round(p.price * 100);
@@ -358,10 +358,9 @@ serve(async (req) => {
       .filter((p: any) => 
         p.base_cost_cents >= 100 && 
         p.base_cost_cents <= 100000
-        // Include all products with valid prices, regardless of image availability
       );
     
-    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync (with valid prices)`);
+    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync (with valid prices $1-$1000)`);
 
     // Process products in smaller batches to avoid memory limits
     const BATCH_SIZE = 10;
