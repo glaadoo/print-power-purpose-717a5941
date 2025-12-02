@@ -113,7 +113,7 @@ serve(async (req) => {
 
     console.log(`[FETCH-MIN-PRICES] Processing ${products.length} products`);
 
-    const updates: { id: string; min_price_cents: number; base_cost_cents: number }[] = [];
+    const updates: { id: string; min_price_cents: number; base_cost_cents: number; min_price_variant_key: string }[] = [];
     let errors = 0;
 
     // Fetch min price for each product by getting options and calculating prices
@@ -253,11 +253,14 @@ serve(async (req) => {
 
         if (price > 0) {
           const minPriceCents = Math.round(price * 100);
-          console.log(`[FETCH-MIN-PRICES] ${product.name}: min price = $${price.toFixed(2)} (${minPriceCents} cents)`);
+          // Generate variant key from sorted option IDs
+          const minPriceVariantKey = minOptions.sort((a, b) => a - b).join('-');
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: min price = $${price.toFixed(2)} (${minPriceCents} cents), variant key: ${minPriceVariantKey}`);
           updates.push({
             id: product.id,
             min_price_cents: minPriceCents,
             base_cost_cents: minPriceCents,
+            min_price_variant_key: minPriceVariantKey,
           });
         } else {
           console.log(`[FETCH-MIN-PRICES] ${product.name}: no valid price found in response`);
@@ -280,7 +283,8 @@ serve(async (req) => {
         .from("products")
         .update({ 
           min_price_cents: update.min_price_cents,
-          base_cost_cents: update.base_cost_cents 
+          base_cost_cents: update.base_cost_cents,
+          min_price_variant_key: update.min_price_variant_key,
         })
         .eq("id", update.id);
 
