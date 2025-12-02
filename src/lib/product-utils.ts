@@ -39,23 +39,14 @@ export function hasScalablePressImages(product: {
 
 /**
  * Check if a SinaLite product has an image
- * Returns true if:
- * - Product is not SinaLite (show it)
- * - Product has a valid image_url
- * Returns false if:
- * - Product is SinaLite and has no image_url
+ * Returns true always for SinaLite products (show all regardless of image)
  */
 export function hasSinaliteImage(product: {
   vendor?: string | null;
   image_url?: string | null;
 }): boolean {
-  // Non-SinaLite products: always show (handled by other filters)
-  if (product.vendor !== 'sinalite') {
-    return true;
-  }
-  
-  // SinaLite products: must have image_url
-  return !!product.image_url && product.image_url.trim() !== '';
+  // Always show all products - no image filtering for SinaLite
+  return true;
 }
 
 /**
