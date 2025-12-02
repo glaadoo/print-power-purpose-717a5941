@@ -11,6 +11,7 @@ type ProductInfoProps = {
     base_cost_cents: number;
     vendor?: string | null;
     pricing_data?: any;
+    min_price_variant_key?: string | null;
   };
   unitPrice: number;
   quantity: number;
@@ -106,6 +107,7 @@ export default function ProductInfo({
             onPriceChange={onPriceChange}
             onConfigChange={onConfigChange}
             onQuantityOptionsChange={() => {}}
+            defaultVariantKey={product.min_price_variant_key}
           />
         </div>
       )}
