@@ -799,25 +799,25 @@ export function ProductConfigurator({
               console.error('[ProductConfigurator] Fallback POST failed:', fallbackErr);
             }
             
-            // If fallback also fails, show error but DO NOT auto-reset selection
-            // CRITICAL FIX: Only auto-reset for QUANTITY groups, not other groups like Grommets/Finishing
-            // This prevents the frustrating behavior where user selections keep reverting
+            // If fallback also fails, mark the option as invalid and reset price to 0
+            // CRITICAL FIX: Mark ALL failed options (not just qty) so they can be disabled in UI
             if (lastChangedOptionRef.current) {
               const failedId = lastChangedOptionRef.current.optionId;
               const failedGroup = lastChangedOptionRef.current.group;
               
-              // Check if this is a quantity group
+              // Mark this option as failed for ALL groups
+              setFailedOptionIds(prev => {
+                const newSet = new Set(prev);
+                newSet.add(failedId);
+                return newSet;
+              });
+              
+              // Check if this is a quantity group for auto-reset behavior
               const isQtyGroup = failedGroup.toLowerCase().includes('qty') || 
                                  failedGroup.toLowerCase().includes('quantity');
               
-              // Only mark as failed and auto-reset for quantity groups
+              // For qty groups: try to auto-select next valid option
               if (isQtyGroup) {
-                setFailedOptionIds(prev => {
-                  const newSet = new Set(prev);
-                  newSet.add(failedId);
-                  return newSet;
-                });
-                
                 const group = optionGroups.find(g => g.group === failedGroup);
                 if (group) {
                   const nextValidOption = group.options.find(opt => 
@@ -833,10 +833,27 @@ export function ProductConfigurator({
                   }
                 }
               }
-              // For non-qty groups: clear the ref but keep the user's selection
+              
+              // For non-qty groups: revert to previous valid option if available
+              const group = optionGroups.find(g => g.group === failedGroup);
+              if (group) {
+                const firstValidOption = group.options.find(opt => !failedOptionIds.has(opt.id) && opt.id !== failedId);
+                if (firstValidOption) {
+                  setSelectedOptions(prev => ({
+                    ...prev,
+                    [failedGroup]: firstValidOption.id
+                  }));
+                  lastChangedOptionRef.current = null;
+                  // Re-fetch price with valid option
+                  return;
+                }
+              }
+              
               lastChangedOptionRef.current = null;
             }
             
+            // CRITICAL: Set price to 0 to indicate invalid configuration
+            onPriceChangeRef.current(0);
             setPriceError('This configuration is not available. Please try a different option.');
             setFetchingPrice(false);
           }
@@ -969,8 +986,8 @@ export function ProductConfigurator({
         // Check if this is the quantity group
         const isQtyGroup = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
         
-        // Only filter failed options for quantity groups (where pre-validation runs)
-        // Non-quantity groups should always show ALL options from API
+        // For quantity groups: filter out failed options completely
+        // For non-qty groups: show all options but mark failed ones for disabling
         const validOptions = isQtyGroup 
           ? group.options.filter(opt => !failedOptionIds.has(opt.id))
           : group.options;
@@ -1054,15 +1071,19 @@ export function ProductConfigurator({
                 <SelectValue placeholder={`Select ${formatGroupName(group.group)}`} />
               </SelectTrigger>
               <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
-                {validOptions.map((option) => (
-                  <SelectItem
-                    key={option.id}
-                    value={String(option.id)}
-                    className="cursor-pointer hover:bg-gray-100"
-                  >
-                    {option.name}
-                  </SelectItem>
-                ))}
+                {validOptions.map((option) => {
+                  const isFailed = failedOptionIds.has(option.id);
+                  return (
+                    <SelectItem
+                      key={option.id}
+                      value={String(option.id)}
+                      disabled={isFailed}
+                      className={`cursor-pointer ${isFailed ? 'opacity-40 cursor-not-allowed line-through text-gray-400' : 'hover:bg-gray-100'}`}
+                    >
+                      {option.name}{isFailed ? ' (unavailable)' : ''}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
