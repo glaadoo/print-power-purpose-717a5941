@@ -32,6 +32,7 @@ type ProductRow = {
   markup_fixed_cents?: number | null;
   markup_percent?: number | null;
   category?: string | null;
+  min_price_variant_key?: string | null;
 };
 
 export default function ProductDetailNew() {
@@ -460,7 +461,7 @@ export default function ProductDetailNew() {
                     onPriceChange={setConfiguredPriceCents}
                     onConfigChange={setProductConfig}
                     onQuantityOptionsChange={() => {}}
-                    defaultVariantKey={minPriceVariantKey}
+                    defaultVariantKey={minPriceVariantKey || product.min_price_variant_key}
                   />
                 </div>
               )}
