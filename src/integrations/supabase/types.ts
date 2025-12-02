@@ -984,6 +984,7 @@ export type Database = {
           markup_fixed_cents: number | null
           markup_percent: number | null
           min_price_cents: number | null
+          min_price_variant_key: string | null
           name: string
           price_override_cents: number | null
           pricing_data: Json | null
@@ -1003,6 +1004,7 @@ export type Database = {
           markup_fixed_cents?: number | null
           markup_percent?: number | null
           min_price_cents?: number | null
+          min_price_variant_key?: string | null
           name: string
           price_override_cents?: number | null
           pricing_data?: Json | null
@@ -1022,6 +1024,7 @@ export type Database = {
           markup_fixed_cents?: number | null
           markup_percent?: number | null
           min_price_cents?: number | null
+          min_price_variant_key?: string | null
           name?: string
           price_override_cents?: number | null
           pricing_data?: Json | null

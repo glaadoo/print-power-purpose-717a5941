@@ -31,6 +31,7 @@ type ProductCardProps = {
     pricing_data?: any;
     base_cost_cents: number;
     min_price_cents?: number | null;
+    min_price_variant_key?: string | null;
     category?: string | null;
   };
   categorySlug?: string;
@@ -146,10 +147,14 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
 
   const handleCardClick = () => {
     const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const navigationState = { 
+      productId: product.id,
+      minPriceVariantKey: product.min_price_variant_key 
+    };
     
     // Use provided categorySlug and subcategorySlug if available (from subcategory page)
     if (categorySlug && subcategorySlug) {
-      navigate(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: { productId: product.id } });
+      navigate(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: navigationState });
     } else {
       // Fallback: extract from product.category (legacy behavior)
       const categoryParts = (product.category || 'uncategorized').toLowerCase().split('/');
@@ -157,7 +162,7 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
       const fallbackSubcategorySlug = categoryParts.length > 1 
         ? categoryParts[1].replace(/\s+/g, '-')
         : 'all';
-      navigate(`/products/${fallbackCategorySlug}/${fallbackSubcategorySlug}/${productSlug}`, { state: { productId: product.id } });
+      navigate(`/products/${fallbackCategorySlug}/${fallbackSubcategorySlug}/${productSlug}`, { state: navigationState });
     }
   };
 

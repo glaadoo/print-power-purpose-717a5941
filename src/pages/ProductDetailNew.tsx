@@ -38,6 +38,7 @@ export default function ProductDetailNew() {
   const { category, subcategory, productName } = useParams();
   const location = useLocation();
   const productId = location.state?.productId;
+  const minPriceVariantKey = location.state?.minPriceVariantKey;
   const nav = useNavigate();
   const { add, items } = useCart();
   const { count: favoritesCount } = useFavorites();
@@ -459,6 +460,7 @@ export default function ProductDetailNew() {
                     onPriceChange={setConfiguredPriceCents}
                     onConfigChange={setProductConfig}
                     onQuantityOptionsChange={() => {}}
+                    defaultVariantKey={minPriceVariantKey}
                   />
                 </div>
               )}

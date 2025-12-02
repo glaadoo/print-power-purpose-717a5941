@@ -11,6 +11,7 @@ interface LoaderProps {
   onConfigChange: (config: Record<string, string>) => void;
   onQuantityOptionsChange?: (options: string[]) => void;
   onVariantKeyChange?: (variantKey: string) => void;
+  defaultVariantKey?: string | null;
 }
 
 export default function ProductConfiguratorLoader({
@@ -19,6 +20,7 @@ export default function ProductConfiguratorLoader({
   onConfigChange,
   onQuantityOptionsChange,
   onVariantKeyChange,
+  defaultVariantKey,
 }: LoaderProps) {
   const [productData, setProductData] = useState<any | null>(null);
   const [pricingOptions, setPricingOptions] = useState<any[] | null>(null);
@@ -451,6 +453,7 @@ export default function ProductConfiguratorLoader({
             onConfigChange={onConfigChange}
             onQuantityOptionsChange={onQuantityOptionsChange}
             onVariantKeyChange={onVariantKeyChange}
+            defaultVariantKey={defaultVariantKey}
           />
         )
       )}

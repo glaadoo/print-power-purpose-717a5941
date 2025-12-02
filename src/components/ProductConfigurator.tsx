@@ -41,6 +41,7 @@ type ProductConfiguratorProps = {
   onPackageInfoChange?: (info: PackageInfo | null) => void;
   onQuantityOptionsChange?: (options: string[]) => void;
   onVariantKeyChange?: (variantKey: string) => void;
+  defaultVariantKey?: string | null;
 };
 
 export function ProductConfigurator({
@@ -53,6 +54,7 @@ export function ProductConfigurator({
   onPackageInfoChange,
   onQuantityOptionsChange,
   onVariantKeyChange,
+  defaultVariantKey,
 }: ProductConfiguratorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [fetchingPrice, setFetchingPrice] = useState(false);
@@ -185,7 +187,7 @@ export function ProductConfigurator({
     }));
   }, [pricingData]);
 
-  // Initialize with first option from each group - ONLY RUN ONCE
+  // Initialize with first option from each group - or use defaultVariantKey if provided
   useEffect(() => {
     if (optionGroups.length === 0) {
       console.log('[ProductConfigurator] No option groups available');
@@ -193,11 +195,43 @@ export function ProductConfigurator({
     }
 
     const initial: Record<string, number> = {};
-    optionGroups.forEach((group) => {
-      if (group.options.length > 0) {
-        initial[group.group] = group.options[0].id;
-      }
-    });
+    
+    // If defaultVariantKey is provided, try to pre-select those options
+    if (defaultVariantKey) {
+      const defaultOptionIds = defaultVariantKey.split('-').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+      console.log('[ProductConfigurator] Using defaultVariantKey to initialize:', defaultVariantKey, 'parsed IDs:', defaultOptionIds);
+      
+      // Map each option ID to its group
+      const allOptions = pricingData?.[0] || [];
+      const optionIdToGroup: Record<number, string> = {};
+      allOptions.forEach((opt: ProductOption) => {
+        if (opt.id && opt.group) {
+          optionIdToGroup[opt.id] = opt.group;
+        }
+      });
+      
+      // Set initial selections from defaultVariantKey
+      defaultOptionIds.forEach(optId => {
+        const group = optionIdToGroup[optId];
+        if (group && !initial[group]) {
+          initial[group] = optId;
+        }
+      });
+      
+      // Fill in any missing groups with first option
+      optionGroups.forEach((group) => {
+        if (!initial[group.group] && group.options.length > 0) {
+          initial[group.group] = group.options[0].id;
+        }
+      });
+    } else {
+      // Default: use first option from each group
+      optionGroups.forEach((group) => {
+        if (group.options.length > 0) {
+          initial[group.group] = group.options[0].id;
+        }
+      });
+    }
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
