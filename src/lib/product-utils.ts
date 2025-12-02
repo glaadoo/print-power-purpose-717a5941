@@ -38,6 +38,27 @@ export function hasScalablePressImages(product: {
 }
 
 /**
+ * Check if a SinaLite product has an image
+ * Returns true if:
+ * - Product is not SinaLite (show it)
+ * - Product has a valid image_url
+ * Returns false if:
+ * - Product is SinaLite and has no image_url
+ */
+export function hasSinaliteImage(product: {
+  vendor?: string | null;
+  image_url?: string | null;
+}): boolean {
+  // Non-SinaLite products: always show (handled by other filters)
+  if (product.vendor !== 'sinalite') {
+    return true;
+  }
+  
+  // SinaLite products: must have image_url
+  return !!product.image_url && product.image_url.trim() !== '';
+}
+
+/**
  * Filter out Canada products by name
  */
 export function isNotCanadaProduct(product: { name: string }): boolean {
@@ -46,12 +67,13 @@ export function isNotCanadaProduct(product: { name: string }): boolean {
 }
 
 /**
- * Combined filter: not Canada AND has images (for Scalable Press)
+ * Combined filter: not Canada AND has images (vendor-specific checks)
  */
 export function shouldShowProduct(product: {
   name: string;
   vendor?: string | null;
   pricing_data?: any;
+  image_url?: string | null;
 }): boolean {
-  return isNotCanadaProduct(product) && hasScalablePressImages(product);
+  return isNotCanadaProduct(product) && hasScalablePressImages(product) && hasSinaliteImage(product);
 }
