@@ -142,10 +142,10 @@ export default function ProductDetail() {
     document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
   }, [product]);
 
-  // Calculate unit price
-  const requiresConfiguration = product?.pricing_data && 
+  // Calculate unit price - SinaLite always requires configuration
+  const requiresConfiguration = product?.vendor === 'sinalite' || (product?.pricing_data && 
     Array.isArray(product.pricing_data) && 
-    product.pricing_data.length > 0;
+    product.pricing_data.length > 0);
   
   const isConfigured = configuredPriceCents !== null;
   const hasArtwork = Boolean(artworkFileUrl && artworkFileName);
@@ -154,7 +154,7 @@ export default function ProductDetail() {
   let unitCents: number;
   if (configuredPriceCents !== null) {
     unitCents = configuredPriceCents;
-  } else if (product && product.vendor === "sinalite" && product.pricing_data) {
+  } else if (product && product.vendor === "sinalite") {
     unitCents = 0;
   } else if (product) {
     const markup_fixed = product.markup_fixed_cents ?? 0;
