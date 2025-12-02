@@ -215,9 +215,9 @@ serve(async (req) => {
             console.log(`[SYNC-SCALABLEPRESS] Product ${product.id}: derived ${colors.length} colors from items keys`);
           }
 
-          // Calculate base cost from items (use minimum price)
-          let baseCostCents = 1000; // Default fallback
-          if (items && typeof items === 'object' && Object.keys(items).length > 0) {
+           // Calculate base cost from items (use minimum price)
+           let baseCostCents = 0; // Default to 0 so products without prices get filtered out
+           if (items && typeof items === 'object' && Object.keys(items).length > 0) {
             const allPrices: number[] = [];
             Object.values(items).forEach((colorData: any) => {
               if (typeof colorData === 'object' && colorData !== null) {
@@ -271,7 +271,7 @@ serve(async (req) => {
           };
         } catch (error) {
           console.error(`[SYNC-SCALABLEPRESS] Error fetching config for ${product.id}:`, error);
-          // Return basic product without config data
+          // Return basic product without config data - set price to 0 so it gets filtered out
           return {
             name: product.name || "Unnamed Product",
             category: product.category,
@@ -281,7 +281,7 @@ serve(async (req) => {
             vendor_id: product.id,
             vendor_product_id: product.id,
             is_active: true,
-            base_cost_cents: 1000,
+            base_cost_cents: 0, // Will be filtered out
             pricing_data: {
               style: product.style,
               categoryId: product.categoryId,
@@ -335,32 +335,35 @@ serve(async (req) => {
       console.log(`[SYNC-SCALABLEPRESS] Found ${existingCustomizations.size} existing products with potential customizations to preserve`);
     }
 
-    // Merge new data with existing customizations
-    const productsToUpsert = productsWithConfig.map(product => {
-      const existing = existingCustomizations.get(product.vendor_id);
-      if (existing) {
-        // Preserve custom markups if they were set
-        if (existing.markup_fixed_cents !== null) {
-          product.markup_fixed_cents = existing.markup_fixed_cents;
+    // Merge new data with existing customizations and filter out products without valid prices
+    const productsToUpsert = productsWithConfig
+      .map(product => {
+        const existing = existingCustomizations.get(product.vendor_id);
+        if (existing) {
+          // Preserve custom markups if they were set
+          if (existing.markup_fixed_cents !== null) {
+            product.markup_fixed_cents = existing.markup_fixed_cents;
+          }
+          if (existing.markup_percent !== null) {
+            product.markup_percent = existing.markup_percent;
+          }
+          if (existing.price_override_cents !== null) {
+            product.price_override_cents = existing.price_override_cents;
+          }
+          // Preserve custom/generated images - only use API image if no custom image exists
+          if (existing.image_url && existing.image_url !== product.image_url) {
+            // Keep existing custom image unless the new one is non-null and existing is null
+            product.image_url = existing.image_url;
+          }
+          if (existing.generated_image_url) {
+            product.generated_image_url = existing.generated_image_url;
+          }
         }
-        if (existing.markup_percent !== null) {
-          product.markup_percent = existing.markup_percent;
-        }
-        if (existing.price_override_cents !== null) {
-          product.price_override_cents = existing.price_override_cents;
-        }
-        // Preserve custom/generated images - only use API image if no custom image exists
-        if (existing.image_url && existing.image_url !== product.image_url) {
-          // Keep existing custom image unless the new one is non-null and existing is null
-          product.image_url = existing.image_url;
-        }
-        if (existing.generated_image_url) {
-          product.generated_image_url = existing.generated_image_url;
-        }
-      }
-      return product;
-    });
+        return product;
+      })
+      .filter(product => product.base_cost_cents >= 100); // Only include products with valid prices
 
+    console.log(`[SYNC-SCALABLEPRESS] Filtered to ${productsToUpsert.length} products with valid prices (excluded ${productsWithConfig.length - productsToUpsert.length} without prices)`);
     console.log(`[SYNC-SCALABLEPRESS] Batch upserting ${productsToUpsert.length} products (with preserved customizations)...`);
 
     // Step 5: Batch upsert in chunks
