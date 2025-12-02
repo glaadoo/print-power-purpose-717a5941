@@ -667,8 +667,60 @@ export function ProductConfigurator({
             
             return;
           } else {
-            console.warn('[ProductConfigurator] No price in response:', data);
+            console.warn('[ProductConfigurator] No price in PRICEBYKEY response, falling back to POST:', data);
             
+            // FALLBACK: Try POST /price with productOptions when PRICEBYKEY returns empty
+            try {
+              const productOptions = Object.values(selectedOptions);
+              console.log('[ProductConfigurator] Fallback POST request with productOptions:', productOptions);
+              
+              const { data: postData, error: postError } = await invokeWithRetry(
+                supabase,
+                'sinalite-price',
+                {
+                  body: {
+                    productId: vendorProductId,
+                    storeCode: storeCode,
+                    productOptions: productOptions,
+                    method: 'POST'
+                  },
+                },
+                {
+                  maxAttempts: 2,
+                  initialDelayMs: 500,
+                  shouldRetry: (err: any) => err?.status === 503 || err?.status >= 500
+                }
+              );
+              
+              console.log('[ProductConfigurator] Fallback POST response:', postData, 'error:', postError);
+              
+              if (!postError && postData) {
+                let priceValue = null;
+                if (typeof postData === 'object') {
+                  if (postData.price !== undefined) {
+                    priceValue = parseFloat(postData.price);
+                  } else if (Array.isArray(postData) && postData[0]?.price !== undefined) {
+                    priceValue = parseFloat(postData[0].price);
+                  } else if (postData.total !== undefined) {
+                    priceValue = parseFloat(postData.total);
+                  }
+                }
+                
+                if (priceValue && priceValue > 0) {
+                  const priceCents = Math.round(priceValue * 100);
+                  console.log('[ProductConfigurator] Fallback POST price received:', priceCents);
+                  setPriceError(null);
+                  setFetchingPrice(false);
+                  setPriceCache(variantKey, priceCents);
+                  onPriceChangeRef.current(priceCents);
+                  return;
+                }
+              }
+            } catch (fallbackErr) {
+              console.error('[ProductConfigurator] Fallback POST failed:', fallbackErr);
+            }
+            
+            // If fallback also fails, handle as before
             if (lastChangedOptionRef.current) {
               const failedId = lastChangedOptionRef.current.optionId;
               const failedGroup = lastChangedOptionRef.current.group;
