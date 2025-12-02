@@ -254,9 +254,8 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
               <span className="text-blue-600">Configure for Price</span>
             )
           ) : product.vendor === 'scalablepress' ? (
-            // Scalable Press: single price per product (all variants same price)
-            // Always show the stored price - no configuration-based pricing
-            <>Price: ${(product.base_cost_cents / 100).toFixed(2)}</>
+            // Scalable Press: show "Starting at" price
+            <>Starting at ${(product.base_cost_cents / 100).toFixed(2)}</>
           ) : (
             // Other vendors: show base cost, or "Configure for Price" if default
             product.base_cost_cents && product.base_cost_cents !== 1000 ? (
