@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import ImageGallery from "@/components/ImageGallery";
 import ArtworkUpload from "@/components/ArtworkUpload";
 import ProductDescription from "@/components/product-detail/ProductDescription";
+import { shouldShowProduct } from "@/lib/product-utils";
 
 type ProductRow = {
   id: string;
@@ -88,6 +89,11 @@ export default function ProductDetailNew() {
       } else if (!data) {
         setErr("Product not found");
         setLoading(false);
+      } else if (!shouldShowProduct(data)) {
+        // Product exists but shouldn't be displayed (no images, Canada product, etc.)
+        toast.error("This product is currently unavailable");
+        nav("/products");
+        return;
       } else {
         setProduct(data as ProductRow);
         setLoading(false); // Allow page to render immediately

@@ -7,12 +7,14 @@ import { Button } from "./ui/button";
 import { Clock, X, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import useToggle from "@/hooks/useToggle";
+import { shouldShowProduct } from "@/lib/product-utils";
 
 type ProductDetails = RecentlyViewedProduct & {
   base_cost_cents?: number;
   pricing_data?: any;
   description?: string | null;
   subcategory?: string | null;
+  vendor?: string | null;
 };
 
 function RecentlyViewedCard({ product, onClick }: { product: ProductDetails; onClick: () => void }) {
@@ -116,7 +118,7 @@ export default function RecentlyViewed() {
       const productIds = recent.map(p => p.id);
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, image_url, category, base_cost_cents, pricing_data, description")
+        .select("id, name, image_url, category, base_cost_cents, pricing_data, description, vendor")
         .in("id", productIds)
         .eq("is_active", true);
 
@@ -135,8 +137,8 @@ export default function RecentlyViewed() {
         })
         .filter(Boolean) as ProductDetails[];
 
-      // Filter out Canada products
-      const filteredProducts = enriched.filter(product => !product.name.toLowerCase().includes('canada'));
+      // Filter out Canada products and products without images
+      const filteredProducts = enriched.filter(product => shouldShowProduct(product));
       setProducts(filteredProducts);
     } catch (error) {
       console.error("Error loading recently viewed:", error);
