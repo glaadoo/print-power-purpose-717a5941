@@ -90,6 +90,7 @@ export function ProductConfigurator({
   const [manualPriceFetch, setManualPriceFetch] = useState(0); // Trigger manual price fetch for variable qty
   const lastChangedOptionRef = useRef<{ group: string; optionId: number } | null>(null);
   const preValidationRunRef = useRef(false); // Prevent multiple pre-validation runs
+  const initializationDoneRef = useRef(false); // Prevent re-initialization after first load
   
   // Use refs to store callbacks to avoid dependency issues causing stale closures
   const onPriceChangeRef = useRef(onPriceChange);
@@ -211,41 +212,16 @@ export function ProductConfigurator({
   }, [pricingData]);
 
   // Initialize with first option from each group - or use defaultVariantKey if provided
-  // CRITICAL: Only run once when selectedOptions is empty, not on every optionGroups change
+  // CRITICAL: Only run ONCE on mount, never re-initialize after user interaction
   useEffect(() => {
-    if (optionGroups.length === 0) {
-      console.log('[ProductConfigurator] No option groups available');
+    // CRITICAL FIX: Only initialize once - never reset after first initialization
+    if (initializationDoneRef.current) {
+      console.log('[ProductConfigurator] Skipping re-initialization, already done');
       return;
     }
-
-    // CRITICAL FIX: Check if selectedOptions already has valid selections for current groups
-    // This prevents resetting user selections when component re-renders or remounts
-    // BUT: If defaultVariantKey is provided and selections don't match it, re-initialize
-    const currentGroupNames = optionGroups.map(g => g.group);
-    const hasExistingSelections = currentGroupNames.length > 0 && 
-      currentGroupNames.every(groupName => {
-        const selection = selectedOptions[groupName];
-        if (!selection) return false;
-        // Verify the selection is a valid option ID for this group
-        const group = optionGroups.find(g => g.group === groupName);
-        return group?.options.some(opt => opt.id === selection);
-      });
     
-    // If defaultVariantKey is provided, check if current selections match it
-    const shouldUseDefaultKey = defaultVariantKey && (() => {
-      const defaultOptionIds = defaultVariantKey.split('-').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
-      const currentOptionIds = Object.values(selectedOptions).sort((a, b) => a - b);
-      const defaultSorted = defaultOptionIds.sort((a, b) => a - b);
-      // If current selections don't match default, we should re-initialize
-      return JSON.stringify(currentOptionIds) !== JSON.stringify(defaultSorted);
-    })();
-    
-    if (hasExistingSelections && !shouldUseDefaultKey) {
-      console.log('[ProductConfigurator] Skipping re-initialization, valid selections already exist:', selectedOptions);
-      // Still mark as interacted to enable price fetching
-      if (!userInteracted) {
-        setTimeout(() => setUserInteracted(true), 100);
-      }
+    if (optionGroups.length === 0) {
+      console.log('[ProductConfigurator] No option groups available');
       return;
     }
 
@@ -291,6 +267,9 @@ export function ProductConfigurator({
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
     
+    // Mark initialization as done BEFORE callbacks to prevent re-runs
+    initializationDoneRef.current = true;
+    
     // CRITICAL FIX: Immediately notify parent of the initial variant key
     // This enables admin price fields for the default configuration without requiring manual changes
     const optionIds = Object.values(initial);
@@ -316,7 +295,7 @@ export function ProductConfigurator({
     setTimeout(() => {
       setUserInteracted(true);
     }, 100);
-  }, [optionGroups, defaultVariantKey, pricingData, selectedOptions, userInteracted]);
+  }, [optionGroups, defaultVariantKey, pricingData]);
 
   // Pre-validate quantity options on mount to hide invalid ones
   // SKIP for variable quantity products - they use input fields, not dropdowns
