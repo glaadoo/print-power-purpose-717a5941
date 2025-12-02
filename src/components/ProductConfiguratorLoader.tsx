@@ -402,6 +402,8 @@ export default function ProductConfiguratorLoader({
     setLoading(false);
     setFetchingRef(false);
     setIsMounted(true);
+    // CRITICAL: Reset selectedOptions so defaultVariantKey can be used for new product
+    setSelectedOptions({});
     
     // Fetch pricing options for new product (will use cache if available)
     fetchPricingOptions();
