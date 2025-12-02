@@ -13,6 +13,7 @@ import { ArrowLeft, Search, ShoppingCart, ArrowUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
 import Footer from "@/components/Footer";
+import { shouldShowProduct } from "@/lib/product-utils";
 
 type ProductRow = {
   id: string;
@@ -172,8 +173,8 @@ export default function ProductSubcategory() {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    // Exclude Canada products first
-    let filtered = products.filter(product => !product.name.toLowerCase().includes('canada'));
+    // Exclude Canada products AND Scalable Press products with no images
+    let filtered = products.filter(product => shouldShowProduct(product));
     
     // Search filter
     if (searchTerm.trim()) {

@@ -20,6 +20,7 @@ import { addRecentlyViewed } from "@/lib/recently-viewed";
 import { cn } from "@/lib/utils";
 import useToggle from "@/hooks/useToggle";
 import Footer from "@/components/Footer";
+import { shouldShowProduct } from "@/lib/product-utils";
 
 type ProductRow = {
   id: string;
@@ -162,7 +163,7 @@ export default function Products() {
             async () => {
               const { data, error } = await supabase
                 .from("products")
-                .select("id, name, description, base_cost_cents, min_price_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id")
+                .select("id, name, description, base_cost_cents, min_price_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id, pricing_data")
                 .eq("is_active", true)
                 .order("category", { ascending: true })
                 .order("name", { ascending: true });
@@ -339,7 +340,7 @@ export default function Products() {
     const matches = rows
       .filter(product => 
         product.name.toLowerCase().includes(searchLower) &&
-        !product.name.toLowerCase().includes('canada')
+        shouldShowProduct(product)
       )
       .slice(0, 8); // Limit to 8 suggestions
     
@@ -424,8 +425,8 @@ export default function Products() {
         )
       : rows;
     
-    // Exclude Canada products
-    filtered = filtered.filter(product => !product.name.toLowerCase().includes('canada'));
+    // Exclude Canada products AND Scalable Press products with no images
+    filtered = filtered.filter(product => shouldShowProduct(product));
     
     // Apply vendor filter
     if (vendorFilter === "sinalite") {
