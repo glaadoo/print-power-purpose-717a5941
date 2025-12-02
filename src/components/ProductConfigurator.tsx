@@ -799,34 +799,45 @@ export function ProductConfigurator({
               console.error('[ProductConfigurator] Fallback POST failed:', fallbackErr);
             }
             
-            // If fallback also fails, handle as before
+            // If fallback also fails, show error but DO NOT auto-reset selection
+            // CRITICAL FIX: Only auto-reset for QUANTITY groups, not other groups like Grommets/Finishing
+            // This prevents the frustrating behavior where user selections keep reverting
             if (lastChangedOptionRef.current) {
               const failedId = lastChangedOptionRef.current.optionId;
               const failedGroup = lastChangedOptionRef.current.group;
               
-              setFailedOptionIds(prev => {
-                const newSet = new Set(prev);
-                newSet.add(failedId);
-                return newSet;
-              });
+              // Check if this is a quantity group
+              const isQtyGroup = failedGroup.toLowerCase().includes('qty') || 
+                                 failedGroup.toLowerCase().includes('quantity');
               
-              const group = optionGroups.find(g => g.group === failedGroup);
-              if (group) {
-                const nextValidOption = group.options.find(opt => 
-                  opt.id !== failedId && !failedOptionIds.has(opt.id)
-                );
-                if (nextValidOption) {
-                  setSelectedOptions(prev => ({
-                    ...prev,
-                    [failedGroup]: nextValidOption.id
-                  }));
-                  lastChangedOptionRef.current = null;
-                  return;
+              // Only mark as failed and auto-reset for quantity groups
+              if (isQtyGroup) {
+                setFailedOptionIds(prev => {
+                  const newSet = new Set(prev);
+                  newSet.add(failedId);
+                  return newSet;
+                });
+                
+                const group = optionGroups.find(g => g.group === failedGroup);
+                if (group) {
+                  const nextValidOption = group.options.find(opt => 
+                    opt.id !== failedId && !failedOptionIds.has(opt.id)
+                  );
+                  if (nextValidOption) {
+                    setSelectedOptions(prev => ({
+                      ...prev,
+                      [failedGroup]: nextValidOption.id
+                    }));
+                    lastChangedOptionRef.current = null;
+                    return;
+                  }
                 }
               }
+              // For non-qty groups: clear the ref but keep the user's selection
+              lastChangedOptionRef.current = null;
             }
             
-            setPriceError('This configuration is not available. Please try a different quantity or option.');
+            setPriceError('This configuration is not available. Please try a different option.');
             setFetchingPrice(false);
           }
         } catch (err: any) {
