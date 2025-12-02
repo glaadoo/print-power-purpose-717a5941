@@ -187,10 +187,21 @@ export function ProductConfigurator({
     }));
   }, [pricingData]);
 
+  // Track if initial setup has been done to prevent re-initialization on re-renders
+  const initialSetupDoneRef = useRef(false);
+
   // Initialize with first option from each group - or use defaultVariantKey if provided
+  // CRITICAL: Only run once on initial mount, not on every optionGroups change
   useEffect(() => {
     if (optionGroups.length === 0) {
       console.log('[ProductConfigurator] No option groups available');
+      return;
+    }
+
+    // CRITICAL FIX: Prevent re-initialization after first setup
+    // This was causing selected options to reset when user changed selections
+    if (initialSetupDoneRef.current) {
+      console.log('[ProductConfigurator] Skipping re-initialization, already set up');
       return;
     }
 
@@ -235,6 +246,7 @@ export function ProductConfigurator({
 
     console.log('[ProductConfigurator] Initialized selections:', initial);
     setSelectedOptions(initial);
+    initialSetupDoneRef.current = true; // Mark setup as complete
     
     // CRITICAL FIX: Immediately notify parent of the initial variant key
     // This enables admin price fields for the default configuration without requiring manual changes
@@ -261,7 +273,7 @@ export function ProductConfigurator({
     setTimeout(() => {
       setUserInteracted(true);
     }, 100);
-  }, [optionGroups]);
+  }, [optionGroups, defaultVariantKey, pricingData]);
 
   // Pre-validate quantity options on mount to hide invalid ones
   // SKIP for variable quantity products - they use input fields, not dropdowns
