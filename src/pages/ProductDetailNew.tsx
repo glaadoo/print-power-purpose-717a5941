@@ -170,7 +170,7 @@ export default function ProductDetailNew() {
   let unitCents: number;
   if (configuredPriceCents !== null && configuredPriceCents > 0) {
     unitCents = configuredPriceCents;
-  } else if (product && product.vendor === "sinalite" && product.pricing_data) {
+  } else if (product && product.vendor === "sinalite") {
     // SinaLite products require configuration - show 0 until configured
     unitCents = 0;
   } else if (product && product.vendor === "scalablepress") {
@@ -420,7 +420,7 @@ export default function ProductDetailNew() {
                     <span className="text-3xl font-bold">${unitPrice.toFixed(2)}</span>
                     <span className="text-sm text-muted-foreground ml-2">per unit</span>
                   </div>
-                ) : product?.vendor === 'sinalite' && product.pricing_data ? (
+                ) : product?.vendor === 'sinalite' ? (
                   <div className="mb-4">
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary/30 border-t-primary"></div>
@@ -444,8 +444,8 @@ export default function ProductDetailNew() {
                 )}
               </div>
 
-              {/* Configuration for SinaLite Products */}
-              {product.vendor === 'sinalite' && product.pricing_data && (
+              {/* Configuration for SinaLite Products - always show for SinaLite, loader fetches data on-demand */}
+              {product.vendor === 'sinalite' && (
                 <div className="border border-border rounded-lg p-4 bg-muted/30">
                   <h3 className="font-semibold mb-4">Product Options</h3>
                   <ProductConfiguratorLoader
