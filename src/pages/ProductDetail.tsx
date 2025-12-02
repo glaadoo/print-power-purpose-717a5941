@@ -13,6 +13,7 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import { toast } from "sonner";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
 import Footer from "@/components/Footer";
+import { shouldShowProduct } from "@/lib/product-utils";
 
 type ProductRow = {
   id: string;
@@ -72,6 +73,13 @@ export default function ProductDetail() {
         
         if (!data) {
           setErr("Product not found");
+          return;
+        }
+
+        // Check if product should be displayed (has images, not Canada, etc.)
+        if (!shouldShowProduct(data)) {
+          toast.error("This product is currently unavailable");
+          nav("/products");
           return;
         }
 
