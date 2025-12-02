@@ -31,7 +31,30 @@ const SECTION_KEYWORDS: Record<string, { keywords: string[]; icon: React.ReactNo
   }
 };
 
+// Check if description is meaningful (not just internal codes or vendor IDs)
+const isMeaningfulDescription = (text: string): boolean => {
+  if (!text || text.trim().length === 0) return false;
+  
+  const cleaned = text.trim();
+  
+  // Skip if it's just an internal code (contains underscores, no spaces, very short)
+  if (cleaned.includes('_') && !cleaned.includes(' ') && cleaned.length < 50) return false;
+  
+  // Skip if it looks like a product ID or code
+  if (/^[a-z0-9_-]+$/i.test(cleaned) && cleaned.length < 30) return false;
+  
+  // Skip if too short to be meaningful
+  if (cleaned.length < 10) return false;
+  
+  return true;
+};
+
 export default function ProductDescription({ description, productName }: ProductDescriptionProps) {
+  // Don't render anything if description is not meaningful
+  if (!isMeaningfulDescription(description)) {
+    return null;
+  }
+
   const parseDescription = (text: string): { sections: ParsedSection[]; generalPoints: string[] } => {
     const sections: ParsedSection[] = [];
     const generalPoints: string[] = [];
