@@ -34,24 +34,30 @@ async function fetchMinPricesBackground(
   supabase: any,
   accessToken: string,
   apiBaseUrl: string,
-  batchSize = 10
+  batchSize = 10,
+  forceRefreshAll = false
 ) {
-  console.log("[SYNC-SINALITE] Starting background min price fetch...");
+  console.log(`[SYNC-SINALITE] Starting background min price fetch (forceRefreshAll: ${forceRefreshAll})...`);
   
   try {
     let totalUpdated = 0;
-    let iterations = 0;
-    const maxIterations = 50; // Process up to 500 products
+    let offset = 0;
+    const maxProducts = 500; // Process up to 500 products per sync
     
-    while (iterations < maxIterations) {
-      iterations++;
-      
+    while (offset < maxProducts) {
       // Get products that need min_price updated
-      const { data: products, error: fetchError } = await supabase
+      let query = supabase
         .from("products")
-        .select("id, vendor_product_id, name")
-        .eq("vendor", "sinalite")
-        .or("min_price_cents.eq.2000,min_price_cents.is.null")
+        .select("id, vendor_product_id, name, min_price_cents")
+        .eq("vendor", "sinalite");
+      
+      // If not forcing refresh, only update products with default/null min_price
+      if (!forceRefreshAll) {
+        query = query.or("min_price_cents.eq.2000,min_price_cents.is.null");
+      }
+      
+      const { data: products, error: fetchError } = await query
+        .range(offset, offset + batchSize - 1)
         .limit(batchSize);
       
       if (fetchError) {
@@ -60,62 +66,83 @@ async function fetchMinPricesBackground(
       }
       
       if (!products || products.length === 0) {
-        console.log("[SYNC-SINALITE] All products have min prices updated");
+        console.log("[SYNC-SINALITE] No more products to process for min prices");
         break;
       }
       
-      console.log(`[SYNC-SINALITE] Batch ${iterations}: Processing ${products.length} products`);
+      const batchNum = Math.floor(offset / batchSize) + 1;
+      console.log(`[SYNC-SINALITE] Min price batch ${batchNum}: Processing ${products.length} products`);
       
       for (const product of products) {
         try {
           const productId = product.vendor_product_id;
-          const variantsUrl = `${apiBaseUrl}/variants/${productId}/0`;
           
-          const variantsRes = await fetch(variantsUrl, {
-            headers: {
-              "Authorization": `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
-          });
-          
-          if (!variantsRes.ok) {
-            console.error(`[SYNC-SINALITE] Variants fetch failed for ${productId}: ${variantsRes.status}`);
-            continue;
-          }
-          
-          const variants = await variantsRes.json();
-          
-          // Find minimum price from variants
+          // Paginate through ALL variant pages to find true minimum
           let minPrice = Infinity;
+          let minPriceVariantKey: string | null = null;
+          let variantOffset = 0;
+          let hasMoreVariants = true;
           
-          if (Array.isArray(variants)) {
-            for (const variant of variants) {
+          while (hasMoreVariants) {
+            const variantsUrl = `${apiBaseUrl}/variants/${productId}/${variantOffset}`;
+            
+            const variantsRes = await fetch(variantsUrl, {
+              headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+            });
+            
+            if (!variantsRes.ok) {
+              console.error(`[SYNC-SINALITE] Variants fetch failed for ${productId} offset ${variantOffset}: ${variantsRes.status}`);
+              break;
+            }
+            
+            const variants = await variantsRes.json();
+            const variantList = Array.isArray(variants) 
+              ? variants 
+              : (variants?.data || variants?.variants || []);
+            
+            if (!Array.isArray(variantList) || variantList.length === 0) {
+              hasMoreVariants = false;
+              break;
+            }
+            
+            // Find minimum price from this page of variants
+            for (const variant of variantList) {
               const price = variant.price || variant.unit_price || variant.base_price;
               if (typeof price === 'number' && price > 0 && price < minPrice) {
                 minPrice = price;
+                minPriceVariantKey = variant.key || variant.variant_key || null;
               }
             }
-          } else if (variants && typeof variants === 'object') {
-            const variantList = variants.data || variants.variants || Object.values(variants);
-            if (Array.isArray(variantList)) {
-              for (const variant of variantList) {
-                const price = variant.price || variant.unit_price || variant.base_price;
-                if (typeof price === 'number' && price > 0 && price < minPrice) {
-                  minPrice = price;
-                }
-              }
+            
+            // Check if there are more pages (1000 variants per page)
+            if (variantList.length < 1000) {
+              hasMoreVariants = false;
+            } else {
+              variantOffset += 1000;
             }
+            
+            // Small delay between variant pages
+            await new Promise(r => setTimeout(r, 50));
           }
           
           if (minPrice !== Infinity && minPrice > 0) {
             const minPriceCents = Math.round(minPrice * 100);
             
+            const updateData: any = { 
+              min_price_cents: minPriceCents,
+              base_cost_cents: minPriceCents 
+            };
+            
+            if (minPriceVariantKey) {
+              updateData.min_price_variant_key = minPriceVariantKey;
+            }
+            
             await supabase
               .from("products")
-              .update({ 
-                min_price_cents: minPriceCents,
-                base_cost_cents: minPriceCents 
-              })
+              .update(updateData)
               .eq("id", product.id);
             
             totalUpdated++;
@@ -128,6 +155,8 @@ async function fetchMinPricesBackground(
           console.error(`[SYNC-SINALITE] Error processing ${product.name}:`, err);
         }
       }
+      
+      offset += batchSize;
       
       // Delay between batches
       await new Promise(r => setTimeout(r, 500));
@@ -477,11 +506,14 @@ serve(async (req) => {
     const synced = totalSynced;
     console.log(`[SYNC-SINALITE] Successfully synced ${synced} products`);
 
-    // Skip background min price fetch by default to reduce memory usage
-    // Can be enabled by passing skipMinPrices: false in request body
+    // Automatically refresh min prices for ALL products during sync
     if (!skipMinPrices && typeof EdgeRuntime !== 'undefined') {
-      console.log("[SYNC-SINALITE] Background min price fetch skipped to conserve resources");
-      // EdgeRuntime.waitUntil(fetchMinPricesBackground(supabase, accessToken, apiBaseUrl, 5));
+      console.log("[SYNC-SINALITE] Starting background min price refresh for all products...");
+      EdgeRuntime.waitUntil(fetchMinPricesBackground(supabase, accessToken, apiBaseUrl, 10, true));
+    } else if (!skipMinPrices) {
+      // Fallback: run synchronously if EdgeRuntime not available (will block response)
+      console.log("[SYNC-SINALITE] EdgeRuntime not available, running min price fetch synchronously...");
+      await fetchMinPricesBackground(supabase, accessToken, apiBaseUrl, 10, true);
     }
 
     return new Response(
