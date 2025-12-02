@@ -21,10 +21,6 @@ const SECTION_KEYWORDS: Record<string, { keywords: string[]; icon: React.ReactNo
     keywords: ['material', 'made from', 'fabric', 'composition', 'constructed'],
     icon: <Package className="w-4 h-4" />
   },
-  'Size & Dimensions': {
-    keywords: ['size', 'dimension', 'measurement', 'fit', 'width', 'height', 'length'],
-    icon: <Ruler className="w-4 h-4" />
-  },
   'Care Instructions': {
     keywords: ['care', 'wash', 'clean', 'maintain', 'dry', 'iron'],
     icon: <Shirt className="w-4 h-4" />
