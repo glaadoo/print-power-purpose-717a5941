@@ -516,82 +516,67 @@ export default function Products() {
     return cachedCategories;
   }, [cachedCategories]);
 
-  // Helper to normalize category strings for comparison (remove special chars, lowercase)
+  // Helper to normalize category strings for comparison (remove all non-alphanumeric, lowercase)
   const normalizeCategory = (str: string) => 
-    str.toLowerCase().replace(/[-_\s]+/g, '').replace(/[^a-z0-9]/g, '');
+    str.toLowerCase().replace(/[^a-z0-9]/g, '');
 
   // Filter by selected category (matches slug but products store category names)
   const categoryFilteredProducts = useMemo(() => {
-    console.log('[Products] Category filter - selectedCategory:', selectedCategory);
-    
     if (!selectedCategory || selectedCategory === "all") {
       return filteredAndSortedProducts;
     }
     
     // Find the selected category to check if it's a parent
     const selectedCat = cachedCategories.find(c => c.slug === selectedCategory);
-    console.log('[Products] Found category:', selectedCat);
-    
     if (!selectedCat) return filteredAndSortedProducts;
     
     // If parent category selected, show all products from child categories
     if (!selectedCat.parent_id) {
-      // Get child categories with their normalized names
+      // Get child categories with exact names and normalized versions
       const childCategories = cachedCategories
         .filter(c => c.parent_id === selectedCat.id)
         .map(c => ({
-          name: c.name.toLowerCase(),
+          exactName: c.name.toLowerCase().trim(),
           normalized: normalizeCategory(c.name)
         }));
       
-      console.log('[Products] Parent category detected. Child categories:', childCategories);
-      
+      const parentName = selectedCat.name.toLowerCase().trim();
       const parentNormalized = normalizeCategory(selectedCat.name);
       
-      const filtered = filteredAndSortedProducts.filter(p => {
-        const productCategory = (p.category || "").toLowerCase();
+      return filteredAndSortedProducts.filter(p => {
+        const productCategory = (p.category || "").toLowerCase().trim();
         const productNormalized = normalizeCategory(productCategory);
         
-        // Match against parent or any child category
-        // Use both exact and partial matching for flexibility
-        const matches = productNormalized === parentNormalized ||
-               childCategories.some(child => 
-                 productNormalized === child.normalized ||
-                 productNormalized.includes(child.normalized) ||
-                 child.normalized.includes(productNormalized) ||
-                 productCategory.startsWith(child.name.split(' ')[0])
-               );
-        
-        // Debug specific products
-        if (productCategory.includes('calendar')) {
-          console.log('[Products] Calendar product check:', {
-            name: p.name,
-            productCategory,
-            productNormalized,
-            matches,
-            childCategories: childCategories.map(c => c.normalized)
-          });
+        // Match against parent category
+        if (productCategory === parentName || productNormalized === parentNormalized) {
+          return true;
         }
         
-        return matches;
+        // Match against any child category - use multiple matching strategies
+        return childCategories.some(child => 
+          // Exact match (case-insensitive)
+          productCategory === child.exactName ||
+          // Normalized match (removes all special chars)
+          productNormalized === child.normalized ||
+          // Partial matches for variations
+          productNormalized.includes(child.normalized) ||
+          child.normalized.includes(productNormalized)
+        );
       });
-      
-      console.log('[Products] Filtered products count:', filtered.length);
-      return filtered;
     }
     
     // If child category selected, show only products from that category
+    const categoryName = selectedCat.name.toLowerCase().trim();
     const categoryNormalized = normalizeCategory(selectedCat.name);
-    const categoryFirstWord = selectedCat.name.toLowerCase().split(' ')[0];
     
     return filteredAndSortedProducts.filter(p => {
-      const productCategory = (p.category || "").toLowerCase();
+      const productCategory = (p.category || "").toLowerCase().trim();
       const productNormalized = normalizeCategory(productCategory);
       
-      return productNormalized === categoryNormalized ||
+      return productCategory === categoryName ||
+             productNormalized === categoryNormalized ||
              productNormalized.includes(categoryNormalized) ||
-             categoryNormalized.includes(productNormalized) ||
-             productCategory.startsWith(categoryFirstWord);
+             categoryNormalized.includes(productNormalized);
     });
   }, [filteredAndSortedProducts, selectedCategory, cachedCategories]);
 
