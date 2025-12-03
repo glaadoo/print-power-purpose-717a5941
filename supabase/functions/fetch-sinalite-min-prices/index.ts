@@ -163,64 +163,89 @@ serve(async (req) => {
           return numA - numB;
         });
 
-        // Base options: smallest qty only - we'll test ALL sizes
+        // Base options: smallest qty only
         const baseQtyOption = qtyOptions.length > 0 ? qtyOptions[0].id : null;
 
-        // ALL other groups are variable - INCLUDING SIZE!
-        // This ensures we test all sizes to find the true minimum
-        const fixedGroups = ['qty']; // Only qty is fixed (smallest)
-        const variableGroups: string[] = [];
+        // Identify groups that are NOT qty or size - these are "other" configurable options
+        const fixedGroups = ['qty', 'size']; // size handled separately to ensure ALL sizes tested
+        const otherGroups: string[] = [];
         
         for (const group of groupNames) {
           if (!fixedGroups.includes(group) && optionsByGroup[group].length > 0) {
-            variableGroups.push(group);
+            otherGroups.push(group);
           }
         }
 
-        console.log(`[FETCH-MIN-PRICES] ${product.name} variable groups (including size): ${variableGroups.join(', ')}`);
+        console.log(`[FETCH-MIN-PRICES] ${product.name} - sizes: ${sizeOptions.length}, other groups: ${otherGroups.join(', ')}`);
 
-        // Generate ALL combinations across variable groups (including all sizes)
-        const generateCombinations = (groups: string[]): number[][] => {
+        // SMART APPROACH: Test ALL sizes with cheapest option from each other group
+        // Then do limited exploration of other option combinations
+        
+        // For each "other" group, pick the first option (usually cheapest/default)
+        const defaultOtherOptions: number[] = [];
+        for (const group of otherGroups) {
+          if (optionsByGroup[group].length > 0) {
+            defaultOtherOptions.push(optionsByGroup[group][0].id);
+          }
+        }
+
+        // Build combinations: test EVERY size with default other options
+        const combinations: number[][] = [];
+        
+        // First pass: test ALL sizes with default options (guaranteed to test every size)
+        for (const sizeOpt of sizeOptions) {
+          combinations.push([sizeOpt.id, ...defaultOtherOptions]);
+        }
+        
+        // Second pass: for each size, also test with other option variations (limited)
+        // Generate variations of other options
+        const generateOtherCombos = (groups: string[]): number[][] => {
           if (groups.length === 0) return [[]];
           
           const [first, ...rest] = groups;
-          const restCombinations = generateCombinations(rest);
-          const combinations: number[][] = [];
+          const restCombos = generateOtherCombos(rest);
+          const combos: number[][] = [];
           
-          // Test ALL options in this group
-          const groupOptions = optionsByGroup[first];
-          
-          for (const opt of groupOptions) {
-            for (const restCombo of restCombinations) {
-              combinations.push([opt.id, ...restCombo]);
+          for (const opt of optionsByGroup[first]) {
+            for (const restCombo of restCombos) {
+              combos.push([opt.id, ...restCombo]);
             }
           }
-          
-          return combinations;
+          return combos;
         };
         
-        // Generate all combinations
-        let combinations = generateCombinations(variableGroups);
+        const otherCombos = generateOtherCombos(otherGroups);
         
-        // Log total combinations count
-        console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} total combinations to test (all sizes included)`);
+        // Add size + other combo variations (capped per size to prevent explosion)
+        const maxOtherCombosPerSize = Math.max(1, Math.floor(50 / Math.max(1, sizeOptions.length)));
         
-        // Cap combinations to prevent timeout (max 300 for thorough testing)
-        const maxCombinations = 300;
-        if (combinations.length > maxCombinations) {
-          console.log(`[FETCH-MIN-PRICES] ${product.name}: capping at ${maxCombinations} combinations`);
-          // Shuffle to get random sample across all options
-          combinations = combinations.sort(() => Math.random() - 0.5).slice(0, maxCombinations);
+        for (const sizeOpt of sizeOptions) {
+          // Skip first combo (already added in first pass with defaults)
+          const limitedOtherCombos = otherCombos.slice(1, maxOtherCombosPerSize + 1);
+          for (const otherCombo of limitedOtherCombos) {
+            combinations.push([sizeOpt.id, ...otherCombo]);
+          }
         }
         
-        // PARALLEL price fetching - test all combinations at once
+        console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} combinations (all ${sizeOptions.length} sizes tested)`);
+        
+        // Final cap at 500 combinations
+        const maxCombinations = 500;
+        let finalCombinations = combinations;
+        if (combinations.length > maxCombinations) {
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: capping at ${maxCombinations} combinations`);
+          // Keep first N (which includes all sizes with defaults)
+          finalCombinations = combinations.slice(0, maxCombinations);
+        }
+        
+        // PARALLEL price fetching - test all combinations
         // Batch into groups of 20 to avoid overwhelming the API
         const batchLimit = 20;
         let globalMinPrice = Infinity;
         let globalMinOptions: number[] = [];
         
-        for (let i = 0; i < combinations.length; i += batchLimit) {
-          const batch = combinations.slice(i, i + batchLimit);
+        for (let i = 0; i < finalCombinations.length; i += batchLimit) {
+          const batch = finalCombinations.slice(i, i + batchLimit);
           
           const pricePromises = batch.map(async (combo): Promise<{ price: number; options: number[] } | null> => {
             // Add base qty option if it exists
@@ -299,7 +324,7 @@ serve(async (req) => {
         if (globalMinOptions.length > 0 && globalMinPrice < Infinity) {
           const minPriceCents = Math.round(globalMinPrice * 100);
           const minPriceVariantKey = globalMinOptions.sort((a, b) => a - b).join('-');
-          console.log(`[FETCH-MIN-PRICES] ✓ ${product.name}: $${globalMinPrice.toFixed(2)} (tested ${combinations.length} combinations)`);
+          console.log(`[FETCH-MIN-PRICES] ✓ ${product.name}: $${globalMinPrice.toFixed(2)} (tested ${finalCombinations.length} combinations)`);
           return {
             id: product.id,
             min_price_cents: minPriceCents,
