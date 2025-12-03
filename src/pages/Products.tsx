@@ -123,9 +123,9 @@ export default function Products() {
     setLoading(true);
     setErr(null);
     
-    // Add timeout to prevent infinite loading
+    // Add timeout to prevent infinite loading - 60s for large catalog
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Request timeout - please check your connection')), 15000)
+      setTimeout(() => reject(new Error('Request timeout - please check your connection')), 60000)
     );
     
     try {
@@ -162,6 +162,7 @@ export default function Products() {
           withRetry(
             async () => {
               // Supabase limits to 1000 rows per request, so fetch in batches
+              // Exclude pricing_data from list view - it's only needed on detail pages
               const allProducts: any[] = [];
               const batchSize = 1000;
               let offset = 0;
@@ -170,7 +171,7 @@ export default function Products() {
               while (hasMore) {
                 const { data, error } = await supabase
                   .from("products")
-                  .select("id, name, description, base_cost_cents, min_price_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id, pricing_data")
+                  .select("id, name, description, base_cost_cents, min_price_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id")
                   .eq("is_active", true)
                   .order("category", { ascending: true })
                   .order("name", { ascending: true })
