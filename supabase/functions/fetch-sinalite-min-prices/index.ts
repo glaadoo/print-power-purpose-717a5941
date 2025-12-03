@@ -163,56 +163,68 @@ serve(async (req) => {
           return numA - numB;
         });
 
-        // All groups except qty (which we pick smallest) and size (which we iterate)
-        const variableGroups = groupNames.filter(g => g !== 'qty' && g !== 'size');
-        
-        console.log(`[FETCH-MIN-PRICES] ${product.name} - sizes: ${sizeOptions.length}, variable groups: ${variableGroups.join(', ')}`);
+        // Base options: smallest qty only - we'll test ALL sizes
+        const baseQtyOption = qtyOptions.length > 0 ? qtyOptions[0].id : null;
 
-        // Build base options: smallest qty + first option from each variable group
-        const baseOptions: number[] = [];
-        if (qtyOptions.length > 0) {
-          baseOptions.push(qtyOptions[0].id);
-        }
-        for (const group of variableGroups) {
-          if (optionsByGroup[group].length > 0) {
-            baseOptions.push(optionsByGroup[group][0].id);
+        // ALL other groups are variable - INCLUDING SIZE!
+        // This ensures we test all sizes to find the true minimum
+        const fixedGroups = ['qty']; // Only qty is fixed (smallest)
+        const variableGroups: string[] = [];
+        
+        for (const group of groupNames) {
+          if (!fixedGroups.includes(group) && optionsByGroup[group].length > 0) {
+            variableGroups.push(group);
           }
         }
 
-        // Build combinations: test EVERY size with base options from all other groups
-        const combinations: number[][] = [];
+        console.log(`[FETCH-MIN-PRICES] ${product.name} variable groups (including size): ${variableGroups.join(', ')}`);
+
+        // Generate ALL combinations across variable groups (including all sizes)
+        const generateCombinations = (groups: string[]): number[][] => {
+          if (groups.length === 0) return [[]];
+          
+          const [first, ...rest] = groups;
+          const restCombinations = generateCombinations(rest);
+          const combinations: number[][] = [];
+          
+          // Test ALL options in this group
+          const groupOptions = optionsByGroup[first];
+          
+          for (const opt of groupOptions) {
+            for (const restCombo of restCombinations) {
+              combinations.push([opt.id, ...restCombo]);
+            }
+          }
+          
+          return combinations;
+        };
         
-        // Test ALL sizes with default options from all groups
-        for (const sizeOpt of sizeOptions) {
-          combinations.push([...baseOptions, sizeOpt.id]);
+        // Generate all combinations
+        let combinations = generateCombinations(variableGroups);
+        
+        // Log total combinations count
+        console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} total combinations to test (all sizes included)`);
+        
+        // Cap combinations to prevent timeout (max 300 for thorough testing)
+        const maxCombinations = 300;
+        if (combinations.length > maxCombinations) {
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: capping at ${maxCombinations} combinations`);
+          // Shuffle to get random sample across all options
+          combinations = combinations.sort(() => Math.random() - 0.5).slice(0, maxCombinations);
         }
         
-        // If no size options, just test with base options
-        if (sizeOptions.length === 0 && baseOptions.length > 0) {
-          combinations.push([...baseOptions]);
-        }
-        
-        console.log(`[FETCH-MIN-PRICES] ${product.name}: testing ${combinations.length} combinations`);
-        
-        // Log first combination for debugging
-        if (combinations.length > 0) {
-          console.log(`[FETCH-MIN-PRICES] ${product.name} first combo: [${combinations[0].join(', ')}]`);
-        }
-        
-        const finalCombinations = combinations;
-        
-        // PARALLEL price fetching - test all combinations
+        // PARALLEL price fetching - test all combinations at once
         // Batch into groups of 20 to avoid overwhelming the API
         const batchLimit = 20;
         let globalMinPrice = Infinity;
         let globalMinOptions: number[] = [];
         
-        for (let i = 0; i < finalCombinations.length; i += batchLimit) {
-          const batch = finalCombinations.slice(i, i + batchLimit);
+        for (let i = 0; i < combinations.length; i += batchLimit) {
+          const batch = combinations.slice(i, i + batchLimit);
           
           const pricePromises = batch.map(async (combo): Promise<{ price: number; options: number[] } | null> => {
-            // combo already includes all required options (qty, size, all variable groups)
-            const fullOptions = [...combo];
+            // Add base qty option if it exists
+            const fullOptions = baseQtyOption ? [baseQtyOption, ...combo] : [...combo];
             try {
               const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
               const priceRes = await fetch(priceUrl, {
@@ -228,36 +240,13 @@ serve(async (req) => {
 
               const priceData = await priceRes.json();
               
-              // Extract price from various possible response fields
               let price = 0;
-              
-              // Try direct price fields
-              const priceFields = ['price', 'unit_price', 'total_price', 'unitPrice', 'totalPrice', 'basePrice', 'base_price', 'amount'];
-              for (const field of priceFields) {
-                if (priceData[field] && parseFloat(priceData[field]) > 0) {
-                  price = parseFloat(priceData[field]);
-                  break;
-                }
-              }
-              
-              // Try nested price object
-              if (price === 0 && priceData.pricing) {
-                for (const field of priceFields) {
-                  if (priceData.pricing[field] && parseFloat(priceData.pricing[field]) > 0) {
-                    price = parseFloat(priceData.pricing[field]);
-                    break;
-                  }
-                }
-              }
-              
-              // Try data wrapper
-              if (price === 0 && priceData.data) {
-                for (const field of priceFields) {
-                  if (priceData.data[field] && parseFloat(priceData.data[field]) > 0) {
-                    price = parseFloat(priceData.data[field]);
-                    break;
-                  }
-                }
+              if (priceData.price && parseFloat(priceData.price) > 0) {
+                price = parseFloat(priceData.price);
+              } else if (priceData.unit_price && parseFloat(priceData.unit_price) > 0) {
+                price = parseFloat(priceData.unit_price);
+              } else if (priceData.total_price && parseFloat(priceData.total_price) > 0) {
+                price = parseFloat(priceData.total_price);
               }
               
               return price > 0 ? { price, options: fullOptions } : null;
@@ -277,80 +266,40 @@ serve(async (req) => {
           }
         }
 
-        // If no combinations worked, try fallback approaches
-        if (globalMinOptions.length === 0) {
-          console.log(`[FETCH-MIN-PRICES] ${product.name}: trying fallback approaches`);
-          
-          // Try with base options + first size
-          if (baseOptions.length > 0 && sizeOptions.length > 0) {
-            try {
-              const fallbackOptions = [...baseOptions, sizeOptions[0].id];
-              const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
-              const priceRes = await fetch(priceUrl, {
-                method: "POST",
-                headers: {
-                  "Authorization": `Bearer ${accessToken}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ productOptions: fallbackOptions }),
-              });
+        // If no combinations worked, try just qty option with first size
+        if (globalMinOptions.length === 0 && baseQtyOption && sizeOptions.length > 0) {
+          try {
+            const fallbackOptions = [baseQtyOption, sizeOptions[0].id];
+            const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
+            const priceRes = await fetch(priceUrl, {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ productOptions: fallbackOptions }),
+            });
 
-              if (priceRes.ok) {
-                const priceData = await priceRes.json();
-                console.log(`[FETCH-MIN-PRICES] ${product.name} fallback response:`, JSON.stringify(priceData).substring(0, 500));
-                
-                let price = 0;
-                const priceFields = ['price', 'unit_price', 'total_price', 'unitPrice', 'totalPrice', 'basePrice', 'base_price', 'amount'];
-                for (const field of priceFields) {
-                  if (priceData[field] && parseFloat(priceData[field]) > 0) {
-                    price = parseFloat(priceData[field]);
-                    break;
-                  }
-                }
-                if (price > 0) {
-                  globalMinPrice = price;
-                  globalMinOptions = fallbackOptions;
-                }
+            if (priceRes.ok) {
+              const priceData = await priceRes.json();
+              let price = 0;
+              if (priceData.price && parseFloat(priceData.price) > 0) {
+                price = parseFloat(priceData.price);
+              } else if (priceData.unit_price && parseFloat(priceData.unit_price) > 0) {
+                price = parseFloat(priceData.unit_price);
               }
-            } catch {}
-          }
-          
-          // Try pricebykey endpoint with variant key from database if still no price
-          if (globalMinOptions.length === 0 && product.min_price_variant_key) {
-            try {
-              const keyUrl = `${apiBaseUrl}/pricebykey/${productId}/${product.min_price_variant_key}`;
-              const keyRes = await fetch(keyUrl, {
-                headers: {
-                  "Authorization": `Bearer ${accessToken}`,
-                  "Content-Type": "application/json",
-                },
-              });
-
-              if (keyRes.ok) {
-                const keyData = await keyRes.json();
-                console.log(`[FETCH-MIN-PRICES] ${product.name} pricebykey response:`, JSON.stringify(keyData).substring(0, 500));
-                
-                let price = 0;
-                const priceFields = ['price', 'unit_price', 'total_price', 'unitPrice', 'totalPrice', 'basePrice', 'base_price', 'amount'];
-                for (const field of priceFields) {
-                  if (keyData[field] && parseFloat(keyData[field]) > 0) {
-                    price = parseFloat(keyData[field]);
-                    break;
-                  }
-                }
-                if (price > 0) {
-                  globalMinPrice = price;
-                  globalMinOptions = product.min_price_variant_key.split('-').map((s: string) => parseInt(s));
-                }
+              if (price > 0) {
+                globalMinPrice = price;
+                globalMinOptions = fallbackOptions;
               }
-            } catch {}
-          }
+            }
+          } catch {}
         }
 
         if (globalMinOptions.length > 0 && globalMinPrice < Infinity) {
           const minPriceCents = Math.round(globalMinPrice * 100);
           const minPriceVariantKey = globalMinOptions.sort((a, b) => a - b).join('-');
-          console.log(`[FETCH-MIN-PRICES] ✓ ${product.name}: $${globalMinPrice.toFixed(2)} (tested ${finalCombinations.length} combinations)`);
+          console.log(`[FETCH-MIN-PRICES] ✓ ${product.name}: $${globalMinPrice.toFixed(2)} (tested ${combinations.length} combinations)`);
           return {
             id: product.id,
             min_price_cents: minPriceCents,
