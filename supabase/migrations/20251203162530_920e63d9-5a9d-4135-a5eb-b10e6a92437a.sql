@@ -1,0 +1,1 @@
+UPDATE products SET image_url = '/images/poly-roll-labels.png' WHERE id = 'c7ca37f3-95c9-4592-bbb2-e2f05f354ed9'
