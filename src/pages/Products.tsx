@@ -693,7 +693,7 @@ export default function Products() {
       {/* Mega Menu Category Navigation */}
       <ProductMegaMenu
         categories={categoryData}
-        onCategorySelect={(slug) => setSelectedCategory(slug)}
+        onCategorySelect={(slug) => setSelectedCategory(prev => prev === slug ? "all" : slug)}
         selectedCategory={selectedCategory}
       />
 
