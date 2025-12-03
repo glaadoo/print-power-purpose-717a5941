@@ -78,10 +78,28 @@ async function computeMinPriceForProduct(
     const qtyOptions = optionsByGroup['qty'] || [];
     const sizeOptions = optionsByGroup['size'] || [];
 
+    // Parse size dimensions to sort by area (smaller = cheaper)
+    const parseSizeValue = (name: string): number => {
+      // Try to parse dimensions like "12 x 18", "4x6", "8.5x11"
+      const match = name.match(/(\d+\.?\d*)\s*[xX×]\s*(\d+\.?\d*)/);
+      if (match) {
+        return parseFloat(match[1]) * parseFloat(match[2]);
+      }
+      // For single numbers, use as-is
+      const num = parseFloat(name.replace(/[^\d.]/g, ''));
+      return isNaN(num) ? 999999 : num;
+    };
+
+    // Sort qty options to use smallest
     qtyOptions.sort((a, b) => {
       const numA = parseInt(a.name) || 999999;
       const numB = parseInt(b.name) || 999999;
       return numA - numB;
+    });
+
+    // Sort size options by area (smallest first - usually cheapest)
+    sizeOptions.sort((a, b) => {
+      return parseSizeValue(a.name) - parseSizeValue(b.name);
     });
 
     // Base options: smallest qty only
@@ -91,13 +109,18 @@ async function computeMinPriceForProduct(
     const fixedGroups = ['qty'];
     const variableGroups: string[] = [];
     
+    // Put 'size' first in variable groups to prioritize testing all sizes
+    if (optionsByGroup['size']?.length > 0) {
+      variableGroups.push('size');
+    }
+    
     for (const group of groupNames) {
-      if (!fixedGroups.includes(group) && optionsByGroup[group].length > 0) {
+      if (!fixedGroups.includes(group) && group !== 'size' && optionsByGroup[group].length > 0) {
         variableGroups.push(group);
       }
     }
 
-    // Generate ALL combinations across variable groups
+    // Generate combinations prioritizing smaller sizes first
     const generateCombinations = (groups: string[]): number[][] => {
       if (groups.length === 0) return [[]];
       
@@ -105,6 +128,7 @@ async function computeMinPriceForProduct(
       const restCombinations = generateCombinations(rest);
       const combinations: number[][] = [];
       
+      // Use pre-sorted options (sizes already sorted by area)
       const groupOptions = optionsByGroup[first];
       
       for (const opt of groupOptions) {
@@ -118,11 +142,12 @@ async function computeMinPriceForProduct(
     
     let combinations = generateCombinations(variableGroups);
     
-    // Cap combinations to prevent timeout (max 100 for sync efficiency)
-    const maxCombinations = 100;
+    // Deterministic selection: keep first N combinations (already sorted by size)
+    // This ensures we test ALL sizes with at least some option combinations
+    const maxCombinations = 150;
     if (combinations.length > maxCombinations) {
-      // Shuffle to get random sample across all options
-      combinations = combinations.sort(() => Math.random() - 0.5).slice(0, maxCombinations);
+      // Keep combinations deterministically - smaller sizes first
+      combinations = combinations.slice(0, maxCombinations);
     }
     
     // Parallel price fetching - test combinations in batches
