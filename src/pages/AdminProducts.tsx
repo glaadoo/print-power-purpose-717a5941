@@ -86,7 +86,7 @@ export default function AdminProducts() {
     }
   }
 
-  async function loadProducts() {
+  async function loadProducts(showToastForVendor?: 'sinalite' | 'scalablepress' | 'all') {
     try {
       console.log("Starting product load with retry logic...");
       
@@ -141,22 +141,31 @@ export default function AdminProducts() {
       setProducts(result);
       console.log(`Successfully loaded ${result.length} products`);
       
-      // Count products by vendor and show separate notifications
-      const sinaliteCount = result.filter(p => p.vendor === 'sinalite').length;
-      const scalableCount = result.filter(p => p.vendor === 'scalablepress').length;
-      const otherCount = result.length - sinaliteCount - scalableCount;
-      
-      if (sinaliteCount > 0) {
-        toast.success(`Successfully loaded ${sinaliteCount} Sinalite products.`);
-      }
-      if (scalableCount > 0) {
-        toast.success(`Successfully loaded ${scalableCount} Scalable Press products.`);
-      }
-      if (otherCount > 0) {
-        toast.success(`Successfully loaded ${otherCount} other products.`);
-      }
-      if (result.length === 0) {
-        toast.info("No products found in database.");
+      // Only show toasts if explicitly requested (not after sync operations which have their own messages)
+      if (showToastForVendor) {
+        const sinaliteCount = result.filter(p => p.vendor === 'sinalite').length;
+        const scalableCount = result.filter(p => p.vendor === 'scalablepress').length;
+        const otherCount = result.length - sinaliteCount - scalableCount;
+        
+        if (showToastForVendor === 'all') {
+          if (sinaliteCount > 0) {
+            toast.success(`Successfully loaded ${sinaliteCount} SinaLite products.`);
+          }
+          if (scalableCount > 0) {
+            toast.success(`Successfully loaded ${scalableCount} Scalable Press products.`);
+          }
+          if (otherCount > 0) {
+            toast.success(`Successfully loaded ${otherCount} other products.`);
+          }
+        } else if (showToastForVendor === 'sinalite' && sinaliteCount > 0) {
+          toast.success(`Successfully loaded ${sinaliteCount} SinaLite products.`);
+        } else if (showToastForVendor === 'scalablepress' && scalableCount > 0) {
+          toast.success(`Successfully loaded ${scalableCount} Scalable Press products.`);
+        }
+        
+        if (result.length === 0) {
+          toast.info("No products found in database.");
+        }
       }
     } catch (err: any) {
       console.error("Error loading products after retries:", err);
@@ -1058,7 +1067,7 @@ export default function AdminProducts() {
                   onClick={() => {
                     setLoading(true);
                     setShowPricingProducts(true);
-                    loadProducts();
+                    loadProducts('all');
                   }}
                   className="rounded-full"
                 >
