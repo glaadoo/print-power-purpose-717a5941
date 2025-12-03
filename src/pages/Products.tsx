@@ -513,6 +513,10 @@ export default function Products() {
     return cachedCategories;
   }, [cachedCategories]);
 
+  // Helper to normalize category strings for comparison (remove special chars, lowercase)
+  const normalizeCategory = (str: string) => 
+    str.toLowerCase().replace(/[-_\s]+/g, '').replace(/[^a-z0-9]/g, '');
+
   // Filter by selected category (matches slug but products store category names)
   const categoryFilteredProducts = useMemo(() => {
     if (!selectedCategory || selectedCategory === "all") {
@@ -525,34 +529,44 @@ export default function Products() {
     
     // If parent category selected, show all products from child categories
     if (!selectedCat.parent_id) {
-      // Get child category NAMES (not slugs) since products store category names
-      const childCategoryNames = cachedCategories
+      // Get child categories with their normalized names
+      const childCategories = cachedCategories
         .filter(c => c.parent_id === selectedCat.id)
-        .map(c => c.name.toLowerCase());
+        .map(c => ({
+          name: c.name.toLowerCase(),
+          normalized: normalizeCategory(c.name)
+        }));
       
-      // Also include the parent category name
-      const parentName = selectedCat.name.toLowerCase();
+      const parentNormalized = normalizeCategory(selectedCat.name);
       
       return filteredAndSortedProducts.filter(p => {
         const productCategory = (p.category || "").toLowerCase();
-        // Match against parent name, child names, or partial match for inconsistent data
-        return productCategory === parentName ||
-               childCategoryNames.some(childName => 
-                 productCategory === childName || 
-                 productCategory.includes(childName.replace(/\s+/g, '')) ||
-                 childName.includes(productCategory.replace(/[-\s]+/g, ' ').trim())
+        const productNormalized = normalizeCategory(productCategory);
+        
+        // Match against parent or any child category
+        // Use both exact and partial matching for flexibility
+        return productNormalized === parentNormalized ||
+               childCategories.some(child => 
+                 productNormalized === child.normalized ||
+                 productNormalized.includes(child.normalized) ||
+                 child.normalized.includes(productNormalized) ||
+                 productCategory.startsWith(child.name.split(' ')[0]) // Match first word (e.g., "Canvas" matches "Canvas Prints")
                );
       });
     }
     
     // If child category selected, show only products from that category
-    // Match by category name (case-insensitive) since products store names not slugs
-    const categoryName = selectedCat.name.toLowerCase();
+    const categoryNormalized = normalizeCategory(selectedCat.name);
+    const categoryFirstWord = selectedCat.name.toLowerCase().split(' ')[0];
+    
     return filteredAndSortedProducts.filter(p => {
       const productCategory = (p.category || "").toLowerCase();
-      return productCategory === categoryName ||
-             productCategory.includes(categoryName.replace(/\s+/g, '')) ||
-             categoryName.includes(productCategory.replace(/[-\s]+/g, ' ').trim());
+      const productNormalized = normalizeCategory(productCategory);
+      
+      return productNormalized === categoryNormalized ||
+             productNormalized.includes(categoryNormalized) ||
+             categoryNormalized.includes(productNormalized) ||
+             productCategory.startsWith(categoryFirstWord);
     });
   }, [filteredAndSortedProducts, selectedCategory, cachedCategories]);
 
