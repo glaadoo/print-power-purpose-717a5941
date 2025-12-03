@@ -161,12 +161,15 @@ export default function Products() {
           ),
           withRetry(
             async () => {
+              // Fetch all products - Supabase defaults to 1000, so we need to fetch in batches
+              // or increase the limit. For product listing, fetch first 3000 to cover most use cases
               const { data, error } = await supabase
                 .from("products")
                 .select("id, name, description, base_cost_cents, min_price_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id, pricing_data")
                 .eq("is_active", true)
                 .order("category", { ascending: true })
-                .order("name", { ascending: true });
+                .order("name", { ascending: true })
+                .limit(5000); // Increase limit to fetch all products
               
               if (error) {
                 console.error('[Products] Products fetch error:', error);
@@ -519,12 +522,16 @@ export default function Products() {
 
   // Filter by selected category (matches slug but products store category names)
   const categoryFilteredProducts = useMemo(() => {
+    console.log('[Products] Category filter - selectedCategory:', selectedCategory);
+    
     if (!selectedCategory || selectedCategory === "all") {
       return filteredAndSortedProducts;
     }
     
     // Find the selected category to check if it's a parent
     const selectedCat = cachedCategories.find(c => c.slug === selectedCategory);
+    console.log('[Products] Found category:', selectedCat);
+    
     if (!selectedCat) return filteredAndSortedProducts;
     
     // If parent category selected, show all products from child categories
@@ -537,22 +544,40 @@ export default function Products() {
           normalized: normalizeCategory(c.name)
         }));
       
+      console.log('[Products] Parent category detected. Child categories:', childCategories);
+      
       const parentNormalized = normalizeCategory(selectedCat.name);
       
-      return filteredAndSortedProducts.filter(p => {
+      const filtered = filteredAndSortedProducts.filter(p => {
         const productCategory = (p.category || "").toLowerCase();
         const productNormalized = normalizeCategory(productCategory);
         
         // Match against parent or any child category
         // Use both exact and partial matching for flexibility
-        return productNormalized === parentNormalized ||
+        const matches = productNormalized === parentNormalized ||
                childCategories.some(child => 
                  productNormalized === child.normalized ||
                  productNormalized.includes(child.normalized) ||
                  child.normalized.includes(productNormalized) ||
-                 productCategory.startsWith(child.name.split(' ')[0]) // Match first word (e.g., "Canvas" matches "Canvas Prints")
+                 productCategory.startsWith(child.name.split(' ')[0])
                );
+        
+        // Debug specific products
+        if (productCategory.includes('calendar')) {
+          console.log('[Products] Calendar product check:', {
+            name: p.name,
+            productCategory,
+            productNormalized,
+            matches,
+            childCategories: childCategories.map(c => c.normalized)
+          });
+        }
+        
+        return matches;
       });
+      
+      console.log('[Products] Filtered products count:', filtered.length);
+      return filtered;
     }
     
     // If child category selected, show only products from that category
