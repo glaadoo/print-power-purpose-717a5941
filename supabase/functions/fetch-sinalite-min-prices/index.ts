@@ -163,80 +163,43 @@ serve(async (req) => {
           return numA - numB;
         });
 
-        // Base options: smallest qty only
-        const baseQtyOption = qtyOptions.length > 0 ? qtyOptions[0].id : null;
-
-        // Identify groups that are NOT qty or size - these are "other" configurable options
-        const fixedGroups = ['qty', 'size']; // size handled separately to ensure ALL sizes tested
-        const otherGroups: string[] = [];
+        // All groups except qty (which we pick smallest) and size (which we iterate)
+        const variableGroups = groupNames.filter(g => g !== 'qty' && g !== 'size');
         
-        for (const group of groupNames) {
-          if (!fixedGroups.includes(group) && optionsByGroup[group].length > 0) {
-            otherGroups.push(group);
-          }
+        console.log(`[FETCH-MIN-PRICES] ${product.name} - sizes: ${sizeOptions.length}, variable groups: ${variableGroups.join(', ')}`);
+
+        // Build base options: smallest qty + first option from each variable group
+        const baseOptions: number[] = [];
+        if (qtyOptions.length > 0) {
+          baseOptions.push(qtyOptions[0].id);
         }
-
-        console.log(`[FETCH-MIN-PRICES] ${product.name} - sizes: ${sizeOptions.length}, other groups: ${otherGroups.join(', ')}`);
-
-        // SMART APPROACH: Test ALL sizes with cheapest option from each other group
-        // Then do limited exploration of other option combinations
-        
-        // For each "other" group, pick the first option (usually cheapest/default)
-        const defaultOtherOptions: number[] = [];
-        for (const group of otherGroups) {
+        for (const group of variableGroups) {
           if (optionsByGroup[group].length > 0) {
-            defaultOtherOptions.push(optionsByGroup[group][0].id);
+            baseOptions.push(optionsByGroup[group][0].id);
           }
         }
 
-        // Build combinations: test EVERY size with default other options
+        // Build combinations: test EVERY size with base options from all other groups
         const combinations: number[][] = [];
         
-        // First pass: test ALL sizes with default options (guaranteed to test every size)
+        // Test ALL sizes with default options from all groups
         for (const sizeOpt of sizeOptions) {
-          combinations.push([sizeOpt.id, ...defaultOtherOptions]);
+          combinations.push([...baseOptions, sizeOpt.id]);
         }
         
-        // Second pass: for each size, also test with other option variations (limited)
-        // Generate variations of other options
-        const generateOtherCombos = (groups: string[]): number[][] => {
-          if (groups.length === 0) return [[]];
-          
-          const [first, ...rest] = groups;
-          const restCombos = generateOtherCombos(rest);
-          const combos: number[][] = [];
-          
-          for (const opt of optionsByGroup[first]) {
-            for (const restCombo of restCombos) {
-              combos.push([opt.id, ...restCombo]);
-            }
-          }
-          return combos;
-        };
-        
-        const otherCombos = generateOtherCombos(otherGroups);
-        
-        // Add size + other combo variations (capped per size to prevent explosion)
-        const maxOtherCombosPerSize = Math.max(1, Math.floor(50 / Math.max(1, sizeOptions.length)));
-        
-        for (const sizeOpt of sizeOptions) {
-          // Skip first combo (already added in first pass with defaults)
-          const limitedOtherCombos = otherCombos.slice(1, maxOtherCombosPerSize + 1);
-          for (const otherCombo of limitedOtherCombos) {
-            combinations.push([sizeOpt.id, ...otherCombo]);
-          }
+        // If no size options, just test with base options
+        if (sizeOptions.length === 0 && baseOptions.length > 0) {
+          combinations.push([...baseOptions]);
         }
         
-        console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} combinations (all ${sizeOptions.length} sizes tested)`);
+        console.log(`[FETCH-MIN-PRICES] ${product.name}: testing ${combinations.length} combinations`);
         
-        // Final cap at 500 combinations
-        const maxCombinations = 500;
-        let finalCombinations = combinations;
-        if (combinations.length > maxCombinations) {
-          console.log(`[FETCH-MIN-PRICES] ${product.name}: capping at ${maxCombinations} combinations`);
-          // Keep first N (which includes all sizes with defaults)
-          finalCombinations = combinations.slice(0, maxCombinations);
+        // Log first combination for debugging
+        if (combinations.length > 0) {
+          console.log(`[FETCH-MIN-PRICES] ${product.name} first combo: [${combinations[0].join(', ')}]`);
         }
+        
+        const finalCombinations = combinations;
         
         // PARALLEL price fetching - test all combinations
         // Batch into groups of 20 to avoid overwhelming the API
@@ -248,8 +211,8 @@ serve(async (req) => {
           const batch = finalCombinations.slice(i, i + batchLimit);
           
           const pricePromises = batch.map(async (combo): Promise<{ price: number; options: number[] } | null> => {
-            // Add base qty option if it exists
-            const fullOptions = baseQtyOption ? [baseQtyOption, ...combo] : [...combo];
+            // combo already includes all required options (qty, size, all variable groups)
+            const fullOptions = [...combo];
             try {
               const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
               const priceRes = await fetch(priceUrl, {
@@ -318,10 +281,10 @@ serve(async (req) => {
         if (globalMinOptions.length === 0) {
           console.log(`[FETCH-MIN-PRICES] ${product.name}: trying fallback approaches`);
           
-          // Try with just qty and first size
-          if (baseQtyOption && sizeOptions.length > 0) {
+          // Try with base options + first size
+          if (baseOptions.length > 0 && sizeOptions.length > 0) {
             try {
-              const fallbackOptions = [baseQtyOption, sizeOptions[0].id];
+              const fallbackOptions = [...baseOptions, sizeOptions[0].id];
               const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
               const priceRes = await fetch(priceUrl, {
                 method: "POST",
