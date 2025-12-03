@@ -513,7 +513,7 @@ export default function Products() {
     return cachedCategories;
   }, [cachedCategories]);
 
-  // Filter by selected category (matches slug)
+  // Filter by selected category (matches slug but products store category names)
   const categoryFilteredProducts = useMemo(() => {
     if (!selectedCategory || selectedCategory === "all") {
       return filteredAndSortedProducts;
@@ -525,16 +525,35 @@ export default function Products() {
     
     // If parent category selected, show all products from child categories
     if (!selectedCat.parent_id) {
-      const childSlugs = cachedCategories
+      // Get child category NAMES (not slugs) since products store category names
+      const childCategoryNames = cachedCategories
         .filter(c => c.parent_id === selectedCat.id)
-        .map(c => c.slug);
-      return filteredAndSortedProducts.filter(p => 
-        p.category === selectedCategory || childSlugs.includes(p.category || "")
-      );
+        .map(c => c.name.toLowerCase());
+      
+      // Also include the parent category name
+      const parentName = selectedCat.name.toLowerCase();
+      
+      return filteredAndSortedProducts.filter(p => {
+        const productCategory = (p.category || "").toLowerCase();
+        // Match against parent name, child names, or partial match for inconsistent data
+        return productCategory === parentName ||
+               childCategoryNames.some(childName => 
+                 productCategory === childName || 
+                 productCategory.includes(childName.replace(/\s+/g, '')) ||
+                 childName.includes(productCategory.replace(/[-\s]+/g, ' ').trim())
+               );
+      });
     }
     
     // If child category selected, show only products from that category
-    return filteredAndSortedProducts.filter(p => p.category === selectedCategory);
+    // Match by category name (case-insensitive) since products store names not slugs
+    const categoryName = selectedCat.name.toLowerCase();
+    return filteredAndSortedProducts.filter(p => {
+      const productCategory = (p.category || "").toLowerCase();
+      return productCategory === categoryName ||
+             productCategory.includes(categoryName.replace(/\s+/g, '')) ||
+             categoryName.includes(productCategory.replace(/[-\s]+/g, ' ').trim());
+    });
   }, [filteredAndSortedProducts, selectedCategory, cachedCategories]);
 
   // Group products by category
