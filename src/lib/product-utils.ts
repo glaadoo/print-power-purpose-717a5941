@@ -7,6 +7,7 @@
  * Returns true if:
  * - Product is not Scalable Press (show it)
  * - Product has at least one color with non-empty images array
+ * - pricing_data is not available (show product on list pages where data isn't fetched)
  * Returns false if:
  * - Product is Scalable Press and ALL colors have empty images arrays
  */
@@ -19,15 +20,15 @@ export function hasScalablePressImages(product: {
     return true;
   }
   
-  // No pricing_data: hide (can't verify images)
+  // No pricing_data: show product (can't verify images, but don't hide on list pages)
   if (!product.pricing_data) {
-    return false;
+    return true;
   }
   
   // Check colors array
   const colors = product.pricing_data?.colors;
   if (!Array.isArray(colors) || colors.length === 0) {
-    return false;
+    return true; // Show if no colors data available
   }
   
   // Check if ANY color has at least one image
