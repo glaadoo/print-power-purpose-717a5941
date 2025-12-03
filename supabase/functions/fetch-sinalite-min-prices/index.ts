@@ -153,7 +153,7 @@ serve(async (req) => {
         const groupNames = Object.keys(optionsByGroup);
         console.log(`[FETCH-MIN-PRICES] ${product.name} has groups: ${groupNames.join(', ')}`);
 
-        // Sort qty and size options to use smallest as base
+        // Sort qty options to use smallest as base
         const qtyOptions = optionsByGroup['qty'] || [];
         const sizeOptions = optionsByGroup['size'] || [];
 
@@ -163,23 +163,12 @@ serve(async (req) => {
           return numA - numB;
         });
 
-        sizeOptions.sort((a, b) => {
-          const parseSize = (name: string) => {
-            const match = name.match(/(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)/i);
-            if (match) return parseFloat(match[1]) * parseFloat(match[2]);
-            return 999999;
-          };
-          return parseSize(a.name) - parseSize(b.name);
-        });
+        // Base options: smallest qty only - we'll test ALL sizes
+        const baseQtyOption = qtyOptions.length > 0 ? qtyOptions[0].id : null;
 
-        // Base options: smallest qty and size only
-        const baseOptions: number[] = [];
-        if (qtyOptions.length > 0) baseOptions.push(qtyOptions[0].id);
-        if (sizeOptions.length > 0) baseOptions.push(sizeOptions[0].id);
-
-        // ALL other groups are variable - including Turnaround!
-        // This ensures we test all turnaround options, coatings, grommets, sides, etc.
-        const fixedGroups = ['qty', 'size'];
+        // ALL other groups are variable - INCLUDING SIZE!
+        // This ensures we test all sizes to find the true minimum
+        const fixedGroups = ['qty']; // Only qty is fixed (smallest)
         const variableGroups: string[] = [];
         
         for (const group of groupNames) {
@@ -188,9 +177,9 @@ serve(async (req) => {
           }
         }
 
-        console.log(`[FETCH-MIN-PRICES] ${product.name} variable groups: ${variableGroups.join(', ')}`);
+        console.log(`[FETCH-MIN-PRICES] ${product.name} variable groups (including size): ${variableGroups.join(', ')}`);
 
-        // Generate ALL combinations across variable groups
+        // Generate ALL combinations across variable groups (including all sizes)
         const generateCombinations = (groups: string[]): number[][] => {
           if (groups.length === 0) return [[]];
           
@@ -214,10 +203,10 @@ serve(async (req) => {
         let combinations = generateCombinations(variableGroups);
         
         // Log total combinations count
-        console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} total combinations to test`);
+        console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} total combinations to test (all sizes included)`);
         
-        // Cap combinations to prevent timeout (max 200 for thorough testing)
-        const maxCombinations = 200;
+        // Cap combinations to prevent timeout (max 300 for thorough testing)
+        const maxCombinations = 300;
         if (combinations.length > maxCombinations) {
           console.log(`[FETCH-MIN-PRICES] ${product.name}: capping at ${maxCombinations} combinations`);
           // Shuffle to get random sample across all options
@@ -234,7 +223,8 @@ serve(async (req) => {
           const batch = combinations.slice(i, i + batchLimit);
           
           const pricePromises = batch.map(async (combo): Promise<{ price: number; options: number[] } | null> => {
-            const fullOptions = [...baseOptions, ...combo];
+            // Add base qty option if it exists
+            const fullOptions = baseQtyOption ? [baseQtyOption, ...combo] : [...combo];
             try {
               const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
               const priceRes = await fetch(priceUrl, {
@@ -276,9 +266,10 @@ serve(async (req) => {
           }
         }
 
-        // If no combinations worked, try base options only
-        if (globalMinOptions.length === 0 && baseOptions.length > 0) {
+        // If no combinations worked, try just qty option with first size
+        if (globalMinOptions.length === 0 && baseQtyOption && sizeOptions.length > 0) {
           try {
+            const fallbackOptions = [baseQtyOption, sizeOptions[0].id];
             const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
             const priceRes = await fetch(priceUrl, {
               method: "POST",
@@ -286,7 +277,7 @@ serve(async (req) => {
                 "Authorization": `Bearer ${accessToken}`,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ productOptions: baseOptions }),
+              body: JSON.stringify({ productOptions: fallbackOptions }),
             });
 
             if (priceRes.ok) {
@@ -299,7 +290,7 @@ serve(async (req) => {
               }
               if (price > 0) {
                 globalMinPrice = price;
-                globalMinOptions = baseOptions;
+                globalMinOptions = fallbackOptions;
               }
             }
           } catch {}
