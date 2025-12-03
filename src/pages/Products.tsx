@@ -703,9 +703,21 @@ export default function Products() {
           <div className="w-full max-w-7xl mx-auto px-6">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                {selectedCategory === "all" ? "All Products" : selectedCategory?.replace(/-/g, ' ')}
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-bold text-gray-900 capitalize">
+                  {selectedCategory === "all" ? "All Products" : selectedCategory?.replace(/-/g, ' ')}
+                </h1>
+                {selectedCategory !== "all" && (
+                  <button
+                    onClick={() => setSelectedCategory("all")}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full transition-colors"
+                    title="Clear filter"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Clear</span>
+                  </button>
+                )}
+              </div>
               <p className="text-gray-600">
                 Showing {visibleProducts.length} of {categoryFilteredProducts.length} {categoryFilteredProducts.length === 1 ? 'product' : 'products'}
               </p>
