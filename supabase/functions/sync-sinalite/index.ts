@@ -29,34 +29,220 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Background task to fetch minimum prices for products
-async function fetchMinPricesBackground(
+// Comprehensive min price calculation - tests ALL configuration combinations
+async function computeMinPriceForProduct(
+  product: { id: string; vendor_product_id: string; name: string },
+  accessToken: string,
+  apiBaseUrl: string,
+  storeCode: number
+): Promise<{ min_price_cents: number; min_price_variant_key: string } | null> {
+  const productId = product.vendor_product_id;
+  
+  try {
+    // Get product configuration options
+    const optionsUrl = `${apiBaseUrl}/product/${productId}/${storeCode}`;
+    const optionsRes = await fetch(optionsUrl, {
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!optionsRes.ok) {
+      console.log(`[MIN-PRICE] Options fetch failed for ${product.name}: ${optionsRes.status}`);
+      return null;
+    }
+
+    const optionsData = await optionsRes.json();
+    
+    if (!Array.isArray(optionsData) || optionsData.length < 1) {
+      console.log(`[MIN-PRICE] Invalid options response for ${product.name}`);
+      return null;
+    }
+
+    const options = optionsData[0] || [];
+    
+    // Group ALL options by category
+    const optionsByGroup: Record<string, { id: number; name: string }[]> = {};
+    for (const opt of options) {
+      const group = opt.group || 'other';
+      if (!optionsByGroup[group]) {
+        optionsByGroup[group] = [];
+      }
+      optionsByGroup[group].push({ id: opt.id, name: opt.name });
+    }
+
+    const groupNames = Object.keys(optionsByGroup);
+
+    // Sort qty options to use smallest as base
+    const qtyOptions = optionsByGroup['qty'] || [];
+    const sizeOptions = optionsByGroup['size'] || [];
+
+    qtyOptions.sort((a, b) => {
+      const numA = parseInt(a.name) || 999999;
+      const numB = parseInt(b.name) || 999999;
+      return numA - numB;
+    });
+
+    // Base options: smallest qty only
+    const baseQtyOption = qtyOptions.length > 0 ? qtyOptions[0].id : null;
+
+    // ALL other groups are variable - INCLUDING SIZE
+    const fixedGroups = ['qty'];
+    const variableGroups: string[] = [];
+    
+    for (const group of groupNames) {
+      if (!fixedGroups.includes(group) && optionsByGroup[group].length > 0) {
+        variableGroups.push(group);
+      }
+    }
+
+    // Generate ALL combinations across variable groups
+    const generateCombinations = (groups: string[]): number[][] => {
+      if (groups.length === 0) return [[]];
+      
+      const [first, ...rest] = groups;
+      const restCombinations = generateCombinations(rest);
+      const combinations: number[][] = [];
+      
+      const groupOptions = optionsByGroup[first];
+      
+      for (const opt of groupOptions) {
+        for (const restCombo of restCombinations) {
+          combinations.push([opt.id, ...restCombo]);
+        }
+      }
+      
+      return combinations;
+    };
+    
+    let combinations = generateCombinations(variableGroups);
+    
+    // Cap combinations to prevent timeout (max 100 for sync efficiency)
+    const maxCombinations = 100;
+    if (combinations.length > maxCombinations) {
+      // Shuffle to get random sample across all options
+      combinations = combinations.sort(() => Math.random() - 0.5).slice(0, maxCombinations);
+    }
+    
+    // Parallel price fetching - test combinations in batches
+    const batchLimit = 10;
+    let globalMinPrice = Infinity;
+    let globalMinOptions: number[] = [];
+    
+    for (let i = 0; i < combinations.length; i += batchLimit) {
+      const batch = combinations.slice(i, i + batchLimit);
+      
+      const pricePromises = batch.map(async (combo): Promise<{ price: number; options: number[] } | null> => {
+        const fullOptions = baseQtyOption ? [baseQtyOption, ...combo] : [...combo];
+        try {
+          const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
+          const priceRes = await fetch(priceUrl, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ productOptions: fullOptions }),
+          });
+
+          if (!priceRes.ok) return null;
+
+          const priceData = await priceRes.json();
+          
+          let price = 0;
+          if (priceData.price && parseFloat(priceData.price) > 0) {
+            price = parseFloat(priceData.price);
+          } else if (priceData.unit_price && parseFloat(priceData.unit_price) > 0) {
+            price = parseFloat(priceData.unit_price);
+          } else if (priceData.total_price && parseFloat(priceData.total_price) > 0) {
+            price = parseFloat(priceData.total_price);
+          }
+          
+          return price > 0 ? { price, options: fullOptions } : null;
+        } catch {
+          return null;
+        }
+      });
+
+      const priceResults = await Promise.all(pricePromises);
+      
+      for (const result of priceResults) {
+        if (result && result.price < globalMinPrice) {
+          globalMinPrice = result.price;
+          globalMinOptions = result.options;
+        }
+      }
+    }
+
+    // Fallback: try just qty option with first size
+    if (globalMinOptions.length === 0 && baseQtyOption && sizeOptions.length > 0) {
+      try {
+        const fallbackOptions = [baseQtyOption, sizeOptions[0].id];
+        const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
+        const priceRes = await fetch(priceUrl, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ productOptions: fallbackOptions }),
+        });
+
+        if (priceRes.ok) {
+          const priceData = await priceRes.json();
+          let price = 0;
+          if (priceData.price && parseFloat(priceData.price) > 0) {
+            price = parseFloat(priceData.price);
+          } else if (priceData.unit_price && parseFloat(priceData.unit_price) > 0) {
+            price = parseFloat(priceData.unit_price);
+          }
+          if (price > 0) {
+            globalMinPrice = price;
+            globalMinOptions = fallbackOptions;
+          }
+        }
+      } catch {}
+    }
+
+    if (globalMinOptions.length > 0 && globalMinPrice < Infinity) {
+      const minPriceCents = Math.round(globalMinPrice * 100);
+      const minPriceVariantKey = globalMinOptions.sort((a, b) => a - b).join('-');
+      return {
+        min_price_cents: minPriceCents,
+        min_price_variant_key: minPriceVariantKey,
+      };
+    }
+    
+    return null;
+
+  } catch (err) {
+    console.error(`[MIN-PRICE] Error for ${product.name}:`, err);
+    return null;
+  }
+}
+
+// Background task to compute comprehensive minimum prices for all products
+async function computeMinPricesBackground(
   supabase: any,
   accessToken: string,
   apiBaseUrl: string,
-  batchSize = 10,
-  forceRefreshAll = false
+  storeCode: number,
+  batchSize = 5
 ) {
-  console.log(`[SYNC-SINALITE] Starting background min price fetch (forceRefreshAll: ${forceRefreshAll})...`);
+  console.log(`[SYNC-SINALITE] Starting comprehensive min price computation...`);
   
   try {
     let totalUpdated = 0;
     let offset = 0;
-    const maxProducts = 500; // Process up to 500 products per sync
+    const maxProducts = 500;
     
     while (offset < maxProducts) {
       // Get products that need min_price updated
-      let query = supabase
+      const { data: products, error: fetchError } = await supabase
         .from("products")
         .select("id, vendor_product_id, name, min_price_cents")
-        .eq("vendor", "sinalite");
-      
-      // If not forcing refresh, only update products with default/null min_price
-      if (!forceRefreshAll) {
-        query = query.or("min_price_cents.eq.2000,min_price_cents.is.null");
-      }
-      
-      const { data: products, error: fetchError } = await query
+        .eq("vendor", "sinalite")
         .range(offset, offset + batchSize - 1)
         .limit(batchSize);
       
@@ -74,86 +260,26 @@ async function fetchMinPricesBackground(
       console.log(`[SYNC-SINALITE] Min price batch ${batchNum}: Processing ${products.length} products`);
       
       for (const product of products) {
-        try {
-          const productId = product.vendor_product_id;
+        const result = await computeMinPriceForProduct(product, accessToken, apiBaseUrl, storeCode);
+        
+        if (result) {
+          const { error: updateError } = await supabase
+            .from("products")
+            .update({ 
+              min_price_cents: result.min_price_cents,
+              base_cost_cents: result.min_price_cents,
+              min_price_variant_key: result.min_price_variant_key,
+            })
+            .eq("id", product.id);
           
-          // Paginate through ALL variant pages to find true minimum
-          let minPrice = Infinity;
-          let minPriceVariantKey: string | null = null;
-          let variantOffset = 0;
-          let hasMoreVariants = true;
-          
-          while (hasMoreVariants) {
-            const variantsUrl = `${apiBaseUrl}/variants/${productId}/${variantOffset}`;
-            
-            const variantsRes = await fetch(variantsUrl, {
-              headers: {
-                "Authorization": `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-            });
-            
-            if (!variantsRes.ok) {
-              console.error(`[SYNC-SINALITE] Variants fetch failed for ${productId} offset ${variantOffset}: ${variantsRes.status}`);
-              break;
-            }
-            
-            const variants = await variantsRes.json();
-            const variantList = Array.isArray(variants) 
-              ? variants 
-              : (variants?.data || variants?.variants || []);
-            
-            if (!Array.isArray(variantList) || variantList.length === 0) {
-              hasMoreVariants = false;
-              break;
-            }
-            
-            // Find minimum price from this page of variants
-            for (const variant of variantList) {
-              const price = variant.price || variant.unit_price || variant.base_price;
-              if (typeof price === 'number' && price > 0 && price < minPrice) {
-                minPrice = price;
-                minPriceVariantKey = variant.key || variant.variant_key || null;
-              }
-            }
-            
-            // Check if there are more pages (1000 variants per page)
-            if (variantList.length < 1000) {
-              hasMoreVariants = false;
-            } else {
-              variantOffset += 1000;
-            }
-            
-            // Small delay between variant pages
-            await new Promise(r => setTimeout(r, 50));
-          }
-          
-          if (minPrice !== Infinity && minPrice > 0) {
-            const minPriceCents = Math.round(minPrice * 100);
-            
-            const updateData: any = { 
-              min_price_cents: minPriceCents,
-              base_cost_cents: minPriceCents 
-            };
-            
-            if (minPriceVariantKey) {
-              updateData.min_price_variant_key = minPriceVariantKey;
-            }
-            
-            await supabase
-              .from("products")
-              .update(updateData)
-              .eq("id", product.id);
-            
+          if (!updateError) {
             totalUpdated++;
+            console.log(`[SYNC-SINALITE] ✓ ${product.name}: $${(result.min_price_cents / 100).toFixed(2)}`);
           }
-          
-          // Small delay to avoid rate limiting
-          await new Promise(r => setTimeout(r, 100));
-          
-        } catch (err) {
-          console.error(`[SYNC-SINALITE] Error processing ${product.name}:`, err);
         }
+        
+        // Small delay to avoid rate limiting
+        await new Promise(r => setTimeout(r, 200));
       }
       
       offset += batchSize;
@@ -162,10 +288,10 @@ async function fetchMinPricesBackground(
       await new Promise(r => setTimeout(r, 500));
     }
     
-    console.log(`[SYNC-SINALITE] Background min price fetch complete. Updated ${totalUpdated} products.`);
+    console.log(`[SYNC-SINALITE] Min price computation complete. Updated ${totalUpdated} products.`);
     
   } catch (error) {
-    console.error("[SYNC-SINALITE] Background min price fetch error:", error);
+    console.error("[SYNC-SINALITE] Min price computation error:", error);
   }
 }
 
@@ -328,7 +454,6 @@ serve(async (req) => {
     if (contentType.includes("application/json")) {
       products = await response.json();
     } else {
-      const textBody = await response.text();
       return new Response(
         JSON.stringify({
           success: false,
@@ -342,19 +467,18 @@ serve(async (req) => {
 
     console.log(`[SYNC-SINALITE] Fetched ${(products?.data?.length ?? products?.length ?? 0)} products`);
 
-    // Transform products - process in smaller chunks to reduce memory
+    // Transform products
     const rawProducts = products.data || products || [];
     const enabledProducts = rawProducts.filter((p: any) => p.enabled === 1);
     
     console.log(`[SYNC-SINALITE] Processing ${enabledProducts.length} enabled products`);
 
-    // Process products and filter out products without valid prices
+    // Process products - set initial min_price to null (will be computed)
     const productsToSync = enabledProducts
       .map((p: any, index: number) => {
-        // Extract price from API - use default $20 if no price found
-        let baseCostCents = 2000; // Default $20.00
+        // Default base cost - will be overwritten by min price calculation
+        let baseCostCents = 2000;
         
-        // Log first product for debugging
         if (index === 0) {
           console.log(`[SYNC-SINALITE] Sample product data:`, JSON.stringify({
             id: p.id,
@@ -387,13 +511,13 @@ serve(async (req) => {
           name: `${p.name || "Unnamed Product"} (${storeName})`,
           description: p.description || p.sku || null,
           base_cost_cents: baseCostCents,
-          min_price_cents: baseCostCents,
+          min_price_cents: baseCostCents, // Will be updated by min price calculation
           category: p.category || "Uncategorized",
           image_url: imageUrl,
           vendor: "sinalite",
           vendor_id: `${p.id}_${storeCode}`,
           vendor_product_id: p.id.toString(),
-          pricing_data: null, // Don't store full API response to save memory
+          pricing_data: null,
         };
       })
       .filter((p: any) => {
@@ -404,9 +528,9 @@ serve(async (req) => {
         return isValid;
       });
     
-    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync (with valid prices $1-$1000)`);
+    console.log(`[SYNC-SINALITE] Prepared ${productsToSync.length} products for sync`);
 
-    // Process products in smaller batches to avoid memory limits
+    // Process products in batches
     const BATCH_SIZE = 10;
     let totalSynced = 0;
     let totalImagesPreserved = 0;
@@ -423,7 +547,7 @@ serve(async (req) => {
       const batchVendorIds = batch.map((p: any) => p.vendor_id);
       const { data: existingProducts, error: fetchError } = await supabase
         .from("products")
-        .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url")
+        .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url, min_price_cents, min_price_variant_key")
         .eq("vendor", "sinalite")
         .in("vendor_id", batchVendorIds);
 
@@ -431,7 +555,7 @@ serve(async (req) => {
         console.error(`[SYNC-SINALITE] Error fetching existing products for batch ${batchNum}:`, fetchError);
       }
 
-      // Create a map of existing product customizations to preserve
+      // Create a map of existing product customizations
       const existingCustomizations = new Map<string, any>();
       if (existingProducts) {
         for (const product of existingProducts) {
@@ -441,6 +565,8 @@ serve(async (req) => {
             price_override_cents: product.price_override_cents,
             image_url: product.image_url,
             generated_image_url: product.generated_image_url,
+            min_price_cents: product.min_price_cents,
+            min_price_variant_key: product.min_price_variant_key,
           });
         }
       }
@@ -451,7 +577,7 @@ serve(async (req) => {
       for (const product of batch) {
         const existing = existingCustomizations.get(product.vendor_id);
         if (existing) {
-          // Preserve custom markups if they were set
+          // Preserve custom markups
           if (existing.markup_fixed_cents !== null) {
             product.markup_fixed_cents = existing.markup_fixed_cents;
             batchMarkupsPreserved++;
@@ -462,17 +588,24 @@ serve(async (req) => {
           if (existing.price_override_cents !== null) {
             product.price_override_cents = existing.price_override_cents;
           }
-          // Preserve custom/generated images - only use API image if no custom image exists
+          // Preserve custom images
           if (existing.image_url && !product.image_url) {
             product.image_url = existing.image_url;
             batchImagesPreserved++;
           } else if (existing.image_url && existing.image_url !== product.image_url) {
-            // Keep existing custom image if it differs from API image
             product.image_url = existing.image_url;
             batchImagesPreserved++;
           }
           if (existing.generated_image_url) {
             product.generated_image_url = existing.generated_image_url;
+          }
+          // Preserve existing min_price if already calculated
+          if (existing.min_price_cents && existing.min_price_cents !== 2000) {
+            product.min_price_cents = existing.min_price_cents;
+            product.base_cost_cents = existing.min_price_cents;
+          }
+          if (existing.min_price_variant_key) {
+            product.min_price_variant_key = existing.min_price_variant_key;
           }
         }
       }
@@ -494,7 +627,6 @@ serve(async (req) => {
       totalSynced += batchSynced;
       console.log(`[SYNC-SINALITE] Batch ${batchNum}/${totalBatches} complete: ${batchSynced} products synced`);
       
-      // Small delay between batches to avoid rate limiting
       if (i + BATCH_SIZE < productsToSync.length) {
         await new Promise(r => setTimeout(r, 100));
       }
@@ -504,16 +636,14 @@ serve(async (req) => {
     console.log(`[SYNC-SINALITE] Preserved ${totalImagesPreserved} custom images and ${totalMarkupsPreserved} custom markups`);
 
     const synced = totalSynced;
-    console.log(`[SYNC-SINALITE] Successfully synced ${synced} products`);
 
-    // Automatically refresh min prices for ALL products during sync
+    // Automatically compute comprehensive min prices for products
     if (!skipMinPrices && typeof EdgeRuntime !== 'undefined') {
-      console.log("[SYNC-SINALITE] Starting background min price refresh for all products...");
-      EdgeRuntime.waitUntil(fetchMinPricesBackground(supabase, accessToken, apiBaseUrl, 10, true));
+      console.log("[SYNC-SINALITE] Starting background comprehensive min price computation...");
+      EdgeRuntime.waitUntil(computeMinPricesBackground(supabase, accessToken, apiBaseUrl, storeCode, 5));
     } else if (!skipMinPrices) {
-      // Fallback: run synchronously if EdgeRuntime not available (will block response)
-      console.log("[SYNC-SINALITE] EdgeRuntime not available, running min price fetch synchronously...");
-      await fetchMinPricesBackground(supabase, accessToken, apiBaseUrl, 10, true);
+      console.log("[SYNC-SINALITE] EdgeRuntime not available, running min price computation synchronously...");
+      await computeMinPricesBackground(supabase, accessToken, apiBaseUrl, storeCode, 5);
     }
 
     return new Response(
@@ -526,7 +656,7 @@ serve(async (req) => {
         storeCode,
         imagesPreserved: totalImagesPreserved,
         markupsPreserved: totalMarkupsPreserved,
-        note: "Sync complete. Only products with valid prices were synced."
+        note: "Sync complete. Min prices will be computed in background."
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );

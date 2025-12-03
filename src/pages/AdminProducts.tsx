@@ -51,10 +51,6 @@ export default function AdminProducts() {
   const [imageProgress, setImageProgress] = useState({ current: 0, total: 0 });
   const [showPricingProducts, setShowPricingProducts] = useState(false);
   const [productSearchQuery, setProductSearchQuery] = useState("");
-  const [fetchingMinPrices, setFetchingMinPrices] = useState(false);
-  const [minPriceProgress, setMinPriceProgress] = useState({ remaining: 0, updated: 0 });
-  const [fetchingScalablePrices, setFetchingScalablePrices] = useState(false);
-  const [scalablePriceProgress, setScalablePriceProgress] = useState({ remaining: 0, updated: 0 });
   const [syncStatus, setSyncStatus] = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({});
   // Persistent status messages per button - only cleared on page refresh or button re-click
   const [buttonMessages, setButtonMessages] = useState<Record<string, { type: 'loading' | 'success' | 'error'; text: string }>>({});
@@ -282,128 +278,6 @@ export default function AdminProducts() {
     }
   };
 
-  // Fetch minimum prices for SinaLite products
-  const handleFetchMinPrices = async (forceRefresh = false) => {
-    const buttonKey = forceRefresh ? 'sinalite-force-refresh' : 'sinalite-fetch-prices';
-    setFetchingMinPrices(true);
-    setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'loading', text: forceRefresh ? 'Force refreshing ALL SinaLite prices...' : 'Syncing SinaLite product prices...' } }));
-    
-    try {
-      let totalUpdated = 0;
-      let remaining = Infinity;
-      let iterations = 0;
-      const maxIterations = forceRefresh ? 50 : 20;
-      const batchSize = forceRefresh ? 5 : 10;
-      
-      if (forceRefresh) {
-        const { count } = await supabase
-          .from('products')
-          .select('id', { count: 'exact', head: true })
-          .eq('vendor', 'sinalite');
-        remaining = count || 0;
-        setMinPriceProgress({ remaining, updated: 0 });
-      }
-      
-      while ((forceRefresh ? iterations * batchSize < (remaining + totalUpdated + batchSize) : remaining > 0) && iterations < maxIterations) {
-        iterations++;
-        
-        const { data, error } = await supabase.functions.invoke('fetch-sinalite-min-prices', {
-          body: { batchSize, forceRefresh }
-        });
-        
-        if (error) throw error;
-        
-        if (data?.updated) {
-          totalUpdated += data.updated;
-        }
-        
-        if (forceRefresh) {
-          remaining = Math.max(0, remaining - batchSize);
-        } else {
-          remaining = data?.remaining || 0;
-        }
-        setMinPriceProgress({ remaining, updated: totalUpdated });
-        
-        if (data?.success && data?.remaining === 0 && !forceRefresh) {
-          break;
-        }
-        
-        if (forceRefresh && data?.processed < batchSize) {
-          break;
-        }
-        
-        await new Promise(r => setTimeout(r, 1000));
-      }
-      
-      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `SinaLite product prices synced successfully. Updated ${totalUpdated} products.` } }));
-      toast.success(`Updated minimum prices for ${totalUpdated} products!`);
-      
-      if (showPricingProducts) {
-        loadProducts();
-      }
-      
-    } catch (error: any) {
-      console.error('Error fetching min prices:', error);
-      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: 'Failed to sync SinaLite product prices. Please try again.' } }));
-      toast.error(`Failed to fetch min prices: ${error.message}`);
-    } finally {
-      setFetchingMinPrices(false);
-      setMinPriceProgress({ remaining: 0, updated: 0 });
-    }
-  };
-
-  // Fetch prices for Scalable Press products
-  const handleFetchScalablePrices = async (forceRefresh = false) => {
-    const buttonKey = forceRefresh ? 'scalablepress-force-refresh' : 'scalablepress-fetch-prices';
-    setFetchingScalablePrices(true);
-    setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'loading', text: forceRefresh ? 'Force refreshing ALL Scalable Press prices...' : 'Syncing Scalable Press product prices...' } }));
-    
-    try {
-      let totalUpdated = 0;
-      let remaining = Infinity;
-      let iterations = 0;
-      const maxIterations = forceRefresh ? 100 : 50;
-      const batchSize = 10;
-      
-      while (remaining > 0 && iterations < maxIterations) {
-        iterations++;
-        
-        const { data, error } = await supabase.functions.invoke('fetch-scalablepress-prices', {
-          body: { batchSize, forceRefresh }
-        });
-        
-        if (error) throw error;
-        
-        if (data?.updated) {
-          totalUpdated += data.updated;
-        }
-        
-        remaining = data?.remaining || 0;
-        setScalablePriceProgress({ remaining, updated: totalUpdated });
-        
-        if (data?.success && data?.remaining === 0) {
-          break;
-        }
-        
-        await new Promise(r => setTimeout(r, 500));
-      }
-      
-      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `Scalable Press product prices synced successfully. Updated ${totalUpdated} products.` } }));
-      toast.success(`Updated prices for ${totalUpdated} Scalable Press products!`);
-      
-      if (showPricingProducts) {
-        loadProducts();
-      }
-      
-    } catch (error: any) {
-      console.error('Error fetching Scalable Press prices:', error);
-      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: 'Failed to sync Scalable Press product prices. Please try again.' } }));
-      toast.error(`Failed to fetch prices: ${error.message}`);
-    } finally {
-      setFetchingScalablePrices(false);
-      setScalablePriceProgress({ remaining: 0, updated: 0 });
-    }
-  };
 
   function handleEdit(product: Product) {
     setEditingProduct(product);
@@ -862,7 +736,7 @@ export default function AdminProducts() {
                       setButtonMessages(prev => ({ ...prev, [buttonKey]: undefined as any }));
                       handleSync(vendor.name, vendor.functionName, vendor.name === "SinaLite" ? selectedStore : undefined);
                     }}
-                    disabled={!!syncing || fetchingMinPrices || fetchingScalablePrices}
+                    disabled={!!syncing}
                     className="w-full bg-white/20 text-white hover:bg-white/30"
                   >
                     {syncing === `${vendor.name}-${vendor.name === "SinaLite" ? selectedStore : ""}` || syncing === vendor.name ? (
