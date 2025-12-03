@@ -872,13 +872,14 @@ export function ProductConfigurator({
         // Check if this is the quantity group
         const isQtyGroup = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
         
-        // CRITICAL: Filter out invalid options for ALL groups (not just quantity)
-        // This hides options that the SinaLite API doesn't support
-        const validOptions = group.options.filter(opt => !failedOptionIds.has(opt.id));
+        // IMPORTANT: Show ALL options - don't pre-filter based on failedOptionIds
+        // If user selects an invalid combination, we'll show an error message
+        // This ensures valid options (like Grommets/Hemming for size 24x60) are never hidden
+        const validOptions = group.options;
         
-        // Skip rendering if group has zero valid options after filtering
+        // Skip rendering if group has no options at all
         if (validOptions.length === 0) {
-          console.warn(`[ProductConfigurator] ${group.group} has no valid options after filtering`);
+          console.warn(`[ProductConfigurator] ${group.group} has no options`);
           return null;
         }
         
@@ -954,19 +955,15 @@ export function ProductConfigurator({
                 <SelectValue placeholder={`Select ${formatGroupName(group.group)}`} />
               </SelectTrigger>
               <SelectContent className="bg-white text-black z-[100] max-h-[300px]">
-                {validOptions.map((option) => {
-                  const isFailed = failedOptionIds.has(option.id);
-                  return (
-                    <SelectItem
-                      key={option.id}
-                      value={String(option.id)}
-                      disabled={isFailed}
-                      className={`cursor-pointer ${isFailed ? 'opacity-40 cursor-not-allowed line-through text-gray-400' : 'hover:bg-gray-100'}`}
-                    >
-                      {option.name}{isFailed ? ' (unavailable)' : ''}
-                    </SelectItem>
-                  );
-                })}
+                {validOptions.map((option) => (
+                  <SelectItem
+                    key={option.id}
+                    value={String(option.id)}
+                    className="cursor-pointer hover:bg-gray-100"
+                  >
+                    {option.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
