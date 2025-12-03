@@ -624,8 +624,12 @@ serve(async (req) => {
           if (existing.generated_image_url) {
             product.generated_image_url = existing.generated_image_url;
           }
-          // NOTE: Do NOT preserve existing min_price - always recalculate fresh
-          // This ensures the latest minimum price is always computed during sync
+          // Preserve existing min_price if already computed (background task has limited capacity)
+          // Only products without min_price_variant_key will be computed by background task
+          if (existing.min_price_cents && existing.min_price_variant_key) {
+            product.min_price_cents = existing.min_price_cents;
+            product.min_price_variant_key = existing.min_price_variant_key;
+          }
         }
       }
       
