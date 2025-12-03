@@ -788,55 +788,17 @@ export function ProductConfigurator({
               console.error('[ProductConfigurator] Fallback POST failed:', fallbackErr);
             }
             
-            // If fallback also fails, mark the option as invalid and reset price to 0
-            // CRITICAL FIX: Mark ALL failed options (not just qty) so they can be disabled in UI
+            // If fallback also fails, mark the option as unavailable but DON'T auto-reset
+            // User should see the error and choose a different option manually
             if (lastChangedOptionRef.current) {
               const failedId = lastChangedOptionRef.current.optionId;
-              const failedGroup = lastChangedOptionRef.current.group;
               
-              // Mark this option as failed for ALL groups
+              // Mark this option as failed so UI can show it's unavailable
               setFailedOptionIds(prev => {
                 const newSet = new Set(prev);
                 newSet.add(failedId);
                 return newSet;
               });
-              
-              // Check if this is a quantity group for auto-reset behavior
-              const isQtyGroup = failedGroup.toLowerCase().includes('qty') || 
-                                 failedGroup.toLowerCase().includes('quantity');
-              
-              // For qty groups: try to auto-select next valid option
-              if (isQtyGroup) {
-                const group = optionGroups.find(g => g.group === failedGroup);
-                if (group) {
-                  const nextValidOption = group.options.find(opt => 
-                    opt.id !== failedId && !failedOptionIds.has(opt.id)
-                  );
-                  if (nextValidOption) {
-                    setSelectedOptions(prev => ({
-                      ...prev,
-                      [failedGroup]: nextValidOption.id
-                    }));
-                    lastChangedOptionRef.current = null;
-                    return;
-                  }
-                }
-              }
-              
-              // For non-qty groups: revert to previous valid option if available
-              const group = optionGroups.find(g => g.group === failedGroup);
-              if (group) {
-                const firstValidOption = group.options.find(opt => !failedOptionIds.has(opt.id) && opt.id !== failedId);
-                if (firstValidOption) {
-                  setSelectedOptions(prev => ({
-                    ...prev,
-                    [failedGroup]: firstValidOption.id
-                  }));
-                  lastChangedOptionRef.current = null;
-                  // Re-fetch price with valid option
-                  return;
-                }
-              }
               
               lastChangedOptionRef.current = null;
             }
