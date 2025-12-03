@@ -615,29 +615,62 @@ export default function Products() {
   }, [filteredAndSortedProducts, selectedCategory, cachedCategories]);
 
   // Group products by category
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+  // Infinite scroll / lazy loading state
+  const ITEMS_PER_BATCH = 24;
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_BATCH);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(categoryFilteredProducts.length / ITEMS_PER_PAGE);
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return categoryFilteredProducts.slice(startIndex, endIndex);
-  }, [categoryFilteredProducts, currentPage]);
+  // Get visible products (lazy loaded)
+  const visibleProducts = useMemo(() => {
+    return categoryFilteredProducts.slice(0, visibleCount);
+  }, [categoryFilteredProducts, visibleCount]);
 
-  // Reset to page 1 when filters/search/category changes
+  const hasMore = visibleCount < categoryFilteredProducts.length;
+
+  // Reset visible count when filters/search/category changes
   useEffect(() => {
-    setCurrentPage(1);
+    setVisibleCount(ITEMS_PER_BATCH);
   }, [searchTerm, sortBy, selectedCategory, ratingFilter, vendorFilter]);
 
-  // Scroll to top when page changes
+  // Intersection Observer for infinite scroll
   useEffect(() => {
-    if (currentPage > 1) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMore && !isLoadingMore && !loading) {
+          setIsLoadingMore(true);
+          // Small delay to show loading state and prevent rapid firing
+          setTimeout(() => {
+            setVisibleCount(prev => Math.min(prev + ITEMS_PER_BATCH, categoryFilteredProducts.length));
+            setIsLoadingMore(false);
+          }, 300);
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
-  }, [currentPage]);
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasMore, isLoadingMore, loading, categoryFilteredProducts.length]);
+
+  const loadMore = () => {
+    if (hasMore && !isLoadingMore) {
+      setIsLoadingMore(true);
+      setTimeout(() => {
+        setVisibleCount(prev => Math.min(prev + ITEMS_PER_BATCH, categoryFilteredProducts.length));
+        setIsLoadingMore(false);
+      }, 300);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -660,7 +693,7 @@ export default function Products() {
                 {selectedCategory === "all" ? "All Products" : selectedCategory?.replace(/-/g, ' ')}
               </h1>
               <p className="text-gray-600">
-                Showing {paginatedProducts.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{Math.min(currentPage * ITEMS_PER_PAGE, categoryFilteredProducts.length)} of {categoryFilteredProducts.length} {categoryFilteredProducts.length === 1 ? 'product' : 'products'}
+                Showing {visibleProducts.length} of {categoryFilteredProducts.length} {categoryFilteredProducts.length === 1 ? 'product' : 'products'}
               </p>
             </div>
 
@@ -772,7 +805,7 @@ export default function Products() {
                 <p className="text-red-600 mb-4">{err}</p>
                 <Button onClick={() => window.location.reload()}>Retry</Button>
               </div>
-            ) : paginatedProducts.length === 0 ? (
+            ) : visibleProducts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-600 mb-4">No products found</p>
                 <Button onClick={() => {
@@ -786,12 +819,12 @@ export default function Products() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 animate-fade-in mb-12">
-                  {paginatedProducts.map((product, index) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 animate-fade-in mb-8">
+                  {visibleProducts.map((product, index) => (
                     <div 
                       key={product.id}
                       className="animate-fade-in"
-                      style={{ animationDelay: `${index * 0.05}s` }}
+                      style={{ animationDelay: `${Math.min(index, 12) * 0.03}s` }}
                     >
                       <ProductCard 
                         product={product}
@@ -800,56 +833,30 @@ export default function Products() {
                   ))}
                 </div>
 
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="mt-12 flex items-center justify-center gap-2 pb-8">
-                    <Button
-                      variant="outline"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                      className="rounded-full px-6"
-                    >
-                      ← Previous
-                    </Button>
-                    
-                    <div className="flex items-center gap-1">
-                      {[...Array(totalPages)].map((_, i) => {
-                        const pageNum = i + 1;
-                        // Show first page, last page, current page, and pages around current
-                        if (
-                          pageNum === 1 ||
-                          pageNum === totalPages ||
-                          (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                        ) {
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={currentPage === pageNum ? "default" : "outline"}
-                              onClick={() => setCurrentPage(pageNum)}
-                              className="w-10 h-10 rounded-full"
-                            >
-                              {pageNum}
-                            </Button>
-                          );
-                        } else if (
-                          pageNum === currentPage - 2 ||
-                          pageNum === currentPage + 2
-                        ) {
-                          return <span key={pageNum} className="px-2 text-gray-400">...</span>;
-                        }
-                        return null;
-                      })}
-                    </div>
-                    
-                    <Button
-                      variant="outline"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                      className="rounded-full px-6"
-                    >
-                      Next →
-                    </Button>
+                {/* Infinite Scroll Trigger / Load More */}
+                {hasMore && (
+                  <div ref={loadMoreRef} className="flex flex-col items-center justify-center py-8 gap-4">
+                    {isLoadingMore ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <span className="text-gray-600">Loading more products...</span>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={loadMore}
+                        className="rounded-full px-8"
+                      >
+                        Load More ({categoryFilteredProducts.length - visibleCount} remaining)
+                      </Button>
+                    )}
                   </div>
+                )}
+
+                {!hasMore && categoryFilteredProducts.length > ITEMS_PER_BATCH && (
+                  <p className="text-center text-gray-500 py-4">
+                    All {categoryFilteredProducts.length} products loaded
+                  </p>
                 )}
               </>
             )}
