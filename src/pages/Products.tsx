@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ShoppingCart, ArrowLeft, Search, X, SlidersHorizontal, Heart, ChevronDown } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Search, X, SlidersHorizontal, Heart, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { withRetry } from "@/lib/api-retry";
 import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing";
@@ -620,6 +620,7 @@ export default function Products() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_BATCH);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Get visible products (lazy loaded)
   const visibleProducts = useMemo(() => {
@@ -632,6 +633,19 @@ export default function Products() {
   useEffect(() => {
     setVisibleCount(ITEMS_PER_BATCH);
   }, [searchTerm, sortBy, selectedCategory, ratingFilter, vendorFilter]);
+
+  // Scroll to top visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -898,6 +912,17 @@ export default function Products() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all duration-300 animate-fade-in"
+          aria-label="Scroll to top"
+        >
+          <ChevronUp className="h-6 w-6" />
+        </button>
+      )}
     </div>
   );
 }
