@@ -161,15 +161,14 @@ export default function Products() {
           ),
           withRetry(
             async () => {
-              // Fetch all products - Supabase defaults to 1000, so we need to fetch in batches
-              // or increase the limit. For product listing, fetch first 3000 to cover most use cases
+              // Fetch all products - must fetch all 5825+ products to include Wall Calendars (at row 5352)
               const { data, error } = await supabase
                 .from("products")
                 .select("id, name, description, base_cost_cents, min_price_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id, pricing_data")
                 .eq("is_active", true)
                 .order("category", { ascending: true })
                 .order("name", { ascending: true })
-                .limit(5000); // Increase limit to fetch all products
+                .limit(6000); // Fetch all products including Wall Calendars
               
               if (error) {
                 console.error('[Products] Products fetch error:', error);
