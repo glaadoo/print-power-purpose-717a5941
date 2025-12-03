@@ -146,59 +146,11 @@ export function ProductConfigurator({
     return false;
   }, [pricingData]);
 
-  // Extract valid option IDs from combinations data (pricingData[1])
-  // This is critical for filtering out options that don't exist in the API's variant matrix
-  const validOptionIds = useMemo(() => {
-    if (!pricingData || !Array.isArray(pricingData) || !pricingData[1]) {
-      return null; // No combinations data available
-    }
-    
-    const combinations = pricingData[1];
-    if (!Array.isArray(combinations) || combinations.length === 0) {
-      return null;
-    }
-    
-    // Combinations can be in different formats:
-    // 1. Array of objects with 'key' field containing hyphen-separated IDs
-    // 2. Array of strings (variant keys directly)
-    // 3. Array of objects with option IDs
-    const validIds = new Set<number>();
-    
-    combinations.forEach((combo: any) => {
-      if (typeof combo === 'string') {
-        // Direct variant key string
-        combo.split('-').forEach((id: string) => {
-          const numId = parseInt(id, 10);
-          if (!isNaN(numId)) validIds.add(numId);
-        });
-      } else if (combo && typeof combo === 'object') {
-        // Object with key field
-        if (combo.key && typeof combo.key === 'string') {
-          combo.key.split('-').forEach((id: string) => {
-            const numId = parseInt(id, 10);
-            if (!isNaN(numId)) validIds.add(numId);
-          });
-        }
-        // Also check for optionIds array
-        if (Array.isArray(combo.optionIds)) {
-          combo.optionIds.forEach((id: number) => {
-            if (typeof id === 'number') validIds.add(id);
-          });
-        }
-        // Check for numeric fields that might be option IDs
-        Object.values(combo).forEach((val) => {
-          if (typeof val === 'number' && val > 0 && val < 10000) {
-            validIds.add(val);
-          }
-        });
-      }
-    });
-    
-    console.log('[ProductConfigurator] Extracted valid option IDs from combinations:', validIds.size);
-    return validIds.size > 0 ? validIds : null;
-  }, [pricingData]);
+  // Note: pricingData[1] contains hash-based combinations, not variant key mappings
+  // We cannot pre-filter options from this data structure
+  // Instead, we validate options on-demand via API calls
 
-  // Parse product options from SinaLite structure - FILTERED by valid combinations
+  // Parse product options from SinaLite structure
   const optionGroups: OptionGroup[] = useMemo(() => {
     if (!pricingData || !Array.isArray(pricingData)) {
       console.warn('[ProductConfigurator] Invalid pricing data structure');
@@ -217,14 +169,6 @@ export function ProductConfigurator({
     const groupMap: Record<string, ProductOption[]> = {};
     options.forEach((option) => {
       if (!option.group) return;
-      
-      // CRITICAL: Filter out options that don't exist in valid combinations
-      // Only apply this filter if we have valid combination data
-      if (validOptionIds && !validOptionIds.has(option.id)) {
-        console.log(`[ProductConfigurator] Filtering out invalid option: ${option.group}/${option.name} (ID: ${option.id})`);
-        return; // Skip this option - not in valid combinations
-      }
-      
       if (!groupMap[option.group]) {
         groupMap[option.group] = [];
       }
@@ -232,7 +176,7 @@ export function ProductConfigurator({
     });
 
     // Convert to array of groups and sort options within each group
-    const groups = Object.entries(groupMap).map(([group, opts]) => ({
+    return Object.entries(groupMap).map(([group, opts]) => ({
       group,
       options: opts.sort((a, b) => {
         // Check if this is a dimension format (e.g., "24×18" or "24x18")
@@ -265,10 +209,7 @@ export function ProductConfigurator({
         return a.name.localeCompare(b.name);
       }),
     }));
-    
-    console.log('[ProductConfigurator] Option groups after filtering:', groups.map(g => `${g.group}: ${g.options.length} options`));
-    return groups;
-  }, [pricingData, validOptionIds]);
+  }, [pricingData]);
 
   // Initialize with first option from each group - or use defaultVariantKey if provided
   // CRITICAL: Only run ONCE on mount, never re-initialize after user interaction
@@ -356,7 +297,7 @@ export function ProductConfigurator({
     }, 100);
   }, [optionGroups, defaultVariantKey, pricingData]);
 
-  // Pre-validate quantity options on mount to hide invalid ones
+  // Pre-validate ALL options on mount to hide invalid ones
   // SKIP for variable quantity products - they use input fields, not dropdowns
   useEffect(() => {
     // Skip pre-validation for variable quantity products
@@ -371,28 +312,17 @@ export function ProductConfigurator({
       return;
     }
     
-    // Find the quantity group
-    const qtyGroup = optionGroups.find(g => 
-      g.group.toLowerCase().includes('qty') || 
-      g.group.toLowerCase().includes('quantity')
-    );
-    
-    if (!qtyGroup || qtyGroup.options.length <= 1) {
-      setPreValidationComplete(true);
-      return;
-    }
-    
     preValidationRunRef.current = true;
     setValidatingOptions(true);
     
-    console.log('[ProductConfigurator] Pre-validating quantity options:', qtyGroup.options.length);
-    
-    // Get base selections (all non-qty options)
-    const baseSelections = { ...selectedOptions };
-    
-    // Test each quantity option in parallel
-    const validateOption = async (option: { id: number; name: string }): Promise<{ id: number; valid: boolean }> => {
-      const testSelections = { ...baseSelections, [qtyGroup.group]: option.id };
+    // Validate options for ALL groups (not just quantity)
+    // We test each option by temporarily selecting it and checking if API returns a price
+    const validateOptionInGroup = async (
+      group: OptionGroup, 
+      option: ProductOption, 
+      baseSelections: Record<string, number>
+    ): Promise<{ groupName: string; id: number; valid: boolean }> => {
+      const testSelections = { ...baseSelections, [group.group]: option.id };
       const optionIds = Object.values(testSelections);
       const variantKey = optionIds.sort((a, b) => a - b).join('-');
       
@@ -407,18 +337,69 @@ export function ProductConfigurator({
         });
         
         const isValid = !error && data && Array.isArray(data) && data.length > 0 && data[0]?.price;
-        console.log(`[ProductConfigurator] Pre-validate ${option.name} (${variantKey}):`, isValid ? 'VALID' : 'INVALID');
-        return { id: option.id, valid: isValid };
+        return { groupName: group.group, id: option.id, valid: isValid };
       } catch {
-        return { id: option.id, valid: false };
+        return { groupName: group.group, id: option.id, valid: false };
       }
     };
     
-    // Run all validations in parallel
-    Promise.all(qtyGroup.options.map(validateOption))
+    // Build list of all options to validate
+    const validationTasks: Promise<{ groupName: string; id: number; valid: boolean }>[] = [];
+    const baseSelections = { ...selectedOptions };
+    
+    // Cap total API calls to prevent overwhelming the API
+    const MAX_VALIDATION_CALLS = 100;
+    let callCount = 0;
+    
+    for (const group of optionGroups) {
+      // Skip groups with only 1 option (nothing to validate)
+      if (group.options.length <= 1) continue;
+      
+      for (const option of group.options) {
+        if (callCount >= MAX_VALIDATION_CALLS) break;
+        
+        // Skip the currently selected option (it's already valid based on initial load)
+        if (option.id === baseSelections[group.group]) continue;
+        
+        validationTasks.push(validateOptionInGroup(group, option, baseSelections));
+        callCount++;
+      }
+      
+      if (callCount >= MAX_VALIDATION_CALLS) break;
+    }
+    
+    console.log('[ProductConfigurator] Pre-validating', validationTasks.length, 'options across all groups');
+    
+    // Run all validations in parallel with batching to avoid overwhelming API
+    const BATCH_SIZE = 10;
+    const runValidation = async () => {
+      const allResults: { groupName: string; id: number; valid: boolean }[] = [];
+      
+      for (let i = 0; i < validationTasks.length; i += BATCH_SIZE) {
+        const batch = validationTasks.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.all(batch);
+        allResults.push(...batchResults);
+        
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < validationTasks.length) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+      }
+      
+      return allResults;
+    };
+    
+    runValidation()
       .then(results => {
         const invalidIds = results.filter(r => !r.valid).map(r => r.id);
-        console.log('[ProductConfigurator] Invalid quantity option IDs:', invalidIds);
+        const invalidByGroup = results.filter(r => !r.valid).reduce((acc, r) => {
+          if (!acc[r.groupName]) acc[r.groupName] = [];
+          acc[r.groupName].push(r.id);
+          return acc;
+        }, {} as Record<string, number[]>);
+        
+        console.log('[ProductConfigurator] Invalid options by group:', invalidByGroup);
+        console.log('[ProductConfigurator] Total invalid option IDs:', invalidIds.length);
         
         if (invalidIds.length > 0) {
           setFailedOptionIds(prev => {
@@ -427,17 +408,26 @@ export function ProductConfigurator({
             return newSet;
           });
           
-          // If current selection is invalid, switch to first valid option
-          const currentQtyId = selectedOptions[qtyGroup.group];
-          if (invalidIds.includes(currentQtyId)) {
-            const firstValidOption = qtyGroup.options.find(opt => !invalidIds.includes(opt.id));
-            if (firstValidOption) {
-              console.log('[ProductConfigurator] Switching to first valid qty:', firstValidOption.name);
-              setSelectedOptions(prev => ({
-                ...prev,
-                [qtyGroup.group]: firstValidOption.id
-              }));
+          // Check if any current selection is invalid and switch to first valid
+          let newSelections = { ...selectedOptions };
+          let selectionChanged = false;
+          
+          for (const group of optionGroups) {
+            const currentId = selectedOptions[group.group];
+            const groupInvalidIds = invalidByGroup[group.group] || [];
+            
+            if (groupInvalidIds.includes(currentId)) {
+              const firstValidOption = group.options.find(opt => !groupInvalidIds.includes(opt.id));
+              if (firstValidOption) {
+                console.log(`[ProductConfigurator] Switching ${group.group} to first valid:`, firstValidOption.name);
+                newSelections[group.group] = firstValidOption.id;
+                selectionChanged = true;
+              }
             }
+          }
+          
+          if (selectionChanged) {
+            setSelectedOptions(newSelections);
           }
         }
         
@@ -996,16 +986,13 @@ export function ProductConfigurator({
         // Check if this is the quantity group
         const isQtyGroup = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
         
-        // For quantity groups: filter out failed options completely
-        // For non-qty groups: show all options but mark failed ones for disabling
-        const validOptions = isQtyGroup 
-          ? group.options.filter(opt => !failedOptionIds.has(opt.id))
-          : group.options;
+        // CRITICAL: Filter out invalid options for ALL groups (not just quantity)
+        // This hides options that the SinaLite API doesn't support
+        const validOptions = group.options.filter(opt => !failedOptionIds.has(opt.id));
         
-        // Skip rendering only if a quantity group has zero valid options
-        // Non-quantity groups always render
-        if (isQtyGroup && validOptions.length === 0) {
-          console.warn('[ProductConfigurator] Qty group has no valid options after filtering');
+        // Skip rendering if group has zero valid options after filtering
+        if (validOptions.length === 0) {
+          console.warn(`[ProductConfigurator] ${group.group} has no valid options after filtering`);
           return null;
         }
         
