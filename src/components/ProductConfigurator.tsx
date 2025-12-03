@@ -83,9 +83,9 @@ export function ProductConfigurator({
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
   const [userInteracted, setUserInteracted] = useState(false); // Track if user has manually changed options
-  const [failedOptionIds, setFailedOptionIds] = useState<Set<number>>(new Set()); // Track options that don't have valid prices
+  const [validOptionsMap, setValidOptionsMap] = useState<Record<string, Set<number>>>({}); // Map of group -> valid option IDs
   const [validatingOptions, setValidatingOptions] = useState(false); // Track validation state  
-  const [preValidationComplete, setPreValidationComplete] = useState(false); // Track if validation is done
+  const [validationComplete, setValidationComplete] = useState(false); // Track if initial validation is done
   const [customQuantity, setCustomQuantity] = useState<string>("100"); // For variable_qty products
   const [manualPriceFetch, setManualPriceFetch] = useState(0); // Trigger manual price fetch for variable qty
   const lastChangedOptionRef = useRef<{ group: string; optionId: number } | null>(null);
@@ -296,36 +296,163 @@ export function ProductConfigurator({
     }, 100);
   }, [optionGroups, defaultVariantKey, pricingData]);
 
-  // REMOVED: Pre-validation on mount was too aggressive and marked valid options as invalid
-  // Options that are valid for size 24x60 might not be valid for initial size 18x12
-  // Instead, we show all options and only mark them as failed when user explicitly selects them
-  // and we get a "configuration not available" error for the CURRENT combination
-  
-  // Clear failed options when "core" selections change (size, stock) 
-  // because options that failed with one size might work with another
+  // SMART VALIDATION: When a "core" option (size, stock) changes, validate all dependent options
+  // Only show options that produce valid prices for the current core configuration
   const prevCoreSelectionsRef = useRef<string>('');
+  const validationInProgress = useRef<boolean>(false);
   
+  // Identify which groups are "core" (affect other options) vs "dependent"
+  const coreGroupNames = useMemo(() => ['size', 'stock', 'Stock', 'qty', 'qtyid', 'Qty', 'QtyId'], []);
+  
+  const isDependentGroup = useCallback((groupName: string) => {
+    const lower = groupName.toLowerCase();
+    return !coreGroupNames.some(c => lower === c.toLowerCase() || lower.includes('qty'));
+  }, [coreGroupNames]);
+  
+  // Validate dependent options when core selections change
   useEffect(() => {
-    // Identify "core" option groups that affect what other options are valid
-    const coreGroups = ['size', 'stock', 'Stock'];
-    const coreSelectionKey = coreGroups
-      .map(g => selectedOptions[g] || selectedOptions[g.toLowerCase()])
+    if (!optionGroups.length || !Object.keys(selectedOptions).length) return;
+    if (validationInProgress.current) return;
+    
+    // Build core selection key to detect changes
+    const coreSelectionKey = optionGroups
+      .filter(g => !isDependentGroup(g.group))
+      .map(g => selectedOptions[g.group])
       .filter(Boolean)
+      .sort((a, b) => a - b)
       .join('-');
     
-    if (prevCoreSelectionsRef.current && prevCoreSelectionsRef.current !== coreSelectionKey) {
-      // Core selection changed - clear failed options as they might now be valid
-      console.log('[ProductConfigurator] Core selection changed, clearing failed options');
-      setFailedOptionIds(new Set());
+    // Skip if core selections haven't changed
+    if (prevCoreSelectionsRef.current === coreSelectionKey && validationComplete) {
+      return;
     }
     
     prevCoreSelectionsRef.current = coreSelectionKey;
-  }, [selectedOptions]);
-  
-  // Mark pre-validation as complete immediately (we're not pre-validating anymore)
-  useEffect(() => {
-    setPreValidationComplete(true);
-  }, []);
+    
+    // Get current core option IDs (size, stock, qty)
+    const coreOptionIds: number[] = optionGroups
+      .filter(g => !isDependentGroup(g.group))
+      .map(g => selectedOptions[g.group])
+      .filter((id): id is number => !!id);
+    
+    if (coreOptionIds.length === 0) return;
+    
+    // Get dependent groups to validate
+    const dependentGroups = optionGroups.filter(g => isDependentGroup(g.group));
+    if (dependentGroups.length === 0) {
+      setValidationComplete(true);
+      return;
+    }
+    
+    // Validate all options in dependent groups
+    const validateDependentOptions = async () => {
+      validationInProgress.current = true;
+      setValidatingOptions(true);
+      
+      console.log('[ProductConfigurator] Starting dependent option validation for core:', coreOptionIds);
+      
+      const newValidOptionsMap: Record<string, Set<number>> = {};
+      
+      // Initialize all groups with empty sets
+      dependentGroups.forEach(g => {
+        newValidOptionsMap[g.group] = new Set<number>();
+      });
+      
+      // Batch validate: for each dependent group, test each option
+      for (const group of dependentGroups) {
+        const validIds = new Set<number>();
+        
+        // Build base option IDs (all core + all other dependent groups with their first valid option)
+        for (const option of group.options) {
+          // Build full configuration: core options + this option + first option from other dependent groups
+          const testOptionIds: number[] = [...coreOptionIds, option.id];
+          
+          // Add first option from other dependent groups
+          for (const otherGroup of dependentGroups) {
+            if (otherGroup.group !== group.group && otherGroup.options.length > 0) {
+              // Use currently selected option or first option
+              const selectedId = selectedOptions[otherGroup.group];
+              if (selectedId) {
+                testOptionIds.push(selectedId);
+              } else {
+                testOptionIds.push(otherGroup.options[0].id);
+              }
+            }
+          }
+          
+          const variantKey = testOptionIds.sort((a, b) => a - b).join('-');
+          
+          try {
+            const { data } = await supabase.functions.invoke('sinalite-price', {
+              body: {
+                productId: vendorProductId,
+                storeCode: storeCode,
+                variantKey: variantKey,
+                method: 'PRICEBYKEY'
+              }
+            });
+            
+            // Check if we got a valid price
+            if (data && Array.isArray(data) && data.length > 0 && data[0].price) {
+              validIds.add(option.id);
+            }
+          } catch (err) {
+            // Option is invalid - don't add to valid set
+            console.log(`[ProductConfigurator] Option ${option.name} (${option.id}) invalid for current config`);
+          }
+          
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 30));
+        }
+        
+        newValidOptionsMap[group.group] = validIds;
+        console.log(`[ProductConfigurator] ${group.group}: ${validIds.size}/${group.options.length} valid options`);
+      }
+      
+      setValidOptionsMap(newValidOptionsMap);
+      setValidatingOptions(false);
+      setValidationComplete(true);
+      validationInProgress.current = false;
+      
+      // Auto-select first valid option if current selection is invalid
+      setSelectedOptions(prev => {
+        const updated = { ...prev };
+        let changed = false;
+        
+        for (const group of dependentGroups) {
+          const validSet = newValidOptionsMap[group.group];
+          const currentSelection = prev[group.group];
+          
+          if (currentSelection && !validSet.has(currentSelection)) {
+            // Current selection is invalid, switch to first valid option
+            const firstValid = Array.from(validSet)[0];
+            if (firstValid) {
+              updated[group.group] = firstValid;
+              changed = true;
+              console.log(`[ProductConfigurator] Auto-switching ${group.group} from ${currentSelection} to ${firstValid}`);
+            }
+          }
+        }
+        
+        if (changed) {
+          // Update config for parent
+          const configUpdate = Object.fromEntries(
+            Object.entries(updated).map(([g, oId]) => {
+              const name = optionGroups
+                .find(og => og.group === g)
+                ?.options.find(o => o.id === oId)?.name || String(oId);
+              return [g, name];
+            })
+          );
+          onConfigChangeRef.current(configUpdate);
+        }
+        
+        return changed ? updated : prev;
+      });
+    };
+    
+    validateDependentOptions();
+  }, [selectedOptions, optionGroups, vendorProductId, storeCode, isDependentGroup, validationComplete]);
 
   // Notify parent of quantity options - separate effect
   useEffect(() => {
@@ -723,20 +850,8 @@ export function ProductConfigurator({
               console.error('[ProductConfigurator] Fallback POST failed:', fallbackErr);
             }
             
-            // If fallback also fails, mark the option as unavailable but DON'T auto-reset
-            // User should see the error and choose a different option manually
-            if (lastChangedOptionRef.current) {
-              const failedId = lastChangedOptionRef.current.optionId;
-              
-              // Mark this option as failed so UI can show it's unavailable
-              setFailedOptionIds(prev => {
-                const newSet = new Set(prev);
-                newSet.add(failedId);
-                return newSet;
-              });
-              
-              lastChangedOptionRef.current = null;
-            }
+            // If fallback also fails, clear the ref - the user will see the error message
+            lastChangedOptionRef.current = null;
             
             // CRITICAL: Set price to 0 to indicate invalid configuration
             onPriceChangeRef.current(0);
@@ -872,15 +987,27 @@ export function ProductConfigurator({
         // Check if this is the quantity group
         const isQtyGroup = group.group.toLowerCase().includes('qty') || group.group.toLowerCase().includes('quantity');
         
-        // IMPORTANT: Show ALL options - don't pre-filter based on failedOptionIds
-        // If user selects an invalid combination, we'll show an error message
-        // This ensures valid options (like Grommets/Hemming for size 24x60) are never hidden
-        const validOptions = group.options;
+        // SMART FILTERING: For dependent groups, only show options that are valid for current core configuration
+        // For core groups (size, stock, qty), show all options
+        const isDependent = isDependentGroup(group.group);
+        let validOptions = group.options;
         
-        // Skip rendering if group has no options at all
+        if (isDependent && validationComplete && validOptionsMap[group.group]) {
+          // Filter to only show valid options for this group
+          const validSet = validOptionsMap[group.group];
+          validOptions = group.options.filter(opt => validSet.has(opt.id));
+          console.log(`[ProductConfigurator] ${group.group}: showing ${validOptions.length}/${group.options.length} valid options`);
+        }
+        
+        // Skip rendering if group has no valid options
         if (validOptions.length === 0) {
-          console.warn(`[ProductConfigurator] ${group.group} has no options`);
-          return null;
+          // During validation, show all options with loading state
+          if (validatingOptions) {
+            validOptions = group.options;
+          } else {
+            console.warn(`[ProductConfigurator] ${group.group} has no valid options for current configuration`);
+            return null;
+          }
         }
         
         // For variable quantity products, show an input field for qty instead of select
