@@ -134,34 +134,47 @@ export function ProductConfigurator({
   });
 
   // Check if this is a variable quantity product
-  // IMPORTANT: Only treat as variable qty if there's NO qty group in the options
-  // The API sometimes returns variable_qty metadata even when fixed qty options exist
+  // Variable qty = user enters any number in a text input
+  // Fixed qty = user selects from dropdown of discrete quantities (100, 250, 500, etc.)
   const isVariableQty = useMemo(() => {
     if (!pricingData || !Array.isArray(pricingData)) {
       return false;
     }
     
-    // First, check if there are actual qty options in pricingData[0]
-    const options = pricingData[0] || [];
-    const hasQtyOptions = Array.isArray(options) && options.some(
-      (opt: any) => opt?.group?.toLowerCase() === 'qty' && !opt.hidden
-    );
-    
-    // If we have qty options, show dropdown regardless of metadata
-    if (hasQtyOptions) {
-      console.log('[ProductConfigurator] Found qty options, using dropdown instead of variable qty');
-      return false;
-    }
-    
-    // Only check metadata if no qty options exist
-    if (!pricingData[2]) {
-      return false;
-    }
+    // Check metadata for variable_qty flag
     const metadata = pricingData[2];
-    if (Array.isArray(metadata) && metadata.length > 0) {
-      return metadata.some((m: any) => m?.metadata === 'variable_qty');
+    const hasVariableQtyMetadata = Array.isArray(metadata) && 
+      metadata.some((m: any) => m?.metadata === 'variable_qty');
+    
+    if (!hasVariableQtyMetadata) {
+      return false;
     }
-    return false;
+    
+    // Check if qty options look like min/max range vs actual discrete quantities
+    const options = pricingData[0] || [];
+    const qtyOptions = Array.isArray(options) 
+      ? options.filter((opt: any) => opt?.group?.toLowerCase() === 'qty' && !opt.hidden)
+      : [];
+    
+    // If only 2 qty options exist and one is "1" or very small, and other is very large (1000000+),
+    // this is a variable qty product with min/max range
+    if (qtyOptions.length === 2) {
+      const values = qtyOptions.map((opt: any) => parseInt(opt.name) || 0).sort((a, b) => a - b);
+      const isMinMaxRange = values[0] <= 10 && values[1] >= 100000;
+      if (isMinMaxRange) {
+        console.log('[ProductConfigurator] Variable qty detected (min/max range):', values);
+        return true;
+      }
+    }
+    
+    // If we have multiple discrete qty options (3+), show dropdown even with variable_qty metadata
+    if (qtyOptions.length >= 3) {
+      console.log('[ProductConfigurator] Fixed qty detected (discrete options):', qtyOptions.length);
+      return false;
+    }
+    
+    // Default: use variable qty if metadata says so and we don't have clear discrete options
+    return true;
   }, [pricingData]);
 
   // Note: pricingData[1] contains hash-based combinations, not variant key mappings
@@ -1052,6 +1065,13 @@ export function ProductConfigurator({
                   const value = e.target.value;
                   setCustomQuantity(value);
                   setUserInteracted(true);
+                }}
+                onBlur={() => {
+                  // Trigger price fetch when user clicks elsewhere
+                  console.log('[ProductConfigurator] Input blur, triggering price fetch for qty:', customQuantity);
+                  if (customQuantity && parseInt(customQuantity) >= minQty) {
+                    setManualPriceFetch(prev => prev + 1);
+                  }
                 }}
                 onKeyDown={(e) => {
                   // Trigger price fetch when user presses Enter
