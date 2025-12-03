@@ -191,7 +191,7 @@ serve(async (req) => {
           }
         }
 
-        // Generate combinations (limit to 2 options per variable group for speed)
+        // Generate combinations - test ALL options per variable group for accurate min price
         const generateCombinations = (groups: string[]): number[][] => {
           if (groups.length === 0) return [[]];
           
@@ -199,8 +199,8 @@ serve(async (req) => {
           const restCombinations = generateCombinations(rest);
           const combinations: number[][] = [];
           
-          // Limit to first 2 options per group
-          const groupOptions = optionsByGroup[first].slice(0, 2);
+          // Test ALL options in each group for accuracy (cap at 6 per group to prevent explosion)
+          const groupOptions = optionsByGroup[first].slice(0, 6);
           
           for (const opt of groupOptions) {
             for (const restCombo of restCombinations) {
@@ -210,8 +210,17 @@ serve(async (req) => {
           
           return combinations;
         };
+        
+        // Cap total combinations to prevent timeout (test up to 100 combinations)
+        const maxCombinations = 100;
 
-        const combinations = generateCombinations(variableGroups);
+        let combinations = generateCombinations(variableGroups);
+        
+        // Cap combinations to prevent timeout
+        if (combinations.length > maxCombinations) {
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} combinations, capping at ${maxCombinations}`);
+          combinations = combinations.slice(0, maxCombinations);
+        }
         
         // PARALLEL price fetching - test all combinations at once
         const pricePromises = combinations.map(async (combo): Promise<{ price: number; options: number[] } | null> => {
