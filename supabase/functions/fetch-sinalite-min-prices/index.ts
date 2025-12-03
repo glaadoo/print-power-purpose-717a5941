@@ -265,13 +265,36 @@ serve(async (req) => {
 
               const priceData = await priceRes.json();
               
+              // Extract price from various possible response fields
               let price = 0;
-              if (priceData.price && parseFloat(priceData.price) > 0) {
-                price = parseFloat(priceData.price);
-              } else if (priceData.unit_price && parseFloat(priceData.unit_price) > 0) {
-                price = parseFloat(priceData.unit_price);
-              } else if (priceData.total_price && parseFloat(priceData.total_price) > 0) {
-                price = parseFloat(priceData.total_price);
+              
+              // Try direct price fields
+              const priceFields = ['price', 'unit_price', 'total_price', 'unitPrice', 'totalPrice', 'basePrice', 'base_price', 'amount'];
+              for (const field of priceFields) {
+                if (priceData[field] && parseFloat(priceData[field]) > 0) {
+                  price = parseFloat(priceData[field]);
+                  break;
+                }
+              }
+              
+              // Try nested price object
+              if (price === 0 && priceData.pricing) {
+                for (const field of priceFields) {
+                  if (priceData.pricing[field] && parseFloat(priceData.pricing[field]) > 0) {
+                    price = parseFloat(priceData.pricing[field]);
+                    break;
+                  }
+                }
+              }
+              
+              // Try data wrapper
+              if (price === 0 && priceData.data) {
+                for (const field of priceFields) {
+                  if (priceData.data[field] && parseFloat(priceData.data[field]) > 0) {
+                    price = parseFloat(priceData.data[field]);
+                    break;
+                  }
+                }
               }
               
               return price > 0 ? { price, options: fullOptions } : null;
@@ -291,34 +314,74 @@ serve(async (req) => {
           }
         }
 
-        // If no combinations worked, try just qty option with first size
-        if (globalMinOptions.length === 0 && baseQtyOption && sizeOptions.length > 0) {
-          try {
-            const fallbackOptions = [baseQtyOption, sizeOptions[0].id];
-            const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
-            const priceRes = await fetch(priceUrl, {
-              method: "POST",
-              headers: {
-                "Authorization": `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ productOptions: fallbackOptions }),
-            });
+        // If no combinations worked, try fallback approaches
+        if (globalMinOptions.length === 0) {
+          console.log(`[FETCH-MIN-PRICES] ${product.name}: trying fallback approaches`);
+          
+          // Try with just qty and first size
+          if (baseQtyOption && sizeOptions.length > 0) {
+            try {
+              const fallbackOptions = [baseQtyOption, sizeOptions[0].id];
+              const priceUrl = `${apiBaseUrl}/price/${productId}/${storeCode}`;
+              const priceRes = await fetch(priceUrl, {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ productOptions: fallbackOptions }),
+              });
 
-            if (priceRes.ok) {
-              const priceData = await priceRes.json();
-              let price = 0;
-              if (priceData.price && parseFloat(priceData.price) > 0) {
-                price = parseFloat(priceData.price);
-              } else if (priceData.unit_price && parseFloat(priceData.unit_price) > 0) {
-                price = parseFloat(priceData.unit_price);
+              if (priceRes.ok) {
+                const priceData = await priceRes.json();
+                console.log(`[FETCH-MIN-PRICES] ${product.name} fallback response:`, JSON.stringify(priceData).substring(0, 500));
+                
+                let price = 0;
+                const priceFields = ['price', 'unit_price', 'total_price', 'unitPrice', 'totalPrice', 'basePrice', 'base_price', 'amount'];
+                for (const field of priceFields) {
+                  if (priceData[field] && parseFloat(priceData[field]) > 0) {
+                    price = parseFloat(priceData[field]);
+                    break;
+                  }
+                }
+                if (price > 0) {
+                  globalMinPrice = price;
+                  globalMinOptions = fallbackOptions;
+                }
               }
-              if (price > 0) {
-                globalMinPrice = price;
-                globalMinOptions = fallbackOptions;
+            } catch {}
+          }
+          
+          // Try pricebykey endpoint with variant key from database if still no price
+          if (globalMinOptions.length === 0 && product.min_price_variant_key) {
+            try {
+              const keyUrl = `${apiBaseUrl}/pricebykey/${productId}/${product.min_price_variant_key}`;
+              const keyRes = await fetch(keyUrl, {
+                headers: {
+                  "Authorization": `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              });
+
+              if (keyRes.ok) {
+                const keyData = await keyRes.json();
+                console.log(`[FETCH-MIN-PRICES] ${product.name} pricebykey response:`, JSON.stringify(keyData).substring(0, 500));
+                
+                let price = 0;
+                const priceFields = ['price', 'unit_price', 'total_price', 'unitPrice', 'totalPrice', 'basePrice', 'base_price', 'amount'];
+                for (const field of priceFields) {
+                  if (keyData[field] && parseFloat(keyData[field]) > 0) {
+                    price = parseFloat(keyData[field]);
+                    break;
+                  }
+                }
+                if (price > 0) {
+                  globalMinPrice = price;
+                  globalMinOptions = product.min_price_variant_key.split('-').map((s: string) => parseInt(s));
+                }
               }
-            }
-          } catch {}
+            } catch {}
+          }
         }
 
         if (globalMinOptions.length > 0 && globalMinPrice < Infinity) {
