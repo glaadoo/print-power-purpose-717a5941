@@ -162,7 +162,7 @@ export default function AdminNonprofitAnalytics() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
-                  Total Nonprofit Donations
+                  Total Nonprofit Printing + Purpose
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -177,15 +177,15 @@ export default function AdminNonprofitAnalytics() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Top 10 Nonprofits by Donations
+                  Top 10 Nonprofits by Printing + Purpose
                 </CardTitle>
                 <CardDescription className="text-white/60">
-                  Ranked by total donation amount
+                  Ranked by total Printing + Purpose amount
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {topNonprofits.length === 0 ? (
-                  <div className="text-white/60 text-center py-4">No donation data yet</div>
+                  <div className="text-white/60 text-center py-4">No Printing + Purpose data yet</div>
                 ) : (
                   <div className="space-y-3">
                     {topNonprofits.map((np, idx) => (
@@ -197,7 +197,7 @@ export default function AdminNonprofitAnalytics() {
                           <div className="text-2xl font-bold text-white/40 w-8">#{idx + 1}</div>
                           <div>
                             <div className="font-semibold text-white">{np.name}</div>
-                            <div className="text-sm text-white/60">{np.donationCount} donations</div>
+                            <div className="text-sm text-white/60">{np.donationCount} contributions</div>
                           </div>
                         </div>
                         <div className="text-xl font-bold text-green-400">
@@ -215,10 +215,10 @@ export default function AdminNonprofitAnalytics() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Top 10 States by Nonprofit Donations
+                  Top 10 States by Nonprofit Printing + Purpose
                 </CardTitle>
                 <CardDescription className="text-white/60">
-                  Geographic distribution of donations
+                  Geographic distribution of Printing + Purpose contributions
                 </CardDescription>
               </CardHeader>
               <CardContent>

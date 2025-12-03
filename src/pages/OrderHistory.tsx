@@ -349,7 +349,7 @@ export default function OrderHistory() {
                               <div className="flex justify-between text-gray-600">
                                 <span className="flex items-center gap-1">
                                   <Heart className="w-4 h-4" />
-                                  Donation
+                                  Printing + Purpose
                                 </span>
                                 <span>${(order.donation_cents / 100).toFixed(2)}</span>
                               </div>

@@ -219,9 +219,9 @@ export default function Donate() {
           
           <div className="relative w-full h-full flex items-center justify-center p-6">
             <div className="max-w-2xl w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 text-white">
-              <h1 className="text-3xl font-bold mb-4">Make a Donation</h1>
+              <h1 className="text-3xl font-bold mb-4">Make a Printing + Purpose Contribution</h1>
               <p className="text-white/80 mb-8">
-                To make a donation, please first select a nonprofit you'd like to support.
+                To make a Printing + Purpose contribution, please first select a nonprofit you'd like to support.
               </p>
               <Button
                 onClick={() => nav("/select/nonprofit")}
@@ -250,7 +250,7 @@ export default function Donate() {
         </Button>
         
         <div className="text-sm md:text-base font-semibold uppercase tracking-[0.2em]">
-          DONATIONS
+          PRINTING + PURPOSE
         </div>
       </header>
 
@@ -309,7 +309,7 @@ export default function Donate() {
 
                 <div className="space-y-2 pt-4">
                   <p className="text-white/90">
-                    Your donation helps make a direct impact on this cause.
+                    Your Printing + Purpose contribution helps make a direct impact on this cause.
                   </p>
                   <p className="text-white/80 text-sm">
                     100% of your contribution goes directly to supporting this initiative.
@@ -323,14 +323,14 @@ export default function Donate() {
                   Every $777 milestone sparks a new story. ✨
                 </h3>
                 <p className="text-white/90 text-sm leading-relaxed">
-                  When an organization hits $777 in donation amount, they unlock a 7-day window to film their impact. 
+                  When an organization hits $777 in Printing + Purpose contributions, they unlock a 7-day window to film their impact. 
                   Show the world what they&apos;ve accomplished — and let their community see the difference they helped create.
                 </p>
               </div>
 
               {/* Recent Donations */}
               <div className="space-y-4">
-                <h3 className="text-xl font-bold">Recent Donations</h3>
+                <h3 className="text-xl font-bold">Recent Printing + Purpose</h3>
                 
                 {loading ? (
                   <div className="space-y-3">
@@ -364,7 +364,7 @@ export default function Donate() {
                   </div>
                 ) : (
                   <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10">
-                    <p className="text-white/60">Be the first to donate!</p>
+                    <p className="text-white/60">Be the first to contribute!</p>
                   </div>
                 )}
               </div>
@@ -377,7 +377,7 @@ export default function Donate() {
               {/* Secure Donation Header */}
               <div className="flex items-center gap-2 mb-6">
                 <Lock className="h-5 w-5 text-green-400" />
-                <h2 className="text-xl font-bold text-white">Secure Donation</h2>
+                <h2 className="text-xl font-bold text-white">Secure Printing + Purpose</h2>
               </div>
 
               {/* Monthly Upsell Modal */}
@@ -387,7 +387,7 @@ export default function Donate() {
                     Make this a monthly gift?
                   </h3>
                   <p className="text-white/80 mb-4">
-                    Monthly donations provide sustainable support and make a bigger impact over time.
+                    Monthly Printing + Purpose contributions provide sustainable support and make a bigger impact over time.
                   </p>
                   <div className="flex gap-3">
                     <Button

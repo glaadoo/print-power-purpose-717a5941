@@ -126,7 +126,7 @@ export default function NonprofitProfile() {
             Every $777 milestone sparks a new story. ✨
           </h3>
           <p className="text-white/90 leading-relaxed">
-            When an organization hits $777 in donation amount, they unlock a 7-day window to film their impact. 
+            When an organization hits $777 in Printing + Purpose contributions, they unlock a 7-day window to film their impact. 
             Show the world what they&apos;ve accomplished — and let their community see the difference they helped create.
           </p>
         </div>
@@ -190,9 +190,9 @@ export default function NonprofitProfile() {
         <div className="grid md:grid-cols-3 gap-6 mb-6">
           <Card className="bg-white/10 border-white/20">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-white flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Total Donations
+                Total Printing + Purpose
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -206,7 +206,7 @@ export default function NonprofitProfile() {
             <CardHeader className="pb-3">
               <CardTitle className="text-white flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Donations
+                Printing + Purpose
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -254,7 +254,7 @@ export default function NonprofitProfile() {
         {/* Recent Donations */}
         {stats && stats.recent_donations.length > 0 && (
           <GlassCard>
-            <h2 className="text-2xl font-bold mb-4">Recent Donations</h2>
+            <h2 className="text-2xl font-bold mb-4">Recent Printing + Purpose</h2>
             <div className="space-y-3">
               {stats.recent_donations.map((donation, idx) => (
                 <div

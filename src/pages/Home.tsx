@@ -63,7 +63,7 @@ export default function Home() {
   useEffect(() => {
     const payment = searchParams.get("payment");
     if (payment === "success") {
-      toast.success("Thank you for your donation! Your payment was successful.");
+      toast.success("Thank you for your Printing + Purpose contribution! Your payment was successful.");
       
       // Clean up URL by removing payment params using React Router
       nav("/", { replace: true });
@@ -286,7 +286,7 @@ export default function Home() {
                   Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">Print Power Purpose</span>
                 </h2>
                 <p className="text-lg text-gray-700 mb-2 font-medium">
-                  Where every donation helps create meaningful change.
+                  Where every Printing + Purpose contribution helps create meaningful change.
                 </p>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto md:mx-0">
                   We connect generous people with impactful nonprofits and help communities achieve their goals — one contribution at a time.
@@ -385,10 +385,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              🏆 Top Donors Making a Difference
+              🏆 Top Printing + Purpose Contributors Making a Difference
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Join our community of generous supporters who are making real impact through their donations. 
+              Join our community of generous supporters who are making real impact through their Printing + Purpose contributions. 
               Every contribution counts!
             </p>
           </div>
@@ -404,7 +404,7 @@ export default function Home() {
                 }}
                 className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                Start Donating Today
+                Start Contributing Today
               </button>
             </div>
           )}
@@ -424,7 +424,7 @@ export default function Home() {
                 Our Impact
               </h2>
               <p className="text-gray-600 mb-8">
-                Real impact requires real community. Comprehensive print + donation tools designed to help nonprofits grow.
+                Real impact requires real community. Comprehensive Printing + Purpose tools designed to help nonprofits grow.
               </p>
               
               <div className="grid grid-cols-2 gap-6">
@@ -458,7 +458,7 @@ export default function Home() {
                 Every $777 milestone sparks a new story. ✨
               </h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                When an organization hits $777 in donation amount, they unlock a 7-day window to film their impact. 
+                When an organization hits $777 in Printing + Purpose contributions, they unlock a 7-day window to film their impact. 
                 Show the world what they&apos;ve accomplished — and let their community see the difference they helped create.
               </p>
               {featuredVideos.length > 0 ? (
