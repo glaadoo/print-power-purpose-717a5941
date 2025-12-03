@@ -146,11 +146,59 @@ export function ProductConfigurator({
     return false;
   }, [pricingData]);
 
-  // Note: pricingData[1] contains hash-based combinations, not variant key mappings
-  // We cannot pre-filter options from this data structure
-  // Instead, we handle invalid combinations gracefully in the price fetch
+  // Extract valid option IDs from combinations data (pricingData[1])
+  // This is critical for filtering out options that don't exist in the API's variant matrix
+  const validOptionIds = useMemo(() => {
+    if (!pricingData || !Array.isArray(pricingData) || !pricingData[1]) {
+      return null; // No combinations data available
+    }
+    
+    const combinations = pricingData[1];
+    if (!Array.isArray(combinations) || combinations.length === 0) {
+      return null;
+    }
+    
+    // Combinations can be in different formats:
+    // 1. Array of objects with 'key' field containing hyphen-separated IDs
+    // 2. Array of strings (variant keys directly)
+    // 3. Array of objects with option IDs
+    const validIds = new Set<number>();
+    
+    combinations.forEach((combo: any) => {
+      if (typeof combo === 'string') {
+        // Direct variant key string
+        combo.split('-').forEach((id: string) => {
+          const numId = parseInt(id, 10);
+          if (!isNaN(numId)) validIds.add(numId);
+        });
+      } else if (combo && typeof combo === 'object') {
+        // Object with key field
+        if (combo.key && typeof combo.key === 'string') {
+          combo.key.split('-').forEach((id: string) => {
+            const numId = parseInt(id, 10);
+            if (!isNaN(numId)) validIds.add(numId);
+          });
+        }
+        // Also check for optionIds array
+        if (Array.isArray(combo.optionIds)) {
+          combo.optionIds.forEach((id: number) => {
+            if (typeof id === 'number') validIds.add(id);
+          });
+        }
+        // Check for numeric fields that might be option IDs
+        Object.values(combo).forEach((val) => {
+          if (typeof val === 'number' && val > 0 && val < 10000) {
+            validIds.add(val);
+          }
+        });
+      }
+    });
+    
+    console.log('[ProductConfigurator] Extracted valid option IDs from combinations:', validIds.size);
+    return validIds.size > 0 ? validIds : null;
+  }, [pricingData]);
 
-  // Parse product options from SinaLite structure
+  // Parse product options from SinaLite structure - FILTERED by valid combinations
   const optionGroups: OptionGroup[] = useMemo(() => {
     if (!pricingData || !Array.isArray(pricingData)) {
       console.warn('[ProductConfigurator] Invalid pricing data structure');
@@ -169,6 +217,14 @@ export function ProductConfigurator({
     const groupMap: Record<string, ProductOption[]> = {};
     options.forEach((option) => {
       if (!option.group) return;
+      
+      // CRITICAL: Filter out options that don't exist in valid combinations
+      // Only apply this filter if we have valid combination data
+      if (validOptionIds && !validOptionIds.has(option.id)) {
+        console.log(`[ProductConfigurator] Filtering out invalid option: ${option.group}/${option.name} (ID: ${option.id})`);
+        return; // Skip this option - not in valid combinations
+      }
+      
       if (!groupMap[option.group]) {
         groupMap[option.group] = [];
       }
@@ -176,7 +232,7 @@ export function ProductConfigurator({
     });
 
     // Convert to array of groups and sort options within each group
-    return Object.entries(groupMap).map(([group, opts]) => ({
+    const groups = Object.entries(groupMap).map(([group, opts]) => ({
       group,
       options: opts.sort((a, b) => {
         // Check if this is a dimension format (e.g., "24×18" or "24x18")
@@ -209,7 +265,10 @@ export function ProductConfigurator({
         return a.name.localeCompare(b.name);
       }),
     }));
-  }, [pricingData]);
+    
+    console.log('[ProductConfigurator] Option groups after filtering:', groups.map(g => `${g.group}: ${g.options.length} options`));
+    return groups;
+  }, [pricingData, validOptionIds]);
 
   // Initialize with first option from each group - or use defaultVariantKey if provided
   // CRITICAL: Only run ONCE on mount, never re-initialize after user interaction
