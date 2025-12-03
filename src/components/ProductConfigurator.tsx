@@ -84,12 +84,11 @@ export function ProductConfigurator({
   const [priceError, setPriceError] = useState<string | null>(null);
   const [userInteracted, setUserInteracted] = useState(false); // Track if user has manually changed options
   const [failedOptionIds, setFailedOptionIds] = useState<Set<number>>(new Set()); // Track options that don't have valid prices
-  const [validatingOptions, setValidatingOptions] = useState(false); // Track pre-validation state
-  const [preValidationComplete, setPreValidationComplete] = useState(false); // Track if pre-validation is done
+  const [validatingOptions, setValidatingOptions] = useState(false); // Track validation state  
+  const [preValidationComplete, setPreValidationComplete] = useState(false); // Track if validation is done
   const [customQuantity, setCustomQuantity] = useState<string>("100"); // For variable_qty products
   const [manualPriceFetch, setManualPriceFetch] = useState(0); // Trigger manual price fetch for variable qty
   const lastChangedOptionRef = useRef<{ group: string; optionId: number } | null>(null);
-  const preValidationRunRef = useRef(false); // Prevent multiple pre-validation runs
   const initializationDoneRef = useRef(false); // Prevent re-initialization after first load
   
   // Use refs to store callbacks to avoid dependency issues causing stale closures
@@ -297,149 +296,36 @@ export function ProductConfigurator({
     }, 100);
   }, [optionGroups, defaultVariantKey, pricingData]);
 
-  // Pre-validate ALL options on mount to hide invalid ones
-  // SKIP for variable quantity products - they use input fields, not dropdowns
+  // REMOVED: Pre-validation on mount was too aggressive and marked valid options as invalid
+  // Options that are valid for size 24x60 might not be valid for initial size 18x12
+  // Instead, we show all options and only mark them as failed when user explicitly selects them
+  // and we get a "configuration not available" error for the CURRENT combination
+  
+  // Clear failed options when "core" selections change (size, stock) 
+  // because options that failed with one size might work with another
+  const prevCoreSelectionsRef = useRef<string>('');
+  
   useEffect(() => {
-    // Skip pre-validation for variable quantity products
-    if (isVariableQty) {
-      console.log('[ProductConfigurator] Skipping pre-validation for variable qty product');
-      setPreValidationComplete(true);
-      return;
+    // Identify "core" option groups that affect what other options are valid
+    const coreGroups = ['size', 'stock', 'Stock'];
+    const coreSelectionKey = coreGroups
+      .map(g => selectedOptions[g] || selectedOptions[g.toLowerCase()])
+      .filter(Boolean)
+      .join('-');
+    
+    if (prevCoreSelectionsRef.current && prevCoreSelectionsRef.current !== coreSelectionKey) {
+      // Core selection changed - clear failed options as they might now be valid
+      console.log('[ProductConfigurator] Core selection changed, clearing failed options');
+      setFailedOptionIds(new Set());
     }
     
-    // Only run once, and only after we have option groups and initial selections
-    if (preValidationRunRef.current || optionGroups.length === 0 || Object.keys(selectedOptions).length === 0) {
-      return;
-    }
-    
-    preValidationRunRef.current = true;
-    setValidatingOptions(true);
-    
-    // Validate options for ALL groups (not just quantity)
-    // We test each option by temporarily selecting it and checking if API returns a price
-    const validateOptionInGroup = async (
-      group: OptionGroup, 
-      option: ProductOption, 
-      baseSelections: Record<string, number>
-    ): Promise<{ groupName: string; id: number; valid: boolean }> => {
-      const testSelections = { ...baseSelections, [group.group]: option.id };
-      const optionIds = Object.values(testSelections);
-      const variantKey = optionIds.sort((a, b) => a - b).join('-');
-      
-      try {
-        const { data, error } = await supabase.functions.invoke('sinalite-price', {
-          body: {
-            productId: vendorProductId,
-            storeCode: storeCode,
-            variantKey: variantKey,
-            method: 'PRICEBYKEY'
-          }
-        });
-        
-        const isValid = !error && data && Array.isArray(data) && data.length > 0 && data[0]?.price;
-        return { groupName: group.group, id: option.id, valid: isValid };
-      } catch {
-        return { groupName: group.group, id: option.id, valid: false };
-      }
-    };
-    
-    // Build list of all options to validate
-    const validationTasks: Promise<{ groupName: string; id: number; valid: boolean }>[] = [];
-    const baseSelections = { ...selectedOptions };
-    
-    // Cap total API calls to prevent overwhelming the API
-    const MAX_VALIDATION_CALLS = 100;
-    let callCount = 0;
-    
-    for (const group of optionGroups) {
-      // Skip groups with only 1 option (nothing to validate)
-      if (group.options.length <= 1) continue;
-      
-      for (const option of group.options) {
-        if (callCount >= MAX_VALIDATION_CALLS) break;
-        
-        // Skip the currently selected option (it's already valid based on initial load)
-        if (option.id === baseSelections[group.group]) continue;
-        
-        validationTasks.push(validateOptionInGroup(group, option, baseSelections));
-        callCount++;
-      }
-      
-      if (callCount >= MAX_VALIDATION_CALLS) break;
-    }
-    
-    console.log('[ProductConfigurator] Pre-validating', validationTasks.length, 'options across all groups');
-    
-    // Run all validations in parallel with batching to avoid overwhelming API
-    const BATCH_SIZE = 10;
-    const runValidation = async () => {
-      const allResults: { groupName: string; id: number; valid: boolean }[] = [];
-      
-      for (let i = 0; i < validationTasks.length; i += BATCH_SIZE) {
-        const batch = validationTasks.slice(i, i + BATCH_SIZE);
-        const batchResults = await Promise.all(batch);
-        allResults.push(...batchResults);
-        
-        // Small delay between batches to avoid rate limiting
-        if (i + BATCH_SIZE < validationTasks.length) {
-          await new Promise(resolve => setTimeout(resolve, 50));
-        }
-      }
-      
-      return allResults;
-    };
-    
-    runValidation()
-      .then(results => {
-        const invalidIds = results.filter(r => !r.valid).map(r => r.id);
-        const invalidByGroup = results.filter(r => !r.valid).reduce((acc, r) => {
-          if (!acc[r.groupName]) acc[r.groupName] = [];
-          acc[r.groupName].push(r.id);
-          return acc;
-        }, {} as Record<string, number[]>);
-        
-        console.log('[ProductConfigurator] Invalid options by group:', invalidByGroup);
-        console.log('[ProductConfigurator] Total invalid option IDs:', invalidIds.length);
-        
-        if (invalidIds.length > 0) {
-          setFailedOptionIds(prev => {
-            const newSet = new Set(prev);
-            invalidIds.forEach(id => newSet.add(id));
-            return newSet;
-          });
-          
-          // Check if any current selection is invalid and switch to first valid
-          let newSelections = { ...selectedOptions };
-          let selectionChanged = false;
-          
-          for (const group of optionGroups) {
-            const currentId = selectedOptions[group.group];
-            const groupInvalidIds = invalidByGroup[group.group] || [];
-            
-            if (groupInvalidIds.includes(currentId)) {
-              const firstValidOption = group.options.find(opt => !groupInvalidIds.includes(opt.id));
-              if (firstValidOption) {
-                console.log(`[ProductConfigurator] Switching ${group.group} to first valid:`, firstValidOption.name);
-                newSelections[group.group] = firstValidOption.id;
-                selectionChanged = true;
-              }
-            }
-          }
-          
-          if (selectionChanged) {
-            setSelectedOptions(newSelections);
-          }
-        }
-        
-        setValidatingOptions(false);
-        setPreValidationComplete(true);
-      })
-      .catch(err => {
-        console.error('[ProductConfigurator] Pre-validation error:', err);
-        setValidatingOptions(false);
-        setPreValidationComplete(true);
-      });
-  }, [optionGroups, selectedOptions, vendorProductId, storeCode, isVariableQty]);
+    prevCoreSelectionsRef.current = coreSelectionKey;
+  }, [selectedOptions]);
+  
+  // Mark pre-validation as complete immediately (we're not pre-validating anymore)
+  useEffect(() => {
+    setPreValidationComplete(true);
+  }, []);
 
   // Notify parent of quantity options - separate effect
   useEffect(() => {
