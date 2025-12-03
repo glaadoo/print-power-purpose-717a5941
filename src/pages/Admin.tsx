@@ -502,7 +502,7 @@ export default function Admin() {
       return matchesSearch && matchesStatus;
     });
 
-    const headers = ["Order Number", "Customer Email", "Product", "Amount", "Donation", "Cause", "Status", "Date"];
+    const headers = ["Order Number", "Customer Email", "Product", "Amount", "Printing + Purpose", "Cause", "Status", "Date"];
     const rows = filteredOrders.map(o => [
       o.order_number, o.customer_email, o.product_name,
       `$${(o.amount_total_cents / 100).toFixed(2)}`,
@@ -834,7 +834,7 @@ export default function Admin() {
                   value="donations" 
                   className="rounded-full px-6 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all"
                 >
-                  Donations
+                  Printing + Purpose
                 </TabsTrigger>
                 <TabsTrigger 
                   value="errors" 
@@ -1316,7 +1316,7 @@ export default function Admin() {
                   <div className="relative max-w-sm">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
                     <Input
-                      placeholder="Search donations..."
+                      placeholder="Search Printing + Purpose..."
                       value={donationSearchTerm}
                       onChange={e => setDonationSearchTerm(e.target.value)}
                       className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50"

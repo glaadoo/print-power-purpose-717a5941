@@ -177,7 +177,7 @@ export default function DonorLeaderboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900">
             <Trophy className="h-5 w-5 text-yellow-500" />
-            Top Donors Leaderboard
+            Top Printing + Purpose Leaderboard
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -195,12 +195,12 @@ export default function DonorLeaderboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-gray-900">
             <Trophy className="h-5 w-5 text-yellow-500" />
-            Top Donors Leaderboard
+            Top Printing + Purpose Leaderboard
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-center text-gray-500 py-8">
-            Be the first to make a donation and appear on the leaderboard!
+            Be the first to contribute and appear on the leaderboard!
           </p>
         </CardContent>
       </Card>
@@ -212,7 +212,7 @@ export default function DonorLeaderboard() {
       <CardHeader className="bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-yellow-100">
         <CardTitle className="flex items-center gap-2 text-gray-900">
           <Trophy className="h-5 w-5 text-yellow-500" />
-          Top Donors Leaderboard
+          Top Printing + Purpose Leaderboard
         </CardTitle>
         <p className="text-sm text-gray-600">
           Celebrating our most generous supporters
@@ -274,7 +274,7 @@ export default function DonorLeaderboard() {
                     )}
                   </div>
                   <p className="text-xs text-gray-500">
-                    {donor.donation_count} donation
+                    {donor.donation_count} contribution
                     {donor.donation_count !== 1 ? "s" : ""}
                   </p>
                 </div>

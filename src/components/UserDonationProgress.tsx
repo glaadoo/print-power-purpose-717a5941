@@ -38,7 +38,7 @@ export default function UserDonationProgress({
 
         const userEmail = session.user.email;
         setUserEmail(userEmail);
-        console.log('[UserDonationProgress] Fetching donations for:', userEmail);
+        console.log('[UserDonationProgress] Fetching Printing + Purpose contributions for:', userEmail);
 
         // Fetch donations from donations table
         const { data: donations, error } = await supabase
@@ -51,9 +51,9 @@ export default function UserDonationProgress({
           throw error;
         }
 
-        console.log('[UserDonationProgress] Donations fetched:', donations);
+        console.log('[UserDonationProgress] Contributions fetched:', donations);
         const total = donations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0;
-        console.log('[UserDonationProgress] Total donated cents:', total);
+        console.log('[UserDonationProgress] Total contributed cents:', total);
         setTotalDonatedCents(total);
       } catch (error) {
         console.error("[UserDonationProgress] Error fetching user donations:", error);
@@ -98,7 +98,7 @@ export default function UserDonationProgress({
             {totalDonatedUsd}
           </span>
           <span className={`text-sm ${isLight ? "text-gray-600" : "text-white/70"}`}>
-            total donated
+            total contributed
           </span>
         </div>
       </div>

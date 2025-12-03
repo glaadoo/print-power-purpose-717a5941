@@ -166,7 +166,7 @@ export default function AdminAnalyticsCharts() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Donations</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Printing + Purpose</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -205,8 +205,8 @@ export default function AdminAnalyticsCharts() {
       {/* Revenue Trend Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Revenue & Donations Trend</CardTitle>
-          <CardDescription>Last 30 days revenue and donation amounts</CardDescription>
+          <CardTitle>Revenue & Printing + Purpose Trend</CardTitle>
+          <CardDescription>Last 30 days revenue and Printing + Purpose amounts</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -228,7 +228,7 @@ export default function AdminAnalyticsCharts() {
                 dataKey="donations"
                 stroke="hsl(var(--chart-2))"
                 strokeWidth={2}
-                name="Donations"
+                name="Printing + Purpose"
               />
             </LineChart>
           </ResponsiveContainer>

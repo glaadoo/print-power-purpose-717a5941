@@ -61,7 +61,7 @@ export default function DonorProfile() {
           return;
         }
 
-        console.log('[DonorProfile] Fetching donations for:', user.email);
+        console.log('[DonorProfile] Fetching Printing + Purpose contributions for:', user.email);
         setUserEmail(user.email);
 
         // Fetch user name from profiles
@@ -87,14 +87,14 @@ export default function DonorProfile() {
           throw error;
         }
 
-        console.log('[DonorProfile] Donations fetched:', donationData);
+        console.log('[DonorProfile] Contributions fetched:', donationData);
         setDonations(donationData || []);
         
         const total = (donationData || []).reduce(
           (sum, d) => sum + (d.amount_cents || 0), 
           0
         );
-        console.log('[DonorProfile] Total donated cents:', total);
+        console.log('[DonorProfile] Total contributed cents:', total);
         setTotalDonatedCents(total);
       } catch (error) {
         console.error("[DonorProfile] Error fetching donor data:", error);
@@ -230,7 +230,7 @@ export default function DonorProfile() {
                   <Heart className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Donated</p>
+                  <p className="text-sm text-muted-foreground">Total Contributed</p>
                   <p className="text-2xl font-bold text-foreground">
                     {formatCents(totalDonatedCents)}
                   </p>
@@ -262,7 +262,7 @@ export default function DonorProfile() {
                   <Gift className="h-6 w-6 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Donations</p>
+                  <p className="text-sm text-muted-foreground">Total Printing + Purpose</p>
                   <p className="text-2xl font-bold text-foreground">
                     {donations.length}
                   </p>
@@ -284,7 +284,7 @@ export default function DonorProfile() {
             <CardContent className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
-                  {formatCents(totalDonatedCents)} donated
+                  {formatCents(totalDonatedCents)} contributed
                 </span>
                 <span className="text-muted-foreground">
                   {formatCents(nextTier.amountCents)} goal
@@ -304,7 +304,7 @@ export default function DonorProfile() {
             Every $777 milestone sparks a new story. ✨
           </h3>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            When an organization hits $777 in donation amount, they unlock a 7-day window to film their impact. 
+            When an organization hits $777 in Printing + Purpose contributions, they unlock a 7-day window to film their impact. 
             Show the world what they&apos;ve accomplished — and let their community see the difference they helped create.
           </p>
         </div>
@@ -321,10 +321,10 @@ export default function DonorProfile() {
             {achievedTiers.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">
-                  Make your first donation to start earning badges!
+                  Make your first Printing + Purpose contribution to start earning badges!
                 </p>
                 <Button onClick={() => navigate("/donate")}>
-                  Make a Donation
+                  Make a Contribution
                 </Button>
               </div>
             ) : (
@@ -384,17 +384,17 @@ export default function DonorProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              Donation History
+              Printing + Purpose History
             </CardTitle>
           </CardHeader>
           <CardContent>
             {donations.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">
-                  No donations yet. Start making an impact today!
+                  No contributions yet. Start making an impact today!
                 </p>
                 <Button onClick={() => navigate("/donate")}>
-                  Make Your First Donation
+                  Make Your First Contribution
                 </Button>
               </div>
             ) : (
@@ -413,7 +413,7 @@ export default function DonorProfile() {
                       </div>
                       <div>
                         <p className="font-medium text-foreground">
-                          {donation.nonprofit_name || "General Donation"}
+                          {donation.nonprofit_name || "General Printing + Purpose"}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {formatDate(donation.created_at)}
