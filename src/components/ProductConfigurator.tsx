@@ -134,8 +134,27 @@ export function ProductConfigurator({
   });
 
   // Check if this is a variable quantity product
+  // IMPORTANT: Only treat as variable qty if there's NO qty group in the options
+  // The API sometimes returns variable_qty metadata even when fixed qty options exist
   const isVariableQty = useMemo(() => {
-    if (!pricingData || !Array.isArray(pricingData) || !pricingData[2]) {
+    if (!pricingData || !Array.isArray(pricingData)) {
+      return false;
+    }
+    
+    // First, check if there are actual qty options in pricingData[0]
+    const options = pricingData[0] || [];
+    const hasQtyOptions = Array.isArray(options) && options.some(
+      (opt: any) => opt?.group?.toLowerCase() === 'qty' && !opt.hidden
+    );
+    
+    // If we have qty options, show dropdown regardless of metadata
+    if (hasQtyOptions) {
+      console.log('[ProductConfigurator] Found qty options, using dropdown instead of variable qty');
+      return false;
+    }
+    
+    // Only check metadata if no qty options exist
+    if (!pricingData[2]) {
       return false;
     }
     const metadata = pricingData[2];
