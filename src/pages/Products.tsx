@@ -161,20 +161,37 @@ export default function Products() {
           ),
           withRetry(
             async () => {
-              // Fetch all products - must fetch all 5825+ products to include Wall Calendars (at row 5352)
-              const { data, error } = await supabase
-                .from("products")
-                .select("id, name, description, base_cost_cents, min_price_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id, pricing_data")
-                .eq("is_active", true)
-                .order("category", { ascending: true })
-                .order("name", { ascending: true })
-                .limit(6000); // Fetch all products including Wall Calendars
+              // Supabase limits to 1000 rows per request, so fetch in batches
+              const allProducts: any[] = [];
+              const batchSize = 1000;
+              let offset = 0;
+              let hasMore = true;
               
-              if (error) {
-                console.error('[Products] Products fetch error:', error);
-                throw error;
+              while (hasMore) {
+                const { data, error } = await supabase
+                  .from("products")
+                  .select("id, name, description, base_cost_cents, min_price_cents, price_override_cents, image_url, category, vendor, markup_fixed_cents, markup_percent, is_active, vendor_product_id, pricing_data")
+                  .eq("is_active", true)
+                  .order("category", { ascending: true })
+                  .order("name", { ascending: true })
+                  .range(offset, offset + batchSize - 1);
+                
+                if (error) {
+                  console.error('[Products] Products fetch error:', error);
+                  throw error;
+                }
+                
+                if (data && data.length > 0) {
+                  allProducts.push(...data);
+                  offset += batchSize;
+                  hasMore = data.length === batchSize;
+                } else {
+                  hasMore = false;
+                }
               }
-              return data ?? [];
+              
+              console.log('[Products] Fetched total products:', allProducts.length);
+              return allProducts;
             },
             { maxAttempts: 2, initialDelayMs: 500, maxDelayMs: 2000 }
           ),
@@ -527,7 +544,10 @@ export default function Products() {
     
     // Find the selected category to check if it's a parent
     const selectedCat = cachedCategories.find(c => c.slug === selectedCategory);
-    if (!selectedCat) return filteredAndSortedProducts;
+    if (!selectedCat) {
+      console.log('[Products] Category not found:', selectedCategory);
+      return filteredAndSortedProducts;
+    }
     
     // If parent category selected, show all products from child categories
     if (!selectedCat.parent_id) {
@@ -539,10 +559,22 @@ export default function Products() {
           normalized: normalizeCategory(c.name)
         }));
       
+      console.log('[Products] Parent category:', selectedCat.name, 'Child categories:', childCategories);
+      console.log('[Products] Total products before filter:', filteredAndSortedProducts.length);
+      
+      // Also log all unique product categories to debug
+      const uniqueCategories = [...new Set(filteredAndSortedProducts.map(p => p.category))];
+      console.log('[Products] Unique product categories in data:', uniqueCategories.filter(c => 
+        c?.toLowerCase().includes('calendar') || 
+        c?.toLowerCase().includes('canvas') || 
+        c?.toLowerCase().includes('foam') || 
+        c?.toLowerCase().includes('covid')
+      ));
+      
       const parentName = selectedCat.name.toLowerCase().trim();
       const parentNormalized = normalizeCategory(selectedCat.name);
       
-      return filteredAndSortedProducts.filter(p => {
+      const filtered = filteredAndSortedProducts.filter(p => {
         const productCategory = (p.category || "").toLowerCase().trim();
         const productNormalized = normalizeCategory(productCategory);
         
@@ -562,6 +594,9 @@ export default function Products() {
           child.normalized.includes(productNormalized)
         );
       });
+      
+      console.log('[Products] Filtered count:', filtered.length, 'products:', filtered.map(p => ({ name: p.name, category: p.category })));
+      return filtered;
     }
     
     // If child category selected, show only products from that category
