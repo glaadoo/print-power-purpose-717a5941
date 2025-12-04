@@ -83,14 +83,16 @@ export default function Auth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        navigate("/");
+        localStorage.setItem("ppp_access", "user");
+        navigate("/welcome");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        navigate("/");
+        localStorage.setItem("ppp_access", "user");
+        navigate("/welcome");
       }
     });
 
@@ -103,7 +105,7 @@ export default function Auth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/welcome`,
         }
       });
       
@@ -221,7 +223,7 @@ export default function Auth() {
         email: signUpData.email,
         password: signUpData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/welcome`,
           data: {
             first_name: signUpData.firstName,
             last_name: signUpData.lastName,
@@ -528,6 +530,29 @@ export default function Auth() {
                       <span className="hidden sm:inline">X</span>
                     </Button>
                   </div>
+
+                  {/* Continue as Guest Divider */}
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-gray-500">or</span>
+                    </div>
+                  </div>
+
+                  {/* Continue as Guest Button */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      localStorage.setItem("ppp_access", "guest");
+                      navigate("/welcome");
+                    }}
+                    className="w-full border-gray-300 hover:bg-gray-50 text-gray-700"
+                  >
+                    Continue as Guest
+                  </Button>
                 </form>
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
@@ -671,6 +696,29 @@ export default function Auth() {
                     className="w-full bg-blue-600 text-white hover:bg-blue-700"
                   >
                     {loading ? "Creating Account..." : "Sign Up"}
+                  </Button>
+
+                  {/* Continue as Guest Divider */}
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-gray-500">or</span>
+                    </div>
+                  </div>
+
+                  {/* Continue as Guest Button */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      localStorage.setItem("ppp_access", "guest");
+                      navigate("/welcome");
+                    }}
+                    className="w-full border-gray-300 hover:bg-gray-50 text-gray-700"
+                  >
+                    Continue as Guest
                   </Button>
                 </form>
               )}
