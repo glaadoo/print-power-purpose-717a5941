@@ -96,10 +96,8 @@ const HelpCenter      = lazyPage("HelpCenter",      () => import("./pages/HelpCe
 const HelpSearchResults = lazyPage("HelpSearchResults", () => import("./pages/HelpSearchResults"));
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
-const PrivacyPolicy   = lazyPage("PrivacyPolicy",   () => import("./pages/PrivacyPolicy"));
-const TermsOfUse      = lazyPage("TermsOfUse",      () => import("./pages/TermsOfUse"));
-const LegalNotice     = lazyPage("LegalNotice",     () => import("./pages/LegalNotice"));
 const Legal           = lazyPage("Legal",           () => import("./pages/Legal"));
+const LegalDocument   = lazyPage("LegalDocument",   () => import("./pages/LegalDocument"));
 const AdminLegal      = lazyPage("AdminLegal",      () => import("./pages/AdminLegal"));
 const AdminNonprofits = lazyPage("AdminNonprofits", () => import("./pages/AdminNonprofits"));
 import AdminNonprofitAnalytics from "./pages/AdminNonprofitAnalytics";
@@ -586,7 +584,7 @@ export default function App() {
             path="/policies/privacy"
             element={
               <RouteBoundary name="PrivacyPolicy">
-                <PrivacyPolicy />
+                <LegalDocument documentType="privacy" />
               </RouteBoundary>
             }
           />
@@ -594,7 +592,7 @@ export default function App() {
             path="/policies/terms"
             element={
               <RouteBoundary name="TermsOfUse">
-                <TermsOfUse />
+                <LegalDocument documentType="terms" />
               </RouteBoundary>
             }
           />
@@ -602,7 +600,7 @@ export default function App() {
             path="/policies/legal"
             element={
               <RouteBoundary name="LegalNotice">
-                <LegalNotice />
+                <LegalDocument documentType="legal" />
               </RouteBoundary>
             }
           />
