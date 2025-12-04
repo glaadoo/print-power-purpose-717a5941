@@ -70,13 +70,45 @@ export default function ProductDetail() {
   const [frequentlyBought, setFrequentlyBought] = useState<ProductRow[]>([]);
   const [avgRating, setAvgRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
-  const [artworkFileUrl, setArtworkFileUrl] = useState<string>("");
-  const [artworkFileName, setArtworkFileName] = useState<string>("");
+  // Artwork state with localStorage persistence
+  const artworkStorageKey = `ppp:artwork:${productId}`;
+  const [artworkFileUrl, setArtworkFileUrl] = useState<string>(() => {
+    try {
+      const stored = localStorage.getItem(artworkStorageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.url || "";
+      }
+    } catch {}
+    return "";
+  });
+  const [artworkFileName, setArtworkFileName] = useState<string>(() => {
+    try {
+      const stored = localStorage.getItem(artworkStorageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.name || "";
+      }
+    } catch {}
+    return "";
+  });
   const [selectedColorImages, setSelectedColorImages] = useState<any[]>([]);
   const [gallerySelectedIndex, setGallerySelectedIndex] = useState(0);
   const [selectedColorName, setSelectedColorName] = useState<string>("");
   const [isOutOfStock, setIsOutOfStock] = useState(false);
   const [stockQuantity, setStockQuantity] = useState<number | undefined>(undefined);
+
+  // Persist artwork to localStorage when it changes
+  useEffect(() => {
+    if (productId && (artworkFileUrl || artworkFileName)) {
+      try {
+        localStorage.setItem(artworkStorageKey, JSON.stringify({
+          url: artworkFileUrl,
+          name: artworkFileName
+        }));
+      } catch {}
+    }
+  }, [artworkFileUrl, artworkFileName, artworkStorageKey, productId]);
 
   // Fetch product by ID from Supabase
   useEffect(() => {
