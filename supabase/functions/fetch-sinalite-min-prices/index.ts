@@ -203,19 +203,18 @@ serve(async (req) => {
         let combinations = generateCombinations(variableGroups);
         
         // Log total combinations count
-        console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} total combinations to test (all sizes included)`);
+        console.log(`[FETCH-MIN-PRICES] ${product.name}: ${combinations.length} total combinations to test`);
         
-        // Cap combinations to prevent timeout (max 300 for thorough testing)
-        const maxCombinations = 300;
+        // Cap combinations to prevent timeout (max 50 for faster processing)
+        const maxCombinations = 50;
         if (combinations.length > maxCombinations) {
           console.log(`[FETCH-MIN-PRICES] ${product.name}: capping at ${maxCombinations} combinations`);
           // Shuffle to get random sample across all options
           combinations = combinations.sort(() => Math.random() - 0.5).slice(0, maxCombinations);
         }
         
-        // PARALLEL price fetching - test all combinations at once
-        // Batch into groups of 20 to avoid overwhelming the API
-        const batchLimit = 20;
+        // PARALLEL price fetching - test combinations in larger batches
+        const batchLimit = 30;
         let globalMinPrice = Infinity;
         let globalMinOptions: number[] = [];
         
