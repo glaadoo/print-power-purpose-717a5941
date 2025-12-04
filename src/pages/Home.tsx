@@ -289,31 +289,33 @@ export default function Home() {
                   We connect generous people with impactful nonprofits and help communities achieve their goals — one contribution at a time.
                 </p>
 
-                {/* Cause Icons */}
-                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-6">
+                {/* Cause Icons - centered */}
+                <div className="flex flex-wrap justify-center gap-3 mb-6 w-full">
                   <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                     <span className="text-xl">💚</span>
                     <span className="text-sm font-medium text-gray-700">Nonprofits</span>
                   </div>
                 </div>
 
-                {/* CTA Button - left aligned */}
-                <button
-                  onClick={() => {
-                    if (isAuthenticated) {
-                      localStorage.setItem("ppp_access", "user");
-                      nav("/welcome");
-                    } else {
-                      nav("/auth");
-                    }
-                  }}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-base animate-[button-glow_2s_ease-in-out_infinite]"
-                >
-                  Start Exploring
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </button>
+                {/* CTA Button - centered */}
+                <div className="flex justify-center w-full">
+                  <button
+                    onClick={() => {
+                      if (isAuthenticated) {
+                        localStorage.setItem("ppp_access", "user");
+                        nav("/welcome");
+                      } else {
+                        nav("/auth");
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-base animate-[button-glow_2s_ease-in-out_infinite]"
+                  >
+                    Start Exploring
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
