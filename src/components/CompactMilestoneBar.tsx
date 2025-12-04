@@ -150,12 +150,13 @@ export default function CompactMilestoneBar() {
           />
           
           <div className="flex justify-between text-xs mt-1">
-            <span className="text-muted-foreground">{displayProgressUsd} / $777</span>
-            {!isGoalReached && (
-              <span className="text-emerald-600 font-medium">{remainingUsd} to milestone!</span>
-            )}
-            {isGoalReached && (
-              <span className="text-yellow-600 font-medium">🎉 Goal reached!</span>
+            {!isGoalReached ? (
+              <>
+                <span className="text-muted-foreground">{displayProgressUsd} / $777</span>
+                <span className="text-emerald-600 font-medium">{remainingUsd} to go!</span>
+              </>
+            ) : (
+              <span className="text-yellow-600 font-medium text-center w-full">🎉 Milestone #{milestoneCount + 1} Complete!</span>
             )}
           </div>
         </div>

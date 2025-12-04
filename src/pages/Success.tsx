@@ -3,9 +3,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Package, DollarSign, Heart, ArrowRight, Home, Truck, ExternalLink } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle2, Package, Heart, ArrowRight, Home, Truck, ExternalLink, Sparkles, PartyPopper } from "lucide-react";
 import Footer from "@/components/Footer";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+
+const MILESTONE_GOAL_CENTS = 77700; // $777
 
 interface OrderDetails {
   order_number: string;
@@ -16,11 +20,17 @@ interface OrderDetails {
   items: any[];
   cause_name?: string;
   nonprofit_name?: string;
+  nonprofit_id?: string;
   created_at: string;
   tracking_number?: string | null;
   tracking_url?: string | null;
   tracking_carrier?: string | null;
   shipping_status?: string | null;
+}
+
+interface NonprofitProgress {
+  current_progress_cents: number;
+  milestone_count: number;
 }
 
 export default function Success() {
@@ -29,15 +39,19 @@ export default function Success() {
   const cart = useCart();
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [nonprofitProgress, setNonprofitProgress] = useState<NonprofitProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const sessionId = searchParams.get("session_id");
 
+  // Calculate if milestone was reached
+  const milestoneReached = nonprofitProgress 
+    ? (nonprofitProgress.current_progress_cents % MILESTONE_GOAL_CENTS) < (orderDetails?.amount_total_cents || 0)
+    : false;
+
   useEffect(() => {
     console.log("[SUCCESS PAGE] Session ID from URL:", sessionId);
-    console.log("[SUCCESS PAGE] Full URL:", window.location.href);
-    console.log("[SUCCESS PAGE] Search params:", Object.fromEntries(searchParams.entries()));
     
     const fetchOrderDetails = async (retryCount = 0) => {
       if (!sessionId) {
@@ -47,36 +61,37 @@ export default function Success() {
         return;
       }
 
-      console.log(`[SUCCESS PAGE] Fetching order for session: ${sessionId} (attempt ${retryCount + 1})`);
-
       try {
-        // Fetch order by session_id
         const { data, error: fetchError } = await supabase
           .from("orders")
           .select("*")
           .eq("session_id", sessionId)
           .maybeSingle();
 
-        console.log("[SUCCESS PAGE] Query result:", { data, error: fetchError });
-
         if (fetchError) throw fetchError;
 
         if (data) {
-          console.log("[SUCCESS PAGE] Order found:", data.order_number);
           setOrderDetails(data as OrderDetails);
           
-          // Clear cart after successful order
-          console.log("[SUCCESS PAGE] Clearing cart after successful order");
-          cart.clear();
+          // Fetch nonprofit progress if nonprofit_id exists
+          if (data.nonprofit_id) {
+            const { data: npData } = await supabase
+              .from("nonprofits")
+              .select("current_progress_cents, milestone_count")
+              .eq("id", data.nonprofit_id)
+              .maybeSingle();
+            
+            if (npData) {
+              setNonprofitProgress(npData);
+            }
+          }
           
+          cart.clear();
           setLoading(false);
         } else if (retryCount < 3) {
-          // Order might not be created yet, retry with exponential backoff
-          const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
-          console.log(`[SUCCESS PAGE] Order not found, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+          const delay = Math.pow(2, retryCount) * 1000;
           setTimeout(() => fetchOrderDetails(retryCount + 1), delay);
         } else {
-          console.error("[SUCCESS PAGE] Order not found after 3 retries");
           setError("Order not found. Please check your email for order confirmation.");
           setLoading(false);
         }
@@ -90,6 +105,38 @@ export default function Success() {
     fetchOrderDetails();
   }, [sessionId, searchParams]);
 
+  // Celebration effect when milestone is reached
+  useEffect(() => {
+    if (orderDetails?.nonprofit_name && milestoneReached && !showCelebration) {
+      setShowCelebration(true);
+      
+      // Fire confetti
+      const duration = 4000;
+      const end = Date.now() + duration;
+
+      const frame = () => {
+        confetti({
+          particleCount: 4,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ["#FFD700", "#FF6B6B", "#4ECDC4", "#9B59B6"],
+        });
+        confetti({
+          particleCount: 4,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ["#FFD700", "#FF6B6B", "#4ECDC4", "#9B59B6"],
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      };
+      frame();
+    }
+  }, [orderDetails, milestoneReached, showCelebration]);
 
   if (loading) {
     return (
@@ -124,16 +171,31 @@ export default function Success() {
     );
   }
 
-  const { order_number, amount_total_cents, donation_cents, subtotal_cents, items, cause_name, nonprofit_name } = orderDetails;
+  const { order_number, amount_total_cents, subtotal_cents, items, nonprofit_name } = orderDetails;
+
+  // Calculate progress toward current milestone
+  const currentProgressCents = nonprofitProgress?.current_progress_cents || 0;
+  const progressTowardMilestone = currentProgressCents % MILESTONE_GOAL_CENTS;
+  const progressPercent = Math.min((progressTowardMilestone / MILESTONE_GOAL_CENTS) * 100, 100);
+  const nextMilestoneNumber = (nonprofitProgress?.milestone_count || 0) + 1;
 
   return (
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Success Header */}
-        <div className="bg-card border border-border rounded-2xl p-8 mb-6 text-center">
-          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-card border border-border rounded-2xl p-8 mb-6 text-center"
+        >
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
             <CheckCircle2 className="w-12 h-12 text-white" />
-          </div>
+          </motion.div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Payment Successful!
           </h1>
@@ -144,8 +206,93 @@ export default function Success() {
             <span className="text-sm text-muted-foreground">Order Number:</span>
             <span className="text-lg font-semibold text-foreground">{order_number}</span>
           </div>
+        </motion.div>
 
-        </div>
+        {/* Nonprofit Impact Section */}
+        {nonprofit_name && (
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className={`rounded-2xl p-6 mb-6 ${
+              milestoneReached 
+                ? "bg-gradient-to-r from-yellow-50 via-emerald-50 to-yellow-50 border-2 border-yellow-300" 
+                : "bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border border-emerald-200"
+            }`}
+          >
+            <AnimatePresence>
+              {milestoneReached ? (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="text-center"
+                >
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <motion.div
+                      animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] }}
+                      transition={{ duration: 0.6, repeat: 3, repeatDelay: 1 }}
+                    >
+                      <PartyPopper className="h-10 w-10 text-yellow-500" />
+                    </motion.div>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Sparkles className="h-8 w-8 text-emerald-500" />
+                    </motion.div>
+                  </div>
+                  
+                  <h2 className="text-2xl font-bold text-emerald-700 mb-2">
+                    🎉 Congratulations!
+                  </h2>
+                  <p className="text-lg text-emerald-600 mb-2">
+                    Your purchase helped power <span className="font-bold">{nonprofit_name}</span>!
+                  </p>
+                  <p className="text-emerald-600">
+                    You helped them reach their <span className="font-bold">$777 Impact Milestone</span>!
+                  </p>
+                  <p className="text-sm text-emerald-500 mt-3">
+                    You're making a real impact. Thank you for being part of this journey! 💚
+                  </p>
+                </motion.div>
+              ) : (
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Heart className="h-6 w-6 text-emerald-600" />
+                    <h2 className="text-xl font-bold text-emerald-700">
+                      You're Making a Difference!
+                    </h2>
+                  </div>
+                  
+                  <p className="text-emerald-600 mb-4">
+                    Your purchase supports <span className="font-bold">{nonprofit_name}</span>
+                  </p>
+                  
+                  {nonprofitProgress && (
+                    <div className="max-w-md mx-auto mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-emerald-600">Progress to Milestone #{nextMilestoneNumber}</span>
+                        <span className="font-bold text-emerald-700">{progressPercent.toFixed(0)}%</span>
+                      </div>
+                      <Progress value={progressPercent} className="h-3" />
+                      <p className="text-xs text-emerald-500 mt-1">
+                        ${(progressTowardMilestone / 100).toFixed(0)} of $777
+                      </p>
+                    </div>
+                  )}
+                  
+                  <p className="text-sm text-emerald-600 mb-4">
+                    Every order brings them closer to their <span className="font-bold">$777 Impact Milestone</span>.
+                  </p>
+                  
+                  <p className="text-emerald-500 text-sm italic">
+                    Want to help power their next breakthrough?
+                  </p>
+                </div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
 
         {/* Order Summary */}
         <div className="bg-card border border-border rounded-2xl p-8 mb-6">
@@ -154,7 +301,6 @@ export default function Success() {
             Order Summary
           </h2>
 
-          {/* Items */}
           {items && items.length > 0 && (
             <div className="space-y-3 mb-6">
               {items.map((item: any, idx: number) => (
@@ -164,7 +310,7 @@ export default function Success() {
                     <p className="text-sm text-muted-foreground">Quantity: {item.quantity || 1}</p>
                     {item.configuration && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        {Object.entries(item.configuration).map(([key, value]) => `${key}: ${value}`).join(', ')}
+                        {Object.entries(item.configuration).map(([key, value]) => `${key}: ${value}`).join(", ")}
                       </p>
                     )}
                   </div>
@@ -181,22 +327,11 @@ export default function Success() {
             </div>
           )}
 
-          {/* Totals */}
           <div className="space-y-2 pt-4 border-t border-border">
             <div className="flex justify-between text-muted-foreground">
               <span>Subtotal</span>
               <span>${((subtotal_cents || 0) / 100).toFixed(2)}</span>
             </div>
-            
-            {donation_cents > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  Donation
-                </span>
-                <span>${(donation_cents / 100).toFixed(2)}</span>
-              </div>
-            )}
 
             <div className="flex justify-between text-lg font-bold text-foreground pt-2 border-t border-border">
               <span>Total</span>
@@ -244,25 +379,6 @@ export default function Success() {
           </div>
         )}
 
-        {/* Cause/Nonprofit Info */}
-        {(cause_name || nonprofit_name) && (
-          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 mb-6">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <Heart className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-1">
-                  Supporting: {nonprofit_name || cause_name}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Your purchase helps make a difference. Thank you for your support!
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Action Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Button
@@ -284,8 +400,9 @@ export default function Success() {
             onClick={() => navigate("/products")}
             variant="outline"
             size="lg"
+            className="bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
           >
-            Shop More
+            Continue Shopping
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
