@@ -93,7 +93,7 @@ export default function HelpCenter() {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
               How can we help you today?
             </h1>
-            <p className="text-lg text-white/90 drop-shadow">
+            <p className="text-lg text-black drop-shadow">
               Find answers to frequently asked questions below
             </p>
           </div>
