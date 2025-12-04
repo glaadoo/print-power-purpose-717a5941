@@ -654,6 +654,7 @@ export type Database = {
           indexed_name: string | null
           irs_status: string | null
           logo_url: string | null
+          milestone_count: number
           name: string
           search_name: string | null
           source: string | null
@@ -674,6 +675,7 @@ export type Database = {
           indexed_name?: string | null
           irs_status?: string | null
           logo_url?: string | null
+          milestone_count?: number
           name: string
           search_name?: string | null
           source?: string | null
@@ -694,6 +696,7 @@ export type Database = {
           indexed_name?: string | null
           irs_status?: string | null
           logo_url?: string | null
+          milestone_count?: number
           name?: string
           search_name?: string | null
           source?: string | null
