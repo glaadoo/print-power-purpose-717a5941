@@ -581,7 +581,7 @@ function FooterStrip() {
           ["Nonprofits & clubs", "/who-we-serve/nonprofits"],
         ]}/>
         <FooterCol title="Print Catalog" links={[
-          ["All products", "/products"], ["Apparel", "/products/apparel"], ["Promo items", "/products/promo"],
+          ["All products", "/products"], ["Promo items", "/products/promo"],
         ]}/>
         <FooterCol title="Insights" links={[
           ["Blog", "/blog"], ["Fundraising guides", "/guides/fundraising"],
