@@ -91,17 +91,11 @@ export default function DonorLeaderboard() {
 
       if (error) throw error;
       
-      // Calculate milestones completed for each donor (based on $777 increments)
-      const enrichedDonors = (data || []).map((donor: any) => ({
+      // Use the milestone count from the database function (donation_count field)
+      // The DB function now counts orders where amount_total_cents >= $1,554
+      const sortedDonors = (data || []).map((donor: any, index: number) => ({
         ...donor,
-        milestones_completed: Math.floor(donor.total_donated_cents / 77700)
-      }));
-      
-      // Sort by milestones completed instead of total donated
-      const sortedDonors = enrichedDonors.sort((a: TopDonor, b: TopDonor) => 
-        b.milestones_completed - a.milestones_completed
-      ).map((donor: TopDonor, index: number) => ({
-        ...donor,
+        milestones_completed: donor.donation_count || 0, // donation_count now contains milestone count
         rank: index + 1
       }));
       
