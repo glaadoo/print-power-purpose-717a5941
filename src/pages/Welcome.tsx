@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
-import VideoBackground from "@/components/VideoBackground";
 import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { Menu } from "lucide-react";
@@ -29,7 +28,7 @@ export default function Welcome() {
     };
   }, []);
 
-  const paws = useMemo(() => Array.from({ length: 22 }, (_, i) => i), []);
+  
 
   useEffect(() => {
     document.title = "Welcome - Print Power Purpose";
@@ -117,15 +116,15 @@ export default function Welcome() {
   }
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen bg-[#f5f5f0]">
       {/* Menu Overlay */}
       <MenuOverlay open={menuOpen} onClose={toggleMenu} showSignOut={!!session} />
 
       {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-foreground backdrop-blur bg-[#f5f5f0]/90 border-b border-border/20">
         <button
           onClick={toggleMenu}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          className="p-2 hover:bg-black/5 rounded-lg transition-colors"
           aria-label="Open menu"
         >
           <Menu className="h-6 w-6" />
@@ -140,32 +139,8 @@ export default function Welcome() {
         </Link>
       </header>
 
-      {/* Fullscreen content with animated paws background */}
+      {/* Fullscreen content */}
       <div className="min-h-screen w-full pt-0 relative">
-        <VideoBackground
-          srcMp4="/media/hero.mp4"
-          srcWebm="/media/hero.webm"
-          poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/40" />}
-        />
-
-        {/* Animated paws all over the background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          {paws.map((i) => (
-            <span 
-              key={i} 
-              className="absolute text-4xl md:text-5xl lg:text-6xl animate-float opacity-30"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${4 + Math.random() * 4}s`
-              }}
-            >
-              🐾
-            </span>
-          ))}
-        </div>
 
         {/* Content */}
         <div className="relative min-h-[calc(100svh-64px)] flex items-center justify-center px-4 py-0 -mt-3 sm:-mt-4">
@@ -175,26 +150,6 @@ export default function Welcome() {
             <div className="flex justify-center px-4">
               <div className="w-full max-w-[1200px]">
                 <div className="p-3 sm:p-4">
-                  {/* paws banner */}
-                  <div
-                    className="relative w-full h-8 sm:h-10 overflow-hidden"
-                    aria-hidden="true"
-                  >
-                    {paws.slice(0, 10).map((i) => (
-                      <span 
-                        key={i} 
-                        className="absolute text-3xl sm:text-4xl animate-float"
-                        style={{
-                          left: `${Math.random() * 100}%`,
-                          top: `${Math.random() * 100}%`,
-                          animationDelay: `${Math.random() * 3}s`,
-                          animationDuration: `${3 + Math.random() * 2}s`
-                        }}
-                      >
-                        🐾
-                      </span>
-                    ))}
-                  </div>
 
                   <div className="text-center space-y-2">
                     {step >= 1 && (
@@ -209,12 +164,12 @@ export default function Welcome() {
                       </div>
                     )}
 
-                    <h1 className="font-serif text-[clamp(2rem,4.5vw,3.2rem)] leading-tight font-semibold drop-shadow">
+                    <h1 className="font-serif text-[clamp(2rem,4.5vw,3.2rem)] leading-tight font-semibold text-[#1a3a2f]">
                       {`Welcome${displayName ? `, ${displayName}` : ""}`}
                     </h1>
                     {step >= 2 && (
                       <div
-                        className="typewriter-nocaret mx-auto text-lg sm:text-2xl"
+                        className="typewriter-nocaret mx-auto text-lg sm:text-2xl text-[#1a3a2f]"
                         style={{ fontFamily: "'Pacifico', cursive" }}
                       >
                         Hi! I'm your mascot kenzie-AI 🐾
