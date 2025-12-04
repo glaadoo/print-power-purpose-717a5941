@@ -233,12 +233,6 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
           {product.name}
         </h3>
         
-        {/* Description - clean, truncated preview */}
-        {!compact && product.description && product.vendor !== 'sinalite' && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-            {cleanDescriptionPreview(product.description)}
-          </p>
-        )}
         
         {/* Rating - hide in compact mode */}
         {!compact && averageRating !== null && reviewCount > 0 && (
