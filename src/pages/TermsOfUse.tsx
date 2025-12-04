@@ -7,6 +7,8 @@ import { Download, ChevronDown, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
 import { exportToPDF } from "@/lib/pdf-export";
 import VideoBackground from "@/components/VideoBackground";
+import VistaprintNav from "@/components/VistaprintNav";
+import Footer from "@/components/Footer";
 import GlassCard from "@/components/GlassCard";
 import DOMPurify from "dompurify";
 
@@ -140,53 +142,23 @@ export default function TermsOfUse() {
   }
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen flex flex-col">
       {/* Fixed video background */}
-      <div className="fixed inset-0">
-        <VideoBackground
-          srcMp4="/media/hero.mp4"
-          srcWebm="/media/hero.webm"
-          poster="/media/hero-poster.jpg"
-          overlay={<div className="absolute inset-0 bg-black/70" />}
-        />
-      </div>
+      <VideoBackground
+        srcMp4="/media/hero.mp4"
+        srcWebm="/media/hero.webm"
+        poster="/media/hero-poster.jpg"
+        parallaxVh={8}
+        overlay={<div className="absolute inset-0 bg-black/50" />}
+        className="fixed inset-0 -z-10"
+      />
 
-      {/* Top Navigation */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <Link
-          to="/"
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-label="Home"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <polyline points="9 22 9 12 15 12 15 22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="hidden sm:inline">Home</span>
-        </Link>
+      {/* Navigation */}
+      <VistaprintNav />
 
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <Link
-            to="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </Link>
-        </div>
-
-        <Link
-          to="/legal"
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-label="Legal Overview"
-        >
-          <span className="hidden sm:inline">Legal</span>
-        </Link>
-      </header>
-
-      {/* Scrollable content */}
-      <div className="relative min-h-screen pt-24 pb-20 px-6 md:px-16 py-10 md:py-20">
-        <div className="mx-auto max-w-5xl">
+      {/* Main Content */}
+      <main className="flex-1 pt-8 pb-16 px-4">
+        <div className="max-w-4xl mx-auto">
           <GlassCard padding="p-6 md:p-10">
             {/* Header */}
             <div className="mb-8">
@@ -285,7 +257,10 @@ export default function TermsOfUse() {
             </div>
           </GlassCard>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <Footer />
 
       {/* Back to Top Button */}
       {showBackToTop && (
