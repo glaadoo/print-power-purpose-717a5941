@@ -18,6 +18,8 @@ type ProductRow = {
   pricing_data?: any;
   vendor?: string | null;
   vendor_product_id?: string | null;
+  min_price_cents?: number | null;
+  min_price_variant_key?: string | null;
 };
 
 export default function FeaturedProducts() {
@@ -71,7 +73,7 @@ export default function FeaturedProducts() {
         console.log("[FeaturedProducts] Starting to load products...");
         const { data, error } = await supabase
           .from("products")
-          .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, vendor, vendor_product_id, pricing_data")
+          .select("id, name, description, base_cost_cents, price_override_cents, image_url, category, vendor, vendor_product_id, pricing_data, min_price_cents, min_price_variant_key")
           .eq("is_active", true)
           .limit(12);
 
