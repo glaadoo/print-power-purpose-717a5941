@@ -294,16 +294,8 @@ export default function Home() {
                 {/* Cause Icons */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-8">
                   <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-                    <span className="text-xl">🏫</span>
-                    <span className="text-sm font-medium text-gray-700">Schools</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                     <span className="text-xl">💚</span>
                     <span className="text-sm font-medium text-gray-700">Nonprofits</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-                    <span className="text-xl">🌍</span>
-                    <span className="text-sm font-medium text-gray-700">Communities</span>
                   </div>
                 </div>
 
