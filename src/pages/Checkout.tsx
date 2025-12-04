@@ -7,7 +7,7 @@ import { useCart } from "../context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { normalizeDonationCents } from "@/lib/donation-utils";
+
 import { withRetry } from "@/lib/api-retry";
 import { calculateOrderShipping, getShippingTierLabel } from "@/lib/shipping-tiers";
 import CompactMilestoneBar from "@/components/CompactMilestoneBar";
@@ -101,13 +101,6 @@ export default function Checkout() {
   const [selectedCauseId, setSelectedCauseId] = useState<string | null>(null);
   const [selectedCauseName, setSelectedCauseName] = useState<string | null>(null);
 
-  // store donation locally in cents for the input
-  const [donation, setDonation] = useState<number>(
-    Math.max(0, Math.round(Number(merged.donationUsd || 0) * 100))
-  );
-  const [donationInput, setDonationInput] = useState<string>(
-    (Math.max(0, Number(merged.donationUsd || 0))).toFixed(2)
-  );
 
   // Legal consent state
   const [legalConsent, setLegalConsent] = useState(false);
@@ -206,9 +199,6 @@ export default function Checkout() {
     
     setLoading(true);
 
-    // Normalize donation amount
-    const normalizedDonation = normalizeDonationCents(donation);
-
     // Build cart items - use cart if available, otherwise use single product
     const checkoutItems = cartItems.length > 0 
       ? cartItems.map(item => ({
@@ -238,7 +228,7 @@ export default function Checkout() {
         items: checkoutItems,
       },
       nonprofitId: (causeCtx as any)?.nonprofit?.id || null,
-      donationCents: normalizedDonation,
+      donationCents: 0,
     };
 
     const fnUrl = `${import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co"}/functions/v1/checkout-session-v2`;
@@ -369,7 +359,7 @@ export default function Checkout() {
   // Tax will be calculated by Stripe based on shipping address
   // We show an estimate here or "Calculated at next step"
   const estimatedTaxCents = 0; // Could estimate ~8% for display: Math.round(subtotal * 0.08)
-  const total = subtotal + shippingCents + donation; // Note: + estimatedTaxCents if showing estimate
+  const total = subtotal + shippingCents; // Note: + estimatedTaxCents if showing estimate
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -530,46 +520,6 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Optional donation */}
-          <div className="border-t border-gray-200 pt-6 mb-6">
-            <div className="mb-4">
-              <p className="text-lg font-semibold text-blue-600 mb-2">
-                Add an Optional Donation
-              </p>
-              <p className="text-sm text-gray-600 mb-4">
-                Help us support more causes with a small donation.
-              </p>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-semibold text-gray-900">$</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={donationInput}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9.]/g, '');
-                    setDonationInput(value);
-                    const usd = parseFloat(value || "0");
-                    if (!isNaN(usd)) {
-                      setDonation(Math.max(0, Math.round(usd * 100)));
-                    }
-                  }}
-                  onBlur={() => {
-                    const usd = parseFloat(donationInput || "0");
-                    if (!isNaN(usd)) {
-                      setDonationInput(usd.toFixed(2));
-                      setDonation(Math.max(0, Math.round(usd * 100)));
-                    } else {
-                      setDonationInput("0.00");
-                      setDonation(0);
-                    }
-                  }}
-                  className="w-full p-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Total */}
           <div className="border-t border-gray-200 pt-6 mb-6">
             <div className="flex justify-between text-xl font-bold mb-2 text-gray-900">
@@ -580,12 +530,6 @@ export default function Checkout() {
               <span>{shippingLabel}</span>
               <span>${(shippingCents / 100).toFixed(2)}</span>
             </div>
-            {donation > 0 && (
-              <div className="flex justify-between text-lg text-gray-600 mb-2">
-                <span>Donation</span>
-                <span>${(donation / 100).toFixed(2)}</span>
-              </div>
-            )}
             {/* Tax notice - calculated by Stripe based on shipping address */}
             <div className="flex justify-between text-sm text-gray-500 italic mb-2">
               <span>Tax</span>
