@@ -469,7 +469,8 @@ export default function AdminProducts() {
     let totalUpdated = 0;
     let remaining = 999;
     let iterations = 0;
-    const maxIterations = forceRecalculate ? 50 : 20; // More iterations for force recalculate
+    let currentOffset = 0; // Track offset for pagination
+    const maxIterations = forceRecalculate ? 50 : 20;
     
     try {
       // Loop until all products are processed or max iterations reached
@@ -486,7 +487,7 @@ export default function AdminProducts() {
         const { data, error } = await invokeWithRetry(
           supabase,
           'fetch-sinalite-min-prices',
-          { body: { batchSize: 20, forceRefresh: forceRecalculate } },
+          { body: { batchSize: 20, forceRefresh: forceRecalculate, offset: currentOffset } },
           {
             maxAttempts: 2,
             initialDelayMs: 3000,
@@ -502,8 +503,9 @@ export default function AdminProducts() {
         if (data?.success) {
           totalUpdated += data.updated || 0;
           remaining = data.remaining || 0;
+          currentOffset = data.nextOffset || (currentOffset + 20); // Use returned offset or increment
           
-          console.log(`[FETCH-MIN-PRICES] Iteration ${iterations}: ${data.updated} updated, ${remaining} remaining`);
+          console.log(`[FETCH-MIN-PRICES] Iteration ${iterations}: ${data.updated} updated, ${remaining} remaining, nextOffset=${currentOffset}`);
           
           // Small delay between batches
           if (remaining > 0) {

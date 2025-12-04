@@ -13,9 +13,10 @@ serve(async (req) => {
 
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const batchSize = body.batchSize || body.limit || 20; // Accept both batchSize and limit
+    const batchSize = body.batchSize || body.limit || 20;
     const storeCode = body.storeCode || 9;
     const forceRefresh = body.forceRefresh || false;
+    const offset = body.offset || 0; // Track pagination offset
 
     console.log(`[FETCH-MIN-PRICES] Starting comprehensive min price fetch for batch of ${batchSize} products`);
 
@@ -86,13 +87,15 @@ serve(async (req) => {
     let query = supabase
       .from("products")
       .select("id, vendor_product_id, name, min_price_cents, base_cost_cents")
-      .eq("vendor", "sinalite");
+      .eq("vendor", "sinalite")
+      .order("id"); // Consistent ordering for pagination
     
     if (!forceRefresh) {
       query = query.or("min_price_cents.eq.2000,min_price_cents.is.null");
     }
     
-    const { data: products, error: fetchError } = await query.limit(batchSize);
+    // Use range for proper pagination with forceRefresh
+    const { data: products, error: fetchError } = await query.range(offset, offset + batchSize - 1);
 
     if (fetchError) {
       throw fetchError;
@@ -345,13 +348,17 @@ serve(async (req) => {
 
     // Count remaining products
     let remainingCount = 0;
+    let totalCount = 0;
+    
+    const { count: total } = await supabase
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("vendor", "sinalite");
+    totalCount = total || 0;
+    
     if (forceRefresh) {
-      // When force refreshing, count all sinalite products minus what we just processed
-      const { count: totalCount } = await supabase
-        .from("products")
-        .select("id", { count: "exact", head: true })
-        .eq("vendor", "sinalite");
-      remainingCount = Math.max(0, (totalCount || 0) - updates.length);
+      // For force refresh, remaining = total - (offset + processed in this batch)
+      remainingCount = Math.max(0, totalCount - offset - products.length);
     } else {
       const { count: remaining } = await supabase
         .from("products")
@@ -361,7 +368,7 @@ serve(async (req) => {
       remainingCount = remaining || 0;
     }
 
-    console.log(`[FETCH-MIN-PRICES] Done: ${updated} updated, ${remainingCount} remaining (forceRefresh=${forceRefresh})`);
+    console.log(`[FETCH-MIN-PRICES] Done: ${updated} updated, ${remainingCount} remaining (offset=${offset}, forceRefresh=${forceRefresh})`);
 
     return new Response(
       JSON.stringify({
@@ -370,6 +377,8 @@ serve(async (req) => {
         updated,
         errors: products.length - updates.length,
         remaining: remainingCount,
+        nextOffset: offset + products.length, // Return next offset for pagination
+        total: totalCount,
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
