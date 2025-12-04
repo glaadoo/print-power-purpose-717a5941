@@ -1,14 +1,10 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import VideoBackground from "@/components/VideoBackground";
-import GlassCard from "@/components/GlassCard";
-import MenuOverlay from "@/components/MenuOverlay";
-import useToggle from "@/hooks/useToggle";
-import { Button } from "@/components/ui/button";
+import VistaprintNav from "@/components/VistaprintNav";
 import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
 
 export default function About() {
-  const menu = useToggle();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,65 +12,24 @@ export default function About() {
   }, []);
 
   return (
-    <div className="fixed inset-0 text-white overflow-y-auto">
-      <VideoBackground srcMp4="/IMG_4805.jpeg" />
-      
-      {/* Top bar (Menu | PPP | empty) */}
-      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        {/* Left: Menu */}
-        <button
-          onClick={menu.toggle}
-          className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/30"
-          aria-haspopup="dialog"
-          aria-label="Open menu"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M3 6h18M3 12h18M3 18h18" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="hidden sm:inline">Menu</span>
-        </button>
+    <div className="min-h-screen bg-white flex flex-col">
+      <VistaprintNav />
 
-        {/* Center: Brand */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <a
-            href="/"
-            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-            aria-label="Print Power Purpose Home"
-          >
-            PRINT&nbsp;POWER&nbsp;PURPOSE
-          </a>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-blue-50 to-white border-b border-gray-200 py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            Why Donors Trust Messy Progress Over Polished Success
+          </h1>
+          <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
         </div>
+      </section>
 
-        {/* Right: Empty space for balance */}
-        <div className="w-[100px]"></div>
-      </header>
-
-      {/* Bottom bar */}
-      <div className="fixed bottom-0 inset-x-0 z-50 px-4 md:px-6 py-3 backdrop-blur bg-black/20 border-t border-white/10">
-        <div className="flex items-center justify-center">
-          <Button
-            onClick={() => navigate("/products")}
-            className="bg-white/20 hover:bg-white/30 text-white font-semibold px-8 py-2 rounded-full transition-all border border-white/30"
-          >
-            Shop With Purpose
-          </Button>
-        </div>
-      </div>
-
-      {/* Article Content - Fullscreen */}
-      <main className="relative z-10 pt-20 pb-20 px-6 min-h-screen flex items-center">
-        {/* Title Section */}
-        <div className="w-full space-y-8">
-          <GlassCard className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Why Donors Trust Messy Progress Over Polished Success
-            </h1>
-            <div className="w-24 h-1 bg-white/60 mx-auto"></div>
-          </GlassCard>
-
-          {/* Article Body */}
-          <GlassCard className="space-y-6 text-white/90 leading-relaxed text-lg">
-            <p className="text-xl font-semibold text-white">
+      {/* Article Content */}
+      <main className="flex-1 py-12 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-10 space-y-6 text-gray-700 leading-relaxed text-lg">
+            <p className="text-xl font-semibold text-gray-900">
               Only 20% of donors give again after their first gift.
             </p>
 
@@ -106,7 +61,7 @@ export default function About() {
               The entire relationship architecture is built on a transactional foundation that was outdated before social media existed.
             </p>
 
-            <h2 className="text-3xl font-bold text-white mt-12 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 mt-12 mb-4">
               The Control Problem
             </h2>
 
@@ -134,23 +89,11 @@ export default function About() {
               Real-time transparency feels risky because it requires vulnerability. Sharing not just wins, but stumbles, questions, and in-progress work.
             </p>
 
-            <p>
-              What if a project hits delays? What if community feedback forces a pivot? What if the initial approach doesn't work and you need to try something different?
-            </p>
-
-            <p>
-              The instinct is to hide those moments. Polish them away. Present only the sanitized version where everything went according to plan.
-            </p>
-
-            <p>
-              The barrier isn't technology or budget. It's the fear of showing the messy middle.
-            </p>
-
-            <p className="text-xl font-semibold text-white">
+            <p className="text-xl font-semibold text-gray-900">
               But here's what organizations miss: the messy middle is exactly where trust gets built.
             </p>
 
-            <h2 className="text-3xl font-bold text-white mt-12 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 mt-12 mb-4">
               What Co-Creation Actually Looks Like
             </h2>
 
@@ -171,26 +114,10 @@ export default function About() {
             </p>
 
             <p>
-              When a project succeeds, it's a shared victory. When obstacles emerge, supporters understand the context instead of feeling deceived.
-            </p>
-
-            <p>
-              That transparency turns donors into stakeholders, not sponsors. The emotional investment drives loyalty and deeper giving.
-            </p>
-
-            <p>
               The Spring community grew to 62,000 members generating nearly $20 million in annual recurring revenue. Not because charity: water had the slickest marketing. Because they invited people into the actual work.
             </p>
 
-            <p>
-              Co-creation means donors give feedback that shapes future projects. They ask questions that get real answers. They see their specific contributions tracked to GPS coordinates of completed wells.
-            </p>
-
-            <p>
-              The relationship becomes reciprocal instead of extractive.
-            </p>
-
-            <h2 className="text-3xl font-bold text-white mt-12 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 mt-12 mb-4">
               Why Authenticity Beats Polish
             </h2>
 
@@ -203,154 +130,18 @@ export default function About() {
             </p>
 
             <p>
-              We've all seen the Instagram posts showing the pristine final product next to the chaotic process that created it. We know restaurants have off nights. We know products have bugs. We know projects have complications.
-            </p>
-
-            <p>
-              Pretending otherwise doesn't build confidence. It triggers skepticism.
-            </p>
-
-            <p>
               When nonprofits only share polished success stories, it feels distant. Sometimes suspicious.
-            </p>
-
-            <p>
-              The donor starts wondering: what aren't they telling me? If everything always goes perfectly, either they're lying or they're not taking on hard enough problems.
             </p>
 
             <p>
               But when they show the messy middle, the challenges and pivots and learning moments, donors see honesty.
             </p>
 
-            <p>
-              A water project that hit unexpected rock formations and required three additional drilling attempts tells a more compelling story than one that went smoothly. Because it's believable.
-            </p>
-
-            <p>
-              Trust is built in those vulnerable, unfinished spaces.
-            </p>
-
-            <p>
-              The organization that says "we tried this approach and it didn't work, so here's what we're doing differently" earns more credibility than the one claiming flawless execution.
-            </p>
-
-            <p className="text-xl font-semibold text-white">
+            <p className="text-xl font-semibold text-gray-900">
               Organizations with proven transparency seals average 62% more in donor contributions. That's not correlation. That's donors voting with their wallets for organizations willing to be real.
             </p>
 
-            <p>
-              The data confirms what donor behavior already shows: transparency isn't a risk to fundraising. It's a competitive advantage.
-            </p>
-
-            <h2 className="text-3xl font-bold text-white mt-12 mb-4">
-              The Participation Shift
-            </h2>
-
-            <p>
-              Something bigger is happening beneath these trends.
-            </p>
-
-            <p>
-              Donors don't just want to give anymore. They want to co-own the story.
-            </p>
-
-            <p>
-              This shift reflects broader cultural changes around participation and ownership. People expect to influence the products they buy, the content they consume, the communities they join.
-            </p>
-
-            <p>
-              Why would philanthropy be different?
-            </p>
-
-            <p>
-              They expect real-time visibility. They treat impact like a shared project rather than a charitable favor.
-            </p>
-
-            <p>
-              The old model positioned donors as benevolent outsiders writing checks to help less fortunate people. The new model positions them as collaborators in addressing shared challenges.
-            </p>
-
-            <p>
-              Nearly 40% of philanthropic collaboratives now use participatory processes for grantmaking decisions. That represents a fundamental power shift.
-            </p>
-
-            <p>
-              Decision-making authority is moving from foundation boards to community members with lived experience. From professional philanthropists to the people actually affected by the issues.
-            </p>
-
-            <p>
-              Nonprofits will need to evolve from hierarchical organizations into participatory ecosystems.
-            </p>
-
-            <p>
-              Supporters won't just fund decisions. They'll shape them through transparent feedback loops, shared dashboards, and open governance models that treat donors, staff, and beneficiaries as collaborators in designing the mission.
-            </p>
-
-            <p>
-              This means rethinking organizational structures that were built for a different era. Boards that include community voices. Funding decisions informed by beneficiary input. Strategy shaped by donor feedback.
-            </p>
-
-            <p>
-              The $68 trillion wealth transfer from Baby Boomers to Millennials and Gen Z over the next 30 years will accelerate this trend. Younger donors expect participation as a baseline, not a bonus feature.
-            </p>
-
-            <p>
-              Organizations that don't adapt will find themselves competing for a shrinking pool of donors comfortable with the old transactional model.
-            </p>
-
-            <h2 className="text-3xl font-bold text-white mt-12 mb-4">
-              The Risk Nobody Talks About
-            </h2>
-
-            <p>
-              There's a danger in this vision that needs naming.
-            </p>
-
-            <p>
-              The biggest risk is mistaking inclusion for consensus.
-            </p>
-
-            <p>
-              When every voice has a say, decision-making can stall. The original mission can blur under competing perspectives.
-            </p>
-
-            <p>
-              I've seen organizations try to implement participatory models and end up paralyzed. Every decision becomes a negotiation. Every strategy gets diluted to accommodate all viewpoints. Progress slows to a crawl.
-            </p>
-
-            <p>
-              Without clear guardrails and trusted facilitators, transparency turns into noise. Collaboration becomes chaos.
-            </p>
-
-            <p>
-              The solution isn't less participation. It's better structure around participation.
-            </p>
-
-            <p>
-              Organizations need frameworks that distinguish between decisions where input genuinely improves outcomes and decisions where too many voices create gridlock.
-            </p>
-
-            <p>
-              They need facilitators who can synthesize diverse perspectives without letting the loudest voices dominate. Who can identify genuine consensus versus forced compromise that satisfies no one.
-            </p>
-
-            <p>
-              They need clear mission boundaries that define what's open for collaborative shaping and what's non-negotiable core purpose.
-            </p>
-
-            <p>
-              The organizations that succeed won't be the ones that give everyone equal vote on everything. They'll be the ones that create structures for meaningful participation while protecting mission clarity.
-            </p>
-
-            <p>
-              Participatory doesn't mean directionless. Co-creation doesn't mean committee-driven mediocrity.
-            </p>
-
-            <p>
-              The best models combine genuine stakeholder input with clear decision-making authority and accountability.
-            </p>
-
-            <h2 className="text-3xl font-bold text-white mt-12 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 mt-12 mb-4">
               The Uncomfortable Truth
             </h2>
 
@@ -367,51 +158,37 @@ export default function About() {
             </p>
 
             <p>
-              That's uncomfortable for organizations built on carefully managed messaging. Decades of institutional practice have trained nonprofits to control information flow, manage perceptions, and present unified fronts.
-            </p>
-
-            <p>
-              But donor behavior is already moving in this direction.
-            </p>
-
-            <p>
               New donor retention rates dropped to 18.5% in 2023. Repeat donor retention sits at 58.2%. The gap between those numbers tells you everything about the value of genuine relationship versus transactional interaction.
             </p>
 
-            <p>
-              Organizations that build real connections retain supporters. Organizations that treat donors as ATMs watch them leave.
-            </p>
-
-            <p>
-              The technology exists to enable participatory models. Platforms can track individual contributions to specific outcomes. Dashboards can provide real-time project updates. Automated systems can share micro-updates without overwhelming staff.
-            </p>
-
-            <p>
-              The question isn't whether to adapt. It's whether you'll lead the transition or get left behind by it.
-            </p>
-
-            <p>
-              Some organizations will resist until declining donations force their hand. Others will experiment cautiously, testing transparency in controlled ways.
-            </p>
-
-            <p className="text-xl font-semibold text-white">
+            <p className="text-xl font-semibold text-gray-900">
               The winners will be the ones who embrace the fundamental shift: donors aren't funding subjects anymore. They're mission partners.
             </p>
 
-            <p>
-              That requires letting go of control. Accepting that impact stories will be messier and more complex than the polished versions you're used to sharing.
-            </p>
-
-            <p className="text-2xl font-bold text-white text-center mt-8">
+            <p className="text-2xl font-bold text-gray-900 text-center mt-8">
               But messy and authentic beats polished and distant. Every time.
             </p>
-          </GlassCard>
+          </div>
+
+          {/* CTA */}
+          <div className="mt-12 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Ready to Make an Impact?
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Join us in creating meaningful change through every purchase.
+            </p>
+            <Button
+              onClick={() => navigate("/products")}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3"
+            >
+              Shop With Purpose
+            </Button>
+          </div>
         </div>
       </main>
 
       <Footer />
-
-      <MenuOverlay open={menu.open} onClose={menu.off} />
     </div>
   );
 }
