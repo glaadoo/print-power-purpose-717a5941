@@ -284,7 +284,7 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
           }`}
           onClick={handleCardClick}
         >
-          {compact ? 'View' : 'Customize'}
+          {compact ? 'View' : 'View Product'}
         </button>
       </div>
     </div>
