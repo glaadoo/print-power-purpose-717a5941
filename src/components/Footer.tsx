@@ -83,13 +83,6 @@ export default function Footer() {
               ]}
             />
             <FooterCol
-              title="Print Catalog"
-              links={[
-                ["All products", "/products"],
-                ["Promo items", "/products/promo"],
-              ]}
-            />
-            <FooterCol
               title="Insights"
               links={[
                 ["Blog", "/blog"],
