@@ -795,7 +795,7 @@ export default function AdminProducts() {
                           AU Store
                         </Button>
                       </div>
-                      {/* Fetch Min Prices Button */}
+                      {/* Fetch Min Prices Button - for products not yet calculated */}
                       <Button
                         onClick={() => {
                           setButtonMessages(prev => ({ ...prev, ['fetch-min-prices']: undefined as any }));
@@ -817,6 +817,7 @@ export default function AdminProducts() {
                           </>
                         )}
                       </Button>
+                      <p className="text-xs text-white/50">Sync already triggers background calculation. Use this to finish remaining products.</p>
                       {/* Min Price Status */}
                       {buttonMessages['fetch-min-prices'] && (
                         <div className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ${
