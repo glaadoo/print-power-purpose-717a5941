@@ -12,7 +12,7 @@ import kenzieAnimated from "@/assets/kenzie-sitting-smile.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import UserDonationProgress from "@/components/UserDonationProgress";
+
 import DonorLeaderboard from "@/components/DonorLeaderboard";
 
 export default function Home() {
@@ -367,14 +367,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* User Donation Progress - Only show for authenticated users */}
-      {isAuthenticated && (
-        <section className="bg-white py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <UserDonationProgress variant="light" />
-          </div>
-        </section>
-      )}
 
       {/* Public Donor Leaderboard - Visible to all users */}
       <section className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 py-16 border-t border-amber-100">
