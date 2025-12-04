@@ -228,7 +228,7 @@ export default function Welcome() {
                         <button
                           onClick={() => {
                             localStorage.setItem("ppp_access", session?.user ? "user" : "guest");
-                            navigate("/nonprofit");
+                            navigate("/select/nonprofit");
                           }}
                           className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-semibold text-lg hover:bg-primary/90 transition-colors shadow-lg"
                         >
