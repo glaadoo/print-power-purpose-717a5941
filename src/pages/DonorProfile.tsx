@@ -376,6 +376,7 @@ export default function DonorProfile() {
         </TooltipProvider>
 
         {/* Badge Journey Pathway */}
+        <TooltipProvider>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -534,6 +535,7 @@ export default function DonorProfile() {
             </div>
           </CardContent>
         </Card>
+        </TooltipProvider>
 
         {/* $777 Milestone Story Feature */}
         <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
