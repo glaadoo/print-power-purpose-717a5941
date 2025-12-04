@@ -103,14 +103,6 @@ export default function Welcome() {
     );
   }, [userProfile, session]);
 
-  function onSelect(value: string) {
-    if (!value) return;
-    
-    // Set access flag for user who has completed onboarding
-    localStorage.setItem("ppp_access", session?.user ? "user" : "guest");
-    
-    if (value === "nonprofit") navigate("/nonprofit");
-  }
 
   if (loading) {
     return (
@@ -229,26 +221,19 @@ export default function Welcome() {
                     )}
                     {step >= 3 && (
                       <div className="mt-1">
-                        <p className="text-gray-800 mb-3 text-base sm:text-lg leading-relaxed max-w-md mx-auto font-medium">
+                        <p className="text-gray-800 mb-4 text-base sm:text-lg leading-relaxed max-w-md mx-auto font-medium">
                           Your print purchase powers nonprofits.<br />
                           Ready to make a change?
                         </p>
-                        <p className="text-gray-800 mb-2 text-lg font-semibold">
-                          What are we printing for today?
-                        </p>
-                        <select
-                          defaultValue=""
-                          onChange={(e) => onSelect(e.target.value)}
-                          className="w-full sm:w-96 rounded-md border border-white/40 bg-white/20 backdrop-blur px-3 py-2 text-gray-800 focus:ring-2"
-                          aria-label="Select purpose"
+                        <button
+                          onClick={() => {
+                            localStorage.setItem("ppp_access", session?.user ? "user" : "guest");
+                            navigate("/nonprofit");
+                          }}
+                          className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-semibold text-lg hover:bg-primary/90 transition-colors shadow-lg"
                         >
-                          <option value="" disabled className="text-black">
-                            Select an option
-                          </option>
-                          <option value="nonprofit" className="text-black">
-                            Nonprofit
-                          </option>
-                        </select>
+                          Choose Your Cause
+                        </button>
                       </div>
                     )}
                 </div>
