@@ -229,7 +229,7 @@ export default function Welcome() {
                     )}
                     {step >= 3 && (
                       <div className="mt-1">
-                        <p className="text-white/90 mb-3 text-base sm:text-lg leading-relaxed max-w-md mx-auto">
+                        <p className="text-gray-800 mb-3 text-base sm:text-lg leading-relaxed max-w-md mx-auto font-medium">
                           Your print purchase powers nonprofits.<br />
                           Ready to make a change?
                         </p>
