@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, Package, Heart, ArrowRight, Home, Truck, ExternalLink, Sparkles, PartyPopper } from "lucide-react";
+import { CheckCircle2, Package, Heart, ArrowRight, Home, Truck, ExternalLink, Sparkles, PartyPopper, Trophy, Star } from "lucide-react";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -41,15 +41,20 @@ export default function Success() {
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [nonprofitProgress, setNonprofitProgress] = useState<NonprofitProgress | null>(null);
+  const [previousMilestoneCount, setPreviousMilestoneCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationTriggered, setCelebrationTriggered] = useState(false);
 
   const sessionId = searchParams.get("session_id");
 
-  // Calculate if this order's donation pushed nonprofit over milestone
+  // Calculate order contribution
   const orderDonationCents = Math.round((orderDetails?.amount_total_cents || 0) * DONATION_RATIO);
-  const milestoneReached = nonprofitProgress 
-    ? (nonprofitProgress.current_progress_cents % MILESTONE_GOAL_CENTS) < orderDonationCents
+  
+  // Milestone is reached if current milestone_count is higher than what we stored before webhook processed
+  // OR if we can detect from progress that a milestone boundary was crossed
+  const milestoneReached = nonprofitProgress && previousMilestoneCount !== null
+    ? nonprofitProgress.milestone_count > previousMilestoneCount
     : false;
 
   useEffect(() => {
@@ -85,6 +90,13 @@ export default function Success() {
             
             if (npData) {
               setNonprofitProgress(npData);
+              
+              // Calculate what milestone count was BEFORE this order
+              // by working backwards from current progress
+              const orderContribution = Math.round((data.amount_total_cents || 0) * DONATION_RATIO);
+              const progressBeforeOrder = npData.current_progress_cents - orderContribution;
+              const milestoneCountBeforeOrder = Math.floor(progressBeforeOrder / MILESTONE_GOAL_CENTS);
+              setPreviousMilestoneCount(Math.max(0, milestoneCountBeforeOrder));
             }
           }
           
@@ -109,36 +121,59 @@ export default function Success() {
 
   // Celebration effect when milestone is reached
   useEffect(() => {
-    if (orderDetails?.nonprofit_name && milestoneReached && !showCelebration) {
+    if (orderDetails?.nonprofit_name && milestoneReached && !celebrationTriggered) {
+      setCelebrationTriggered(true);
       setShowCelebration(true);
       
-      // Fire confetti
-      const duration = 4000;
-      const end = Date.now() + duration;
-
-      const frame = () => {
+      // Fire epic confetti burst
+      const fireConfetti = () => {
+        // Center burst
         confetti({
-          particleCount: 4,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ["#FFD700", "#FF6B6B", "#4ECDC4", "#9B59B6"],
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6, x: 0.5 },
+          colors: ["#FFD700", "#FF6B6B", "#4ECDC4", "#9B59B6", "#10B981"],
         });
-        confetti({
-          particleCount: 4,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ["#FFD700", "#FF6B6B", "#4ECDC4", "#9B59B6"],
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
+        
+        // Side cannons
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ["#FFD700", "#10B981"],
+          });
+          confetti({
+            particleCount: 50,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ["#FFD700", "#10B981"],
+          });
+        }, 250);
+        
+        // Stars burst
+        setTimeout(() => {
+          confetti({
+            particleCount: 30,
+            spread: 360,
+            startVelocity: 30,
+            origin: { y: 0.3 },
+            shapes: ["star"],
+            colors: ["#FFD700"],
+          });
+        }, 500);
       };
-      frame();
+      
+      fireConfetti();
+      setTimeout(fireConfetti, 1500);
+      setTimeout(fireConfetti, 3000);
+      
+      // Hide celebration banner after animation
+      setTimeout(() => setShowCelebration(false), 8000);
     }
-  }, [orderDetails, milestoneReached, showCelebration]);
+  }, [orderDetails, milestoneReached, celebrationTriggered]);
 
   if (loading) {
     return (
@@ -222,39 +257,84 @@ export default function Success() {
                 : "bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border border-emerald-200"
             }`}
           >
-            <AnimatePresence>
-              {milestoneReached ? (
+          <AnimatePresence>
+            {milestoneReached ? (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-center py-4"
+              >
+                {/* Trophy badge */}
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="text-center"
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                  className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/30"
                 >
-                  <div className="flex items-center justify-center gap-3 mb-4">
-                    <motion.div
-                      animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] }}
-                      transition={{ duration: 0.6, repeat: 3, repeatDelay: 1 }}
-                    >
-                      <PartyPopper className="h-10 w-10 text-yellow-500" />
-                    </motion.div>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Sparkles className="h-8 w-8 text-emerald-500" />
-                    </motion.div>
-                  </div>
-                  
-                  <h2 className="text-2xl font-bold text-emerald-700 mb-2">
-                    🎉 Great job!
-                  </h2>
-                  <p className="text-lg text-emerald-600 mb-2">
-                    You've helped <span className="font-bold">{nonprofit_name}</span> reach their $777 milestone!
-                  </p>
-                  <p className="text-sm text-emerald-500 mt-3">
-                    You're making a real impact. Thank you for being part of this journey! 💚
-                  </p>
+                  <Trophy className="h-12 w-12 text-white" />
                 </motion.div>
-              ) : (
+                
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <motion.div
+                    animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 2 }}
+                  >
+                    <PartyPopper className="h-8 w-8 text-yellow-500" />
+                  </motion.div>
+                  <motion.div
+                    animate={{ scale: [1, 1.3, 1] }}
+                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 0.5 }}
+                  >
+                    <Star className="h-6 w-6 text-yellow-400 fill-yellow-400" />
+                  </motion.div>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Sparkles className="h-8 w-8 text-emerald-500" />
+                  </motion.div>
+                </div>
+                
+                <motion.h2 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-3xl font-bold bg-gradient-to-r from-yellow-600 via-emerald-600 to-yellow-600 bg-clip-text text-transparent mb-2"
+                >
+                  🎉 Milestone #{nonprofitProgress?.milestone_count} Achieved!
+                </motion.h2>
+                
+                <motion.p 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-lg text-emerald-700 mb-2"
+                >
+                  You helped <span className="font-bold">{nonprofit_name}</span> reach their <span className="font-bold text-yellow-600">$777 milestone</span>!
+                </motion.p>
+                
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                  className="inline-flex items-center gap-2 bg-yellow-100 border border-yellow-300 rounded-full px-4 py-2 mt-3"
+                >
+                  <Trophy className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-700">
+                    Total Milestones: {nonprofitProgress?.milestone_count}
+                  </span>
+                </motion.div>
+                
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="text-sm text-emerald-500 mt-4"
+                >
+                  You're making a real impact. Thank you for being part of this journey! 💚
+                </motion.p>
+              </motion.div>
+            ) : (
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-3">
                     <Heart className="h-6 w-6 text-emerald-600" />
