@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -14,7 +14,6 @@ import {
   AlertCircle, CheckCircle, X, ArrowLeft, Check,
   Clock, Send, DollarSign, ShoppingCart, Heart, TrendingUp, LogOut, Activity, FileText, CreditCard, Package
 } from "lucide-react";
-import AdminTabNav from "@/components/admin/AdminTabNav";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import VideoBackground from "@/components/VideoBackground";
 import GlassCard from "@/components/GlassCard";
@@ -70,7 +69,6 @@ export default function Admin() {
   // Orders filters
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Donations filters
   const [donationSearchTerm, setDonationSearchTerm] = useState("");
@@ -781,8 +779,101 @@ export default function Admin() {
           </div>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <AdminTabNav activeTab={activeTab} onTabChange={setActiveTab} />
+          <Tabs defaultValue="dashboard" className="space-y-6">
+            <div className="flex justify-center px-4">
+              <TabsList className="bg-[#5a5a5a] p-2 rounded-2xl flex flex-wrap justify-center gap-2 max-w-5xl">
+                <TabsTrigger 
+                  value="dashboard" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Dashboard
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analytics" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Analytics
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="products" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Products
+                </TabsTrigger>
+                <TabsTrigger
+                  value="prices"
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Configuration
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="causes" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Causes
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="schools" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Schools
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="nonprofits" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Nonprofits
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="orders" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Orders
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="donations" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Donations
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="errors" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Errors
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="stories" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Stories
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="sync" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Sync
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="videos" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Videos
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="pages" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Pages
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="settings" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                >
+                  Settings
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="dashboard">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
