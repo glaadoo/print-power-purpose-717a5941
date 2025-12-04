@@ -133,17 +133,15 @@ export default function CompactMilestoneBar() {
         {/* Progress Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {nonprofit.name}
-            </p>
-            <div className="flex items-center gap-2">
-              {milestoneCount > 0 && (
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                  {milestoneCount} milestone{milestoneCount > 1 ? 's' : ''}
-                </span>
-              )}
-              <span className="text-sm font-bold text-primary">{progressPercent.toFixed(0)}%</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {nonprofit.name}
+              </p>
+              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+                Milestone #{milestoneCount + 1}
+              </span>
             </div>
+            <span className="text-sm font-bold text-primary ml-2">{progressPercent.toFixed(0)}%</span>
           </div>
           
           <Progress 
