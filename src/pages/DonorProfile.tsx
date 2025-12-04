@@ -486,16 +486,16 @@ export default function DonorProfile() {
                           
                           {/* Badge Label */}
                           <div className="mt-2 text-center">
-                            <p className={`text-xs font-medium ${
+                            <p className={`font-semibold ${
                               isAchieved 
-                                ? tier.colors.text 
+                                ? `text-sm ${tier.colors.text}` 
                                 : isNext 
-                                  ? 'text-primary' 
-                                  : 'text-muted-foreground/50'
+                                  ? 'text-xs text-primary' 
+                                  : 'text-xs text-muted-foreground/50'
                             }`}>
                               {tier.name}
                             </p>
-                            <p className={`text-[10px] ${isFuture ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}>
+                            <p className={`${isAchieved ? 'text-xs' : 'text-[10px]'} ${isFuture ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}>
                               {tier.milestonesRequired} milestone{tier.milestonesRequired !== 1 ? 's' : ''}
                             </p>
                             
