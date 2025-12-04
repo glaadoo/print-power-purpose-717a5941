@@ -6,7 +6,7 @@ import { useFavorites } from "@/context/FavoritesContext";
 import VideoBackground from "@/components/VideoBackground";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Heart, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Heart, ShoppingCart, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 type FavoriteProduct = {
@@ -271,14 +271,24 @@ export default function Favorites() {
                   const canAddToCart = requiresConfiguration ? isConfigured : displayPrice > 0;
 
                   return (
-                    <div key={product.id} className="relative">
+                    <div key={product.id} className="relative group">
                       {/* Remove from favorites button */}
                       <button
                         onClick={() => handleRemoveFavorite(product.id)}
-                        className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-colors"
-                        aria-label="Remove from favorites"
+                        className="absolute top-3 right-3 z-20 bg-red-500/90 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100 hover:scale-110 flex items-center gap-1"
+                        aria-label="Remove from wishlist"
+                        title="Remove from wishlist"
                       >
-                        <Heart className="w-5 h-5 fill-current" />
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      
+                      {/* Mobile-visible remove button */}
+                      <button
+                        onClick={() => handleRemoveFavorite(product.id)}
+                        className="md:hidden absolute top-3 right-3 z-20 bg-red-500/90 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-colors"
+                        aria-label="Remove from wishlist"
+                      >
+                        <X className="w-4 h-4" />
                       </button>
 
                       <div className="space-y-3">
