@@ -54,6 +54,7 @@ export default function AdminProducts() {
   const [syncStatus, setSyncStatus] = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({});
   // Persistent status messages per button - only cleared on page refresh or button re-click
   const [buttonMessages, setButtonMessages] = useState<Record<string, { type: 'loading' | 'success' | 'error'; text: string }>>({});
+  const [fetchingMinPrices, setFetchingMinPrices] = useState(false);
 
   useEffect(() => {
     // Don't auto-load products - wait for user to click "Show Products" button
@@ -459,6 +460,48 @@ export default function AdminProducts() {
     sinaliteCount: products.filter(p => p.vendor === 'sinalite').length,
   };
 
+  async function handleFetchMinPrices() {
+    const buttonKey = 'fetch-min-prices';
+    setFetchingMinPrices(true);
+    setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'loading', text: 'Calculating min prices for SinaLite products...' } }));
+    
+    try {
+      const { data, error } = await invokeWithRetry(
+        supabase,
+        'fetch-sinalite-min-prices',
+        { body: { limit: 100 } },
+        {
+          maxAttempts: 2,
+          initialDelayMs: 3000,
+          shouldRetry: (error: any) => {
+            const msg = error?.message?.toLowerCase() || '';
+            return msg.includes('timeout') || msg.includes('fetch') || msg.includes('network');
+          }
+        }
+      );
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(`Successfully calculated min prices for ${data.updated || 0} products!`);
+        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `Updated min prices for ${data.updated || 0} SinaLite products.` } }));
+        loadProducts();
+      } else {
+        toast.warning(data?.error || 'Min price calculation completed with issues');
+        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: data?.error || 'Calculation completed with issues' } }));
+      }
+    } catch (error: any) {
+      console.error('Error fetching min prices:', error);
+      const errorMsg = error?.message?.includes('timeout') 
+        ? 'Calculation is taking longer than expected. It may still be running in the background.'
+        : error.message;
+      toast.error(`Failed to fetch min prices: ${errorMsg}`);
+      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: `Failed: ${errorMsg}` } }));
+    } finally {
+      setFetchingMinPrices(false);
+    }
+  }
+
   const vendors = [
     {
       name: "SinaLite",
@@ -707,7 +750,7 @@ export default function AdminProducts() {
                 </CardHeader>
                 <CardContent>
                   {vendor.name === "SinaLite" && (
-                    <div className="mb-3">
+                    <div className="mb-3 space-y-3">
                       <div className="flex gap-2">
                         <Button
                           onClick={() => setSelectedStore(9)}
@@ -726,6 +769,41 @@ export default function AdminProducts() {
                           AU Store
                         </Button>
                       </div>
+                      {/* Fetch Min Prices Button */}
+                      <Button
+                        onClick={() => {
+                          setButtonMessages(prev => ({ ...prev, ['fetch-min-prices']: undefined as any }));
+                          handleFetchMinPrices();
+                        }}
+                        disabled={!!syncing || fetchingMinPrices}
+                        variant="outline"
+                        className="w-full bg-yellow-500/20 text-yellow-200 border-yellow-500/30 hover:bg-yellow-500/30"
+                      >
+                        {fetchingMinPrices ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            Calculating...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Fetch Min Prices
+                          </>
+                        )}
+                      </Button>
+                      {/* Min Price Status */}
+                      {buttonMessages['fetch-min-prices'] && (
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ${
+                          buttonMessages['fetch-min-prices'].type === 'loading' ? 'bg-blue-500/20 text-blue-300' :
+                          buttonMessages['fetch-min-prices'].type === 'success' ? 'bg-green-500/20 text-green-300' :
+                          'bg-red-500/20 text-red-300'
+                        }`}>
+                          {buttonMessages['fetch-min-prices'].type === 'loading' && <RefreshCw className="h-4 w-4 animate-spin" />}
+                          {buttonMessages['fetch-min-prices'].type === 'success' && <Check className="h-4 w-4" />}
+                          {buttonMessages['fetch-min-prices'].type === 'error' && <AlertTriangle className="h-4 w-4" />}
+                          <span>{buttonMessages['fetch-min-prices'].text}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                   <Button
