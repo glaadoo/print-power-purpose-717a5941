@@ -87,45 +87,61 @@ export default function DonorProfile() {
           setUserName(`${profile.first_name} ${profile.last_name}`.trim());
         }
 
-        // Fetch all donations for this user
-        const { data: donationData, error } = await supabase
-          .from("donations")
-          .select("id, amount_cents, created_at, nonprofit_name, nonprofit_ein")
+        // Fetch all orders for this user (milestones are based on order amount > $1554)
+        const { data: orderData, error } = await supabase
+          .from("orders")
+          .select("id, amount_total_cents, donation_cents, created_at, nonprofit_name, nonprofit_id, status")
           .eq("customer_email", user.email)
+          .in("status", ["completed", "paid"])
           .order("created_at", { ascending: false });
 
         if (error) {
-          console.error('[DonorProfile] Error fetching donations:', error);
+          console.error('[DonorProfile] Error fetching orders:', error);
           throw error;
         }
 
-        console.log('[DonorProfile] Contributions fetched:', donationData);
-        setDonations(donationData || []);
+        console.log('[DonorProfile] Orders fetched:', orderData);
         
-        const total = (donationData || []).reduce(
-          (sum, d) => sum + (d.amount_cents || 0), 
-          0
-        );
-        setTotalDonatedCents(total);
+        // Convert orders to donation-like format for display
+        const donationList: Donation[] = (orderData || []).map(o => ({
+          id: o.id,
+          amount_cents: o.donation_cents || 0,
+          created_at: o.created_at,
+          nonprofit_name: o.nonprofit_name,
+          nonprofit_ein: null
+        }));
+        setDonations(donationList);
         
-        // Calculate milestones completed ($777 = 77700 cents)
-        const milestones = Math.floor(total / 77700);
+        const totalDonations = donationList.reduce((sum, d) => sum + d.amount_cents, 0);
+        setTotalDonatedCents(totalDonations);
+        
+        // Calculate milestones completed: each order > $1554 (155400 cents) = 1 milestone
+        const MILESTONE_PURCHASE_THRESHOLD = 155400; // $1554
+        const milestones = (orderData || []).filter(
+          order => (order.amount_total_cents || 0) >= MILESTONE_PURCHASE_THRESHOLD
+        ).length;
         setMilestonesCompleted(milestones);
 
-        // Aggregate nonprofits supported
+        // Aggregate nonprofits supported (unique nonprofits with any purchase)
         const nonprofitMap = new Map<string, SupportedNonprofit>();
-        (donationData || []).forEach(d => {
-          const key = d.nonprofit_name || 'General';
+        (orderData || []).forEach(o => {
+          if (!o.nonprofit_name) return;
+          const key = o.nonprofit_name;
           const existing = nonprofitMap.get(key);
+          const orderDonation = o.donation_cents || 0;
+          const isMilestoneOrder = (o.amount_total_cents || 0) >= MILESTONE_PURCHASE_THRESHOLD;
+          
           if (existing) {
-            existing.total_donated += d.amount_cents;
-            existing.milestones_contributed = Math.floor(existing.total_donated / 77700);
+            existing.total_donated += orderDonation;
+            if (isMilestoneOrder) {
+              existing.milestones_contributed += 1;
+            }
           } else {
             nonprofitMap.set(key, {
-              nonprofit_id: null,
-              nonprofit_name: d.nonprofit_name,
-              total_donated: d.amount_cents,
-              milestones_contributed: Math.floor(d.amount_cents / 77700)
+              nonprofit_id: o.nonprofit_id,
+              nonprofit_name: o.nonprofit_name,
+              total_donated: orderDonation,
+              milestones_contributed: isMilestoneOrder ? 1 : 0
             });
           }
         });
