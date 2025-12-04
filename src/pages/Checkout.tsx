@@ -507,25 +507,25 @@ export default function Checkout() {
               </div>
             ))}
             
-            {/* Supporting Cause/Nonprofit */}
+            {/* Supporting Cause/Nonprofit - prioritize nonprofit over cause */}
             <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-              <div className="flex justify-between mb-2">
+              <div className="flex justify-between">
                 <span className="text-gray-700 font-medium">Supporting</span>
-                <span className="font-semibold text-blue-700">
-                  {selectedCauseName || causeCtx?.cause?.name || "General Fund"}
-                </span>
-              </div>
-              {causeCtx?.nonprofit && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Nonprofit</span>
-                  <span className="text-gray-900">
-                    {causeCtx.nonprofit.name}
-                    {causeCtx.nonprofit.ein && (
-                      <span className="text-gray-500 ml-2">(EIN: {causeCtx.nonprofit.ein})</span>
-                    )}
-                  </span>
+                <div className="text-right">
+                  {causeCtx?.nonprofit ? (
+                    <div>
+                      <span className="font-semibold text-blue-700">{causeCtx.nonprofit.name}</span>
+                      {causeCtx.nonprofit.ein && (
+                        <span className="text-gray-500 text-sm ml-2">(EIN: {causeCtx.nonprofit.ein})</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="font-semibold text-blue-700">
+                      {selectedCauseName || causeCtx?.cause?.name || "General Fund"}
+                    </span>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
