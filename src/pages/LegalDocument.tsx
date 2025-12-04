@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,30 @@ interface LegalDoc {
   changelog: string | null;
 }
 
-export default function PrivacyPolicy() {
+// Configuration for different document types
+const DOC_CONFIG: Record<string, { label: string; path: string; errorMessage: string }> = {
+  privacy: {
+    label: "privacy policy",
+    path: "/policies/privacy",
+    errorMessage: "Privacy policy not available",
+  },
+  terms: {
+    label: "terms of use",
+    path: "/policies/terms",
+    errorMessage: "Terms of use not available",
+  },
+  legal: {
+    label: "legal notice",
+    path: "/policies/legal",
+    errorMessage: "Legal notice not available",
+  },
+};
+
+interface LegalDocumentProps {
+  documentType: "privacy" | "terms" | "legal";
+}
+
+export default function LegalDocument({ documentType }: LegalDocumentProps) {
   const [searchParams] = useSearchParams();
   const requestedVersion = searchParams.get("version");
   
@@ -32,18 +55,30 @@ export default function PrivacyPolicy() {
   const [versions, setVersions] = useState<LegalDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVersions, setShowVersions] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  const config = DOC_CONFIG[documentType];
 
   useEffect(() => {
     fetchDocument();
     fetchVersions();
-  }, [requestedVersion]);
+  }, [requestedVersion, documentType]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const fetchDocument = async () => {
+    setLoading(true);
     try {
       let query = supabase
         .from("legal_documents")
         .select("*")
-        .eq("type", "privacy");
+        .eq("type", documentType);
 
       if (requestedVersion) {
         query = query.eq("version", parseInt(requestedVersion));
@@ -59,7 +94,7 @@ export default function PrivacyPolicy() {
       if (error) throw error;
       setDocument(data);
     } catch (error: any) {
-      toast.error("Failed to load privacy policy");
+      toast.error(`Failed to load ${config.label}`);
       console.error(error);
     } finally {
       setLoading(false);
@@ -71,7 +106,7 @@ export default function PrivacyPolicy() {
       const { data, error } = await supabase
         .from("legal_documents")
         .select("id, version, effective_date, published_at, changelog, type, title, content, status")
-        .eq("type", "privacy")
+        .eq("type", documentType)
         .eq("status", "published")
         .order("version", { ascending: false });
 
@@ -92,16 +127,6 @@ export default function PrivacyPolicy() {
     }
   };
 
-  const [showBackToTop, setShowBackToTop] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 400);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -117,7 +142,7 @@ export default function PrivacyPolicy() {
         />
         <div className="relative text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p className="mt-4 text-white/80">Loading privacy policy...</p>
+          <p className="mt-4 text-white/80">Loading {config.label}...</p>
         </div>
       </div>
     );
@@ -134,7 +159,7 @@ export default function PrivacyPolicy() {
         />
         <GlassCard className="relative max-w-md">
           <p className="text-center text-white/80">
-            Privacy policy not available
+            {config.errorMessage}
           </p>
         </GlassCard>
       </div>
@@ -206,7 +231,7 @@ export default function PrivacyPolicy() {
                       {versions.map((v) => (
                         <Link
                           key={v.id}
-                          to={`/policies/privacy?version=${v.version}`}
+                          to={`${config.path}?version=${v.version}`}
                           className="block p-4 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -246,7 +271,7 @@ export default function PrivacyPolicy() {
             {/* Footer */}
             <div className="mt-12 pt-6 border-t border-white/20 text-center text-sm text-white/60">
               <p className="mb-2">
-                Questions about our privacy practices?{" "}
+                Questions about our {config.label}?{" "}
                 <Link to="/contact" className="text-white hover:underline">
                   Contact us
                 </Link>
