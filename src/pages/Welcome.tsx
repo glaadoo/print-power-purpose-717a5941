@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
-import { Menu } from "lucide-react";
+import { Menu, ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 import kenzieMascot from "@/assets/kenzie-power-mascot.jpg";
 
@@ -122,13 +122,22 @@ export default function Welcome() {
 
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-foreground backdrop-blur bg-[#f5f5f0]/90 border-b border-border/20">
-        <button
-          onClick={toggleMenu}
-          className="p-2 hover:bg-black/5 rounded-lg transition-colors"
-          aria-label="Open menu"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-black/5 rounded-lg transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <button
+            onClick={toggleMenu}
+            className="p-2 hover:bg-black/5 rounded-lg transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+        </div>
 
         <Link
           to="/"
