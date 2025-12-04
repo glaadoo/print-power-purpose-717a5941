@@ -460,6 +460,8 @@ export default function AdminProducts() {
     sinaliteCount: products.filter(p => p.vendor === 'sinalite').length,
   };
 
+  const [forceRecalculate, setForceRecalculate] = useState(false);
+
   async function handleFetchMinPrices() {
     const buttonKey = 'fetch-min-prices';
     setFetchingMinPrices(true);
@@ -467,7 +469,7 @@ export default function AdminProducts() {
     let totalUpdated = 0;
     let remaining = 999;
     let iterations = 0;
-    const maxIterations = 20; // Safety limit
+    const maxIterations = forceRecalculate ? 50 : 20; // More iterations for force recalculate
     
     try {
       // Loop until all products are processed or max iterations reached
@@ -477,14 +479,14 @@ export default function AdminProducts() {
           ...prev, 
           [buttonKey]: { 
             type: 'loading', 
-            text: `Calculating min prices... ${totalUpdated} updated${remaining < 999 ? `, ${remaining} remaining` : ''}` 
+            text: `${forceRecalculate ? 'Recalculating' : 'Calculating'} min prices... ${totalUpdated} updated${remaining < 999 ? `, ${remaining} remaining` : ''}` 
           } 
         }));
         
         const { data, error } = await invokeWithRetry(
           supabase,
           'fetch-sinalite-min-prices',
-          { body: { batchSize: 20 } }, // Process 20 at a time
+          { body: { batchSize: 20, forceRefresh: forceRecalculate } },
           {
             maxAttempts: 2,
             initialDelayMs: 3000,
@@ -514,6 +516,7 @@ export default function AdminProducts() {
       
       toast.success(`Successfully calculated min prices for ${totalUpdated} products!`);
       setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `Updated min prices for ${totalUpdated} SinaLite products.` } }));
+      setForceRecalculate(false); // Reset checkbox after completion
       loadProducts();
       
     } catch (error: any) {
@@ -808,7 +811,7 @@ export default function AdminProducts() {
                         {fetchingMinPrices ? (
                           <>
                             <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                            Calculating...
+                            {forceRecalculate ? 'Recalculating...' : 'Calculating...'}
                           </>
                         ) : (
                           <>
@@ -817,6 +820,16 @@ export default function AdminProducts() {
                           </>
                         )}
                       </Button>
+                      <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={forceRecalculate}
+                          onChange={(e) => setForceRecalculate(e.target.checked)}
+                          className="rounded border-white/30"
+                          disabled={fetchingMinPrices}
+                        />
+                        Force recalculate ALL products (fix incorrect prices)
+                      </label>
                       <p className="text-xs text-white/50">Sync already triggers background calculation. Use this to finish remaining products.</p>
                       {/* Min Price Status */}
                       {buttonMessages['fetch-min-prices'] && (
