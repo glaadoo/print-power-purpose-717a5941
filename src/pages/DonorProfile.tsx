@@ -567,20 +567,21 @@ export default function DonorProfile() {
           </p>
         </div>
 
-        {/* Your Impact Journey - Per Nonprofit Progress */}
-        {supportedNonprofits.length > 0 && (
+        {/* Your Recent Impact Status - Per Nonprofit with Contributions */}
+        {supportedNonprofits.filter(n => n.nonprofit_name && n.total_donated > 0).length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-500" />
-                Your Impact Journey
+                Your Recent Impact Status
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {supportedNonprofits.filter(n => n.nonprofit_name).map((np, index) => {
-                  const MILESTONE_TARGET = 77700;
-                  const progressPercent = Math.round((np.progress_cents / MILESTONE_TARGET) * 100);
+                {/* Only show nonprofits with actual contributions ($777+) */}
+                {supportedNonprofits
+                  .filter(n => n.nonprofit_name && n.total_donated > 0)
+                  .map((np, index) => {
                   const hasMilestones = np.milestones_contributed > 0;
                   
                   return (
@@ -589,58 +590,35 @@ export default function DonorProfile() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className={`p-4 rounded-lg transition-colors ${
-                        hasMilestones 
-                          ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/20' 
-                          : 'bg-muted/30 hover:bg-muted/50'
-                      }`}
+                      className="p-4 rounded-lg transition-colors bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/20"
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${
-                            hasMilestones ? 'bg-yellow-500/20' : 'bg-emerald-500/10'
-                          }`}>
-                            {hasMilestones ? (
-                              <Trophy className="h-5 w-5 text-yellow-600" />
-                            ) : (
-                              <Heart className="h-5 w-5 text-emerald-600" />
-                            )}
+                          <div className="p-2 rounded-full bg-yellow-500/20">
+                            <Trophy className="h-5 w-5 text-yellow-600" />
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{np.nonprofit_name}</p>
-                            {hasMilestones ? (
-                              <p className="text-sm text-yellow-600 font-medium">
-                                🏆 {np.milestones_contributed} Milestone{np.milestones_contributed !== 1 ? 's' : ''} Achieved 🎉
-                              </p>
-                            ) : (
-                              <p className="text-sm text-muted-foreground">
-                                Progress: {formatCents(np.progress_cents)} / $777
-                              </p>
-                            )}
+                            <p className="text-sm text-yellow-600 font-medium">
+                              🏆 {np.milestones_contributed} Milestone{np.milestones_contributed !== 1 ? 's' : ''} Achieved
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Total Contributed: {formatCents(np.total_donated)}
+                            </p>
                           </div>
                         </div>
-                        {hasMilestones && np.last_order_date && (
+                        {np.last_order_date && (
                           <span className="text-xs text-muted-foreground">
                             Last: {formatDate(np.last_order_date)}
                           </span>
                         )}
                       </div>
                       
-                      {/* Progress Bar */}
-                      {!hasMilestones || np.progress_cents > 0 ? (
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>Impact Status: {progressPercent}% to Milestone 🎯</span>
-                            <span>{formatCents(MILESTONE_TARGET - np.progress_cents)} remaining</span>
-                          </div>
-                          <Progress value={progressPercent} className="h-2" />
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-yellow-600 bg-yellow-500/10 rounded-md px-3 py-2">
-                          <CheckCircle2 className="h-4 w-4" />
-                          <span>Impact Verified: {np.milestones_contributed} Milestone{np.milestones_contributed !== 1 ? 's' : ''} Completed</span>
-                        </div>
-                      )}
+                      {/* Achieved Milestone Badge */}
+                      <div className="flex items-center gap-2 text-sm text-yellow-600 bg-yellow-500/10 rounded-md px-3 py-2 mt-3">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>Impact Verified: {np.milestones_contributed} × $777 Milestone{np.milestones_contributed !== 1 ? 's' : ''} Completed</span>
+                      </div>
                     </motion.div>
                   );
                 })}
@@ -750,96 +728,87 @@ export default function DonorProfile() {
           </CardContent>
         </Card>
 
-        {/* Impact Journey Timeline - Grouped by Nonprofit */}
+        {/* Impact Journey Timeline - Grouped by Nonprofit - Only show nonprofits with contributions */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              Your Impact Journey
+              Impact Journey Timeline
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {donations.length === 0 ? (
+            {donations.filter(d => d.amount_cents > 0).length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">
-                  No contributions yet. Start making an impact today!
+                  No milestone contributions yet. Orders of $1,554+ contribute $777 to your selected nonprofit!
                 </p>
                 <Button onClick={() => navigate("/products")}>
-                  Make Your First Purchase
+                  Start Shopping
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Group donations by nonprofit */}
+                {/* Group donations by nonprofit - only show groups with actual contributions */}
                 {(() => {
-                  const grouped = donations.reduce((acc, donation) => {
-                    const key = donation.nonprofit_name || "General Impact";
-                    if (!acc[key]) {
-                      acc[key] = {
-                        name: key,
-                        donations: [],
-                        totalCents: 0,
-                        hasMilestone: false
-                      };
-                    }
-                    acc[key].donations.push(donation);
-                    acc[key].totalCents += donation.amount_cents;
-                    if (donation.is_milestone) acc[key].hasMilestone = true;
-                    return acc;
-                  }, {} as Record<string, { name: string; donations: typeof donations; totalCents: number; hasMilestone: boolean }>);
+                  const grouped = donations
+                    .filter(d => d.amount_cents > 0) // Only include milestone orders with $777 contribution
+                    .reduce((acc, donation) => {
+                      const key = donation.nonprofit_name || "General Impact";
+                      if (!acc[key]) {
+                        acc[key] = {
+                          name: key,
+                          donations: [],
+                          totalCents: 0,
+                          milestoneCount: 0
+                        };
+                      }
+                      acc[key].donations.push(donation);
+                      acc[key].totalCents += donation.amount_cents;
+                      if (donation.is_milestone) acc[key].milestoneCount += 1;
+                      return acc;
+                    }, {} as Record<string, { name: string; donations: typeof donations; totalCents: number; milestoneCount: number }>);
 
-                  return Object.values(grouped).map((group, groupIndex) => (
+                  // Only show nonprofits with contributions
+                  return Object.values(grouped)
+                    .filter(group => group.totalCents > 0)
+                    .map((group, groupIndex) => (
                     <Collapsible key={group.name} defaultOpen={groupIndex === 0}>
                       <CollapsibleTrigger className="w-full">
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: groupIndex * 0.05 }}
-                          className={`flex items-center justify-between p-4 rounded-lg transition-colors cursor-pointer ${
-                            group.hasMilestone 
-                              ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/20' 
-                              : 'bg-muted/30 hover:bg-muted/50'
-                          }`}
+                          className="flex items-center justify-between p-4 rounded-lg transition-colors cursor-pointer bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/20"
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${
-                              group.hasMilestone 
-                                ? 'bg-yellow-500/20' 
-                                : 'bg-primary/10'
-                            }`}>
-                              {group.hasMilestone ? (
-                                <Trophy className="h-4 w-4 text-yellow-600" />
-                              ) : (
-                                <Heart className="h-4 w-4 text-primary" />
-                              )}
+                            <div className="p-2 rounded-full bg-yellow-500/20">
+                              <Trophy className="h-4 w-4 text-yellow-600" />
                             </div>
                             <div className="text-left">
                               <p className="font-medium text-foreground">
                                 {group.name}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {group.donations.length} contribution{group.donations.length > 1 ? 's' : ''}
+                                {group.milestoneCount} milestone{group.milestoneCount !== 1 ? 's' : ''} achieved
                               </p>
                             </div>
                           </div>
                           <div className="text-right flex items-center gap-3">
                             <div className="flex flex-col items-end">
                               <span className="text-sm font-medium text-foreground">
-                                {formatCents(group.totalCents)} total
+                                {formatCents(group.totalCents)} contributed
                               </span>
-                              {group.hasMilestone && (
-                                <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Milestone 🎉
-                                </span>
-                              )}
+                              <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                {group.milestoneCount} × $777
+                              </span>
                             </div>
                             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                           </div>
                         </motion.div>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="ml-6 mt-2 space-y-2 border-l-2 border-muted pl-4">
+                        <div className="ml-6 mt-2 space-y-2 border-l-2 border-yellow-500/30 pl-4">
                           {group.donations.map((donation, index) => (
                             <motion.div
                               key={donation.id}
@@ -849,14 +818,17 @@ export default function DonorProfile() {
                               className="flex items-center justify-between p-3 rounded-md bg-background/50 hover:bg-muted/30 transition-colors"
                             >
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-primary/50" />
+                                <div className="w-2 h-2 rounded-full bg-yellow-500" />
                                 <p className="text-sm text-muted-foreground">
                                   {formatDate(donation.created_at)}
                                 </p>
                               </div>
-                              <span className="text-sm text-foreground">
-                                {formatCents(donation.amount_cents)} contributed
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-yellow-600">
+                                  $777 milestone
+                                </span>
+                                <CheckCircle2 className="h-3.5 w-3.5 text-yellow-600" />
+                              </div>
                             </motion.div>
                           ))}
                         </div>
