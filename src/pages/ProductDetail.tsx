@@ -1,29 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useComparison } from "@/context/ComparisonContext";
 import { supabase } from "@/integrations/supabase/client";
-import VistaprintNav from "@/components/VistaprintNav";
-import ProductImageGallery from "@/components/product-detail/ProductImageGallery";
-import ProductInfo from "@/components/product-detail/ProductInfo";
-import ProductTabs from "@/components/product-detail/ProductTabs";
-import RelatedProductsCarousel from "@/components/product-detail/RelatedProductsCarousel";
-import FrequentlyBoughtCarousel from "@/components/product-detail/FrequentlyBoughtCarousel";
-import RecentlyViewed from "@/components/RecentlyViewed";
-import { toast } from "sonner";
+import VideoBackground from "@/components/VideoBackground";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Heart, Star, ShoppingCart, Scale } from "lucide-react";
+import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
+import ScalablePressConfigurator from "@/components/ScalablePressConfigurator";
 import { addRecentlyViewed } from "@/lib/recently-viewed";
-import Footer from "@/components/Footer";
+import ProductReviews from "@/components/ProductReviews";
+import ReviewForm from "@/components/ReviewForm";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import ImageGallery from "@/components/ImageGallery";
+import ArtworkUpload from "@/components/ArtworkUpload";
+import ProductDescription from "@/components/product-detail/ProductDescription";
 import { shouldShowProduct } from "@/lib/product-utils";
-
-// Remove "US" suffix from product names for display
-const cleanProductName = (name: string): string => {
-  return name
-    .replace(/\s*\(US\)\s*/gi, '')
-    .replace(/\s+-\s*US\s*$/gi, '')
-    .replace(/\s+US\s*$/gi, '')
-    .replace(/\s+-\s*US\s+-/gi, ' - ')
-    .trim();
-};
+import CompactMilestoneBar from "@/components/CompactMilestoneBar";
 
 type ProductRow = {
   id: string;
@@ -38,13 +33,19 @@ type ProductRow = {
   markup_fixed_cents?: number | null;
   markup_percent?: number | null;
   category?: string | null;
-  subcategory?: string | null;
+  min_price_variant_key?: string | null;
 };
 
 export default function ProductDetail() {
-  const { id } = useParams();
+  const { category, subcategory, productName, id: paramId } = useParams();
+  const location = useLocation();
+  // Support both: productId from state (3-level route) or id from params (simple route)
+  const productId = location.state?.productId || paramId;
+  const minPriceVariantKey = location.state?.minPriceVariantKey;
   const nav = useNavigate();
-  const { add } = useCart();
+  const { add, items } = useCart();
+  const { count: favoritesCount } = useFavorites();
+  const { add: addToComparison, remove: removeFromComparison, isInComparison, canAddMore } = useComparison();
 
   const [product, setProduct] = useState<ProductRow | null>(null);
   const [qty, setQty] = useState(1);
@@ -52,128 +53,139 @@ export default function ProductDetail() {
   const [err, setErr] = useState<string | null>(null);
   const [configuredPriceCents, setConfiguredPriceCents] = useState<number | null>(null);
   const [productConfig, setProductConfig] = useState<Record<string, string>>({});
+  const [packageInfo, setPackageInfo] = useState<any>(null);
+  const [imageError, setImageError] = useState(false);
   const [reviewsKey, setReviewsKey] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<ProductRow[]>([]);
   const [frequentlyBought, setFrequentlyBought] = useState<ProductRow[]>([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
   const [artworkFileUrl, setArtworkFileUrl] = useState<string>("");
   const [artworkFileName, setArtworkFileName] = useState<string>("");
-  const [avgRating, setAvgRating] = useState<number | undefined>(undefined);
-  const [reviewCount, setReviewCount] = useState<number>(0);
+  const [selectedColorImages, setSelectedColorImages] = useState<any[]>([]);
+  const [gallerySelectedIndex, setGallerySelectedIndex] = useState(0);
+  const [selectedColorName, setSelectedColorName] = useState<string>("");
+  const [isOutOfStock, setIsOutOfStock] = useState(false);
+  const [stockQuantity, setStockQuantity] = useState<number | undefined>(undefined);
 
-  // Fetch product and related data
+  // Fetch product by ID from Supabase
   useEffect(() => {
-    if (!id) return;
+    if (!productId) {
+      setErr("Product not found");
+      setLoading(false);
+      return;
+    }
     
     (async () => {
       setLoading(true);
       setErr(null);
       
-      try {
-        // Fetch main product
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
+      // Fetch product data first (critical path)
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", productId)
+        .maybeSingle();
         
-        if (error) {
-          setErr(error.message);
-          return;
-        }
-        
-        if (!data) {
-          setErr("Product not found");
-          return;
-        }
-
-        // Check if product should be displayed (has images, not Canada, etc.)
-        if (!shouldShowProduct(data)) {
-          toast.error("This product is currently unavailable");
-          nav("/products");
-          return;
-        }
-
+      if (error) {
+        setErr(error.message);
+        setLoading(false);
+      } else if (!data) {
+        setErr("Product not found");
+        setLoading(false);
+      } else if (!shouldShowProduct(data)) {
+        // Product exists but shouldn't be displayed (no images, Canada product, etc.)
+        toast.error("This product is currently unavailable");
+        nav("/products");
+        return;
+      } else {
         setProduct(data as ProductRow);
+        setLoading(false); // Allow page to render immediately
         
-        // Track as recently viewed
+        // Track as recently viewed with category/subcategory for proper navigation
         addRecentlyViewed({
           id: data.id,
           name: data.name,
           image_url: data.image_url,
-          category: data.category
+          category: data.category,
+          subcategory: subcategory || 'all'
         });
 
-        // Fetch reviews for rating
-        const { data: reviewsData } = await supabase
-          .from("reviews")
-          .select("rating")
-          .eq("product_id", id);
-        
-        if (reviewsData && reviewsData.length > 0) {
-          const sum = reviewsData.reduce((acc, r) => acc + r.rating, 0);
-          setAvgRating(sum / reviewsData.length);
-          setReviewCount(reviewsData.length);
-        }
+        // Load supplementary data in background (non-blocking)
+        Promise.all([
+          supabase
+            .from("reviews")
+            .select("rating")
+            .eq("product_id", productId),
+          supabase
+            .from("products")
+            .select("*")
+            .eq("category", data.category)
+            .neq("id", productId)
+            .eq("is_active", true)
+            .limit(6),
+          supabase
+            .from("products")
+            .select("*")
+            .eq("vendor", data.vendor)
+            .neq("category", data.category)
+            .neq("id", productId)
+            .eq("is_active", true)
+            .limit(6)
+        ]).then(([reviewsResult, relatedResult, frequentResult]) => {
+          if (reviewsResult.data && reviewsResult.data.length > 0) {
+            const sum = reviewsResult.data.reduce((acc, r) => acc + r.rating, 0);
+            setAvgRating(sum / reviewsResult.data.length);
+            setReviewCount(reviewsResult.data.length);
+          }
 
-        // Fetch related products (same category, exclude Canada)
-        const { data: related } = await supabase
-          .from("products")
-          .select("*")
-          .eq("category", data.category)
-          .neq("id", id)
-          .eq("is_active", true)
-          .limit(8);
-        
-        if (related) {
-          const filteredRelated = (related as ProductRow[]).filter(
-            product => !product.name.toLowerCase().includes('canada')
-          );
-          setRelatedProducts(filteredRelated);
-        }
+          if (relatedResult.data) {
+            // Filter out Canada products
+            const filteredRelated = (relatedResult.data as ProductRow[]).filter(product => !product.name.toLowerCase().includes('canada'));
+            setRelatedProducts(filteredRelated);
+          }
 
-        // Fetch frequently bought together (same vendor, different category, exclude Canada)
-        const { data: frequent } = await supabase
-          .from("products")
-          .select("*")
-          .eq("vendor", data.vendor)
-          .neq("category", data.category)
-          .neq("id", id)
-          .eq("is_active", true)
-          .limit(8);
-        
-        if (frequent) {
-          const filteredFrequent = (frequent as ProductRow[]).filter(
-            product => !product.name.toLowerCase().includes('canada')
-          );
-          setFrequentlyBought(filteredFrequent);
-        }
-      } catch (error: any) {
-        console.error("Error loading product:", error);
-        setErr(error.message || "Failed to load product");
-      } finally {
-        setLoading(false);
+          if (frequentResult.data) {
+            // Filter out Canada products
+            const filteredFrequent = (frequentResult.data as ProductRow[]).filter(product => !product.name.toLowerCase().includes('canada'));
+            setFrequentlyBought(filteredFrequent);
+          }
+        }).catch(err => {
+          console.error('[ProductDetailNew] Background data fetch error:', err);
+        });
       }
     })();
-  }, [id]);
+  }, [productId]);
 
   useEffect(() => {
-    document.title = product ? `${cleanProductName(product.name)} - Print Power Purpose` : "Product - Print Power Purpose";
+    document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
   }, [product]);
 
-  // Calculate unit price - SinaLite always requires configuration
-  const requiresConfiguration = product?.vendor === 'sinalite' || (product?.pricing_data && 
+  // Check if product requires configuration
+  const requiresConfiguration = product?.pricing_data && 
     Array.isArray(product.pricing_data) && 
-    product.pricing_data.length > 0);
+    product.pricing_data.length > 0;
   
   const isConfigured = configuredPriceCents !== null;
-  const hasArtwork = Boolean(artworkFileUrl && artworkFileName);
-  const canAddToCart: boolean = (!requiresConfiguration || isConfigured) && hasArtwork;
+  
+  // Check if artwork is uploaded (required for all products)
+  const hasArtwork = artworkFileUrl && artworkFileName;
+  
+  // For Scalable Press products, also check stock status
+  const isScalablePressOutOfStock = product?.vendor === 'scalablepress' && isOutOfStock;
+  
+  const canAddToCart = (!requiresConfiguration || isConfigured) && hasArtwork && !isScalablePressOutOfStock;
 
+  // Calculate price
   let unitCents: number;
-  if (configuredPriceCents !== null) {
+  if (configuredPriceCents !== null && configuredPriceCents > 0) {
     unitCents = configuredPriceCents;
   } else if (product && product.vendor === "sinalite") {
+    // SinaLite products require configuration - show 0 until configured
     unitCents = 0;
+  } else if (product && product.vendor === "scalablepress") {
+    // Scalable Press should use configuredPriceCents or base_cost_cents fallback
+    unitCents = configuredPriceCents ?? product.base_cost_cents;
   } else if (product) {
     const markup_fixed = product.markup_fixed_cents ?? 0;
     const markup_percent = product.markup_percent ?? 0;
@@ -188,159 +200,497 @@ export default function ProductDetail() {
   function handleAddToCart() {
     if (!product || !canAddToCart) return;
     
+    // Determine the correct image URL - use selected color image if available
+    let imageToUse = product.image_url;
+    if (selectedColorImages.length > 0) {
+      const firstColorImage = selectedColorImages[0];
+      imageToUse = typeof firstColorImage === 'string' ? firstColorImage : firstColorImage?.url;
+    }
+    
     add(
       {
         id: product.id,
         name: product.name,
         priceCents: unitCents,
-        imageUrl: product.image_url,
+        imageUrl: imageToUse,
         currency: product.currency || "USD",
+        configuration: productConfig,
+        artworkUrl: artworkFileUrl,
+        artworkFileName: artworkFileName,
       },
       Math.max(1, Number(qty))
     );
     
-    toast.success(`Added ${qty} ${product.name} to cart`, {
-      description: "Product has been added to your cart",
-      action: {
-        label: "View Cart",
-        onClick: () => nav("/cart")
-      }
+    // Show success toast
+    toast.success("Product added to cart!", {
+      description: "You can continue shopping or go to cart to checkout.",
     });
   }
 
-  function handleCheckout() {
-    if (!product || !canAddToCart) return;
-    
-    // Add to cart first
-    add(
-      {
-        id: product.id,
-        name: product.name,
-        priceCents: unitCents,
-        imageUrl: product.image_url,
-        currency: product.currency || "USD",
-      },
-      Math.max(1, Number(qty))
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <p className="text-white">Loading product...</p>
+      </div>
     );
-    
-    // Navigate to checkout
-    nav("/checkout");
   }
 
-  const handleReviewSubmit = () => {
-    setReviewsKey(prev => prev + 1);
+  if (err || !product) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{err || "Product not found"}</p>
+          <Button onClick={() => nav("/products")}>Back to Products</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Build image gallery array - prioritize selected color images
+  const galleryImages: Array<{ url: string; label?: string }> = [];
+  
+  // For Scalable Press products with a selected color, only show that color's images
+  const isScalablePressWithColor = product?.vendor === 'scalablepress' && selectedColorName;
+  
+  // If a color is selected and has images, show those
+  if (selectedColorImages.length > 0) {
+    selectedColorImages.forEach((img: any, idx: number) => {
+      const imageUrl = typeof img === 'string' ? img : img.url;
+      if (imageUrl && !galleryImages.some(g => g.url === imageUrl)) {
+        galleryImages.push({ 
+          url: imageUrl, 
+          label: idx === 0 ? selectedColorName || 'Selected Color' : `View ${idx + 1}`
+        });
+      }
+    });
+  }
+  
+  // Add main product image only if NOT a Scalable Press product with a selected color that has no images
+  if (product?.image_url && !imageError && !isScalablePressWithColor && !galleryImages.some(g => g.url === product?.image_url)) {
+    galleryImages.push({ url: product.image_url, label: "Main" });
+  }
+  
+  // Flag to show "No image available" for selected color
+  const showNoImageForColor = isScalablePressWithColor && selectedColorImages.length === 0;
+
+  // Handle color change from ScalablePressConfigurator
+  const handleScalablePressColorChange = (color: { name: string; images?: any[] }) => {
+    // Get display name (primary color before "/")
+    const displayName = color.name ? color.name.split('/')[0].split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ') : color.name;
+    
+    setSelectedColorName(displayName);
+    if (color.images && color.images.length > 0) {
+      setSelectedColorImages(color.images);
+      setGallerySelectedIndex(0); // Reset to first image of new color
+    } else {
+      // Clear color-specific images to show default product image
+      setSelectedColorImages([]);
+      setGallerySelectedIndex(0);
+    }
   };
 
-  // Get product images (support for multiple images in the future)
-  const productImages = product?.image_url ? [product.image_url] : [];
-
   return (
-    <div className="min-h-screen bg-white">
-      <VistaprintNav />
-      
-      {/* Main Content */}
-      <div className="pt-20">
-        {loading ? (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="text-center text-gray-600">Loading product…</div>
+    <div className="fixed inset-0 bg-background text-foreground">
+      {/* Top bar */}
+      <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between backdrop-blur bg-background/80 border-b border-border">
+        <Button
+          onClick={() => nav("/products")}
+          variant="outline"
+          size="sm"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Products
+        </Button>
+        
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <a
+            href="/"
+            className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
+          >
+            PRINT POWER PURPOSE
+          </a>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => nav("/favorites")}
+            className="relative"
+          >
+            <Heart className="w-4 h-4" />
+            {favoritesCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {favoritesCount}
+              </span>
+            )}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => nav("/cart")}
+            className="relative"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            {items.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {items.length}
+              </span>
+            )}
+          </Button>
+        </div>
+      </header>
+
+      {/* Scrollable content */}
+      <div className="h-full overflow-y-auto scroll-smooth pt-16">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Milestone Progress Bar */}
+          <CompactMilestoneBar />
+
+          {/* Breadcrumb */}
+          <div className="text-sm text-muted-foreground mb-6">
+            <button onClick={() => nav("/")} className="hover:text-foreground">Home</button>
+            {" / "}
+            <button onClick={() => nav("/products")} className="hover:text-foreground">Products</button>
+            {product.category && (
+              <>
+                {" / "}
+                <span>{product.category}</span>
+              </>
+            )}
+            {" / "}
+            <span className="text-foreground">{product.name}</span>
           </div>
-        ) : err ? (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="text-center">
-              <p className="text-red-600 mb-4">{err || "Product not found"}</p>
-              <button
-                onClick={() => nav("/products")}
-                className="text-blue-600 hover:text-blue-700 underline"
-              >
-                ← Back to products
-              </button>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Left: Product Image Gallery */}
+            <div>
+              {galleryImages.length > 0 ? (
+                <ImageGallery
+                  images={galleryImages}
+                  alt={product.name}
+                  onError={() => setImageError(true)}
+                  selectedIndex={gallerySelectedIndex}
+                  colorLabel={product.vendor === 'scalablepress' && selectedColorName ? selectedColorName : undefined}
+                  hideThumbnails={product.vendor === 'scalablepress'}
+                />
+              ) : showNoImageForColor ? (
+                <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-center p-6">
+                      <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-muted-foreground text-sm mt-3">No image available for {selectedColorName}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="aspect-square rounded-xl overflow-hidden bg-muted border border-border">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-center p-6">
+                      <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-muted-foreground text-sm mt-3">No image available</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ) : product ? (
-          <>
-            {/* Top Section: Two-Column Layout */}
-            <section className="bg-white py-8 md:py-12">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-                  {/* Left Column: Image Gallery */}
-                  <div className="md:sticky md:top-24 md:self-start">
-                    <ProductImageGallery
-                      images={productImages}
+
+            {/* Right: Product Details */}
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+                
+                {/* Rating */}
+                {reviewCount > 0 && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={cn(
+                            "w-4 h-4",
+                            star <= avgRating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {avgRating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+                    </span>
+                  </div>
+                )}
+
+                {/* Price */}
+                {unitPrice > 0 ? (
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold">${unitPrice.toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground ml-2">per unit</span>
+                  </div>
+                ) : product?.vendor === 'sinalite' ? (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary/30 border-t-primary"></div>
+                      <span className="text-sm text-muted-foreground">Loading price...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-4">
+                    Configure product to see pricing
+                  </p>
+                )}
+
+                {/* Description */}
+                {product.description && (
+                  <div className="mb-6">
+                    <ProductDescription 
+                      description={product.description} 
                       productName={product.name}
                     />
                   </div>
+                )}
+              </div>
 
-                  {/* Right Column: Product Info */}
+              {/* Configuration for SinaLite Products - always show for SinaLite, loader fetches data on-demand */}
+              {product.vendor === 'sinalite' && (
+                <div className="border border-border rounded-lg p-4 bg-muted/30">
+                  <h3 className="font-semibold mb-4">Product Options</h3>
+                  <ProductConfiguratorLoader
+                    productId={product.id}
+                    onPriceChange={setConfiguredPriceCents}
+                    onConfigChange={setProductConfig}
+                    onQuantityOptionsChange={() => {}}
+                    defaultVariantKey={minPriceVariantKey || product.min_price_variant_key}
+                  />
+                </div>
+              )}
+              
+              {/* Configuration for Scalable Press Products */}
+              {product.vendor === 'scalablepress' && product.pricing_data && (product.pricing_data.colors || product.pricing_data.items) && (
+                <div className="border border-border rounded-lg p-4 bg-muted/30">
+                  <h3 className="font-semibold mb-4">Product Options</h3>
+                  <ScalablePressConfigurator
+                    productId={product.id}
+                    productName={product.name}
+                    pricingData={product.pricing_data}
+                    mainProductImage={product.image_url || undefined}
+                    onPriceChange={setConfiguredPriceCents}
+                    onConfigChange={setProductConfig}
+                    onColorChange={handleScalablePressColorChange}
+                    onStockStatusChange={(outOfStock, qty) => {
+                      setIsOutOfStock(outOfStock);
+                      setStockQuantity(qty);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Artwork Upload Section - REQUIRED */}
+              <div className="w-full p-8 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 rounded-2xl border-4 border-blue-400 dark:border-blue-600 shadow-lg">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
                   <div>
-                    <ProductInfo
-                      product={product}
-                      unitPrice={unitPrice}
-                      quantity={qty}
-                      onQuantityChange={setQty}
-                      onPriceChange={setConfiguredPriceCents}
-                      onConfigChange={setProductConfig}
-                      onAddToCart={handleAddToCart}
-                      onCheckout={handleCheckout}
-                      canAddToCart={canAddToCart}
-                      avgRating={avgRating}
-                      reviewCount={reviewCount}
-                      artworkFileUrl={artworkFileUrl}
-                      artworkFileName={artworkFileName}
-                      onArtworkUpload={(fileUrl, fileName) => {
-                        setArtworkFileUrl(fileUrl);
-                        setArtworkFileName(fileName);
-                      }}
-                    />
+                    <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-100">Upload Your Artwork</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">Required before adding to cart</p>
                   </div>
                 </div>
-              </div>
-            </section>
-
-            {/* Banner / Promotional Section */}
-            <section className="bg-blue-600 py-6">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center text-white">
-                  <p className="text-lg font-semibold">
-                    🎉 Every purchase supports a nonprofit of your choice! 🎉
-                  </p>
-                  <p className="text-sm mt-1 opacity-90">
-                    Choose your cause at checkout and make an impact with every order
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* Product Details Tabs Section */}
-            <section className="bg-white py-12">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <ProductTabs
-                  product={product}
-                  reviewsKey={reviewsKey}
-                  onReviewSubmit={handleReviewSubmit}
+                <ArtworkUpload
+                  productId={product.id}
+                  productName={product.name}
+                  onUploadComplete={(fileUrl, fileName) => {
+                    setArtworkFileUrl(fileUrl);
+                    setArtworkFileName(fileName);
+                  }}
+                  initialFileUrl={artworkFileUrl}
+                  initialFileName={artworkFileName}
                 />
               </div>
-            </section>
 
-            {/* Related Products Carousel */}
-            {relatedProducts.length > 0 && (
-              <RelatedProductsCarousel products={relatedProducts} />
-            )}
-
-            {/* Frequently Bought Together Carousel */}
-            {frequentlyBought.length > 0 && (
-              <FrequentlyBoughtCarousel products={frequentlyBought} />
-            )}
-
-            {/* Recently Viewed Section */}
-            <section className="bg-gray-50 py-12">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <RecentlyViewed />
+              {/* Quantity */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Quantity</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={qty}
+                  onChange={(e) => setQty(Math.max(1, Number(e.target.value || 1)))}
+                  className="w-32 rounded-lg border border-border bg-background px-4 py-2 outline-none focus:ring-2 focus:ring-ring"
+                />
               </div>
-            </section>
-          </>
-        ) : null}
+
+              {requiresConfiguration && !isConfigured && (
+                <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                  Please select product options above before adding to cart
+                </p>
+              )}
+              
+              {!hasArtwork && (
+                <p className="text-sm text-amber-600 dark:text-amber-400 font-semibold">
+                  ⚠️ Please upload your artwork before adding to cart
+                </p>
+              )}
+              
+              {isScalablePressOutOfStock && (
+                <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400 font-semibold flex items-center gap-2">
+                    <span className="inline-block w-3 h-3 bg-red-500 rounded-full"></span>
+                    {productConfig.color ? `The selected color "${productConfig.color}" is out of stock` : 'Selected configuration is out of stock'}
+                  </p>
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                    Please select a different color or size to continue.
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={!canAddToCart}
+                  size="lg"
+                  className="flex-1"
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Add to Cart
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    const isInCompare = isInComparison(product.id);
+                    if (isInCompare) {
+                      removeFromComparison(product.id);
+                      toast.success("Removed from comparison");
+                    } else {
+                      if (!canAddMore) {
+                        toast.error("Maximum 4 products can be compared");
+                        return;
+                      }
+                      addToComparison({
+                        id: product.id,
+                        name: product.name,
+                        description: product.description,
+                        base_cost_cents: unitPrice * 100 || product.base_cost_cents,
+                        image_url: product.image_url,
+                        category: product.category,
+                        vendor: product.vendor,
+                        pricing_data: product.pricing_data,
+                      });
+                      toast.success("Added to comparison");
+                    }
+                  }}
+                  variant="outline"
+                  size="lg"
+                  className="flex-1"
+                >
+                  <Scale className="mr-2 h-4 w-4" />
+                  {isInComparison(product.id) ? "Remove from Compare" : "Add to Compare"}
+                </Button>
+
+                <Button
+                  onClick={() => nav("/checkout", { state: { productId: product.id, qty } })}
+                  disabled={!canAddToCart}
+                  variant="outline"
+                  size="lg"
+                  className="flex-1"
+                >
+                  Checkout Now
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Details Section */}
+          <div className="mt-12 border-t border-border pt-8">
+            <h2 className="text-2xl font-bold mb-6">Product Details</h2>
+            {product.description ? (
+              <ProductDescription 
+                description={product.description} 
+                productName={product.name}
+              />
+            ) : (
+              <p className="text-muted-foreground">
+                High-quality printing with fast turnaround times. Every order supports a cause of your choice.
+              </p>
+            )}
+            {packageInfo && (
+              <div className="mt-4 p-4 bg-muted rounded-lg">
+                <h4 className="font-semibold mb-2">Package Information</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {packageInfo["total weight"] && (
+                    <div><span className="font-medium">Weight:</span> {packageInfo["total weight"]} lbs</div>
+                  )}
+                  {packageInfo["box size"] && (
+                    <div><span className="font-medium">Box Size:</span> {packageInfo["box size"]}"</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Related Products */}
+          {relatedProducts.length > 0 && (
+            <div className="mt-12 border-t border-border pt-8">
+              <h2 className="text-2xl font-bold mb-6">Related Products</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {relatedProducts.map((p) => {
+                  const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                  const categorySlug = slugify(p.category || 'uncategorized');
+                  const subcategorySlug = 'all'; // Related products don't have subcategory, default to 'all'
+                  const productSlug = slugify(p.name);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => nav(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: { productId: p.id } })}
+                      className="cursor-pointer group"
+                    >
+                      <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border mb-2">
+                        {p.image_url ? (
+                          <img 
+                            src={p.image_url} 
+                            alt={p.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <svg className="w-12 h-12 text-muted-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                        {p.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        From ${(p.base_cost_cents / 100).toFixed(2)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Reviews Section */}
+          <div className="mt-12 border-t border-border pt-8">
+            <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
+            <div className="space-y-6">
+              <ReviewForm productId={product.id} onReviewSubmitted={() => setReviewsKey(prev => prev + 1)} />
+              <ProductReviews key={reviewsKey} productId={product.id} />
+            </div>
+          </div>
+        </div>
       </div>
-      <Footer />
     </div>
   );
 }

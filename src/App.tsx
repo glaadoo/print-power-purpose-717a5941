@@ -70,7 +70,6 @@ const Causes          = lazyPage("Causes",          () => import("./pages/Causes
 const Donate          = lazyPage("Donate",          () => import("./pages/Donate"));
 const Products        = lazyPage("Products",        () => import("./pages/Products"));
 const ProductDetail   = lazyPage("ProductDetail",   () => import("./pages/ProductDetail"));
-const ProductDetailNew = lazyPage("ProductDetailNew", () => import("./pages/ProductDetailNew"));
 const ProductSubcategory = lazyPage("ProductSubcategory", () => import("./pages/ProductSubcategory"));
 const Favorites       = lazyPage("Favorites",       () => import("./pages/Favorites"));
 const Success         = lazyPage("Success",         () => import("./pages/Success"));
@@ -416,9 +415,9 @@ export default function App() {
           <Route
             path="/products/:category/:subcategory/:productName"
             element={
-              <RouteBoundary name="ProductDetailNew">
+              <RouteBoundary name="ProductDetail">
                 <ProtectedRoute>
-                  <ProductDetailNew />
+                  <ProductDetail />
                 </ProtectedRoute>
               </RouteBoundary>
             }
