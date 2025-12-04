@@ -14,7 +14,10 @@ import {
   Gift,
   Target,
   Building2,
-  TrendingUp
+  TrendingUp,
+  HelpCircle,
+  CheckCircle2,
+  Lock
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { 
@@ -33,14 +36,22 @@ import {
   getUncelebratedMilestones, 
   markMilestonesAsCelebrated 
 } from "@/hooks/useUnseenMilestones";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import confetti from "canvas-confetti";
 
 interface Donation {
   id: string;
   amount_cents: number;
+  amount_total_cents: number;
   created_at: string;
   nonprofit_name: string | null;
   nonprofit_ein: string | null;
+  is_milestone: boolean;
 }
 
 interface SupportedNonprofit {
@@ -48,6 +59,8 @@ interface SupportedNonprofit {
   nonprofit_name: string | null;
   total_donated: number;
   milestones_contributed: number;
+  progress_cents: number;
+  last_order_date: string | null;
 }
 
 export default function DonorProfile() {
@@ -102,27 +115,31 @@ export default function DonorProfile() {
 
         console.log('[DonorProfile] Orders fetched:', orderData);
         
+        const MILESTONE_PURCHASE_THRESHOLD = 155400; // $1554
+        const MILESTONE_TARGET = 77700; // $777
+        
         // Convert orders to donation-like format for display
         const donationList: Donation[] = (orderData || []).map(o => ({
           id: o.id,
           amount_cents: o.donation_cents || 0,
+          amount_total_cents: o.amount_total_cents || 0,
           created_at: o.created_at,
           nonprofit_name: o.nonprofit_name,
-          nonprofit_ein: null
+          nonprofit_ein: null,
+          is_milestone: (o.amount_total_cents || 0) >= MILESTONE_PURCHASE_THRESHOLD
         }));
         setDonations(donationList);
         
         const totalDonations = donationList.reduce((sum, d) => sum + d.amount_cents, 0);
         setTotalDonatedCents(totalDonations);
         
-        // Calculate milestones completed: each order > $1554 (155400 cents) = 1 milestone
-        const MILESTONE_PURCHASE_THRESHOLD = 155400; // $1554
+        // Calculate milestones completed: each order >= $1554 = 1 milestone
         const milestones = (orderData || []).filter(
           order => (order.amount_total_cents || 0) >= MILESTONE_PURCHASE_THRESHOLD
         ).length;
         setMilestonesCompleted(milestones);
 
-        // Aggregate nonprofits supported (unique nonprofits with any purchase)
+        // Aggregate nonprofits supported with progress tracking
         const nonprofitMap = new Map<string, SupportedNonprofit>();
         (orderData || []).forEach(o => {
           if (!o.nonprofit_name) return;
@@ -133,15 +150,23 @@ export default function DonorProfile() {
           
           if (existing) {
             existing.total_donated += orderDonation;
+            // Track progress toward $777 (reset after each milestone)
+            existing.progress_cents = (existing.progress_cents + orderDonation) % MILESTONE_TARGET;
             if (isMilestoneOrder) {
               existing.milestones_contributed += 1;
+              existing.progress_cents = 0; // Reset progress after milestone
+            }
+            if (!existing.last_order_date || o.created_at > existing.last_order_date) {
+              existing.last_order_date = o.created_at;
             }
           } else {
             nonprofitMap.set(key, {
               nonprofit_id: o.nonprofit_id,
               nonprofit_name: o.nonprofit_name,
               total_donated: orderDonation,
-              milestones_contributed: isMilestoneOrder ? 1 : 0
+              milestones_contributed: isMilestoneOrder ? 1 : 0,
+              progress_cents: isMilestoneOrder ? 0 : orderDonation % MILESTONE_TARGET,
+              last_order_date: o.created_at
             });
           }
         });
@@ -273,55 +298,77 @@ export default function DonorProfile() {
         </div>
 
         {/* Stats Overview - Milestones Focused */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-yellow-500/20 rounded-full">
-                  <Target className="h-6 w-6 text-yellow-600" />
+        <TooltipProvider>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/20">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-yellow-500/20 rounded-full">
+                    <CheckCircle2 className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground">Verified Milestone Impact</p>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[280px]">
+                          <p>A milestone is achieved only when a nonprofit reaches $777 AND your payment is completed.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <p className="text-3xl font-bold text-foreground">
+                      {milestonesCompleted}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Milestones Completed</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {milestonesCompleted}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-amber-500/20 rounded-full">
-                  <Trophy className="h-6 w-6 text-amber-500" />
+            <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-amber-500/20 rounded-full">
+                    <Trophy className="h-6 w-6 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Current Badge</p>
+                    <p className="text-xl font-bold text-foreground">
+                      {currentBadge?.name || "Getting Started"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Current Badge</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {currentBadge?.name || "Getting Started"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-emerald-500/20 rounded-full">
-                  <Building2 className="h-6 w-6 text-emerald-500" />
+            <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-emerald-500/20 rounded-full">
+                    <Heart className="h-6 w-6 text-emerald-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground">Nonprofits You've Helped</p>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[280px]">
+                          <p>Total number of unique nonprofits you've supported through your purchases.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <p className="text-3xl font-bold text-foreground">
+                      {supportedNonprofits.filter(n => n.nonprofit_name).length}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Nonprofits Supported</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {supportedNonprofits.filter(n => n.nonprofit_name).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TooltipProvider>
 
         {/* Progress to Next Badge */}
         {nextBadge && (
@@ -360,44 +407,83 @@ export default function DonorProfile() {
           </p>
         </div>
 
-        {/* Nonprofits Supported Timeline */}
+        {/* Your Impact Journey - Per Nonprofit Progress */}
         {supportedNonprofits.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-500" />
-                Nonprofits You've Empowered
+                Your Impact Journey
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {supportedNonprofits.filter(n => n.nonprofit_name).map((np, index) => (
-                  <motion.div
-                    key={np.nonprofit_name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-500/10 rounded-full">
-                        <Building2 className="h-5 w-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{np.nonprofit_name}</p>
-                        {np.milestones_contributed > 0 && (
-                          <p className="text-sm text-muted-foreground">
-                            Contributed to {np.milestones_contributed} milestone{np.milestones_contributed !== 1 ? 's' : ''}
-                          </p>
+                {supportedNonprofits.filter(n => n.nonprofit_name).map((np, index) => {
+                  const MILESTONE_TARGET = 77700;
+                  const progressPercent = Math.round((np.progress_cents / MILESTONE_TARGET) * 100);
+                  const hasMilestones = np.milestones_contributed > 0;
+                  
+                  return (
+                    <motion.div
+                      key={np.nonprofit_name}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`p-4 rounded-lg transition-colors ${
+                        hasMilestones 
+                          ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/20' 
+                          : 'bg-muted/30 hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${
+                            hasMilestones ? 'bg-yellow-500/20' : 'bg-emerald-500/10'
+                          }`}>
+                            {hasMilestones ? (
+                              <Trophy className="h-5 w-5 text-yellow-600" />
+                            ) : (
+                              <Heart className="h-5 w-5 text-emerald-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{np.nonprofit_name}</p>
+                            {hasMilestones ? (
+                              <p className="text-sm text-yellow-600 font-medium">
+                                🏆 {np.milestones_contributed} Milestone{np.milestones_contributed !== 1 ? 's' : ''} Achieved 🎉
+                              </p>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">
+                                Progress: {formatCents(np.progress_cents)} / $777
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {hasMilestones && np.last_order_date && (
+                          <span className="text-xs text-muted-foreground">
+                            Last: {formatDate(np.last_order_date)}
+                          </span>
                         )}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-yellow-600">
-                      <Target className="h-4 w-4" />
-                      <span className="font-bold">{np.milestones_contributed}</span>
-                    </div>
-                  </motion.div>
-                ))}
+                      
+                      {/* Progress Bar */}
+                      {!hasMilestones || np.progress_cents > 0 ? (
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Impact Status: {progressPercent}% to Milestone 🎯</span>
+                            <span>{formatCents(MILESTONE_TARGET - np.progress_cents)} remaining</span>
+                          </div>
+                          <Progress value={progressPercent} className="h-2" />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-yellow-600 bg-yellow-500/10 rounded-md px-3 py-2">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>Impact Verified: ${(np.milestones_contributed * 777).toLocaleString()} Completed</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -443,7 +529,7 @@ export default function DonorProfile() {
               </div>
             )}
 
-            {/* Locked Badges Preview */}
+            {/* Locked & In-Progress Badges Preview */}
             {achievedBadges.length < MILESTONE_BADGE_TIERS.length && (
               <div className="mt-8">
                 <h4 className="text-sm font-medium text-muted-foreground mb-4">
@@ -453,20 +539,48 @@ export default function DonorProfile() {
                   {MILESTONE_BADGE_TIERS.filter(
                     (tier) => !achievedBadges.find((a) => a.id === tier.id)
                   ).map((tier) => {
+                    const isNextBadge = nextBadge?.id === tier.id;
+                    const tierProgress = isNextBadge ? progress.percentage : 0;
+                    
                     return (
                       <div
                         key={tier.id}
-                        className="flex flex-col items-center p-4 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20 opacity-50"
+                        className={`relative flex flex-col items-center p-4 rounded-xl border transition-all ${
+                          isNextBadge 
+                            ? 'bg-gradient-to-b from-primary/5 to-transparent border-primary/30' 
+                            : 'bg-muted/30 border-dashed border-muted-foreground/20 opacity-50'
+                        }`}
                       >
-                        <div className="p-3 bg-muted rounded-full mb-2 text-2xl">
+                        {/* Lock icon for fully locked badges */}
+                        {!isNextBadge && (
+                          <div className="absolute top-2 right-2">
+                            <Lock className="h-3 w-3 text-muted-foreground/40" />
+                          </div>
+                        )}
+                        
+                        <div className={`p-3 rounded-full mb-2 text-2xl ${
+                          isNextBadge ? 'bg-primary/10' : 'bg-muted'
+                        }`}>
                           {tier.icon}
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground">
+                        <span className={`text-xs font-medium ${
+                          isNextBadge ? 'text-foreground' : 'text-muted-foreground'
+                        }`}>
                           {tier.name}
                         </span>
                         <span className="text-[10px] text-muted-foreground">
                           {tier.milestonesRequired} milestones
                         </span>
+                        
+                        {/* Progress indicator for next badge */}
+                        {isNextBadge && (
+                          <div className="w-full mt-2 space-y-1">
+                            <Progress value={tierProgress} className="h-1.5" />
+                            <p className="text-[10px] text-center text-primary font-medium">
+                              {milestonesCompleted}/{tier.milestonesRequired} ({tierProgress}%)
+                            </p>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -497,7 +611,6 @@ export default function DonorProfile() {
             ) : (
               <div className="space-y-3">
                 {donations.slice(0, 10).map((donation, index) => {
-                  const isMilestoneContribution = donation.amount_cents >= 77700;
                   return (
                     <motion.div
                       key={donation.id}
@@ -505,18 +618,18 @@ export default function DonorProfile() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
-                        isMilestoneContribution 
-                          ? 'bg-yellow-500/10 border border-yellow-500/20' 
+                        donation.is_milestone 
+                          ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/20' 
                           : 'bg-muted/30 hover:bg-muted/50'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full ${
-                          isMilestoneContribution 
+                          donation.is_milestone 
                             ? 'bg-yellow-500/20' 
                             : 'bg-primary/10'
                         }`}>
-                          {isMilestoneContribution ? (
+                          {donation.is_milestone ? (
                             <Trophy className="h-4 w-4 text-yellow-600" />
                           ) : (
                             <Heart className="h-4 w-4 text-primary" />
@@ -531,10 +644,15 @@ export default function DonorProfile() {
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        {isMilestoneContribution && (
-                          <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full font-medium">
-                            🎯 Milestone
+                      <div className="text-right flex flex-col items-end gap-1">
+                        {donation.is_milestone ? (
+                          <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Milestone Achieved 🎉
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {formatCents(donation.amount_cents)} contributed
                           </span>
                         )}
                       </div>
