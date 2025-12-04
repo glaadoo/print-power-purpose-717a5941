@@ -7,7 +7,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { Menu } from "lucide-react";
 import Footer from "@/components/Footer";
-import kenzieMascot from "@/assets/kenzie-sitting-smile.png";
+import kenzieMascot from "@/assets/kenzie-power-mascot.jpg";
 
 export default function Welcome() {
   const navigate = useNavigate();
