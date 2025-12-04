@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Trophy, Sparkles, PartyPopper } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Trophy, Sparkles, PartyPopper, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Progress } from "@/components/ui/progress";
@@ -14,6 +14,8 @@ export default function CompactMilestoneBar() {
   const { totalCents } = useCart();
   const [showCelebration, setShowCelebration] = useState(false);
   const [hasTriggeredCelebration, setHasTriggeredCelebration] = useState(false);
+  const [showCartMilestoneCelebration, setShowCartMilestoneCelebration] = useState(false);
+  const cartMilestoneTriggeredRef = useRef(false);
 
   if (!nonprofit) return null;
 
@@ -48,6 +50,30 @@ export default function CompactMilestoneBar() {
     currency: "USD",
     minimumFractionDigits: 0,
   });
+
+  // Trigger mini celebration when cart reaches $777 milestone threshold
+  useEffect(() => {
+    if (wouldReachGoalWithCart && hasCartItems && !cartMilestoneTriggeredRef.current && !isActualGoalReached) {
+      cartMilestoneTriggeredRef.current = true;
+      setShowCartMilestoneCelebration(true);
+
+      // Fire mini confetti burst
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7, x: 0.5 },
+        colors: ["#FFD700", "#10B981", "#6366F1"],
+      });
+
+      // Hide after animation
+      setTimeout(() => setShowCartMilestoneCelebration(false), 5000);
+    }
+    
+    // Reset if cart goes below threshold
+    if (!wouldReachGoalWithCart && cartMilestoneTriggeredRef.current) {
+      cartMilestoneTriggeredRef.current = false;
+    }
+  }, [wouldReachGoalWithCart, hasCartItems, isActualGoalReached]);
 
   // Only trigger celebration for ACTUAL paid milestones, not projections
   useEffect(() => {
@@ -88,7 +114,46 @@ export default function CompactMilestoneBar() {
 
   return (
     <div className="bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6 shadow-sm">
-      {/* Celebration Animation */}
+      {/* Cart Milestone Reached Celebration (Not yet purchased) */}
+      <AnimatePresence>
+        {showCartMilestoneCelebration && !isActualGoalReached && (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: -20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: -20 }}
+            className="mb-4 p-4 rounded-xl bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-100 border-2 border-yellow-400"
+          >
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <motion.div
+                animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 1 }}
+              >
+                <PartyPopper className="h-7 w-7 text-amber-600" />
+              </motion.div>
+              <div className="text-center">
+                <motion.p
+                  className="font-bold text-amber-700 text-lg"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  🎉 You're almost there!
+                </motion.p>
+                <p className="text-sm text-amber-600">
+                  You've reached your <span className="font-bold">$777 milestone goal</span> — now complete the purchase to unlock your impact!
+                </p>
+              </div>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
+                <Star className="h-6 w-6 text-yellow-500 fill-yellow-400" />
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Actual Paid Milestone Celebration */}
       <AnimatePresence>
         {showCelebration && (
           <motion.div
@@ -133,6 +198,8 @@ export default function CompactMilestoneBar() {
           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
             isActualGoalReached 
               ? "bg-yellow-100 text-yellow-600" 
+              : wouldReachGoalWithCart
+              ? "bg-amber-100 text-amber-600"
               : "bg-emerald-100 text-emerald-600"
           }`}>
             <Trophy className="h-5 w-5" />
@@ -147,7 +214,7 @@ export default function CompactMilestoneBar() {
                 {nonprofit.name}
               </p>
               <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
-                Milestone #{milestoneCount + 1}
+                Working on Milestone #{milestoneCount + 1}
               </span>
             </div>
             <span className="text-sm font-bold text-primary ml-2">{progressPercent.toFixed(0)}%</span>
@@ -155,7 +222,13 @@ export default function CompactMilestoneBar() {
           
           <Progress 
             value={progressPercent} 
-            className={`h-2 ${isActualGoalReached ? '[&>div]:bg-yellow-500' : ''}`}
+            className={`h-2 ${
+              isActualGoalReached 
+                ? '[&>div]:bg-yellow-500' 
+                : wouldReachGoalWithCart 
+                ? '[&>div]:bg-amber-500'
+                : ''
+            }`}
           />
           
           <div className="flex flex-col text-xs mt-1 gap-1">
@@ -167,7 +240,7 @@ export default function CompactMilestoneBar() {
                 </div>
                 {hasCartItems && wouldReachGoalWithCart && (
                   <p className="text-amber-600 text-center font-medium">
-                    🎯 Your purchase will complete this milestone!
+                    🎯 Complete your purchase to unlock this milestone!
                   </p>
                 )}
                 {hasCartItems && !wouldReachGoalWithCart && (
@@ -177,7 +250,9 @@ export default function CompactMilestoneBar() {
                 )}
               </>
             ) : (
-              <span className="text-yellow-600 font-medium text-center w-full">🎉 Milestone #{milestoneCount + 1} Complete!</span>
+              <span className="text-yellow-600 font-medium text-center w-full">
+                🎉 Milestone #{milestoneCount + 1} Complete!
+              </span>
             )}
           </div>
         </div>

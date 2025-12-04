@@ -11,17 +11,20 @@ import {
   Heart, 
   Trophy,
   Sparkles,
-  Gift
+  Gift,
+  Target,
+  Building2,
+  TrendingUp
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { 
-  MILESTONE_TIERS, 
-  getAchievedTiers, 
-  getCurrentTier, 
-  getNextTier,
-  getProgressToNextTier,
+  MILESTONE_BADGE_TIERS, 
+  getAchievedMilestoneBadges, 
+  getCurrentMilestoneBadge, 
+  getNextMilestoneBadge,
+  getProgressToNextMilestoneBadge,
   formatCents,
-  MilestoneTier 
+  MilestoneBadgeTier 
 } from "@/lib/milestone-tiers";
 import MilestoneAchievementBadge from "@/components/MilestoneAchievementBadge";
 import { Progress } from "@/components/ui/progress";
@@ -40,6 +43,13 @@ interface Donation {
   nonprofit_ein: string | null;
 }
 
+interface SupportedNonprofit {
+  nonprofit_id: string | null;
+  nonprofit_name: string | null;
+  total_donated: number;
+  milestones_contributed: number;
+}
+
 export default function DonorProfile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -47,6 +57,8 @@ export default function DonorProfile() {
   const [userName, setUserName] = useState<string | null>(null);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [totalDonatedCents, setTotalDonatedCents] = useState(0);
+  const [milestonesCompleted, setMilestonesCompleted] = useState(0);
+  const [supportedNonprofits, setSupportedNonprofits] = useState<SupportedNonprofit[]>([]);
   const [showCelebration, setShowCelebration] = useState(false);
   const celebrationTriggered = useRef(false);
 
@@ -61,7 +73,7 @@ export default function DonorProfile() {
           return;
         }
 
-        console.log('[DonorProfile] Fetching Printing + Purpose contributions for:', user.email);
+        console.log('[DonorProfile] Fetching impact data for:', user.email);
         setUserEmail(user.email);
 
         // Fetch user name from profiles
@@ -94,8 +106,31 @@ export default function DonorProfile() {
           (sum, d) => sum + (d.amount_cents || 0), 
           0
         );
-        console.log('[DonorProfile] Total contributed cents:', total);
         setTotalDonatedCents(total);
+        
+        // Calculate milestones completed ($777 = 77700 cents)
+        const milestones = Math.floor(total / 77700);
+        setMilestonesCompleted(milestones);
+
+        // Aggregate nonprofits supported
+        const nonprofitMap = new Map<string, SupportedNonprofit>();
+        (donationData || []).forEach(d => {
+          const key = d.nonprofit_name || 'General';
+          const existing = nonprofitMap.get(key);
+          if (existing) {
+            existing.total_donated += d.amount_cents;
+            existing.milestones_contributed = Math.floor(existing.total_donated / 77700);
+          } else {
+            nonprofitMap.set(key, {
+              nonprofit_id: null,
+              nonprofit_name: d.nonprofit_name,
+              total_donated: d.amount_cents,
+              milestones_contributed: Math.floor(d.amount_cents / 77700)
+            });
+          }
+        });
+        setSupportedNonprofits(Array.from(nonprofitMap.values()));
+
       } catch (error) {
         console.error("[DonorProfile] Error fetching donor data:", error);
       } finally {
@@ -106,15 +141,15 @@ export default function DonorProfile() {
     fetchDonorData();
   }, [navigate]);
 
-  const achievedTiers = getAchievedTiers(totalDonatedCents);
-  const currentTier = getCurrentTier(totalDonatedCents);
-  const nextTier = getNextTier(totalDonatedCents);
-  const progress = getProgressToNextTier(totalDonatedCents);
+  const achievedBadges = getAchievedMilestoneBadges(milestonesCompleted);
+  const currentBadge = getCurrentMilestoneBadge(milestonesCompleted);
+  const nextBadge = getNextMilestoneBadge(milestonesCompleted);
+  const progress = getProgressToNextMilestoneBadge(milestonesCompleted);
 
   // Check for uncelebrated milestones and trigger confetti
   useEffect(() => {
-    if (achievedTiers.length > 0 && !loading && !celebrationTriggered.current) {
-      const uncelebrated = getUncelebratedMilestones(achievedTiers.map(t => t.id));
+    if (achievedBadges.length > 0 && !loading && !celebrationTriggered.current) {
+      const uncelebrated = getUncelebratedMilestones(achievedBadges.map(t => t.id));
       
       if (uncelebrated.length > 0) {
         celebrationTriggered.current = true;
@@ -155,9 +190,9 @@ export default function DonorProfile() {
       }
       
       // Always mark as seen
-      markMilestonesAsSeen(achievedTiers.map(t => t.id));
+      markMilestonesAsSeen(achievedBadges.map(t => t.id));
     }
-  }, [achievedTiers, loading]);
+  }, [achievedBadges, loading]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -221,18 +256,18 @@ export default function DonorProfile() {
           </div>
         </div>
 
-        {/* Stats Overview */}
+        {/* Stats Overview - Milestones Focused */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+          <Card className="bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/20">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/20 rounded-full">
-                  <Heart className="h-6 w-6 text-primary" />
+                <div className="p-3 bg-yellow-500/20 rounded-full">
+                  <Target className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Contributed</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {formatCents(totalDonatedCents)}
+                  <p className="text-sm text-muted-foreground">Milestones Completed</p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {milestonesCompleted}
                   </p>
                 </div>
               </div>
@@ -246,25 +281,25 @@ export default function DonorProfile() {
                   <Trophy className="h-6 w-6 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Current Tier</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {currentTier?.name || "Getting Started"}
+                  <p className="text-sm text-muted-foreground">Current Badge</p>
+                  <p className="text-xl font-bold text-foreground">
+                    {currentBadge?.name || "Getting Started"}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+          <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-500/20 rounded-full">
-                  <Gift className="h-6 w-6 text-green-500" />
+                <div className="p-3 bg-emerald-500/20 rounded-full">
+                  <Building2 className="h-6 w-6 text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Printing + Purpose</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {donations.length}
+                  <p className="text-sm text-muted-foreground">Nonprofits Supported</p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {supportedNonprofits.filter(n => n.nonprofit_name).length}
                   </p>
                 </div>
               </div>
@@ -272,27 +307,27 @@ export default function DonorProfile() {
           </Card>
         </div>
 
-        {/* Progress to Next Tier */}
-        {nextTier && (
+        {/* Progress to Next Badge */}
+        {nextBadge && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Progress to {nextTier.name}
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Progress to {nextBadge.name}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
-                  {formatCents(totalDonatedCents)} contributed
+                  {milestonesCompleted} milestone{milestonesCompleted !== 1 ? 's' : ''} completed
                 </span>
                 <span className="text-muted-foreground">
-                  {formatCents(nextTier.amountCents)} goal
+                  {nextBadge.milestonesRequired} milestones needed
                 </span>
               </div>
               <Progress value={progress.percentage} className="h-3" />
               <p className="text-center text-sm text-muted-foreground">
-                {formatCents(progress.remainingCents)} more to reach {nextTier.name}
+                {progress.remaining} more milestone{progress.remaining !== 1 ? 's' : ''} to reach {nextBadge.name}
               </p>
             </CardContent>
           </Card>
@@ -304,57 +339,103 @@ export default function DonorProfile() {
             Every $777 milestone sparks a new story. ✨
           </h3>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            When an organization hits $777 in Printing + Purpose contributions, they unlock a 7-day window to film their impact. 
-            Show the world what they&apos;ve accomplished — and let their community see the difference they helped create.
+            When an organization hits a $777 milestone, they unlock a <span className="font-bold text-primary">7-day window to film their impact</span>. 
+            Your contributions make this possible — helping nonprofits share their stories with the world!
           </p>
         </div>
+
+        {/* Nonprofits Supported Timeline */}
+        {supportedNonprofits.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-red-500" />
+                Nonprofits You've Empowered
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {supportedNonprofits.filter(n => n.nonprofit_name).map((np, index) => (
+                  <motion.div
+                    key={np.nonprofit_name}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-500/10 rounded-full">
+                        <Building2 className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{np.nonprofit_name}</p>
+                        {np.milestones_contributed > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            Contributed to {np.milestones_contributed} milestone{np.milestones_contributed !== 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-yellow-600">
+                      <Target className="h-4 w-4" />
+                      <span className="font-bold">{np.milestones_contributed}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Earned Badges */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-500" />
-              Earned Milestone Badges
+              Milestone Badges Earned
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {achievedTiers.length === 0 ? (
+            {achievedBadges.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">
-                  Make your first Printing + Purpose contribution to start earning badges!
+                  Complete your first $777 milestone impact to start earning badges!
                 </p>
-                <Button onClick={() => navigate("/donate")}>
-                  Make a Contribution
+                <Button onClick={() => navigate("/products")}>
+                  Start Shopping
                 </Button>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                {achievedTiers.map((tier, index) => (
+                {achievedBadges.map((badge, index) => (
                   <motion.div
-                    key={tier.id}
+                    key={badge.id}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
+                    className={`flex flex-col items-center p-4 rounded-xl ${badge.colors.bg} border ${badge.colors.border}`}
                   >
-                    <MilestoneAchievementBadge
-                      tier={tier}
-                      totalDonated={formatCents(totalDonatedCents)}
-                      userName={userName || undefined}
-                    />
+                    <div className="text-3xl mb-2">{badge.icon}</div>
+                    <span className={`text-sm font-bold ${badge.colors.text}`}>
+                      {badge.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {badge.milestonesRequired} milestone{badge.milestonesRequired !== 1 ? 's' : ''}
+                    </span>
                   </motion.div>
                 ))}
               </div>
             )}
 
             {/* Locked Badges Preview */}
-            {achievedTiers.length < MILESTONE_TIERS.length && (
+            {achievedBadges.length < MILESTONE_BADGE_TIERS.length && (
               <div className="mt-8">
                 <h4 className="text-sm font-medium text-muted-foreground mb-4">
                   Upcoming Badges
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                  {MILESTONE_TIERS.filter(
-                    (tier) => !achievedTiers.find((a) => a.id === tier.id)
+                  {MILESTONE_BADGE_TIERS.filter(
+                    (tier) => !achievedBadges.find((a) => a.id === tier.id)
                   ).map((tier) => {
                     return (
                       <div
@@ -368,7 +449,7 @@ export default function DonorProfile() {
                           {tier.name}
                         </span>
                         <span className="text-[10px] text-muted-foreground">
-                          {formatCents(tier.amountCents)}
+                          {tier.milestonesRequired} milestones
                         </span>
                       </div>
                     );
@@ -379,12 +460,12 @@ export default function DonorProfile() {
           </CardContent>
         </Card>
 
-        {/* Donation History */}
+        {/* Impact Journey Timeline */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              Printing + Purpose History
+              Your Impact Journey
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -393,40 +474,62 @@ export default function DonorProfile() {
                 <p className="text-muted-foreground mb-4">
                   No contributions yet. Start making an impact today!
                 </p>
-                <Button onClick={() => navigate("/donate")}>
-                  Make Your First Contribution
+                <Button onClick={() => navigate("/products")}>
+                  Make Your First Purchase
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
-                {donations.map((donation, index) => (
-                  <motion.div
-                    key={donation.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-full">
-                        <Heart className="h-4 w-4 text-primary" />
+                {donations.slice(0, 10).map((donation, index) => {
+                  const isMilestoneContribution = donation.amount_cents >= 77700;
+                  return (
+                    <motion.div
+                      key={donation.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
+                        isMilestoneContribution 
+                          ? 'bg-yellow-500/10 border border-yellow-500/20' 
+                          : 'bg-muted/30 hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${
+                          isMilestoneContribution 
+                            ? 'bg-yellow-500/20' 
+                            : 'bg-primary/10'
+                        }`}>
+                          {isMilestoneContribution ? (
+                            <Trophy className="h-4 w-4 text-yellow-600" />
+                          ) : (
+                            <Heart className="h-4 w-4 text-primary" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {donation.nonprofit_name || "General Impact"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(donation.created_at)}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {donation.nonprofit_name || "General Printing + Purpose"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(donation.created_at)}
-                        </p>
+                      <div className="text-right">
+                        {isMilestoneContribution && (
+                          <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full font-medium">
+                            🎯 Milestone
+                          </span>
+                        )}
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-foreground">
-                        {formatCents(donation.amount_cents)}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
+                {donations.length > 10 && (
+                  <p className="text-center text-sm text-muted-foreground pt-2">
+                    And {donations.length - 10} more contributions...
+                  </p>
+                )}
               </div>
             )}
           </CardContent>

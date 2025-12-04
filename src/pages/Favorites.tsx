@@ -8,6 +8,7 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart, ShoppingCart, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import CompactMilestoneBar from "@/components/CompactMilestoneBar";
 
 type FavoriteProduct = {
   id: string;
@@ -243,6 +244,9 @@ export default function Favorites() {
           />
 
           <div className="relative w-full max-w-7xl mx-auto px-6 pt-6">
+            {/* Milestone Progress Bar */}
+            <CompactMilestoneBar />
+            
             {favorites.length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
                 <Heart className="w-24 h-24 text-white/30" />
