@@ -80,7 +80,6 @@ export default function Footer() {
               title="Who We Serve"
               links={[
                 ["Nonprofits & clubs", "/who-we-serve/nonprofits"],
-                ["Schools & teams", "/who-we-serve/schools"],
               ]}
             />
             <FooterCol
