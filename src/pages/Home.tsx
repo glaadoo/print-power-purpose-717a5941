@@ -355,7 +355,7 @@ export default function Home() {
               <div className="flex gap-3">
                 <button
                   onClick={() => nav("/auth")}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm whitespace-nowrap"
                 >
                   Sign Up
                 </button>
