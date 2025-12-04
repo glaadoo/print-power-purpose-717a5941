@@ -296,48 +296,68 @@ serve(async (req) => {
         
         // Update nonprofit's progress and check for milestone achievement
         const MILESTONE_GOAL_CENTS = 77700; // $777
-        if (nonprofitId && donationCents > 0) {
+        const DONATION_RATIO = 77700 / 155400; // $777 donation from $1554 sales (~50%)
+        
+        if (nonprofitId && orderData) {
           try {
-            // Fetch current nonprofit progress
-            const { data: nonprofit, error: fetchError } = await supabase
-              .from('nonprofits')
-              .select('current_progress_cents, milestone_count')
-              .eq('id', nonprofitId)
-              .single();
+            // Calculate donation from order total using business model ratio
+            // This is the amount contributed toward nonprofit milestones
+            const orderTotalCents = orderData.amount_total_cents || session.amount_total || 0;
+            const calculatedDonationCents = Math.round(orderTotalCents * DONATION_RATIO);
             
-            if (fetchError) {
-              console.error('Error fetching nonprofit progress:', fetchError);
-            } else if (nonprofit) {
-              const previousProgress = nonprofit.current_progress_cents || 0;
-              const previousMilestoneCount = nonprofit.milestone_count || 0;
-              const newProgress = previousProgress + donationCents;
-              
-              // Calculate if milestone was achieved with this donation
-              const previousMilestoneProgress = previousProgress % MILESTONE_GOAL_CENTS;
-              const newMilestoneProgress = newProgress % MILESTONE_GOAL_CENTS;
-              const milestoneAchieved = newProgress >= MILESTONE_GOAL_CENTS && 
-                (newMilestoneProgress < previousMilestoneProgress || newProgress - previousProgress >= MILESTONE_GOAL_CENTS);
-              
-              // Calculate new milestone count
-              const milestonesReached = Math.floor(newProgress / MILESTONE_GOAL_CENTS);
-              const newMilestoneCount = Math.max(milestonesReached, previousMilestoneCount);
-              
-              // Update nonprofit with new progress and milestone count
-              const { error: updateError } = await supabase
+            console.log('[NONPROFIT PROGRESS] Calculating donation:', {
+              orderTotalCents,
+              DONATION_RATIO,
+              calculatedDonationCents,
+              nonprofitId,
+            });
+            
+            if (calculatedDonationCents > 0) {
+              // Fetch current nonprofit progress
+              const { data: nonprofit, error: fetchError } = await supabase
                 .from('nonprofits')
-                .update({
-                  current_progress_cents: newProgress,
-                  milestone_count: newMilestoneCount,
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', nonprofitId);
+                .select('current_progress_cents, milestone_count, name')
+                .eq('id', nonprofitId)
+                .single();
               
-              if (updateError) {
-                console.error('Error updating nonprofit progress:', updateError);
-              } else {
-                console.log(`Nonprofit progress updated: ${previousProgress} -> ${newProgress} cents, milestones: ${newMilestoneCount}`);
-                if (milestoneAchieved) {
-                  console.log(`🎉 MILESTONE ACHIEVED! Nonprofit ${nonprofitId} reached milestone #${newMilestoneCount}`);
+              if (fetchError) {
+                console.error('Error fetching nonprofit progress:', fetchError);
+              } else if (nonprofit) {
+                const previousProgress = nonprofit.current_progress_cents || 0;
+                const previousMilestoneCount = nonprofit.milestone_count || 0;
+                const newProgress = previousProgress + calculatedDonationCents;
+                
+                // Calculate new milestone count (total $777 milestones reached)
+                const newMilestoneCount = Math.floor(newProgress / MILESTONE_GOAL_CENTS);
+                const milestoneAchieved = newMilestoneCount > previousMilestoneCount;
+                
+                console.log('[NONPROFIT PROGRESS] Progress calculation:', {
+                  nonprofitName: nonprofit.name,
+                  previousProgress,
+                  calculatedDonationCents,
+                  newProgress,
+                  previousMilestoneCount,
+                  newMilestoneCount,
+                  milestoneAchieved,
+                });
+                
+                // Update nonprofit with new progress and milestone count
+                const { error: updateError } = await supabase
+                  .from('nonprofits')
+                  .update({
+                    current_progress_cents: newProgress,
+                    milestone_count: newMilestoneCount,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('id', nonprofitId);
+                
+                if (updateError) {
+                  console.error('Error updating nonprofit progress:', updateError);
+                } else {
+                  console.log(`[NONPROFIT PROGRESS] Updated: ${previousProgress} -> ${newProgress} cents, milestones: ${previousMilestoneCount} -> ${newMilestoneCount}`);
+                  if (milestoneAchieved) {
+                    console.log(`🎉 MILESTONE ACHIEVED! "${nonprofit.name}" reached milestone #${newMilestoneCount}`);
+                  }
                 }
               }
             }
