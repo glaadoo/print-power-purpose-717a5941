@@ -200,12 +200,17 @@ export default function Checkout() {
     setLoading(true);
 
     // Build cart items - use cart if available, otherwise use single product
+    // CRITICAL: Include all cart item properties for proper pricing and order processing
     const checkoutItems = cartItems.length > 0 
       ? cartItems.map(item => ({
           id: item.id,
           quantity: item.quantity,
           name: item.name,
           priceCents: item.priceCents,
+          configuration: item.configuration || null,
+          artworkUrl: item.artworkUrl || null,
+          artworkFileName: item.artworkFileName || null,
+          imageUrl: item.imageUrl || null,
         }))
       : product 
         ? [{
@@ -213,6 +218,10 @@ export default function Checkout() {
             quantity: merged.qty || 1,
             name: product.name,
             priceCents: product.priceCents || priceFromBase(product.base_cost_cents),
+            configuration: null,
+            artworkUrl: null,
+            artworkFileName: null,
+            imageUrl: product.imageUrl || null,
           }]
         : [];
 
