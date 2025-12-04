@@ -621,7 +621,7 @@ export default function DonorProfile() {
                       ) : (
                         <div className="flex items-center gap-2 text-sm text-yellow-600 bg-yellow-500/10 rounded-md px-3 py-2">
                           <CheckCircle2 className="h-4 w-4" />
-                          <span>Impact Verified: ${(np.milestones_contributed * 777).toLocaleString()} Completed</span>
+                          <span>Impact Verified: {np.milestones_contributed} Milestone{np.milestones_contributed !== 1 ? 's' : ''} Completed</span>
                         </div>
                       )}
                     </motion.div>
