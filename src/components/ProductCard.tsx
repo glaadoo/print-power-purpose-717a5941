@@ -174,7 +174,7 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
       onClick={handleCardClick}
     >
       {/* Product Image */}
-      <div className={`relative w-full overflow-hidden bg-gray-50 ${compact ? 'aspect-[4/3]' : 'aspect-square'}`}>
+      <div className={`relative w-full overflow-hidden bg-gray-50 ${compact ? 'aspect-[4/3]' : 'aspect-[4/3]'}`}>
         {imageSrc && !imageError ? (
           <img 
             src={imageSrc} 
