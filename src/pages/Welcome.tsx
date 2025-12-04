@@ -124,7 +124,7 @@ export default function Welcome() {
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-foreground backdrop-blur bg-[#f5f5f0]/90 border-b border-border/20">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="p-2 hover:bg-black/5 rounded-lg transition-colors"
             aria-label="Go back"
           >
