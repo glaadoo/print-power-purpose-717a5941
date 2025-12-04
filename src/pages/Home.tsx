@@ -205,7 +205,7 @@ export default function Home() {
 
       {/* Welcome Section with Animated kenzie-AI - Only show for non-authenticated users */}
       {!isAuthenticated && (
-        <section className="relative bg-white py-16 overflow-hidden">
+        <section className="relative bg-white py-12 md:py-16 overflow-hidden">
           {/* Subtle paw prints background */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
             {[...Array(8)].map((_, i) => (
@@ -223,16 +223,16 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
               {/* kenzie-AI Puppy */}
-              <div className="relative flex-shrink-0">
+              <div className="relative flex-shrink-0 md:w-[45%]">
                 {/* kenzie-AI with gentle bounce */}
-                <div className="relative">
+                <div className="relative flex justify-center">
                   <img
                     src={kenzieAnimated}
                     alt="kenzie-AI the puppy"
-                    className="w-72 h-72 md:w-96 md:h-96 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite] mix-blend-multiply"
+                    className="w-64 h-64 md:w-80 md:h-80 object-contain relative z-10 animate-[puppy-bounce_2s_ease-in-out_infinite] mix-blend-multiply"
                   />
                   
                   {/* Floating hearts */}
@@ -272,52 +272,48 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Content area */}
-              <div className="flex-1 text-center md:text-left relative">
-                {/* Floating dots connector */}
-                <div className="absolute -left-12 top-8 hidden md:block">
-                  <span className="absolute left-0 top-0 text-amber-500 text-2xl animate-[speech-dot_1.5s_ease-in-out_infinite]">•</span>
-                  <span className="absolute left-5 top-3 text-amber-500 text-xl animate-[speech-dot_1.5s_ease-in-out_infinite_0.2s]">•</span>
-                  <span className="absolute left-9 top-5 text-amber-500 text-lg animate-[speech-dot_1.5s_ease-in-out_infinite_0.4s]">•</span>
-                </div>
-                
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 whitespace-nowrap">
+              {/* Content area - clean left-aligned column */}
+              <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
+                {/* Heading with tighter line height */}
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-3">
                   Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">Print Power Purpose</span>
                 </h2>
-                <p className="text-lg text-gray-700 mb-2 font-medium">
+                
+                {/* Subtitle - prominent */}
+                <p className="text-base md:text-lg text-gray-800 font-medium mb-2 leading-relaxed">
                   Where every Printing + Purpose contribution helps create meaningful change.
                 </p>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto md:mx-0">
+                
+                {/* Description - lighter weight */}
+                <p className="text-sm md:text-base text-gray-600 mb-5 max-w-lg leading-relaxed">
                   We connect generous people with impactful nonprofits and help communities achieve their goals — one contribution at a time.
                 </p>
 
                 {/* Cause Icons */}
-                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-8">
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-6">
                   <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                     <span className="text-xl">💚</span>
                     <span className="text-sm font-medium text-gray-700">Nonprofits</span>
                   </div>
                 </div>
 
-                {/* CTA Button */}
-                <div className="flex justify-center md:justify-end">
-                  <button
-                    onClick={() => {
-                      if (isAuthenticated) {
-                        localStorage.setItem("ppp_access", "user");
-                        nav("/welcome");
-                      } else {
-                        nav("/auth");
-                      }
-                    }}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-lg animate-[button-glow_2s_ease-in-out_infinite]"
-                  >
-                    Start Exploring
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </button>
-                </div>
+                {/* CTA Button - left aligned */}
+                <button
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      localStorage.setItem("ppp_access", "user");
+                      nav("/welcome");
+                    } else {
+                      nav("/auth");
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 hover:from-red-600 hover:via-yellow-600 hover:via-green-600 hover:via-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-base animate-[button-glow_2s_ease-in-out_infinite]"
+                >
+                  Start Exploring
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
