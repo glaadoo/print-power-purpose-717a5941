@@ -209,47 +209,43 @@ serve(async (req) => {
       // Collect for shipping calculation
       shippingItems.push({ productName: product.name, category: product.category });
 
-      // Compute pricing using global engine
-      const pricing = computeGlobalPricing({
-        vendor: product.vendor,
-        base_cost_cents: product.base_cost_cents,
-        settings,
-      });
+      // CRITICAL: Use the actual cart price (priceCents) that was shown to the user
+      // NOT the base_cost_cents from the database which would give incorrect prices
+      const finalPricePerUnitCents = cartItem.priceCents || 0;
+      
+      if (!finalPricePerUnitCents || finalPricePerUnitCents <= 0) {
+        console.error("[PPP:CHECKOUT] Invalid cart item price:", {
+          productId: product.id,
+          productName: product.name,
+          priceCents: cartItem.priceCents,
+        });
+        throw new Error(`Invalid price for "${product.name}". Please re-add to cart.`);
+      }
 
-      const lineSubtotal = pricing.final_price_per_unit_cents * cartItem.quantity;
+      const lineSubtotal = finalPricePerUnitCents * cartItem.quantity;
       subtotalCents += lineSubtotal;
 
       console.log("[PPP:PRICING:CHECKOUT] Item", {
         productId: product.id,
-        productName: product.name,
+        productName: cartItem.name || product.name,
         vendor: product.vendor,
         category: product.category,
         quantity: cartItem.quantity,
-        base_cost_cents: pricing.base_price_per_unit_cents,
-        markup_amount_cents: pricing.markup_amount_cents,
-        donation_per_unit_cents: pricing.donation_per_unit_cents,
-        gross_margin_per_unit_cents: pricing.gross_margin_per_unit_cents,
-        final_price_per_unit_cents: pricing.final_price_per_unit_cents,
+        cart_price_cents: finalPricePerUnitCents,
         line_subtotal_cents: lineSubtotal,
       });
 
       orderItems.push({
         product_id: product.id,
-        product_name: product.name,
+        product_name: cartItem.name || product.name,
         vendor: product.vendor,
         category: product.category,
         quantity: cartItem.quantity,
-        base_price_per_unit_cents: pricing.base_price_per_unit_cents,
-        markup_mode: settings.markup_mode,
-        markup_fixed_cents: settings.markup_fixed_cents,
-        markup_percent: settings.markup_percent,
-        nonprofit_share_mode: settings.nonprofit_share_mode,
-        nonprofit_fixed_cents: settings.nonprofit_fixed_cents,
-        nonprofit_percent_of_markup: settings.nonprofit_percent_of_markup,
-        donation_per_unit_cents: pricing.donation_per_unit_cents,
-        gross_margin_per_unit_cents: pricing.gross_margin_per_unit_cents,
-        final_price_per_unit_cents: pricing.final_price_per_unit_cents,
+        final_price_per_unit_cents: finalPricePerUnitCents,
         line_subtotal_cents: lineSubtotal,
+        configuration: cartItem.configuration || null,
+        artwork_url: cartItem.artworkUrl || null,
+        artwork_file_name: cartItem.artworkFileName || null,
       });
     }
 
