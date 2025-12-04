@@ -294,6 +294,58 @@ serve(async (req) => {
           }
         }
         
+        // Update nonprofit's progress and check for milestone achievement
+        const MILESTONE_GOAL_CENTS = 77700; // $777
+        if (nonprofitId && donationCents > 0) {
+          try {
+            // Fetch current nonprofit progress
+            const { data: nonprofit, error: fetchError } = await supabase
+              .from('nonprofits')
+              .select('current_progress_cents, milestone_count')
+              .eq('id', nonprofitId)
+              .single();
+            
+            if (fetchError) {
+              console.error('Error fetching nonprofit progress:', fetchError);
+            } else if (nonprofit) {
+              const previousProgress = nonprofit.current_progress_cents || 0;
+              const previousMilestoneCount = nonprofit.milestone_count || 0;
+              const newProgress = previousProgress + donationCents;
+              
+              // Calculate if milestone was achieved with this donation
+              const previousMilestoneProgress = previousProgress % MILESTONE_GOAL_CENTS;
+              const newMilestoneProgress = newProgress % MILESTONE_GOAL_CENTS;
+              const milestoneAchieved = newProgress >= MILESTONE_GOAL_CENTS && 
+                (newMilestoneProgress < previousMilestoneProgress || newProgress - previousProgress >= MILESTONE_GOAL_CENTS);
+              
+              // Calculate new milestone count
+              const milestonesReached = Math.floor(newProgress / MILESTONE_GOAL_CENTS);
+              const newMilestoneCount = Math.max(milestonesReached, previousMilestoneCount);
+              
+              // Update nonprofit with new progress and milestone count
+              const { error: updateError } = await supabase
+                .from('nonprofits')
+                .update({
+                  current_progress_cents: newProgress,
+                  milestone_count: newMilestoneCount,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', nonprofitId);
+              
+              if (updateError) {
+                console.error('Error updating nonprofit progress:', updateError);
+              } else {
+                console.log(`Nonprofit progress updated: ${previousProgress} -> ${newProgress} cents, milestones: ${newMilestoneCount}`);
+                if (milestoneAchieved) {
+                  console.log(`🎉 MILESTONE ACHIEVED! Nonprofit ${nonprofitId} reached milestone #${newMilestoneCount}`);
+                }
+              }
+            }
+          } catch (nonprofitErr) {
+            console.error('Error updating nonprofit progress (non-blocking):', nonprofitErr);
+          }
+        }
+        
         // Send order confirmation email
         if (session.customer_details?.email && orderData) {
           try {

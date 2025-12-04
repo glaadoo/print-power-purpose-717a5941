@@ -27,7 +27,11 @@ export default function CompactMilestoneBar() {
   const cartDonationCents = Math.round(totalCents * DONATION_RATIO);
   const progressWithCart = progressTowardCurrentMilestone + cartDonationCents;
   const progressPercent = Math.min((progressWithCart / MILESTONE_GOAL_CENTS) * 100, 100);
-  const isGoalReached = progressWithCart >= MILESTONE_GOAL_CENTS;
+  
+  // IMPORTANT: Milestone is only "reached" based on ACTUAL paid progress, not cart projections
+  const isActualGoalReached = progressTowardCurrentMilestone >= MILESTONE_GOAL_CENTS;
+  // Show projected completion only for display purposes (progress bar can fill)
+  const wouldReachGoalWithCart = progressWithCart >= MILESTONE_GOAL_CENTS;
   const hasCartItems = totalCents > 0;
   
   // Display only progress toward current milestone, not total ever raised
@@ -44,9 +48,9 @@ export default function CompactMilestoneBar() {
     minimumFractionDigits: 0,
   });
 
-  // Trigger celebration when milestone is reached
+  // Only trigger celebration for ACTUAL paid milestones, not projections
   useEffect(() => {
-    if (isGoalReached && !hasTriggeredCelebration) {
+    if (isActualGoalReached && !hasTriggeredCelebration) {
       setHasTriggeredCelebration(true);
       setShowCelebration(true);
 
@@ -79,7 +83,7 @@ export default function CompactMilestoneBar() {
       // Hide celebration after animation
       setTimeout(() => setShowCelebration(false), 5000);
     }
-  }, [isGoalReached, hasTriggeredCelebration]);
+  }, [isActualGoalReached, hasTriggeredCelebration]);
 
   return (
     <div className="bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6 shadow-sm">
@@ -126,7 +130,7 @@ export default function CompactMilestoneBar() {
         {/* Trophy Icon */}
         <div className="flex-shrink-0">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-            isGoalReached 
+            isActualGoalReached 
               ? "bg-yellow-100 text-yellow-600" 
               : "bg-emerald-100 text-emerald-600"
           }`}>
@@ -150,17 +154,22 @@ export default function CompactMilestoneBar() {
           
           <Progress 
             value={progressPercent} 
-            className={`h-2 ${isGoalReached ? '[&>div]:bg-yellow-500' : ''}`}
+            className={`h-2 ${isActualGoalReached ? '[&>div]:bg-yellow-500' : ''}`}
           />
           
           <div className="flex flex-col text-xs mt-1 gap-1">
-            {!isGoalReached ? (
+            {!isActualGoalReached ? (
               <>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{displayProgressUsd} / $777</span>
                   <span className="text-emerald-600 font-medium">{remainingUsd} to go!</span>
                 </div>
-                {hasCartItems && (
+                {hasCartItems && wouldReachGoalWithCart && (
+                  <p className="text-amber-600 text-center font-medium">
+                    🎯 Your purchase will complete this milestone!
+                  </p>
+                )}
+                {hasCartItems && !wouldReachGoalWithCart && (
                   <p className="text-emerald-600 text-center font-medium">
                     Complete your purchase to help this nonprofit reach its $777 milestone.
                   </p>
