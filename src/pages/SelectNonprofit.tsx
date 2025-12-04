@@ -32,8 +32,7 @@ type Nonprofit = {
   irs_status?: string | null;
   tags?: string[] | null;
   logo_url?: string | null;
-  total_raised_cents?: number;
-  supporter_count?: number;
+  milestone_count?: number;
   created_at?: string;
 };
 
@@ -104,19 +103,11 @@ export default function SelectNonprofit() {
     return new Date(createdAt) > thirtyDaysAgo;
   };
 
-  // Get top fundraisers (top 3 with actual funds raised)
-  const topFundraisers = useMemo(() => {
+  // Get top nonprofits by milestone count
+  const topMilestoneNonprofits = useMemo(() => {
     return [...allNonprofits]
-      .filter(np => (np.total_raised_cents || 0) > 0)
-      .sort((a, b) => (b.total_raised_cents || 0) - (a.total_raised_cents || 0))
-      .slice(0, 3);
-  }, [allNonprofits]);
-
-  // Get top 5 by supporter count for "Rising Fundraiser" badge
-  const topRisingFundraisers = useMemo(() => {
-    return [...allNonprofits]
-      .filter(np => (np.supporter_count || 0) > 0)
-      .sort((a, b) => (b.supporter_count || 0) - (a.supporter_count || 0))
+      .filter(np => (np.milestone_count || 0) > 0)
+      .sort((a, b) => (b.milestone_count || 0) - (a.milestone_count || 0))
       .slice(0, 5)
       .map(np => np.id);
   }, [allNonprofits]);
@@ -125,20 +116,14 @@ export default function SelectNonprofit() {
   const sortCounts = useMemo(() => {
     return {
       default: allNonprofits.length,
-      top_fundraisers: allNonprofits.filter(np => (np.total_raised_cents || 0) > 0).length,
       new_fundraisers: allNonprofits.filter(np => np.created_at && isNewlyAdded(np.created_at)).length,
-      rising_fundraisers: allNonprofits.filter(np => (np.supporter_count || 0) > 0).length, // Nonprofits with at least 1 supporter
+      top_milestones: allNonprofits.filter(np => (np.milestone_count || 0) > 0).length,
     };
   }, [allNonprofits]);
 
-  // Check if nonprofit is a top fundraiser
-  const isTopFundraiser = (nonprofitId: string) => {
-    return topFundraisers.some(nf => nf.id === nonprofitId);
-  };
-
-  // Check if nonprofit is a top rising fundraiser (top 5 by supporters)
-  const isTopRisingFundraiser = (nonprofitId: string) => {
-    return topRisingFundraisers.includes(nonprofitId);
+  // Check if nonprofit has achieved milestones
+  const hasAchievedMilestones = (nonprofitId: string) => {
+    return topMilestoneNonprofits.includes(nonprofitId);
   };
 
   // Apply filters and sorting
@@ -178,9 +163,6 @@ export default function SelectNonprofit() {
     // Apply sorting
     let sorted = [...filtered];
     switch (sortBy) {
-      case "top_fundraisers":
-        sorted.sort((a, b) => (b.total_raised_cents || 0) - (a.total_raised_cents || 0));
-        break;
       case "new_fundraisers":
         sorted.sort((a, b) => {
           const dateA = new Date(a.created_at || 0).getTime();
@@ -188,9 +170,8 @@ export default function SelectNonprofit() {
           return dateB - dateA; // newest first
         });
         break;
-      case "rising_fundraisers":
-        // Sort by supporter count (highest first), show all nonprofits even with 0 supporters
-        sorted.sort((a, b) => (b.supporter_count || 0) - (a.supporter_count || 0));
+      case "top_milestones":
+        sorted.sort((a, b) => (b.milestone_count || 0) - (a.milestone_count || 0));
         break;
       default:
         // Keep default order
@@ -219,56 +200,26 @@ export default function SelectNonprofit() {
     let alive = true;
     (async () => {
       try {
-        // Fetch all nonprofits with impact metrics
+        // Fetch all nonprofits with milestone_count
         const { data: nonprofitsData, error: nonprofitsError } = await supabase
           .from("nonprofits")
-          .select("id, name, ein, city, state, description, source, irs_status, tags, logo_url, created_at")
+          .select("id, name, ein, city, state, description, source, irs_status, tags, logo_url, created_at, milestone_count")
           .eq("approved", true)
           .order("name", { ascending: true });
 
         if (nonprofitsError) throw nonprofitsError;
 
-        // Fetch nonprofit metrics using database function (bypasses RLS)
-        const { data: metricsData, error: metricsError } = await supabase
-          .rpc("get_nonprofit_metrics");
-
-        console.log("[SelectNonprofit] Metrics result:", { metricsData, metricsError });
-
-        if (metricsError) {
-          console.error("[SelectNonprofit] Metrics query failed:", metricsError);
-        }
-
-        // Build metrics map from function results
-        const metricsMap = new Map<string, { total_raised_cents: number; supporter_count: number }>();
-        
-        if (metricsData) {
-          metricsData.forEach((metric: any) => {
-            metricsMap.set(metric.nonprofit_id, {
-              total_raised_cents: Number(metric.total_raised_cents) || 0,
-              supporter_count: Number(metric.supporter_count) || 0,
-            });
-          });
-        }
-
-        // Merge metrics with nonprofits
-        // Convert UUID to string for map lookup since orders.nonprofit_id is text
-        const nonprofitsWithMetrics = (nonprofitsData || []).map(np => ({
-          ...np,
-          total_raised_cents: metricsMap.get(String(np.id))?.total_raised_cents || 0,
-          supporter_count: metricsMap.get(String(np.id))?.supporter_count || 0,
-        }));
-
-        if (alive) setAllNonprofits(nonprofitsWithMetrics);
+        if (alive) setAllNonprofits(nonprofitsData || []);
 
         // Get 10 random for initial display
         // If there's a selected nonprofit from context, ensure it's included in the display
         let initialDisplay: Nonprofit[];
         if (nonprofit) {
           // Find the selected nonprofit in the full list
-          const selectedNp = nonprofitsWithMetrics.find(np => np.id === nonprofit.id);
+          const selectedNp = (nonprofitsData || []).find(np => np.id === nonprofit.id);
           if (selectedNp) {
             // Get 9 random nonprofits (excluding the selected one)
-            const others = nonprofitsWithMetrics
+            const others = (nonprofitsData || [])
               .filter(np => np.id !== nonprofit.id)
               .sort(() => Math.random() - 0.5)
               .slice(0, 9);
@@ -277,11 +228,11 @@ export default function SelectNonprofit() {
             console.log("[SelectNonprofit] Including selected nonprofit in initial display:", selectedNp.name);
           } else {
             // Selected nonprofit not found, just show random 10
-            initialDisplay = [...nonprofitsWithMetrics].sort(() => Math.random() - 0.5).slice(0, 10);
+            initialDisplay = [...(nonprofitsData || [])].sort(() => Math.random() - 0.5).slice(0, 10);
           }
         } else {
           // No selection, show random 10
-          initialDisplay = [...nonprofitsWithMetrics].sort(() => Math.random() - 0.5).slice(0, 10);
+          initialDisplay = [...(nonprofitsData || [])].sort(() => Math.random() - 0.5).slice(0, 10);
         }
         
         if (alive) setRandomNonprofits(initialDisplay);
@@ -425,98 +376,6 @@ export default function SelectNonprofit() {
     </div>
   ) : (
     <>
-      {/* Top Fundraisers Featured Section */}
-      {topFundraisers.length > 0 && !searchQuery.trim() && !hasActiveFilters && (
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-primary" />
-              <h2 className="text-2xl font-bold text-primary">Top Fundraisers</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">Most funds raised</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {topFundraisers.map((np, index) => {
-              const isSelected = selectedNonprofit?.id === np.id;
-              return (
-                <Card
-                  key={np.id}
-                  ref={isSelected ? selectedCardRef : null}
-                  onClick={() => handleNonprofitSelect(np)}
-                  className={`
-                    relative cursor-pointer p-6 transition-all hover:shadow-xl
-                    ${isSelected
-                      ? "border-primary ring-2 ring-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                    }
-                    ${isSelected && isRestoringSelection ? "animate-fade-in" : ""}
-                  `}
-                >
-                  {/* Ranking Badge */}
-                  <div className="absolute -top-3 left-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
-                    #{index + 1} Top Fundraiser
-                  </div>
-
-                  <div className="flex flex-col items-center text-center mt-3">
-                    {/* Logo */}
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4 overflow-hidden border-2 border-primary/20">
-                      {np.logo_url ? (
-                        <img 
-                          src={np.logo_url} 
-                          alt={`${np.name} logo`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-primary font-bold text-2xl">
-                          {np.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Name */}
-                    <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2">
-                      {np.name}
-                    </h3>
-
-                    {/* Location */}
-                    {(np.city || np.state) && (
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {[np.city, np.state].filter(Boolean).join(", ")}
-                      </p>
-                    )}
-
-                    {/* Raised Amount - Prominent Display */}
-                    <div className="mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20 w-full">
-                      <p className="text-xs text-muted-foreground mb-1">Total Raised</p>
-                      <p className="text-3xl font-bold text-primary">
-                        ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                      </p>
-                    </div>
-
-                    {/* Supporter Count */}
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
-                      <span className="font-semibold text-foreground">{(np.supporter_count || 0).toLocaleString()}</span>
-                      <span>supporters</span>
-                    </div>
-
-                    {/* Select Button */}
-                    <Button
-                      variant={isSelected ? "default" : "outline"}
-                      className="w-full rounded-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNonprofitSelect(np);
-                      }}
-                    >
-                      {isSelected ? "Selected" : "Select Nonprofit"}
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Search bar and filters */}
       <div className="mb-8 space-y-4">
@@ -566,22 +425,16 @@ export default function SelectNonprofit() {
                   <Badge variant="secondary" className="text-xs">{sortCounts.default}</Badge>
                 </div>
               </SelectItem>
-              <SelectItem value="top_fundraisers">
-                <div className="flex items-center justify-between w-full gap-2">
-                  <span>Top Fundraisers</span>
-                  <Badge variant="secondary" className="text-xs">{sortCounts.top_fundraisers}</Badge>
-                </div>
-              </SelectItem>
               <SelectItem value="new_fundraisers">
                 <div className="flex items-center justify-between w-full gap-2">
                   <span>New Fundraisers</span>
                   <Badge variant="secondary" className="text-xs">{sortCounts.new_fundraisers}</Badge>
                 </div>
               </SelectItem>
-              <SelectItem value="rising_fundraisers">
+              <SelectItem value="top_milestones">
                 <div className="flex items-center justify-between w-full gap-2">
-                  <span>Top Rising Fundraisers</span>
-                  <Badge variant="secondary" className="text-xs">{sortCounts.rising_fundraisers}</Badge>
+                  <span>Top Milestones</span>
+                  <Badge variant="secondary" className="text-xs">{sortCounts.top_milestones}</Badge>
                 </div>
               </SelectItem>
             </SelectContent>
@@ -728,16 +581,10 @@ export default function SelectNonprofit() {
               >
                 {/* Featured Badges */}
                 <div className="absolute top-3 right-3 flex flex-col gap-2 max-w-[140px]">
-                  {isTopFundraiser(np.id) && (
+                  {hasAchievedMilestones(np.id) && (
                     <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
                       <TrendingUp className="w-3 h-3" />
-                      Top Fundraiser
-                    </Badge>
-                  )}
-                  {isTopRisingFundraiser(np.id) && (
-                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-md flex items-center gap-1 text-xs">
-                      <TrendingUp className="w-3 h-3" />
-                      Top Rising
+                      Milestone Achieved
                     </Badge>
                   )}
                   {np.created_at && isNewlyAdded(np.created_at) && (
@@ -786,23 +633,17 @@ export default function SelectNonprofit() {
                   </p>
                 )}
 
-                {/* Impact Metrics */}
-                <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Total Raised</p>
-                      <p className="text-lg font-bold text-primary">
-                        ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Supporters</p>
-                      <p className="text-lg font-bold text-primary">
-                        {(np.supporter_count || 0).toLocaleString()}
+                {/* Milestone Count */}
+                {(np.milestone_count || 0) > 0 && (
+                  <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground mb-1">$777 Milestones Achieved</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {(np.milestone_count || 0).toLocaleString()}
                       </p>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Select Button */}
                 <Button
@@ -879,16 +720,10 @@ export default function SelectNonprofit() {
 
                   {/* Badges */}
                   <div className="flex flex-wrap gap-1 items-center">
-                    {isTopFundraiser(np.id) && (
+                    {hasAchievedMilestones(np.id) && (
                       <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
                         <TrendingUp className="w-3 h-3 mr-1" />
-                        Top
-                      </Badge>
-                    )}
-                    {isTopRisingFundraiser(np.id) && (
-                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 text-xs">
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                        Rising
+                        Milestone
                       </Badge>
                     )}
                     {np.created_at && isNewlyAdded(np.created_at) && (
@@ -899,21 +734,15 @@ export default function SelectNonprofit() {
                     )}
                   </div>
 
-                  {/* Metrics */}
-                  <div className="flex gap-6 items-center">
+                  {/* Milestone Count */}
+                  {(np.milestone_count || 0) > 0 && (
                     <div className="text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Raised</p>
+                      <p className="text-xs text-muted-foreground mb-1">Milestones</p>
                       <p className="text-lg font-bold text-primary">
-                        ${((np.total_raised_cents || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        {(np.milestone_count || 0).toLocaleString()}
                       </p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Supporters</p>
-                      <p className="text-lg font-bold text-primary">
-                        {(np.supporter_count || 0).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Select Button */}
                   <Button
@@ -989,7 +818,7 @@ export default function SelectNonprofit() {
           <NonprofitMilestoneProgress
             nonprofitName={selectedNonprofit.name}
             nonprofitId={selectedNonprofit.id}
-            totalRaisedCents={selectedNonprofit.total_raised_cents || 0}
+            milestoneCount={selectedNonprofit.milestone_count || 0}
             className="mb-8"
           />
         )}
