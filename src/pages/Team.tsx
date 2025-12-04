@@ -4,6 +4,39 @@ import VideoBackground from "@/components/VideoBackground";
 import useToggle from "@/hooks/useToggle";
 import MenuOverlay from "@/components/MenuOverlay";
 
+const teamMembers = [
+  {
+    name: "Wayne Strobel",
+    title: "Founder / CEO",
+    image: "/images/team/wayne.png"
+  },
+  {
+    name: "Hamza Sakar",
+    title: "Project Manager",
+    image: "/images/team/hamza.png"
+  },
+  {
+    name: "Shikha Dodecha",
+    title: "Technical Lead",
+    image: "/images/team/shikha.png"
+  },
+  {
+    name: "Kwasi Adofo",
+    title: "Frontend UI/UX Engineer",
+    image: "/images/team/kwasi.png"
+  },
+  {
+    name: "Ralph Desir",
+    title: "Quality Lead",
+    image: "/images/team/ralph.png"
+  },
+  {
+    name: "Derrick Yeboah",
+    title: "Backend & Infrastructure Engineer",
+    image: "/images/team/derrick.png"
+  }
+];
+
 export default function Team() {
   const nav = useNavigate();
   const menu = useToggle(false);
@@ -11,33 +44,6 @@ export default function Team() {
   useEffect(() => {
     document.title = "Our Team - Print Power Purpose";
   }, []);
-
-  const teamMembers = [
-    {
-      name: "Sarah Johnson",
-      role: "Founder & CEO",
-      bio: "Sarah founded Print Power Purpose with a vision to transform custom printing into a force for social good. With 15 years of experience in social entrepreneurship, she leads our mission to empower nonprofits and schools.",
-      image: "/placeholder.svg"
-    },
-    {
-      name: "Michael Chen",
-      role: "Head of Operations",
-      bio: "Michael ensures every order is produced with quality and delivered on time. His background in supply chain management helps us maintain efficiency while keeping costs low for our partners.",
-      image: "/placeholder.svg"
-    },
-    {
-      name: "Emily Rodriguez",
-      role: "Director of Partnerships",
-      bio: "Emily builds relationships with nonprofits and schools across the country. Her passion for education and community development drives our cause selection and impact measurement.",
-      image: "/placeholder.svg"
-    },
-    {
-      name: "David Park",
-      role: "Creative Director",
-      bio: "David leads our design team to help organizations create compelling custom products. His expertise in branding ensures every item tells a powerful story.",
-      image: "/placeholder.svg"
-    }
-  ];
 
   return (
     <div className="min-h-screen text-white">
@@ -66,31 +72,47 @@ export default function Team() {
         />
 
         <section className="py-16 md:py-24 px-4">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             {/* Hero */}
             <div className="text-center mb-16">
               <h1 className="font-serif text-[clamp(2.4rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow-md mb-6">
                 Meet Our Team
               </h1>
               <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
-                We're a passionate group dedicated to helping organizations raise funds and make an impact through custom products.
+                The people powering purpose through print.
               </p>
             </div>
 
-            {/* Team Grid */}
-            <div className="grid md:grid-cols-2 gap-8">
+            {/* Team Grid - 1 col mobile, 2 tablet, 3 desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {teamMembers.map((member, idx) => (
-                <div key={idx} className="bg-background/95 backdrop-blur-md rounded-2xl border border-border/20 shadow-xl p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary flex-shrink-0">
-                      {member.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-foreground mb-1">{member.name}</h3>
-                      <p className="text-sm text-primary font-medium">{member.role}</p>
-                    </div>
+                <div 
+                  key={idx} 
+                  className="bg-background/95 backdrop-blur-md rounded-2xl border border-border/20 shadow-xl p-6 flex flex-col items-center text-center"
+                >
+                  {/* Image placeholder */}
+                  <div className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-muted/50 border-2 border-primary/20 overflow-hidden mb-4 flex items-center justify-center">
+                    <img 
+                      src={member.image} 
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement!.innerHTML = `<span class="text-3xl font-bold text-primary/60">${member.name.split(' ').map(n => n[0]).join('')}</span>`;
+                      }}
+                    />
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">{member.bio}</p>
+                  
+                  {/* Name */}
+                  <h3 className="text-lg md:text-xl font-semibold text-foreground mb-1">
+                    {member.name}
+                  </h3>
+                  
+                  {/* Title */}
+                  <p className="text-sm text-muted-foreground">
+                    {member.title}
+                  </p>
                 </div>
               ))}
             </div>
@@ -101,7 +123,7 @@ export default function Team() {
                 Join Our Mission
               </h2>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                We're always looking for talented individuals who share our passion for social impact. If you're interested in joining our team, we'd love to hear from you.
+                We're always looking for talented individuals who share our passion for social impact.
               </p>
               <button
                 onClick={() => nav('/contact')}
