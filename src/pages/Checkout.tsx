@@ -10,6 +10,7 @@ import { ArrowLeft } from "lucide-react";
 import { normalizeDonationCents } from "@/lib/donation-utils";
 import { withRetry } from "@/lib/api-retry";
 import { calculateOrderShipping, getShippingTierLabel } from "@/lib/shipping-tiers";
+import CompactMilestoneBar from "@/components/CompactMilestoneBar";
 import {
   Dialog,
   DialogContent,
@@ -415,6 +416,9 @@ export default function Checkout() {
 
       {/* Scrollable content */}
       <div className="max-w-2xl mx-auto px-4 py-12">
+        {/* Milestone Progress Bar */}
+        <CompactMilestoneBar />
+        
         <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6 md:p-8">
           <h1 className="text-3xl font-bold text-blue-600 text-center mb-8">
             Review Your Order

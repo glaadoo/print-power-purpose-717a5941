@@ -2,6 +2,7 @@ import { useMemo, useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
+import CompactMilestoneBar from "@/components/CompactMilestoneBar";
 import { X, ArrowLeft, ArrowRight, ShoppingCart, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -141,6 +142,9 @@ export default function Cart() {
               </div>
             ) : (
               <div className="absolute inset-0 z-10 p-6 md:p-8 flex flex-col">
+                {/* Milestone Progress Bar */}
+                <CompactMilestoneBar />
+                
                 <ul className="divide-y divide-gray-200 mb-6">
                   {detailed.map((it) => (
                     <li key={it.cartItemId} className="py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white rounded-lg px-4 mb-4 shadow-sm">

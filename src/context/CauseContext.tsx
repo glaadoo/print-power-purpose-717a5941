@@ -1,7 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Cause = { id: string; name: string; summary?: string };
-type Nonprofit = { id: string; name: string; ein?: string; city?: string; state?: string };
+type Nonprofit = { 
+  id: string; 
+  name: string; 
+  ein?: string; 
+  city?: string; 
+  state?: string;
+  milestone_count?: number;
+  current_progress_cents?: number;
+};
 
 type Ctx = { 
   cause: Cause | null; 
