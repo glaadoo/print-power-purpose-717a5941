@@ -35,6 +35,7 @@ type ProductRow = {
   pricing_data?: any;
   vendor?: string | null;
   vendor_product_id?: string | null;
+  is_active?: boolean | null;
 };
 
 

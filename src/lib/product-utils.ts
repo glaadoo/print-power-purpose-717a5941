@@ -2,6 +2,36 @@
  * Product utility functions for filtering and validation
  */
 
+// Type for products with image and active status
+export interface ProductWithImage {
+  id?: string;
+  name: string;
+  vendor?: string | null;
+  pricing_data?: any;
+  image_url?: string | null;
+  is_active?: boolean | null;
+}
+
+/**
+ * Filter products to only include those with valid images and active status.
+ * Use this helper on any product list to ensure rendering only shows valid products.
+ * 
+ * @param products - Array of products to filter
+ * @returns Filtered array with only products that have images and are active
+ */
+export function filterProductsWithImages<T extends ProductWithImage>(products: T[]): T[] {
+  return products.filter(
+    (p) => p.is_active !== false && !!p.image_url && p.image_url.trim() !== ''
+  );
+}
+
+/**
+ * Check if a single product has a valid image
+ */
+export function hasValidImage(product: { image_url?: string | null }): boolean {
+  return !!product.image_url && product.image_url.trim() !== '';
+}
+
 /**
  * Check if a Scalable Press product has at least one color with images
  * Returns true if:
@@ -66,6 +96,11 @@ export function shouldShowProduct(product: {
   vendor?: string | null;
   pricing_data?: any;
   image_url?: string | null;
+  is_active?: boolean | null;
 }): boolean {
+  // Must be active and have valid image
+  if (product.is_active === false) return false;
+  if (!hasValidImage(product)) return false;
+  
   return isNotCanadaProduct(product) && hasScalablePressImages(product) && hasSinaliteImage(product);
 }
