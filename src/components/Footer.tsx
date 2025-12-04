@@ -86,7 +86,6 @@ export default function Footer() {
               title="Print Catalog"
               links={[
                 ["All products", "/products"],
-                ["Apparel", "/products/apparel"],
                 ["Promo items", "/products/promo"],
               ]}
             />
