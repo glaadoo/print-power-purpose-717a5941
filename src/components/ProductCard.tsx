@@ -266,13 +266,13 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
           {product.vendor === 'sinalite' ? (
             // SinaLite: show average price if min_price_variant_key exists (indicates real calculation)
             product.min_price_variant_key && product.min_price_cents && product.min_price_cents > 0 ? (
-              <>Average Price ${(product.min_price_cents / 100).toFixed(2)}</>
+              <>Avg. Price: ${(product.min_price_cents / 100).toFixed(2)}</>
             ) : (
               <span className="text-blue-600">Configure for Price</span>
             )
           ) : product.vendor === 'scalablepress' ? (
             // Scalable Press: show average price
-            <>Average Price ${(product.base_cost_cents / 100).toFixed(2)}</>
+            <>Avg. Price: ${(product.base_cost_cents / 100).toFixed(2)}</>
           ) : (
             // Other vendors: show base cost, or "Configure for Price" if default
             product.base_cost_cents && product.base_cost_cents > 0 ? (
