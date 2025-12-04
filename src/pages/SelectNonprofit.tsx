@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/Footer";
 import UserDonationProgress from "@/components/UserDonationProgress";
+import NonprofitMilestoneProgress from "@/components/NonprofitMilestoneProgress";
 import SubmitNonprofitForm from "@/components/SubmitNonprofitForm";
 
 type Nonprofit = {
@@ -983,8 +984,15 @@ export default function SelectNonprofit() {
           </div>
         </div>
 
-        {/* User Donation Progress */}
-        <UserDonationProgress variant="light" className="mb-8" />
+        {/* Nonprofit Milestone Progress - Show when nonprofit is selected */}
+        {selectedNonprofit && (
+          <NonprofitMilestoneProgress
+            nonprofitName={selectedNonprofit.name}
+            nonprofitId={selectedNonprofit.id}
+            totalRaisedCents={selectedNonprofit.total_raised_cents || 0}
+            className="mb-8"
+          />
+        )}
 
         {body}
 

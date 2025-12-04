@@ -12,7 +12,6 @@ import kenzieAnimated from "@/assets/kenzie-sitting-smile.png";
 import Footer from "@/components/Footer";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import KenzieJourneySection from "@/components/KenzieJourneySection";
 import UserDonationProgress from "@/components/UserDonationProgress";
 import DonorLeaderboard from "@/components/DonorLeaderboard";
 
@@ -367,9 +366,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* kenzie-AI Journey Section - Only show for authenticated users */}
-      {isAuthenticated && <KenzieJourneySection />}
 
       {/* User Donation Progress - Only show for authenticated users */}
       {isAuthenticated && (
