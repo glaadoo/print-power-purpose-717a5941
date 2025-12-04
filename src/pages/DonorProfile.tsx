@@ -313,8 +313,9 @@ export default function DonorProfile() {
                         <TooltipTrigger>
                           <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-[280px]">
-                          <p>A milestone is achieved only when a nonprofit reaches $777 AND your payment is completed.</p>
+                        <TooltipContent className="max-w-[300px]">
+                          <p className="font-medium mb-1">How milestones work:</p>
+                          <p>Each order of $1,554+ counts as 1 verified milestone. This is separate from how many nonprofits you've helped—you can support many nonprofits with smaller orders while working toward milestone badges.</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -355,8 +356,9 @@ export default function DonorProfile() {
                         <TooltipTrigger>
                           <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-[280px]">
-                          <p>Total number of unique nonprofits you've supported through your purchases.</p>
+                        <TooltipContent className="max-w-[300px]">
+                          <p className="font-medium mb-1">Nonprofits vs Milestones:</p>
+                          <p>This counts unique nonprofits you've supported through ANY purchase amount. Milestones require orders of $1,554+, so you can help many nonprofits while earning fewer milestone badges.</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -399,14 +401,41 @@ export default function DonorProfile() {
             
             {/* Visual Badge Pathway */}
             <div className="relative">
-              {/* Connection Line */}
-              <div className="absolute top-8 left-0 right-0 h-1 bg-muted rounded-full" />
-              <div 
-                className="absolute top-8 left-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500"
-                style={{ 
-                  width: `${Math.min(100, (milestonesCompleted / 20) * 100)}%` 
-                }}
-              />
+              {/* Connection Line Background */}
+              <div className="absolute top-8 left-[8%] right-[8%] h-1.5 bg-muted rounded-full" />
+              
+              {/* Progress Line - calculate based on badge positions */}
+              {(() => {
+                // Calculate progress position based on achieved badges
+                const tierPositions = [0, 25, 50, 75, 100]; // Position % for each tier
+                const achievedIndex = MILESTONE_BADGE_TIERS.findIndex(t => milestonesCompleted < t.milestonesRequired);
+                const currentTierIndex = achievedIndex === -1 ? MILESTONE_BADGE_TIERS.length - 1 : Math.max(0, achievedIndex - 1);
+                
+                // If at least 1 milestone, show progress to first badge
+                let progressWidth = 0;
+                if (milestonesCompleted >= 1) {
+                  if (currentTierIndex === 0) {
+                    // Between 1 and next tier (3)
+                    progressWidth = tierPositions[0] + ((milestonesCompleted - 1) / (3 - 1)) * (tierPositions[1] - tierPositions[0]);
+                  } else {
+                    progressWidth = tierPositions[currentTierIndex];
+                    const nextTier = MILESTONE_BADGE_TIERS[currentTierIndex + 1];
+                    const currentTier = MILESTONE_BADGE_TIERS[currentTierIndex];
+                    if (nextTier) {
+                      const tierProgress = (milestonesCompleted - currentTier.milestonesRequired) / 
+                        (nextTier.milestonesRequired - currentTier.milestonesRequired);
+                      progressWidth += tierProgress * (tierPositions[currentTierIndex + 1] - tierPositions[currentTierIndex]);
+                    }
+                  }
+                }
+                
+                return (
+                  <div 
+                    className="absolute top-8 left-[8%] h-1.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 rounded-full transition-all duration-700"
+                    style={{ width: `${Math.min(84, progressWidth * 0.84)}%` }}
+                  />
+                );
+              })()}
               
               {/* Badge Nodes */}
               <div className="relative flex justify-between">
