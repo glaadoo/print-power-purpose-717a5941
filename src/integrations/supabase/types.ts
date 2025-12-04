@@ -646,6 +646,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          current_progress_cents: number
           description: string | null
           ein: string | null
           goal_cents: number | null
@@ -667,6 +668,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          current_progress_cents?: number
           description?: string | null
           ein?: string | null
           goal_cents?: number | null
@@ -688,6 +690,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          current_progress_cents?: number
           description?: string | null
           ein?: string | null
           goal_cents?: number | null
