@@ -34,8 +34,9 @@ export default function CompactMilestoneBar() {
   const wouldReachGoalWithCart = progressWithCart >= MILESTONE_GOAL_CENTS;
   const hasCartItems = totalCents > 0;
   
-  // Display only progress toward current milestone, not total ever raised
-  const displayProgressUsd = (progressWithCart / 100).toLocaleString("en-US", {
+  // Display only progress toward current milestone, capped at goal
+  const displayProgressCents = Math.min(progressWithCart, MILESTONE_GOAL_CENTS);
+  const displayProgressUsd = (displayProgressCents / 100).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
