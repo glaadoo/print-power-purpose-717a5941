@@ -602,9 +602,6 @@ export default function DonorProfile() {
                             <p className="text-sm text-yellow-600 font-medium">
                               🏆 {np.milestones_contributed} Milestone{np.milestones_contributed !== 1 ? 's' : ''} Achieved
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Total Contributed: {formatCents(np.total_donated)}
-                            </p>
                           </div>
                         </div>
                         {np.last_order_date && (
