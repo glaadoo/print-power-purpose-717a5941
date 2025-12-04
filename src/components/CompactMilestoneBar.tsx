@@ -7,7 +7,7 @@ import { useCause } from "@/context/CauseContext";
 import { useCart } from "@/context/CartContext";
 
 const MILESTONE_GOAL_CENTS = 77700; // $777
-const DONATION_RATIO = 77700 / 115400; // $777 donation from $1154 gross (~67.3%)
+const DONATION_RATIO = 77700 / 155400; // $777 donation from $1554 gross (~50%)
 
 export default function CompactMilestoneBar() {
   const { nonprofit } = useCause();
