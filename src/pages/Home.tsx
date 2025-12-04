@@ -575,7 +575,7 @@ function FooterStrip() {
     <footer className="w-full px-6 pb-8 text-white">
       <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 text-white">
         <FooterCol title="About" links={[
-          ["Our mission", "/about"], ["Team", "/team"], ["Press", "/press"],
+          ["Our mission", "/about"], ["Team", "/team"],
         ]}/>
         <FooterCol title="Who We Serve" links={[
           ["Nonprofits & clubs", "/who-we-serve/nonprofits"], ["Schools & teams", "/who-we-serve/schools"],

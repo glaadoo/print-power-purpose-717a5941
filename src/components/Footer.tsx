@@ -74,7 +74,6 @@ export default function Footer() {
               links={[
                 ["Our mission", "/about"],
                 ["Team", "/team"],
-                ["Press", "/press"],
               ]}
             />
             <FooterCol
