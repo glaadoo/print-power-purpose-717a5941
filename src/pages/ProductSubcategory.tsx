@@ -6,6 +6,7 @@ import VistaprintNav from "@/components/VistaprintNav";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import ProductFilterSidebar from "@/components/ProductFilterSidebar";
+import CompactMilestoneBar from "@/components/CompactMilestoneBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -316,6 +317,9 @@ export default function ProductSubcategory() {
             {subcategory?.replace(/-/g, ' ')}
           </span>
         </div>
+
+        {/* Milestone Progress Bar */}
+        <CompactMilestoneBar />
 
         {/* Header */}
         <div className="mb-8">

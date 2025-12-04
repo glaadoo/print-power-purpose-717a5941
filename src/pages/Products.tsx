@@ -8,6 +8,7 @@ import ProductMegaMenu from "@/components/ProductMegaMenu";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import RecentlyViewed from "@/components/RecentlyViewed";
+import CompactMilestoneBar from "@/components/CompactMilestoneBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -702,6 +703,9 @@ export default function Products() {
       <div className="h-full overflow-y-auto scroll-smooth pb-24">
         <section className="min-h-screen py-16 bg-gray-50">
           <div className="w-full max-w-7xl mx-auto px-6">
+            {/* Milestone Progress Bar */}
+            <CompactMilestoneBar />
+            
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-2">
