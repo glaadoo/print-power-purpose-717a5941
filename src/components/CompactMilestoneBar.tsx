@@ -7,6 +7,7 @@ import { useCause } from "@/context/CauseContext";
 import { useCart } from "@/context/CartContext";
 
 const MILESTONE_GOAL_CENTS = 77700; // $777
+const DONATION_RATIO = 77700 / 115400; // $777 donation from $1154 gross (~67.3%)
 
 export default function CompactMilestoneBar() {
   const { nonprofit } = useCause();
@@ -20,11 +21,14 @@ export default function CompactMilestoneBar() {
   const milestoneCount = nonprofit.milestone_count || 0;
   
   // Calculate progress toward CURRENT milestone only (resets after each $777)
-  // If someone has raised $2,385, they've hit 3 milestones ($2,331) and are $54 into the next
   const progressTowardCurrentMilestone = currentProgressCents % MILESTONE_GOAL_CENTS;
-  const progressWithCart = progressTowardCurrentMilestone + totalCents;
+  
+  // Cart total contributes as donation (67.3% of cart goes to nonprofit)
+  const cartDonationCents = Math.round(totalCents * DONATION_RATIO);
+  const progressWithCart = progressTowardCurrentMilestone + cartDonationCents;
   const progressPercent = Math.min((progressWithCart / MILESTONE_GOAL_CENTS) * 100, 100);
   const isGoalReached = progressWithCart >= MILESTONE_GOAL_CENTS;
+  const hasCartItems = totalCents > 0;
   
   // Display only progress toward current milestone, not total ever raised
   const displayProgressUsd = (progressWithCart / 100).toLocaleString("en-US", {
@@ -149,11 +153,18 @@ export default function CompactMilestoneBar() {
             className={`h-2 ${isGoalReached ? '[&>div]:bg-yellow-500' : ''}`}
           />
           
-          <div className="flex justify-between text-xs mt-1">
+          <div className="flex flex-col text-xs mt-1 gap-1">
             {!isGoalReached ? (
               <>
-                <span className="text-muted-foreground">{displayProgressUsd} / $777</span>
-                <span className="text-emerald-600 font-medium">{remainingUsd} to go!</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{displayProgressUsd} / $777</span>
+                  <span className="text-emerald-600 font-medium">{remainingUsd} to go!</span>
+                </div>
+                {hasCartItems && (
+                  <p className="text-emerald-600 text-center font-medium">
+                    Complete your purchase to help this nonprofit reach its $777 milestone.
+                  </p>
+                )}
               </>
             ) : (
               <span className="text-yellow-600 font-medium text-center w-full">🎉 Milestone #{milestoneCount + 1} Complete!</span>

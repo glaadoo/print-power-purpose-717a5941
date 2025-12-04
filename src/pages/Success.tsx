@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
 const MILESTONE_GOAL_CENTS = 77700; // $777
+const DONATION_RATIO = 77700 / 115400; // $777 donation from $1154 gross (~67.3%)
 
 interface OrderDetails {
   order_number: string;
@@ -45,9 +46,10 @@ export default function Success() {
 
   const sessionId = searchParams.get("session_id");
 
-  // Calculate if milestone was reached
+  // Calculate if this order's donation pushed nonprofit over milestone
+  const orderDonationCents = Math.round((orderDetails?.amount_total_cents || 0) * DONATION_RATIO);
   const milestoneReached = nonprofitProgress 
-    ? (nonprofitProgress.current_progress_cents % MILESTONE_GOAL_CENTS) < (orderDetails?.amount_total_cents || 0)
+    ? (nonprofitProgress.current_progress_cents % MILESTONE_GOAL_CENTS) < orderDonationCents
     : false;
 
   useEffect(() => {
@@ -243,13 +245,10 @@ export default function Success() {
                   </div>
                   
                   <h2 className="text-2xl font-bold text-emerald-700 mb-2">
-                    🎉 Congratulations!
+                    🎉 Great job!
                   </h2>
                   <p className="text-lg text-emerald-600 mb-2">
-                    Your purchase helped power <span className="font-bold">{nonprofit_name}</span>!
-                  </p>
-                  <p className="text-emerald-600">
-                    You helped them reach their <span className="font-bold">$777 Impact Milestone</span>!
+                    You've helped <span className="font-bold">{nonprofit_name}</span> reach their $777 milestone!
                   </p>
                   <p className="text-sm text-emerald-500 mt-3">
                     You're making a real impact. Thank you for being part of this journey! 💚
