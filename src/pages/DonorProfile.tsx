@@ -462,18 +462,20 @@ export default function DonorProfile() {
                                 ? `${tier.colors.bg} ${tier.colors.border} border-2 shadow-lg` 
                                 : isNext 
                                   ? 'bg-primary/10 border-2 border-primary/50 ring-2 ring-primary/20 ring-offset-2' 
-                                  : 'bg-muted/50 border-2 border-dashed border-muted-foreground/20 grayscale opacity-50'
+                                  : 'bg-muted/30 border-2 border-dashed border-muted-foreground/30'
                             }`}
                           >
                             {isAchieved ? (
                               <span>{tier.icon}</span>
                             ) : isFuture ? (
-                              <div className="relative">
-                                <span className="opacity-30 grayscale">{tier.icon}</span>
-                                <Lock className="absolute inset-0 m-auto h-5 w-5 text-muted-foreground/60" />
-                              </div>
+                              <>
+                                <span className="opacity-50 grayscale">{tier.icon}</span>
+                                <div className="absolute -bottom-1 -right-1 bg-muted-foreground/70 rounded-full p-1">
+                                  <Lock className="h-3 w-3 text-background" />
+                                </div>
+                              </>
                             ) : (
-                              <span className="opacity-60">{tier.icon}</span>
+                              <span className="opacity-70">{tier.icon}</span>
                             )}
                             
                             {/* Achieved checkmark */}
