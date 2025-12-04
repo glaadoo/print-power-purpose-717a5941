@@ -16,6 +16,14 @@ import { computeGlobalPricing, type PricingSettings } from "@/lib/global-pricing
 import Footer from "@/components/Footer";
 import { shouldShowProduct } from "@/lib/product-utils";
 
+// Format slug to proper display name with title case
+const formatCategoryName = (slug: string | undefined): string => {
+  if (!slug) return '';
+  return slug
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, char => char.toUpperCase());
+};
+
 type ProductRow = {
   id: string;
   name: string;
@@ -309,13 +317,13 @@ export default function ProductSubcategory() {
           <span>/</span>
           <button 
             onClick={() => navigate("/products")}
-            className="hover:text-blue-600 transition-colors capitalize"
+            className="hover:text-blue-600 transition-colors"
           >
-            {category?.replace(/-/g, ' ')}
+            {formatCategoryName(category)}
           </button>
           <span>/</span>
-          <span className="text-gray-900 font-medium capitalize">
-            {subcategory?.replace(/-/g, ' ')}
+          <span className="text-gray-900 font-medium">
+            {subcategoryData?.name || formatCategoryName(subcategory)}
           </span>
         </div>
 
@@ -324,8 +332,8 @@ export default function ProductSubcategory() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2 capitalize">
-            {subcategoryData?.name || subcategory?.replace(/-/g, ' ')}
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            {subcategoryData?.name || formatCategoryName(subcategory)}
           </h1>
           <p className="text-gray-600">
             Showing {paginatedProducts.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)} of {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
