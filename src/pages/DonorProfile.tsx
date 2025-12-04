@@ -122,45 +122,56 @@ export default function DonorProfile() {
         console.log('[DonorProfile] Orders fetched:', orderData);
         
         const MILESTONE_PURCHASE_THRESHOLD = 155400; // $1554
-        const MILESTONE_TARGET = 77700; // $777
+        const MILESTONE_CONTRIBUTION = 77700; // $777 contribution per milestone
         
         // Convert orders to donation-like format for display
-        const donationList: Donation[] = (orderData || []).map(o => ({
-          id: o.id,
-          amount_cents: o.donation_cents || 0,
-          amount_total_cents: o.amount_total_cents || 0,
-          created_at: o.created_at,
-          nonprofit_name: o.nonprofit_name,
-          nonprofit_ein: null,
-          is_milestone: (o.amount_total_cents || 0) >= MILESTONE_PURCHASE_THRESHOLD
-        }));
+        // CRITICAL: Contribution amount is $777 when order >= $1554, otherwise $0
+        const donationList: Donation[] = (orderData || []).map(o => {
+          const isMilestoneOrder = (o.amount_total_cents || 0) >= MILESTONE_PURCHASE_THRESHOLD;
+          // Contribution is $777 for qualifying orders, otherwise $0
+          const contributionAmount = isMilestoneOrder ? MILESTONE_CONTRIBUTION : 0;
+          
+          return {
+            id: o.id,
+            amount_cents: contributionAmount, // $777 per milestone order
+            amount_total_cents: o.amount_total_cents || 0,
+            created_at: o.created_at,
+            nonprofit_name: o.nonprofit_name,
+            nonprofit_ein: null,
+            is_milestone: isMilestoneOrder
+          };
+        });
         setDonations(donationList);
         
-        const totalDonations = donationList.reduce((sum, d) => sum + d.amount_cents, 0);
-        setTotalDonatedCents(totalDonations);
+        // Total contributed = sum of $777 contributions (only from milestone orders)
+        const totalContributed = donationList.reduce((sum, d) => sum + d.amount_cents, 0);
+        setTotalDonatedCents(totalContributed);
         
         // Calculate milestones completed: each order >= $1554 = 1 milestone
-        const milestones = (orderData || []).filter(
-          order => (order.amount_total_cents || 0) >= MILESTONE_PURCHASE_THRESHOLD
-        ).length;
+        const milestones = donationList.filter(d => d.is_milestone).length;
         setMilestonesCompleted(milestones);
 
-        // Aggregate nonprofits supported with progress tracking
+        // Aggregate nonprofits supported with contribution tracking
         const nonprofitMap = new Map<string, SupportedNonprofit>();
         (orderData || []).forEach(o => {
           if (!o.nonprofit_name) return;
           const key = o.nonprofit_name;
           const existing = nonprofitMap.get(key);
-          const orderDonation = o.donation_cents || 0;
           const isMilestoneOrder = (o.amount_total_cents || 0) >= MILESTONE_PURCHASE_THRESHOLD;
+          // Contribution is $777 for qualifying orders, otherwise $0
+          const orderContribution = isMilestoneOrder ? MILESTONE_CONTRIBUTION : 0;
           
           if (existing) {
-            existing.total_donated += orderDonation;
-            // Track progress toward $777 (reset after each milestone)
-            existing.progress_cents = (existing.progress_cents + orderDonation) % MILESTONE_TARGET;
+            existing.total_donated += orderContribution;
             if (isMilestoneOrder) {
               existing.milestones_contributed += 1;
-              existing.progress_cents = 0; // Reset progress after milestone
+            }
+            // Track progress toward next milestone based on order total
+            if (!isMilestoneOrder) {
+              existing.progress_cents = Math.min(
+                existing.progress_cents + (o.amount_total_cents || 0),
+                MILESTONE_PURCHASE_THRESHOLD
+              );
             }
             if (!existing.last_order_date || o.created_at > existing.last_order_date) {
               existing.last_order_date = o.created_at;
@@ -169,9 +180,9 @@ export default function DonorProfile() {
             nonprofitMap.set(key, {
               nonprofit_id: o.nonprofit_id,
               nonprofit_name: o.nonprofit_name,
-              total_donated: orderDonation,
+              total_donated: orderContribution, // $777 if milestone, $0 otherwise
               milestones_contributed: isMilestoneOrder ? 1 : 0,
-              progress_cents: isMilestoneOrder ? 0 : orderDonation % MILESTONE_TARGET,
+              progress_cents: isMilestoneOrder ? 0 : Math.min(o.amount_total_cents || 0, MILESTONE_PURCHASE_THRESHOLD),
               last_order_date: o.created_at
             });
           }
