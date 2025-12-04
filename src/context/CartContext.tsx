@@ -52,14 +52,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Clear cart only on explicit logout (not on mount/refresh)
+  // Clear cart and ppp_access only on explicit logout (not on mount/refresh)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Only clear cart when user explicitly signs out
+      // Only clear cart and access when user explicitly signs out
       if (event === 'SIGNED_OUT') {
         setState({ items: [] });
         try {
           localStorage.removeItem(LS_KEY);
+          // PPP SECURITY: Clear onboarding access flag on sign out
+          localStorage.removeItem("ppp_access");
         } catch {}
       }
     });

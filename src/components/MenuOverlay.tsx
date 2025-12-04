@@ -250,7 +250,9 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
                   <button
                     onClick={async () => {
                       await supabase.auth.signOut();
-                      navigate("/auth");
+                      // Clear onboarding access flag on sign out
+                      localStorage.removeItem("ppp_access");
+                      navigate("/");
                       onClose();
                     }}
                     className="
