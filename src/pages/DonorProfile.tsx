@@ -18,8 +18,15 @@ import {
   HelpCircle,
   CheckCircle2,
   Lock,
-  ChevronDown
+  ChevronDown,
+  Share2,
+  Twitter,
+  Facebook,
+  Linkedin,
+  Link2,
+  Check
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Collapsible,
   CollapsibleContent,
@@ -67,6 +74,74 @@ interface SupportedNonprofit {
   milestones_contributed: number;
   progress_cents: number;
   last_order_date: string | null;
+}
+
+// ShareButton component for social sharing
+interface ShareButtonProps {
+  platform: 'twitter' | 'facebook' | 'linkedin' | 'copy';
+  milestones: number;
+  badge?: string;
+  nonprofitsCount: number;
+}
+
+function ShareButton({ platform, milestones, badge, nonprofitsCount }: ShareButtonProps) {
+  const [copied, setCopied] = useState(false);
+  
+  const shareText = `🏆 I've achieved ${milestones} milestone${milestones !== 1 ? 's' : ''} on Print Power Purpose${badge ? ` and earned the ${badge} badge` : ''}! Supporting ${nonprofitsCount} nonprofit${nonprofitsCount !== 1 ? 's' : ''} through purposeful purchases. Join me in making an impact!`;
+  const shareUrl = window.location.origin;
+  
+  const handleShare = async () => {
+    const encodedText = encodeURIComponent(shareText);
+    const encodedUrl = encodeURIComponent(shareUrl);
+    
+    switch (platform) {
+      case 'twitter':
+        window.open(`https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`, '_blank');
+        break;
+      case 'facebook':
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`, '_blank');
+        break;
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank');
+        break;
+      case 'copy':
+        try {
+          await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+          setCopied(true);
+          toast.success("Link copied to clipboard!");
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          toast.error("Failed to copy link");
+        }
+        break;
+    }
+  };
+  
+  const icons = {
+    twitter: <Twitter className="h-4 w-4" />,
+    facebook: <Facebook className="h-4 w-4" />,
+    linkedin: <Linkedin className="h-4 w-4" />,
+    copy: copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />
+  };
+  
+  const labels = {
+    twitter: 'X',
+    facebook: 'Facebook',
+    linkedin: 'LinkedIn',
+    copy: copied ? 'Copied!' : 'Copy Link'
+  };
+  
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleShare}
+      className="gap-1.5"
+    >
+      {icons[platform]}
+      <span className="hidden sm:inline">{labels[platform]}</span>
+    </Button>
+  );
 }
 
 export default function DonorProfile() {
@@ -391,6 +466,53 @@ export default function DonorProfile() {
             </Card>
           </div>
         </TooltipProvider>
+
+        {/* Share Your Impact Section */}
+        {milestonesCompleted > 0 && (
+          <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-full">
+                    <Share2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Share Your Impact</p>
+                    <p className="text-sm text-muted-foreground">
+                      Inspire others by sharing your {milestonesCompleted} milestone{milestonesCompleted !== 1 ? 's' : ''}!
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ShareButton 
+                    platform="twitter" 
+                    milestones={milestonesCompleted} 
+                    badge={currentBadge?.name}
+                    nonprofitsCount={supportedNonprofits.filter(n => n.nonprofit_name).length}
+                  />
+                  <ShareButton 
+                    platform="facebook" 
+                    milestones={milestonesCompleted} 
+                    badge={currentBadge?.name}
+                    nonprofitsCount={supportedNonprofits.filter(n => n.nonprofit_name).length}
+                  />
+                  <ShareButton 
+                    platform="linkedin" 
+                    milestones={milestonesCompleted} 
+                    badge={currentBadge?.name}
+                    nonprofitsCount={supportedNonprofits.filter(n => n.nonprofit_name).length}
+                  />
+                  <ShareButton 
+                    platform="copy" 
+                    milestones={milestonesCompleted} 
+                    badge={currentBadge?.name}
+                    nonprofitsCount={supportedNonprofits.filter(n => n.nonprofit_name).length}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Badge Journey Pathway */}
         <TooltipProvider>
