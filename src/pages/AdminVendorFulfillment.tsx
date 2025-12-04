@@ -140,11 +140,30 @@ export default function AdminVendorFulfillment() {
 
   async function downloadCSV() {
     try {
-      const ordersToExport = orders.filter(
-        (o) => statusFilter === "all" || o.vendor_status === statusFilter
-      );
+      toast({
+        title: "Exporting...",
+        description: "Fetching all orders for export",
+      });
 
-      if (ordersToExport.length === 0) {
+      // Fetch ALL orders matching filters (not just current page)
+      let query = supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (statusFilter !== "all") {
+        query = query.eq("vendor_status", statusFilter);
+      }
+
+      if (vendorFilter !== "all") {
+        query = query.eq("vendor_key", vendorFilter);
+      }
+
+      const { data: allOrders, error } = await query;
+
+      if (error) throw error;
+
+      if (!allOrders || allOrders.length === 0) {
         toast({
           title: "No orders",
           description: "No orders available to export",
@@ -167,21 +186,25 @@ export default function AdminVendorFulfillment() {
         "Created At",
       ];
 
-      const rows = ordersToExport.map((order) => {
-        const firstItem = order.items?.[0] || {};
+      const rows = allOrders.map((order) => {
+        const items = order.items as any[] || [];
+        const firstItem = items[0] || {};
         const shippingAddr = firstItem.shipping_address || {};
         
+        // Escape double quotes in cell values
+        const escapeCell = (val: any) => String(val || "").replace(/"/g, '""');
+        
         return [
-          order.order_number,
-          order.customer_email || "",
-          `${shippingAddr.first_name || ""} ${shippingAddr.last_name || ""}`,
+          escapeCell(order.order_number),
+          escapeCell(order.customer_email),
+          escapeCell(`${shippingAddr.first_name || ""} ${shippingAddr.last_name || ""}`.trim()),
           (order.amount_total_cents / 100).toFixed(2),
-          order.vendor_name || order.vendor_key || "",
-          order.vendor_status || "",
-          firstItem.product_name || "",
+          escapeCell(order.vendor_name || order.vendor_key),
+          escapeCell(order.vendor_status),
+          escapeCell(firstItem.product_name),
           firstItem.quantity || 1,
-          `${shippingAddr.line1 || ""}, ${shippingAddr.city || ""}, ${shippingAddr.state || ""} ${shippingAddr.postal_code || ""}`,
-          shippingAddr.phone || "",
+          escapeCell(`${shippingAddr.line1 || ""}, ${shippingAddr.city || ""}, ${shippingAddr.state || ""} ${shippingAddr.postal_code || ""}`.trim()),
+          escapeCell(shippingAddr.phone),
           new Date(order.created_at).toLocaleDateString(),
         ];
       });
@@ -189,10 +212,10 @@ export default function AdminVendorFulfillment() {
       const csvContent = [
         headers.join(","),
         ...rows.map((row) => row.map(cell => `"${cell}"`).join(",")),
-      ].join("\\n");
+      ].join("\n");
 
       // Download file
-      const blob = new Blob([csvContent], { type: "text/csv" });
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -204,7 +227,7 @@ export default function AdminVendorFulfillment() {
 
       toast({
         title: "Success",
-        description: `Exported ${ordersToExport.length} orders to CSV`,
+        description: `Exported ${allOrders.length} orders to CSV`,
       });
     } catch (err) {
       console.error("Error downloading CSV:", err);
