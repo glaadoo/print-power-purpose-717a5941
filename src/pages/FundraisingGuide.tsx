@@ -1,13 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import VideoBackground from "@/components/VideoBackground";
-import useToggle from "@/hooks/useToggle";
-import MenuOverlay from "@/components/MenuOverlay";
+import VistaprintNav from "@/components/VistaprintNav";
+import Footer from "@/components/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function FundraisingGuide() {
   const nav = useNavigate();
-  const menu = useToggle(false);
 
   useEffect(() => {
     document.title = "Fundraising Guide - Print Power Purpose";
@@ -77,119 +75,91 @@ export default function FundraisingGuide() {
   ];
 
   return (
-    <div className="min-h-screen text-white">
-      {/* Top bar */}
-      <header className="fixed top-0 inset-x-0 z-50 h-14 px-4 md:px-6 flex items-center justify-between text-white backdrop-blur bg-black/20 border-b border-white/10">
-        <button onClick={() => nav(-1)} className="text-sm hover:opacity-80 transition-opacity">
-          ← Back
-        </button>
-        <a href="/" className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase">
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
-        <button onClick={menu.on} className="text-sm hover:opacity-80 transition-opacity">
-          Menu
-        </button>
-      </header>
+    <div className="min-h-screen bg-white flex flex-col">
+      <VistaprintNav />
 
-      {/* Main content */}
-      <div className="pt-14 min-h-screen overflow-y-auto scroll-smooth pb-24">
-        <VideoBackground
-          srcMp4="/media/hero.mp4"
-          srcWebm="/media/hero.webm"
-          poster="/media/hero-poster.jpg"
-          parallaxVh={8}
-          overlay={<div className="absolute inset-0 bg-black/50" />}
-          className="fixed inset-0 -z-10"
-        />
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-blue-50 to-white border-b border-gray-200 py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            Complete Fundraising Guide
+          </h1>
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+            Everything you need to know to run a successful custom merchandise fundraising campaign.
+          </p>
+        </div>
+      </section>
 
-        <section className="py-16 md:py-24 px-4">
-          <div className="max-w-4xl mx-auto">
-            {/* Hero */}
-            <div className="text-center mb-16">
-              <h1 className="font-serif text-[clamp(2.4rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow-md mb-6">
-                Complete Fundraising Guide
-              </h1>
-              <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
-                Everything you need to know to run a successful custom merchandise fundraising campaign.
-              </p>
+      {/* Quick Stats */}
+      <section className="py-12 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 p-6 text-center">
+              <div className="text-3xl font-bold text-green-600 mb-2">40-60%</div>
+              <div className="text-sm text-gray-600">Typical Profit Margin</div>
             </div>
-
-            {/* Quick Stats */}
-            <div className="grid md:grid-cols-3 gap-4 mb-12">
-              <div className="bg-background/95 backdrop-blur-md rounded-xl border border-border/20 p-6 text-center">
-                <div className="text-3xl font-bold text-primary mb-2">40-60%</div>
-                <div className="text-sm text-muted-foreground">Typical Profit Margin</div>
-              </div>
-              <div className="bg-background/95 backdrop-blur-md rounded-xl border border-border/20 p-6 text-center">
-                <div className="text-3xl font-bold text-primary mb-2">6-8 weeks</div>
-                <div className="text-sm text-muted-foreground">Average Campaign Length</div>
-              </div>
-              <div className="bg-background/95 backdrop-blur-md rounded-xl border border-border/20 p-6 text-center">
-                <div className="text-3xl font-bold text-primary mb-2">$5K+</div>
-                <div className="text-sm text-muted-foreground">Typical Campaign Raises</div>
-              </div>
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-6 text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-2">6-8 weeks</div>
+              <div className="text-sm text-gray-600">Average Campaign Length</div>
             </div>
-
-            {/* Guide Content */}
-            <div className="bg-background/95 backdrop-blur-md rounded-2xl border border-border/20 shadow-xl p-6 md:p-8 mb-12">
-              <Accordion type="single" collapsible className="space-y-2">
-                {sections.map((section, index) => (
-                  <AccordionItem key={section.id} value={section.id} className="border-b border-border/50">
-                    <AccordionTrigger className="text-left text-base md:text-lg font-medium text-foreground hover:text-primary transition-colors py-4">
-                      <span className="flex items-center gap-3">
-                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm font-semibold">
-                          {index + 1}
-                        </span>
-                        {section.title}
-                      </span>
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed pb-4 pl-11">
-                      {section.content}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-
-            {/* CTA */}
-            <div className="bg-background/95 backdrop-blur-md rounded-2xl border border-border/20 shadow-xl p-8 text-center">
-              <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-4">
-                Ready to Start Your Campaign?
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                We're here to help you every step of the way. From design to fulfillment, our team has the expertise to make your fundraiser a success.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={() => nav('/products')}
-                  className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Browse Products
-                </button>
-                <button
-                  onClick={() => nav('/contact')}
-                  className="px-8 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/90 transition-colors"
-                >
-                  Contact Our Team
-                </button>
-              </div>
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-100 p-6 text-center">
+              <div className="text-3xl font-bold text-amber-600 mb-2">$5K+</div>
+              <div className="text-sm text-gray-600">Typical Campaign Raises</div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      {/* Menu Overlay */}
-      <MenuOverlay
-        open={menu.open}
-        onClose={menu.off}
-        items={[
-          { label: "Home", href: "/" },
-          { label: "About", href: "/about" },
-          { label: "Products", href: "/products" },
-          { label: "Causes", href: "/causes" },
-          { label: "Contact", href: "/contact" },
-        ]}
-      />
+      {/* Guide Content */}
+      <section className="py-12 bg-gray-50 flex-1">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 mb-12">
+            <Accordion type="single" collapsible className="space-y-2">
+              {sections.map((section, index) => (
+                <AccordionItem key={section.id} value={section.id} className="border-b border-gray-100">
+                  <AccordionTrigger className="text-left text-base md:text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors py-4">
+                    <span className="flex items-center gap-3">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-semibold">
+                        {index + 1}
+                      </span>
+                      {section.title}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-600 leading-relaxed pb-4 pl-11">
+                    {section.content}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+
+          {/* CTA */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 p-8 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              Ready to Start Your Campaign?
+            </h2>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              We're here to help you every step of the way. From design to fulfillment, our team has the expertise to make your fundraiser a success.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => nav('/products')}
+                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors shadow-sm"
+              >
+                Browse Products
+              </button>
+              <button
+                onClick={() => nav('/contact')}
+                className="px-8 py-3 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold border border-gray-300 transition-colors"
+              >
+                Contact Our Team
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 }
