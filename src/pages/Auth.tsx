@@ -84,7 +84,7 @@ export default function Auth() {
       setSession(session);
       if (session) {
         localStorage.setItem("ppp_access", "user");
-        navigate("/welcome");
+        navigate("/");
       }
     });
 
@@ -92,7 +92,7 @@ export default function Auth() {
       setSession(session);
       if (session) {
         localStorage.setItem("ppp_access", "user");
-        navigate("/welcome");
+        navigate("/");
       }
     });
 
