@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Trophy, Sparkles, PartyPopper, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -14,8 +14,7 @@ export default function CompactMilestoneBar() {
   const { totalCents } = useCart();
   const [showCelebration, setShowCelebration] = useState(false);
   const [hasTriggeredCelebration, setHasTriggeredCelebration] = useState(false);
-  const [showCartMilestoneCelebration, setShowCartMilestoneCelebration] = useState(false);
-  const cartMilestoneTriggeredRef = useRef(false);
+  const [hasPlayedConfetti, setHasPlayedConfetti] = useState(false);
 
   if (!nonprofit) return null;
 
@@ -51,29 +50,26 @@ export default function CompactMilestoneBar() {
     minimumFractionDigits: 0,
   });
 
-  // Trigger mini celebration when cart reaches $777 milestone threshold
-  useEffect(() => {
-    if (wouldReachGoalWithCart && hasCartItems && !cartMilestoneTriggeredRef.current && !isActualGoalReached) {
-      cartMilestoneTriggeredRef.current = true;
-      setShowCartMilestoneCelebration(true);
+  // Cart milestone celebration - stays visible as long as cart is at threshold
+  const showCartMilestoneCelebration = wouldReachGoalWithCart && hasCartItems && !isActualGoalReached;
 
-      // Fire mini confetti burst
+  // Fire confetti once when cart first reaches milestone threshold
+  useEffect(() => {
+    if (showCartMilestoneCelebration && !hasPlayedConfetti) {
+      setHasPlayedConfetti(true);
       confetti({
         particleCount: 50,
         spread: 60,
         origin: { y: 0.7, x: 0.5 },
         colors: ["#FFD700", "#10B981", "#6366F1"],
       });
-
-      // Hide after animation
-      setTimeout(() => setShowCartMilestoneCelebration(false), 5000);
     }
     
-    // Reset if cart goes below threshold
-    if (!wouldReachGoalWithCart && cartMilestoneTriggeredRef.current) {
-      cartMilestoneTriggeredRef.current = false;
+    // Reset confetti flag if cart goes below threshold
+    if (!showCartMilestoneCelebration && hasPlayedConfetti) {
+      setHasPlayedConfetti(false);
     }
-  }, [wouldReachGoalWithCart, hasCartItems, isActualGoalReached]);
+  }, [showCartMilestoneCelebration, hasPlayedConfetti]);
 
   // Only trigger celebration for ACTUAL paid milestones, not projections
   useEffect(() => {
