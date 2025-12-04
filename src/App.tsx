@@ -527,12 +527,14 @@ export default function App() {
             }
           />
 
-          {/* Welcome */}
+          {/* Welcome - Protected */}
           <Route
             path="/welcome"
             element={
               <RouteBoundary name="Welcome">
-                <Welcome />
+                <ProtectedRoute>
+                  <Welcome />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -548,12 +550,14 @@ export default function App() {
             }
           />
 
-          {/* System Logs */}
+          {/* System Logs - Protected */}
           <Route
             path="/system-logs"
             element={
               <RouteBoundary name="SystemLogs">
-                <SystemLogs />
+                <ProtectedRoute>
+                  <SystemLogs />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
@@ -826,12 +830,14 @@ export default function App() {
             }
           />
 
-          {/* Video Gallery - Public */}
+          {/* Video Gallery - Protected */}
           <Route
             path="/videos"
             element={
               <RouteBoundary name="VideoGallery">
-                <VideoGallery />
+                <ProtectedRoute>
+                  <VideoGallery />
+                </ProtectedRoute>
               </RouteBoundary>
             }
           />
