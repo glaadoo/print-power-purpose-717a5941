@@ -364,7 +364,7 @@ export default function Home() {
                     localStorage.setItem("ppp_access", "guest");
                     nav("/welcome");
                   }}
-                  className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-6 py-3 rounded-lg border-2 border-gray-300 transition-colors"
+                  className="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-6 py-3 rounded-lg border-2 border-gray-300 transition-colors whitespace-nowrap"
                 >
                   Continue as Guest
                 </button>
