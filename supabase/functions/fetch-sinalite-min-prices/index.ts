@@ -345,13 +345,24 @@ serve(async (req) => {
     }
 
     // Count remaining products
-    const { count: remaining } = await supabase
-      .from("products")
-      .select("id", { count: "exact", head: true })
-      .eq("vendor", "sinalite")
-      .or("min_price_cents.eq.2000,min_price_cents.is.null");
+    let remainingCount = 0;
+    if (forceRefresh) {
+      // When force refreshing, count all sinalite products minus what we just processed
+      const { count: totalCount } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("vendor", "sinalite");
+      remainingCount = Math.max(0, (totalCount || 0) - updates.length);
+    } else {
+      const { count: remaining } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("vendor", "sinalite")
+        .or("min_price_cents.eq.2000,min_price_cents.is.null");
+      remainingCount = remaining || 0;
+    }
 
-    console.log(`[FETCH-MIN-PRICES] Done: ${updated} updated, ${remaining || 0} remaining`);
+    console.log(`[FETCH-MIN-PRICES] Done: ${updated} updated, ${remainingCount} remaining (forceRefresh=${forceRefresh})`);
 
     return new Response(
       JSON.stringify({
@@ -359,7 +370,7 @@ serve(async (req) => {
         processed: products.length,
         updated,
         errors: products.length - updates.length,
-        remaining: remaining || 0,
+        remaining: remainingCount,
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
