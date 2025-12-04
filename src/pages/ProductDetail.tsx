@@ -597,7 +597,34 @@ export default function ProductDetail() {
                 </Button>
 
                 <Button
-                  onClick={() => nav("/checkout", { state: { productId: product.id, qty } })}
+                  onClick={() => {
+                    if (!product || !canAddToCart) return;
+                    
+                    // Determine the correct image URL - use selected color image if available
+                    let imageToUse = product.image_url;
+                    if (selectedColorImages.length > 0) {
+                      const firstColorImage = selectedColorImages[0];
+                      imageToUse = typeof firstColorImage === 'string' ? firstColorImage : firstColorImage?.url;
+                    }
+                    
+                    // Add to cart with all configuration and price data
+                    add(
+                      {
+                        id: product.id,
+                        name: product.name,
+                        priceCents: unitCents,
+                        imageUrl: imageToUse,
+                        currency: product.currency || "USD",
+                        configuration: productConfig,
+                        artworkUrl: artworkFileUrl,
+                        artworkFileName: artworkFileName,
+                      },
+                      Math.max(1, Number(qty))
+                    );
+                    
+                    // Navigate to checkout
+                    nav("/checkout");
+                  }}
                   disabled={!canAddToCart}
                   variant="outline"
                   size="lg"
