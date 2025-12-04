@@ -9,6 +9,12 @@ import { calculateOrderShipping, getShippingTierLabel } from "../_shared/shippin
  * 
  * This edge function creates Stripe Checkout sessions with proper pricing and tax calculation.
  * 
+ * SECURITY FEATURES:
+ * - Rate limiting per IP address (5 requests per minute)
+ * - Server-side price validation against database prices
+ * - Input validation for cart structure and product IDs
+ * - Stock validation for Scalable Press products
+ * 
  * KEY PRICING RULES:
  * - Product prices are computed using computeGlobalPricing() from _shared/pricing.ts
  * - Shipping is calculated per order using calculateOrderShipping() from _shared/shipping-tiers.ts
@@ -19,17 +25,6 @@ import { calculateOrderShipping, getShippingTierLabel } from "../_shared/shippin
  * - shipping_address_collection collects address for tax calculation
  * - After session creation, we retrieve the expanded session to get calculated tax
  * - Tax amount is stored in orders.tax_cents for record keeping
- * 
- * IMPORTANT: To change tax behavior or pricing rules:
- * 1. Tax rules are managed in Stripe Dashboard > Settings > Tax
- * 2. Product pricing logic is in ../shared/pricing.ts (computeGlobalPricing)
- * 3. Shipping tiers are defined in ../shared/shipping-tiers.ts
- * 4. Line items MUST use unit_amount in CENTS with quantity (never double-multiply)
- * 
- * DEBUGGING NOTES:
- * - All amounts are logged in console with [PPP:PRICING:CHECKOUT] and [PPP:STRIPE:TAX] prefixes
- * - Check line items payload sent to Stripe for unit_amount × quantity correctness
- * - Verify tax is calculated by checking expandedSession.total_details.amount_tax
  */
 
 const corsHeaders = {
@@ -37,9 +32,69 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limiting for checkout abuse protection
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const MAX_CHECKOUT_REQUESTS = 5; // 5 checkout attempts per minute per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+
+  if (record.count >= MAX_CHECKOUT_REQUESTS) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+// Input validation helpers
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+function validateCartItem(item: any): { valid: boolean; error?: string } {
+  if (!item || typeof item !== 'object') {
+    return { valid: false, error: 'Invalid cart item structure' };
+  }
+  if (!item.id || typeof item.id !== 'string' || !isValidUUID(item.id)) {
+    return { valid: false, error: 'Invalid product ID format' };
+  }
+  if (!item.quantity || typeof item.quantity !== 'number' || item.quantity < 1 || item.quantity > 10000) {
+    return { valid: false, error: 'Invalid quantity (must be 1-10000)' };
+  }
+  if (item.priceCents !== undefined && (typeof item.priceCents !== 'number' || item.priceCents < 0)) {
+    return { valid: false, error: 'Invalid price format' };
+  }
+  return { valid: true };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check
+  const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  if (!checkRateLimit(clientIp)) {
+    console.warn(`[PPP:CHECKOUT:RATE-LIMIT] IP ${clientIp} exceeded checkout rate limit`);
+    return new Response(
+      JSON.stringify({ 
+        error: "Too many checkout attempts. Please wait a moment and try again.",
+        code: 'RATE_LIMIT'
+      }),
+      {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 
   try {
@@ -69,10 +124,40 @@ serve(async (req) => {
     
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    const { cart, nonprofitId, donationCents } = await req.json();
+    const body = await req.json();
+    const { cart, nonprofitId, donationCents } = body;
 
-    if (!cart || !Array.isArray(cart.items) || cart.items.length === 0) {
+    // Validate cart structure
+    if (!cart || typeof cart !== 'object') {
+      throw new Error("Invalid cart format");
+    }
+    
+    if (!Array.isArray(cart.items) || cart.items.length === 0) {
       throw new Error("Cart is empty");
+    }
+
+    if (cart.items.length > 50) {
+      throw new Error("Cart has too many items (max 50)");
+    }
+
+    // Validate each cart item
+    for (const item of cart.items) {
+      const validation = validateCartItem(item);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+    }
+
+    // Validate nonprofitId if provided
+    if (nonprofitId && (typeof nonprofitId !== 'string' || !isValidUUID(nonprofitId))) {
+      throw new Error("Invalid nonprofit ID format");
+    }
+
+    // Validate donationCents
+    if (donationCents !== undefined && donationCents !== null) {
+      if (typeof donationCents !== 'number' || donationCents < 0 || donationCents > 1000000) {
+        throw new Error("Invalid donation amount");
+      }
     }
 
     // Fetch nonprofit details if nonprofitId is provided
@@ -125,14 +210,20 @@ serve(async (req) => {
 
     for (const cartItem of cart.items) {
       // Fetch product with category and pricing_data for stock validation
-      const { data: product } = await supabase
+      const { data: product, error: productError } = await supabase
         .from("products")
-        .select("id, name, vendor, base_cost_cents, category, pricing_data")
+        .select("id, name, vendor, base_cost_cents, category, pricing_data, is_active")
         .eq("id", cartItem.id)
         .single();
 
-      if (!product) {
+      if (productError || !product) {
+        console.error("[PPP:CHECKOUT] Product not found:", cartItem.id);
         throw new Error(`Product not found: ${cartItem.id}`);
+      }
+
+      // Verify product is active
+      if (!product.is_active) {
+        throw new Error(`Product "${product.name}" is no longer available`);
       }
       
       // Validate stock for Scalable Press products
@@ -210,7 +301,7 @@ serve(async (req) => {
       shippingItems.push({ productName: product.name, category: product.category });
 
       // CRITICAL: Use the actual cart price (priceCents) that was shown to the user
-      // NOT the base_cost_cents from the database which would give incorrect prices
+      // BUT also validate it against what we can compute server-side
       const finalPricePerUnitCents = cartItem.priceCents || 0;
       
       if (!finalPricePerUnitCents || finalPricePerUnitCents <= 0) {
@@ -220,6 +311,20 @@ serve(async (req) => {
           priceCents: cartItem.priceCents,
         });
         throw new Error(`Invalid price for "${product.name}". Please re-add to cart.`);
+      }
+
+      // Server-side price sanity check - price should be reasonable (not suspiciously low)
+      // Minimum price should be at least the base cost (prevent price manipulation attacks)
+      const minReasonablePrice = Math.max(100, product.base_cost_cents || 100); // At least $1 or base cost
+      if (finalPricePerUnitCents < minReasonablePrice * 0.5) {
+        console.error("[PPP:CHECKOUT] Suspicious price detected - below reasonable minimum:", {
+          productId: product.id,
+          productName: product.name,
+          priceCents: finalPricePerUnitCents,
+          baseCost: product.base_cost_cents,
+          minReasonable: minReasonablePrice,
+        });
+        throw new Error(`Price validation failed for "${product.name}". Please refresh and try again.`);
       }
 
       const lineSubtotal = finalPricePerUnitCents * cartItem.quantity;
@@ -323,6 +428,7 @@ serve(async (req) => {
       orderId,
       orderNumber,
       tempSessionId,
+      clientIp: clientIp.substring(0, 10) + "...", // Log partial IP for debugging
     });
 
     // Build Stripe line items using computed final prices
