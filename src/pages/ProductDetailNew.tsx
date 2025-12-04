@@ -18,6 +18,7 @@ import ImageGallery from "@/components/ImageGallery";
 import ArtworkUpload from "@/components/ArtworkUpload";
 import ProductDescription from "@/components/product-detail/ProductDescription";
 import { shouldShowProduct } from "@/lib/product-utils";
+import CompactMilestoneBar from "@/components/CompactMilestoneBar";
 
 type ProductRow = {
   id: string;
@@ -345,6 +346,9 @@ export default function ProductDetailNew() {
       {/* Scrollable content */}
       <div className="h-full overflow-y-auto scroll-smooth pt-16">
         <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Milestone Progress Bar */}
+          <CompactMilestoneBar />
+
           {/* Breadcrumb */}
           <div className="text-sm text-muted-foreground mb-6">
             <button onClick={() => nav("/")} className="hover:text-foreground">Home</button>

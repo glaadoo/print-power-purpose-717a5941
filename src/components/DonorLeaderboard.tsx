@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Medal, Award, Crown } from "lucide-react";
+import { Trophy, Medal, Award, Crown, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MILESTONE_TIERS, formatCents } from "@/lib/milestone-tiers";
+import { MILESTONE_BADGE_TIERS, getCurrentMilestoneBadge } from "@/lib/milestone-tiers";
 import confetti from "canvas-confetti";
 
 interface TopDonor {
@@ -13,6 +13,7 @@ interface TopDonor {
   donation_count: number;
   highest_tier: string | null;
   rank: number;
+  milestones_completed: number;
 }
 
 // Track which donors have changed for highlight animation
@@ -22,13 +23,11 @@ const getChangedDonors = (prev: TopDonor[], next: TopDonor[]): Set<string> => {
   next.forEach((donor) => {
     const prevDonor = prev.find(p => p.donor_display_name === donor.donor_display_name);
     if (!prevDonor) {
-      // New donor on leaderboard
       changed.add(donor.donor_display_name);
     } else if (
       prevDonor.rank !== donor.rank ||
-      prevDonor.total_donated_cents !== donor.total_donated_cents
+      prevDonor.milestones_completed !== donor.milestones_completed
     ) {
-      // Position or amount changed
       changed.add(donor.donor_display_name);
     }
   });
@@ -41,7 +40,6 @@ const checkTop3Entry = (prev: TopDonor[], next: TopDonor[]): boolean => {
   return next.some((donor) => {
     if (donor.rank > 3) return false;
     const prevDonor = prev.find(p => p.donor_display_name === donor.donor_display_name);
-    // New to top 3 or moved up into top 3
     return !prevDonor || prevDonor.rank > 3;
   });
 };
@@ -75,9 +73,8 @@ const triggerConfetti = () => {
   })();
 };
 
-const getTierInfo = (tierId: string | null) => {
-  if (!tierId) return null;
-  return MILESTONE_TIERS.find((t) => t.id === tierId) || null;
+const getBadgeInfo = (milestonesCompleted: number) => {
+  return getCurrentMilestoneBadge(milestonesCompleted);
 };
 
 export default function DonorLeaderboard() {
@@ -94,25 +91,35 @@ export default function DonorLeaderboard() {
 
       if (error) throw error;
       
-      const newDonors = data || [];
+      // Calculate milestones completed for each donor (based on $777 increments)
+      const enrichedDonors = (data || []).map((donor: any) => ({
+        ...donor,
+        milestones_completed: Math.floor(donor.total_donated_cents / 77700)
+      }));
+      
+      // Sort by milestones completed instead of total donated
+      const sortedDonors = enrichedDonors.sort((a: TopDonor, b: TopDonor) => 
+        b.milestones_completed - a.milestones_completed
+      ).map((donor: TopDonor, index: number) => ({
+        ...donor,
+        rank: index + 1
+      }));
       
       // Detect changes and trigger highlight
       if (prevDonorsRef.current.length > 0) {
-        const changed = getChangedDonors(prevDonorsRef.current, newDonors);
+        const changed = getChangedDonors(prevDonorsRef.current, sortedDonors);
         if (changed.size > 0) {
           setChangedDonors(changed);
-          // Clear highlight after animation
           setTimeout(() => setChangedDonors(new Set()), 2000);
         }
         
-        // Trigger confetti if someone moved into top 3
-        if (checkTop3Entry(prevDonorsRef.current, newDonors)) {
+        if (checkTop3Entry(prevDonorsRef.current, sortedDonors)) {
           triggerConfetti();
         }
       }
       
-      prevDonorsRef.current = newDonors;
-      setDonors(newDonors);
+      prevDonorsRef.current = sortedDonors;
+      setDonors(sortedDonors);
     } catch (error) {
       console.error("Error fetching top donors:", error);
     } finally {
@@ -123,7 +130,6 @@ export default function DonorLeaderboard() {
   useEffect(() => {
     fetchTopDonors();
 
-    // Subscribe to real-time changes on the donations table
     const channel = supabase
       .channel('donor-leaderboard-changes')
       .on(
@@ -134,7 +140,6 @@ export default function DonorLeaderboard() {
           table: 'donations'
         },
         () => {
-          // Refetch leaderboard when donations change
           fetchTopDonors();
         }
       )
@@ -200,7 +205,7 @@ export default function DonorLeaderboard() {
         </CardHeader>
         <CardContent>
           <p className="text-center text-gray-500 py-8">
-            Be the first to contribute and appear on the leaderboard!
+            Be the first to complete a milestone and appear on the leaderboard!
           </p>
         </CardContent>
       </Card>
@@ -215,13 +220,13 @@ export default function DonorLeaderboard() {
           Top Printing + Purpose Leaderboard
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Celebrating our most generous supporters
+          Celebrating our top milestone makers
         </p>
       </CardHeader>
       <CardContent className="p-4 space-y-2">
         <AnimatePresence mode="popLayout">
           {donors.map((donor, index) => {
-            const tierInfo = getTierInfo(donor.highest_tier);
+            const badgeInfo = getBadgeInfo(donor.milestones_completed);
             const isChanged = changedDonors.has(donor.donor_display_name);
             return (
               <motion.div
@@ -260,42 +265,47 @@ export default function DonorLeaderboard() {
                     <span className="font-semibold text-gray-900 truncate">
                       {donor.donor_display_name}
                     </span>
-                    {tierInfo && (
+                    {badgeInfo && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${tierInfo.colors.bg} ${tierInfo.colors.border} border`}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${badgeInfo.colors.bg} ${badgeInfo.colors.border} border`}
                       >
-                        <span className="text-xs">{tierInfo.icon}</span>
-                        <span className={`text-[10px] font-bold ${tierInfo.colors.text}`}>
-                          {tierInfo.name}
+                        <span className="text-xs">{badgeInfo.icon}</span>
+                        <span className={`text-[10px] font-bold ${badgeInfo.colors.text}`}>
+                          {badgeInfo.name}
                         </span>
                       </motion.div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500">
-                    {donor.donation_count} contribution
-                    {donor.donation_count !== 1 ? "s" : ""}
-                  </p>
                 </div>
 
-                {/* Amount */}
+                {/* Milestones Count */}
                 <div className="text-right">
-                  <motion.p
+                  <motion.div
                     animate={isChanged ? { scale: [1, 1.1, 1] } : {}}
                     transition={{ duration: 0.4 }}
-                    className={`font-bold ${
+                    className="flex items-center gap-1"
+                  >
+                    <Target className={`h-4 w-4 ${
                       donor.rank === 1
-                        ? "text-yellow-600 text-lg"
+                        ? "text-yellow-600"
+                        : donor.rank <= 3
+                        ? "text-amber-600"
+                        : "text-gray-500"
+                    }`} />
+                    <span className={`font-bold text-lg ${
+                      donor.rank === 1
+                        ? "text-yellow-600"
                         : donor.rank <= 3
                         ? "text-amber-600"
                         : "text-gray-700"
-                    }`}
-                  >
-                    {formatCents(donor.total_donated_cents)}
-                  </motion.p>
+                    }`}>
+                      {donor.milestones_completed}
+                    </span>
+                  </motion.div>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wider">
-                    Total
+                    Milestones
                   </p>
                 </div>
               </motion.div>
