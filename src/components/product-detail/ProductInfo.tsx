@@ -3,6 +3,16 @@ import { Button } from "@/components/ui/button";
 import ProductConfiguratorLoader from "@/components/ProductConfiguratorLoader";
 import ArtworkUpload from "@/components/ArtworkUpload";
 
+// Remove "US" suffix from product names for display
+const cleanProductName = (name: string): string => {
+  return name
+    .replace(/\s*\(US\)\s*/gi, '')
+    .replace(/\s+-\s*US\s*$/gi, '')
+    .replace(/\s+US\s*$/gi, '')
+    .replace(/\s+-\s*US\s+-/gi, ' - ')
+    .trim();
+};
+
 type ProductInfoProps = {
   product: {
     id: string;
@@ -49,7 +59,7 @@ export default function ProductInfo({
       {/* Title and Rating */}
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-          {product.name}
+          {cleanProductName(product.name)}
         </h1>
 
         {/* Rating */}
