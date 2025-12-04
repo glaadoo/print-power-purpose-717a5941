@@ -15,6 +15,16 @@ import { addRecentlyViewed } from "@/lib/recently-viewed";
 import Footer from "@/components/Footer";
 import { shouldShowProduct } from "@/lib/product-utils";
 
+// Remove "US" suffix from product names for display
+const cleanProductName = (name: string): string => {
+  return name
+    .replace(/\s*\(US\)\s*/gi, '')
+    .replace(/\s+-\s*US\s*$/gi, '')
+    .replace(/\s+US\s*$/gi, '')
+    .replace(/\s+-\s*US\s+-/gi, ' - ')
+    .trim();
+};
+
 type ProductRow = {
   id: string;
   name: string;
@@ -147,7 +157,7 @@ export default function ProductDetail() {
   }, [id]);
 
   useEffect(() => {
-    document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
+    document.title = product ? `${cleanProductName(product.name)} - Print Power Purpose` : "Product - Print Power Purpose";
   }, [product]);
 
   // Calculate unit price - SinaLite always requires configuration
