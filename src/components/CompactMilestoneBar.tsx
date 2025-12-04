@@ -19,20 +19,21 @@ export default function CompactMilestoneBar() {
   const currentProgressCents = nonprofit.current_progress_cents || 0;
   const milestoneCount = nonprofit.milestone_count || 0;
   
-  // Calculate progress toward CURRENT milestone (not cumulative)
-  // Progress resets after each $777 milestone
+  // Calculate progress toward CURRENT milestone only (resets after each $777)
+  // If someone has raised $2,385, they've hit 3 milestones ($2,331) and are $54 into the next
   const progressTowardCurrentMilestone = currentProgressCents % MILESTONE_GOAL_CENTS;
-  const totalProgressCents = progressTowardCurrentMilestone + totalCents;
-  const progressPercent = Math.min((totalProgressCents / MILESTONE_GOAL_CENTS) * 100, 100);
-  const isGoalReached = totalProgressCents >= MILESTONE_GOAL_CENTS;
+  const progressWithCart = progressTowardCurrentMilestone + totalCents;
+  const progressPercent = Math.min((progressWithCart / MILESTONE_GOAL_CENTS) * 100, 100);
+  const isGoalReached = progressWithCart >= MILESTONE_GOAL_CENTS;
   
-  const currentProgressUsd = (totalProgressCents / 100).toLocaleString("en-US", {
+  // Display only progress toward current milestone, not total ever raised
+  const displayProgressUsd = (progressWithCart / 100).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
   });
   
-  const remainingCents = Math.max(MILESTONE_GOAL_CENTS - totalProgressCents, 0);
+  const remainingCents = Math.max(MILESTONE_GOAL_CENTS - progressWithCart, 0);
   const remainingUsd = (remainingCents / 100).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -151,7 +152,7 @@ export default function CompactMilestoneBar() {
           />
           
           <div className="flex justify-between text-xs mt-1">
-            <span className="text-muted-foreground">{currentProgressUsd} / $777</span>
+            <span className="text-muted-foreground">{displayProgressUsd} / $777</span>
             {!isGoalReached && (
               <span className="text-emerald-600 font-medium">{remainingUsd} to milestone!</span>
             )}
