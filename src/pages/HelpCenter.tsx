@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
-import MenuOverlay from "@/components/MenuOverlay";
-import useToggle from "@/hooks/useToggle";
+import VistaprintNav from "@/components/VistaprintNav";
+import Footer from "@/components/Footer";
 import {
   Accordion,
   AccordionContent,
@@ -65,121 +65,75 @@ const faqs = [
 
 export default function HelpCenter() {
   const nav = useNavigate();
-  const menu = useToggle(false);
 
-  // Set document title
   useEffect(() => {
     document.title = "Help Center - Print Power Purpose";
   }, []);
 
   return (
-    <div className="min-h-screen text-white">
-      {/* Top bar - Brand only */}
-      <header
-        className="
-          fixed top-0 inset-x-0 z-50
-          h-14 px-4 md:px-6
-          flex items-center justify-center
-          text-white
-          backdrop-blur bg-black/20
-          border-b border-white/10
-        "
-      >
-        {/* Center: Brand */}
-        <a
-          href="/"
-          className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase"
-          aria-label="Print Power Purpose Home"
-        >
-          PRINT&nbsp;POWER&nbsp;PURPOSE
-        </a>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      {/* Fixed Video Background */}
+      <VideoBackground
+        srcMp4="/media/hero.mp4"
+        srcWebm="/media/hero.webm"
+        poster="/media/hero-poster.jpg"
+        parallaxVh={8}
+        overlay={<div className="absolute inset-0 bg-black/50" />}
+        className="fixed inset-0 -z-10"
+      />
 
-      {/* Main scrollable content */}
-      <div 
-        className="pt-14 min-h-screen overflow-y-auto scroll-smooth pb-24"
-        role="main"
-        aria-label="Help Center content"
-      >
-        {/* Hero Section */}
-        <section className="relative py-16 md:py-24 px-4">
-          <VideoBackground
-            srcMp4="/media/hero.mp4"
-            srcWebm="/media/hero.webm"
-            poster="/media/hero-poster.jpg"
-            parallaxVh={8}
-            overlay={<div className="absolute inset-0 bg-black/40" />}
-            className="fixed inset-0 -z-10"
-          />
+      {/* Navigation */}
+      <VistaprintNav />
 
-          <div className="max-w-4xl mx-auto text-center mb-16">
-            <h1 className="font-serif text-[clamp(2.4rem,6vw,4.5rem)] leading-tight font-semibold drop-shadow-md mb-6">
+      {/* Main Content */}
+      <main className="flex-1 pt-8 pb-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
               How can we help you today?
             </h1>
-            <p className="text-base md:text-lg opacity-90">
-              Find answers to frequently asked questions below, or chat with kenzie-AI.
+            <p className="text-lg text-white/90 drop-shadow">
+              Find answers to frequently asked questions below
             </p>
           </div>
 
-          {/* FAQ Section */}
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-background/95 backdrop-blur-md rounded-2xl border border-border/20 shadow-xl p-6 md:p-8">
-              <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-6">
-                Frequently Asked Questions
-              </h2>
-              <Accordion type="single" collapsible className="space-y-2">
-                {faqs.map((faq) => (
-                  <AccordionItem key={faq.id} value={faq.id} className="border-b border-border/50">
-                    <AccordionTrigger className="text-left text-base md:text-lg font-medium text-foreground hover:text-primary transition-colors py-4">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground text-sm md:text-base leading-relaxed pb-4">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-              
-              {/* Contact CTA */}
-              <div className="mt-8 pt-6 border-t border-border/50 text-center">
-                <p className="text-muted-foreground mb-4">
-                  Still have questions?
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => {
-                      const event = new CustomEvent('open-kenzie-chat');
-                      window.dispatchEvent(event);
-                    }}
-                    className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    Chat with Kenzie 🐾
-                  </button>
-                  <button
-                    onClick={() => nav('/contact')}
-                    className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/90 transition-colors"
-                  >
-                    Contact Support
-                  </button>
-                </div>
-              </div>
+          {/* FAQ Card */}
+          <div className="bg-background/95 backdrop-blur-md rounded-2xl border border-border/20 shadow-xl p-6 md:p-8">
+            <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-6">
+              Frequently Asked Questions
+            </h2>
+            <Accordion type="single" collapsible className="space-y-2">
+              {faqs.map((faq) => (
+                <AccordionItem key={faq.id} value={faq.id} className="border-b border-border/50">
+                  <AccordionTrigger className="text-left text-base md:text-lg font-medium text-foreground hover:text-primary transition-colors py-4">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground text-sm md:text-base leading-relaxed pb-4">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            
+            {/* Contact CTA */}
+            <div className="mt-8 pt-6 border-t border-border/50 text-center">
+              <p className="text-muted-foreground mb-4">
+                Still have questions?
+              </p>
+              <button
+                onClick={() => nav('/contact')}
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              >
+                Contact Support
+              </button>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </main>
 
-      {/* Full-screen overlay menu */}
-      <MenuOverlay
-        open={menu.open}
-        onClose={menu.off}
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Help Center", href: "/help" },
-          { label: "Products", href: "/products" },
-          { label: "Causes", href: "/causes" },
-          { label: "Contact", href: "/contact" },
-        ]}
-      />
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
