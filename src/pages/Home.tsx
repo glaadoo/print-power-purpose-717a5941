@@ -346,7 +346,7 @@ export default function Home() {
             </div>
             {isAuthenticated ? (
               <button
-                onClick={() => nav("/select/nonprofit")}
+                onClick={() => nav("/welcome")}
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <span>🖨️</span>
