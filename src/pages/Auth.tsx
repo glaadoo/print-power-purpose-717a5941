@@ -382,7 +382,7 @@ export default function Auth() {
         </button>
         
         <span className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase text-blue-600">
-          Sign In
+          {mode === "signin" ? "Sign In" : "Sign Up"}
         </span>
         
         <div className="w-9" />
