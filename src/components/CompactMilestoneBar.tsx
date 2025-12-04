@@ -19,8 +19,10 @@ export default function CompactMilestoneBar() {
   const currentProgressCents = nonprofit.current_progress_cents || 0;
   const milestoneCount = nonprofit.milestone_count || 0;
   
-  // Calculate total progress including current cart
-  const totalProgressCents = currentProgressCents + totalCents;
+  // Calculate progress toward CURRENT milestone (not cumulative)
+  // Progress resets after each $777 milestone
+  const progressTowardCurrentMilestone = currentProgressCents % MILESTONE_GOAL_CENTS;
+  const totalProgressCents = progressTowardCurrentMilestone + totalCents;
   const progressPercent = Math.min((totalProgressCents / MILESTONE_GOAL_CENTS) * 100, 100);
   const isGoalReached = totalProgressCents >= MILESTONE_GOAL_CENTS;
   
