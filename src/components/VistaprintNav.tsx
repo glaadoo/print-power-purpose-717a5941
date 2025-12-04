@@ -303,6 +303,8 @@ export default function VistaprintNav() {
                       <button
                         onClick={async () => {
                           await supabase.auth.signOut();
+                          // Clear onboarding access flag on sign out
+                          localStorage.removeItem("ppp_access");
                           setMenuOpen(false);
                           navigate("/");
                         }}
