@@ -710,8 +710,10 @@ export default function Products() {
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-bold text-gray-900 capitalize">
-                  {selectedCategory === "all" ? "All Products" : selectedCategory?.replace(/-/g, ' ')}
+                <h1 className="text-4xl font-bold text-gray-900">
+                  {selectedCategory === "all" 
+                    ? "All Products" 
+                    : cachedCategories.find(c => c.slug === selectedCategory)?.name || selectedCategory?.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                 </h1>
                 {selectedCategory !== "all" && (
                   <button
