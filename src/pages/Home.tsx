@@ -272,8 +272,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Content area - clean left-aligned column */}
-              <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
+              {/* Content area - centered column */}
+              <div className="flex-1 flex flex-col items-center text-center">
                 {/* Heading with tighter line height */}
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-3">
                   Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500">Print Power Purpose</span>
@@ -285,20 +285,20 @@ export default function Home() {
                 </p>
                 
                 {/* Description - lighter weight */}
-                <p className="text-sm md:text-base text-gray-600 mb-5 max-w-lg leading-relaxed">
+                <p className="text-sm md:text-base text-gray-600 mb-6 max-w-lg leading-relaxed text-center">
                   We connect generous people with impactful nonprofits and help communities achieve their goals — one contribution at a time.
                 </p>
 
-                {/* Cause Icons - slightly left of center */}
-                <div className="flex flex-wrap justify-center md:justify-start md:pl-12 gap-3 mb-6 w-full">
+                {/* Cause Icons - centered */}
+                <div className="flex justify-center mb-6">
                   <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                     <span className="text-xl">💚</span>
                     <span className="text-sm font-medium text-gray-700">Nonprofits</span>
                   </div>
                 </div>
 
-                {/* CTA Button - slightly left of center */}
-                <div className="flex justify-center md:justify-start md:pl-12 w-full">
+                {/* CTA Button - centered */}
+                <div className="flex justify-center">
                   <button
                     onClick={() => {
                       if (isAuthenticated) {
