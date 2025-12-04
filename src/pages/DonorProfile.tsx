@@ -737,7 +737,7 @@ export default function DonorProfile() {
             {donations.filter(d => d.amount_cents > 0).length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">
-                  No milestone contributions yet. Orders of $1,554+ contribute $777 to your selected nonprofit!
+                  No milestone contributions yet. Complete qualifying orders to contribute $777 milestones to your selected nonprofit!
                 </p>
                 <Button onClick={() => navigate("/products")}>
                   Start Shopping
@@ -792,12 +792,9 @@ export default function DonorProfile() {
                           </div>
                           <div className="text-right flex items-center gap-3">
                             <div className="flex flex-col items-end">
-                              <span className="text-sm font-medium text-foreground">
-                                {formatCents(group.totalCents)} contributed
-                              </span>
                               <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
                                 <CheckCircle2 className="h-3 w-3" />
-                                {group.milestoneCount} × $777
+                                {group.milestoneCount} × $777 milestone{group.milestoneCount !== 1 ? 's' : ''}
                               </span>
                             </div>
                             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
