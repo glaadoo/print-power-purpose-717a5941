@@ -289,16 +289,16 @@ export default function Home() {
                   We connect generous people with impactful nonprofits and help communities achieve their goals — one contribution at a time.
                 </p>
 
-                {/* Cause Icons - centered */}
-                <div className="flex flex-wrap justify-center gap-3 mb-6 w-full">
+                {/* Cause Icons - slightly left of center */}
+                <div className="flex flex-wrap justify-center md:justify-start md:pl-12 gap-3 mb-6 w-full">
                   <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                     <span className="text-xl">💚</span>
                     <span className="text-sm font-medium text-gray-700">Nonprofits</span>
                   </div>
                 </div>
 
-                {/* CTA Button - centered */}
-                <div className="flex justify-center w-full">
+                {/* CTA Button - slightly left of center */}
+                <div className="flex justify-center md:justify-start md:pl-12 w-full">
                   <button
                     onClick={() => {
                       if (isAuthenticated) {
