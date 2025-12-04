@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Check, X } from "lucide-react";
+import { Search, Check, X, Trophy } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 
 type Nonprofit = {
   id: string;
@@ -11,12 +12,16 @@ type Nonprofit = {
   state?: string | null;
   source?: string | null;
   irs_status?: string | null;
+  milestone_count?: number;
+  current_progress_cents?: number;
 };
 
 type Props = {
   onSelect: (nonprofit: Nonprofit) => void;
   selectedId?: string | null;
 };
+
+const MILESTONE_GOAL_CENTS = 77700; // $777
 
 const RECENT_NONPROFITS_KEY = "ppp_recent_nonprofits";
 const MAX_RECENT = 6;
@@ -55,7 +60,7 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
       
       let queryBuilder = supabase
         .from("nonprofits")
-        .select("id, name, ein, city, state, source, irs_status")
+        .select("id, name, ein, city, state, source, irs_status, milestone_count, current_progress_cents")
         .eq("approved", true);
 
       if (normalizedQuery === "") {
@@ -124,7 +129,15 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <p className="text-xs text-white/70 mb-1 uppercase tracking-wider">Your Selected Cause</p>
-              <h3 className="text-white font-semibold text-base mb-1">{selectedNonprofit.name}</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-white font-semibold text-base">{selectedNonprofit.name}</h3>
+                {(selectedNonprofit.milestone_count || 0) > 0 && (
+                  <div className="flex items-center gap-1 bg-yellow-500/20 border border-yellow-500/50 rounded-full px-2 py-0.5">
+                    <Trophy className="w-3 h-3 text-yellow-400" />
+                    <span className="text-xs font-bold text-yellow-300">{selectedNonprofit.milestone_count}</span>
+                  </div>
+                )}
+              </div>
               {selectedNonprofit.ein && (
                 <p className="text-xs text-white/60">EIN: {selectedNonprofit.ein}</p>
               )}
@@ -133,6 +146,21 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
                   {[selectedNonprofit.city, selectedNonprofit.state].filter(Boolean).join(", ")}
                 </p>
               )}
+              {/* Progress bar toward next milestone */}
+              {(() => {
+                const progress = selectedNonprofit.current_progress_cents || 0;
+                const progressTowardMilestone = progress % MILESTONE_GOAL_CENTS;
+                const progressPercent = Math.min((progressTowardMilestone / MILESTONE_GOAL_CENTS) * 100, 100);
+                return (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-[10px] text-white/60 mb-1">
+                      <span>Progress to milestone #{(selectedNonprofit.milestone_count || 0) + 1}</span>
+                      <span>{progressPercent.toFixed(0)}%</span>
+                    </div>
+                    <Progress value={progressPercent} className="h-1.5 bg-white/20 [&>div]:bg-emerald-400" />
+                  </div>
+                );
+              })()}
             </div>
             <div className="flex-shrink-0 flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
@@ -228,7 +256,15 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <div className="text-base font-semibold text-white">{nonprofit.name}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-base font-semibold text-white">{nonprofit.name}</div>
+                    {(nonprofit.milestone_count || 0) > 0 && (
+                      <div className="flex items-center gap-1 bg-yellow-500/20 border border-yellow-500/50 rounded-full px-2 py-0.5">
+                        <Trophy className="w-3 h-3 text-yellow-400" />
+                        <span className="text-xs font-bold text-yellow-300">{nonprofit.milestone_count}</span>
+                      </div>
+                    )}
+                  </div>
                   {nonprofit.ein && (
                     <div className="text-xs text-white/70 mt-1">EIN: {nonprofit.ein}</div>
                   )}
@@ -237,6 +273,21 @@ export default function NonprofitSearch({ onSelect, selectedId }: Props) {
                       {[nonprofit.city, nonprofit.state].filter(Boolean).join(", ")}
                     </div>
                   )}
+                  {/* Progress bar toward next milestone */}
+                  {(() => {
+                    const progress = nonprofit.current_progress_cents || 0;
+                    const progressTowardMilestone = progress % MILESTONE_GOAL_CENTS;
+                    const progressPercent = Math.min((progressTowardMilestone / MILESTONE_GOAL_CENTS) * 100, 100);
+                    return (
+                      <div className="mt-2">
+                        <div className="flex justify-between text-[10px] text-white/60 mb-1">
+                          <span>Progress to milestone #{(nonprofit.milestone_count || 0) + 1}</span>
+                          <span>{progressPercent.toFixed(0)}%</span>
+                        </div>
+                        <Progress value={progressPercent} className="h-1.5 bg-white/20 [&>div]:bg-emerald-400" />
+                      </div>
+                    );
+                  })()}
                 </div>
                 {selectedId === nonprofit.id && (
                   <div className="flex-shrink-0">
