@@ -634,16 +634,14 @@ export default function SelectNonprofit() {
                 )}
 
                 {/* Milestone Count */}
-                {(np.milestone_count || 0) > 0 && (
-                  <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground mb-1">$777 Milestones Achieved</p>
-                      <p className="text-2xl font-bold text-primary">
-                        {(np.milestone_count || 0).toLocaleString()}
-                      </p>
-                    </div>
+                <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground mb-1">$777 Milestones Achieved</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {(np.milestone_count || 0).toLocaleString()}
+                    </p>
                   </div>
-                )}
+                </div>
 
                 {/* Select Button */}
                 <Button
@@ -735,14 +733,12 @@ export default function SelectNonprofit() {
                   </div>
 
                   {/* Milestone Count */}
-                  {(np.milestone_count || 0) > 0 && (
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Milestones</p>
-                      <p className="text-lg font-bold text-primary">
-                        {(np.milestone_count || 0).toLocaleString()}
-                      </p>
-                    </div>
-                  )}
+                  <div className="text-center px-3 py-1 bg-primary/5 rounded-lg">
+                    <p className="text-xs text-muted-foreground">Milestones</p>
+                    <p className="text-lg font-bold text-primary">
+                      {(np.milestone_count || 0).toLocaleString()}
+                    </p>
+                  </div>
 
                   {/* Select Button */}
                   <Button
