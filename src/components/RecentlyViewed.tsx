@@ -1,104 +1,45 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getRecentlyViewed, type RecentlyViewedProduct } from "@/lib/recently-viewed";
-import GlassCard from "./GlassCard";
+import ProductCard from "./ProductCard";
 import { Button } from "./ui/button";
-import { Clock, X, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import useToggle from "@/hooks/useToggle";
+import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { shouldShowProduct } from "@/lib/product-utils";
+import useEmblaCarousel from "embla-carousel-react";
 
 type ProductDetails = RecentlyViewedProduct & {
-  base_cost_cents?: number;
+  base_cost_cents: number;
   pricing_data?: any;
   description?: string | null;
   subcategory?: string | null;
   vendor?: string | null;
   is_active?: boolean | null;
+  min_price_cents?: number | null;
+  min_price_variant_key?: string | null;
+  price_override_cents?: number | null;
+  vendor_product_id?: string | null;
+  generated_image_url?: string | null;
 };
-
-function RecentlyViewedCard({ product, onClick }: { product: ProductDetails; onClick: () => void }) {
-  const { open: descriptionOpen, toggle: toggleDescription } = useToggle(false);
-  
-  return (
-    <div className="flex-shrink-0 w-[250px]">
-      <GlassCard padding="p-4">
-        <div className="cursor-pointer space-y-3">
-          {/* Product Image */}
-          <div 
-            onClick={onClick}
-            className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-white/5 border border-white/10"
-          >
-            {product.image_url ? (
-              <img 
-                src={product.image_url} 
-                alt={product.name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-white/5">
-                <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            )}
-          </div>
-
-          {/* Product Info */}
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-[#0057FF] line-clamp-2" onClick={onClick}>
-              {product.name}
-            </h3>
-            {product.category && (
-              <p className="text-xs text-gray-600">{product.category}</p>
-            )}
-            <p className="text-xs text-gray-500">
-              Viewed {formatTimeAgo(product.viewedAt)}
-            </p>
-            
-            {/* Description Toggle */}
-            {product.description && (
-              <Collapsible open={descriptionOpen} onOpenChange={toggleDescription}>
-                <CollapsibleTrigger 
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  <span>{descriptionOpen ? 'Hide Details' : 'Show Details'}</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${descriptionOpen ? 'rotate-180' : ''}`} />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="animate-accordion-down">
-                  <p className="text-xs text-gray-600 mt-2 line-clamp-3">
-                    {product.description}
-                  </p>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-          </div>
-
-          {/* View Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick();
-            }}
-          >
-            View Product
-          </Button>
-        </div>
-      </GlassCard>
-    </div>
-  );
-}
 
 export default function RecentlyViewed() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<ProductDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scrollPosition, setScrollPosition] = useState(0);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: false, 
+    align: "start",
+    slidesToScroll: 1,
+  });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
 
   useEffect(() => {
     loadRecentlyViewed();
@@ -119,7 +60,7 @@ export default function RecentlyViewed() {
       const productIds = recent.map(p => p.id);
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, image_url, category, base_cost_cents, pricing_data, description, vendor, is_active")
+        .select("id, name, image_url, generated_image_url, category, base_cost_cents, pricing_data, description, vendor, is_active, min_price_cents, min_price_variant_key, price_override_cents, vendor_product_id")
         .in("id", productIds)
         .eq("is_active", true);
 
@@ -129,11 +70,12 @@ export default function RecentlyViewed() {
       const enriched = recent
         .map(recentProduct => {
           const fullProduct = data?.find(p => p.id === recentProduct.id);
-          if (!fullProduct) return null;
+          if (!fullProduct || fullProduct.base_cost_cents === null || fullProduct.base_cost_cents === undefined) return null;
           
           return {
             ...fullProduct,
             ...recentProduct, // Preserve localStorage data (subcategory, viewedAt) over DB data
+            base_cost_cents: fullProduct.base_cost_cents,
           };
         })
         .filter(Boolean) as ProductDetails[];
@@ -148,42 +90,22 @@ export default function RecentlyViewed() {
     }
   };
 
-  const handleProductClick = (product: ProductDetails) => {
-    // Generate slug from name
-    const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    const categorySlug = slugify(product.category || 'uncategorized');
-    const subcategorySlug = product.subcategory ? slugify(product.subcategory) : 'all';
-    const productSlug = slugify(product.name);
-    navigate(`/products/${categorySlug}/${subcategorySlug}/${productSlug}`, { state: { productId: product.id } });
-  };
-
-  const scrollLeft = () => {
-    const container = document.getElementById('recently-viewed-container');
-    if (container) {
-      const scrollAmount = 300;
-      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-      setScrollPosition(container.scrollLeft - scrollAmount);
-    }
-  };
-
-  const scrollRight = () => {
-    const container = document.getElementById('recently-viewed-container');
-    if (container) {
-      const scrollAmount = 300;
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-      setScrollPosition(container.scrollLeft + scrollAmount);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="w-full py-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="w-5 h-5 text-white/70" />
-          <h2 className="text-xl font-bold text-white">Recently Viewed</h2>
+      <section className="bg-white py-16 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-64 mx-auto mb-8"></div>
+              <div className="flex gap-6 overflow-hidden">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex-shrink-0 w-72 h-80 bg-gray-100 rounded-2xl"></div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="text-white/60 text-sm">Loading...</div>
-      </div>
+      </section>
     );
   }
 
@@ -192,76 +114,54 @@ export default function RecentlyViewed() {
   }
 
   return (
-    <div className="w-full py-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 section-title" />
-          <h2 className="text-xl font-bold section-title">Recently Viewed</h2>
-          <span className="text-sm text-gray-600">({products.length})</span>
-        </div>
-        
-        {products.length > 3 && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={scrollLeft}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={scrollRight}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+    <section className="bg-white py-16 border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="w-6 h-6 text-gray-700" />
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Recently Viewed
+              </h2>
+              <span className="text-sm text-gray-500 ml-2">({products.length})</span>
+            </div>
+            <p className="text-gray-600">Continue where you left off</p>
           </div>
-        )}
-      </div>
+          
+          {/* Navigation Arrows */}
+          {products.length > 3 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={scrollPrev}
+                className="rounded-full border-gray-300 hover:bg-gray-100"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={scrollNext}
+                className="rounded-full border-gray-300 hover:bg-gray-100"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
+        </div>
 
-      <div 
-        id="recently-viewed-container"
-        className="flex gap-4 overflow-x-auto pb-4 scroll-smooth hide-scrollbar"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}
-      >
-        {products.map(product => (
-          <RecentlyViewedCard 
-            key={product.id} 
-            product={product} 
-            onClick={() => handleProductClick(product)} 
-          />
-        ))}
+        {/* Carousel */}
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-6">
+            {products.map(product => (
+              <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[300px] md:w-[320px]">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-
-      <style>{`
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-    </div>
+    </section>
   );
-}
-
-// Format timestamp to human-readable "time ago"
-function formatTimeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  
-  if (seconds < 60) return 'just now';
-  
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  
-  return new Date(timestamp).toLocaleDateString();
 }
