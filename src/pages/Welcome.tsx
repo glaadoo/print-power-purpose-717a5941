@@ -109,9 +109,7 @@ export default function Welcome() {
     // Set access flag for user who has completed onboarding
     localStorage.setItem("ppp_access", session?.user ? "user" : "guest");
     
-    if (value === "school") navigate("/select/school?flow=shopping");
-    else if (value === "nonprofit") navigate("/select/nonprofit?flow=shopping");
-    else if (value === "personal") navigate("/select/personal?flow=shopping");
+    if (value === "nonprofit") navigate("/nonprofit");
   }
 
   if (loading) {
@@ -231,6 +229,10 @@ export default function Welcome() {
                     )}
                     {step >= 3 && (
                       <div className="mt-1">
+                        <p className="text-white/90 mb-3 text-base sm:text-lg leading-relaxed max-w-md mx-auto">
+                          Your print purchase powers nonprofits.<br />
+                          Ready to make a change?
+                        </p>
                         <p className="text-gray-800 mb-2 text-lg font-semibold">
                           What are we printing for today?
                         </p>
@@ -243,18 +245,12 @@ export default function Welcome() {
                           <option value="" disabled className="text-black">
                             Select an option
                           </option>
-                          <option value="school" className="text-black">
-                            School
-                          </option>
                           <option value="nonprofit" className="text-black">
                             Nonprofit
                           </option>
-                          <option value="personal" className="text-black">
-                          Personal mission
-                        </option>
-                      </select>
-                    </div>
-                  )}
+                        </select>
+                      </div>
+                    )}
                 </div>
               </div>
               {/* Spacer for footer clearance */}
