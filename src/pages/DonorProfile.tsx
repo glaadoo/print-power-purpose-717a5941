@@ -17,8 +17,14 @@ import {
   TrendingUp,
   HelpCircle,
   CheckCircle2,
-  Lock
+  Lock,
+  ChevronDown
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { motion } from "framer-motion";
 import { 
   MILESTONE_BADGE_TIERS, 
@@ -733,7 +739,7 @@ export default function DonorProfile() {
           </CardContent>
         </Card>
 
-        {/* Impact Journey Timeline */}
+        {/* Impact Journey Timeline - Grouped by Nonprofit */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -752,61 +758,101 @@ export default function DonorProfile() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
-                {donations.slice(0, 10).map((donation, index) => {
-                  return (
-                    <motion.div
-                      key={donation.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
-                        donation.is_milestone 
-                          ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/20' 
-                          : 'bg-muted/30 hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full ${
-                          donation.is_milestone 
-                            ? 'bg-yellow-500/20' 
-                            : 'bg-primary/10'
-                        }`}>
-                          {donation.is_milestone ? (
-                            <Trophy className="h-4 w-4 text-yellow-600" />
-                          ) : (
-                            <Heart className="h-4 w-4 text-primary" />
-                          )}
+              <div className="space-y-4">
+                {/* Group donations by nonprofit */}
+                {(() => {
+                  const grouped = donations.reduce((acc, donation) => {
+                    const key = donation.nonprofit_name || "General Impact";
+                    if (!acc[key]) {
+                      acc[key] = {
+                        name: key,
+                        donations: [],
+                        totalCents: 0,
+                        hasMilestone: false
+                      };
+                    }
+                    acc[key].donations.push(donation);
+                    acc[key].totalCents += donation.amount_cents;
+                    if (donation.is_milestone) acc[key].hasMilestone = true;
+                    return acc;
+                  }, {} as Record<string, { name: string; donations: typeof donations; totalCents: number; hasMilestone: boolean }>);
+
+                  return Object.values(grouped).map((group, groupIndex) => (
+                    <Collapsible key={group.name} defaultOpen={groupIndex === 0}>
+                      <CollapsibleTrigger className="w-full">
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: groupIndex * 0.05 }}
+                          className={`flex items-center justify-between p-4 rounded-lg transition-colors cursor-pointer ${
+                            group.hasMilestone 
+                              ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/20' 
+                              : 'bg-muted/30 hover:bg-muted/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-full ${
+                              group.hasMilestone 
+                                ? 'bg-yellow-500/20' 
+                                : 'bg-primary/10'
+                            }`}>
+                              {group.hasMilestone ? (
+                                <Trophy className="h-4 w-4 text-yellow-600" />
+                              ) : (
+                                <Heart className="h-4 w-4 text-primary" />
+                              )}
+                            </div>
+                            <div className="text-left">
+                              <p className="font-medium text-foreground">
+                                {group.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {group.donations.length} contribution{group.donations.length > 1 ? 's' : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right flex items-center gap-3">
+                            <div className="flex flex-col items-end">
+                              <span className="text-sm font-medium text-foreground">
+                                {formatCents(group.totalCents)} total
+                              </span>
+                              {group.hasMilestone && (
+                                <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Milestone 🎉
+                                </span>
+                              )}
+                            </div>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                          </div>
+                        </motion.div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="ml-6 mt-2 space-y-2 border-l-2 border-muted pl-4">
+                          {group.donations.map((donation, index) => (
+                            <motion.div
+                              key={donation.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.03 }}
+                              className="flex items-center justify-between p-3 rounded-md bg-background/50 hover:bg-muted/30 transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-primary/50" />
+                                <p className="text-sm text-muted-foreground">
+                                  {formatDate(donation.created_at)}
+                                </p>
+                              </div>
+                              <span className="text-sm text-foreground">
+                                {formatCents(donation.amount_cents)} contributed
+                              </span>
+                            </motion.div>
+                          ))}
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {donation.nonprofit_name || "General Impact"}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(donation.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end gap-1">
-                        {donation.is_milestone ? (
-                          <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Milestone Achieved 🎉
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            {formatCents(donation.amount_cents)} contributed
-                          </span>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-                {donations.length > 10 && (
-                  <p className="text-center text-sm text-muted-foreground pt-2">
-                    And {donations.length - 10} more contributions...
-                  </p>
-                )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ));
+                })()}
               </div>
             )}
           </CardContent>
