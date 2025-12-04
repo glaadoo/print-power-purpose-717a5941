@@ -370,31 +370,111 @@ export default function DonorProfile() {
           </div>
         </TooltipProvider>
 
-        {/* Progress to Next Badge */}
-        {nextBadge && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Progress to {nextBadge.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {milestonesCompleted} milestone{milestonesCompleted !== 1 ? 's' : ''} completed
-                </span>
-                <span className="text-muted-foreground">
-                  {nextBadge.milestonesRequired} milestones needed
-                </span>
+        {/* Badge Journey Pathway */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Your Milestone Journey
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Current Progress Summary */}
+            {nextBadge && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {milestonesCompleted} milestone{milestonesCompleted !== 1 ? 's' : ''} completed
+                  </span>
+                  <span className="text-primary font-medium">
+                    Next: {nextBadge.name} ({nextBadge.milestonesRequired} milestones)
+                  </span>
+                </div>
+                <Progress value={progress.percentage} className="h-3" />
+                <p className="text-center text-sm text-muted-foreground">
+                  {progress.remaining} more milestone{progress.remaining !== 1 ? 's' : ''} to reach {nextBadge.name}
+                </p>
               </div>
-              <Progress value={progress.percentage} className="h-3" />
-              <p className="text-center text-sm text-muted-foreground">
-                {progress.remaining} more milestone{progress.remaining !== 1 ? 's' : ''} to reach {nextBadge.name}
-              </p>
-            </CardContent>
-          </Card>
-        )}
+            )}
+            
+            {/* Visual Badge Pathway */}
+            <div className="relative">
+              {/* Connection Line */}
+              <div className="absolute top-8 left-0 right-0 h-1 bg-muted rounded-full" />
+              <div 
+                className="absolute top-8 left-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500"
+                style={{ 
+                  width: `${Math.min(100, (milestonesCompleted / 20) * 100)}%` 
+                }}
+              />
+              
+              {/* Badge Nodes */}
+              <div className="relative flex justify-between">
+                {MILESTONE_BADGE_TIERS.map((tier, index) => {
+                  const isAchieved = milestonesCompleted >= tier.milestonesRequired;
+                  const isNext = nextBadge?.id === tier.id;
+                  const isFuture = !isAchieved && !isNext;
+                  
+                  return (
+                    <div key={tier.id} className="flex flex-col items-center">
+                      {/* Badge Circle */}
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                        className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-all ${
+                          isAchieved 
+                            ? `${tier.colors.bg} ${tier.colors.border} border-2 shadow-lg` 
+                            : isNext 
+                              ? 'bg-primary/10 border-2 border-primary/50 ring-2 ring-primary/20 ring-offset-2' 
+                              : 'bg-muted border-2 border-dashed border-muted-foreground/20'
+                        }`}
+                      >
+                        {isAchieved ? (
+                          <span>{tier.icon}</span>
+                        ) : isFuture ? (
+                          <Lock className="h-5 w-5 text-muted-foreground/40" />
+                        ) : (
+                          <span className="opacity-50">{tier.icon}</span>
+                        )}
+                        
+                        {/* Achieved checkmark */}
+                        {isAchieved && (
+                          <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5">
+                            <CheckCircle2 className="h-4 w-4 text-white" />
+                          </div>
+                        )}
+                      </motion.div>
+                      
+                      {/* Badge Label */}
+                      <div className="mt-2 text-center">
+                        <p className={`text-xs font-medium ${
+                          isAchieved 
+                            ? tier.colors.text 
+                            : isNext 
+                              ? 'text-primary' 
+                              : 'text-muted-foreground'
+                        }`}>
+                          {tier.name}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {tier.milestonesRequired} milestone{tier.milestonesRequired !== 1 ? 's' : ''}
+                        </p>
+                        
+                        {/* Progress for next badge */}
+                        {isNext && (
+                          <p className="text-[10px] text-primary font-medium mt-1">
+                            {milestonesCompleted}/{tier.milestonesRequired}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* $777 Milestone Story Feature */}
         <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
