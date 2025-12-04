@@ -160,7 +160,7 @@ export const MILESTONE_BADGE_TIERS: MilestoneBadgeTier[] = [
     id: "platinum",
     name: "Platinum Impact",
     milestonesRequired: 10,
-    icon: "💎",
+    icon: "⭐",
     title: "10 MILESTONES",
     colors: {
       primary: "from-purple-400 to-indigo-600",
@@ -175,7 +175,7 @@ export const MILESTONE_BADGE_TIERS: MilestoneBadgeTier[] = [
     id: "diamond",
     name: "Diamond Legend",
     milestonesRequired: 20,
-    icon: "🌟",
+    icon: "💎",
     title: "20+ MILESTONES",
     colors: {
       primary: "from-cyan-400 to-blue-600",
