@@ -36,6 +36,16 @@ type ProductRow = {
   min_price_variant_key?: string | null;
 };
 
+// Remove "US" suffix from product names for display
+const cleanProductName = (name: string): string => {
+  return name
+    .replace(/\s*\(US\)\s*/gi, '')
+    .replace(/\s+-\s*US\s*$/gi, '')
+    .replace(/\s+US\s*$/gi, '')
+    .replace(/\s+-\s*US\s+-/gi, ' - ')
+    .trim();
+};
+
 export default function ProductDetail() {
   const { category, subcategory, productName, id: paramId } = useParams();
   const location = useLocation();
@@ -158,7 +168,7 @@ export default function ProductDetail() {
   }, [productId]);
 
   useEffect(() => {
-    document.title = product ? `${product.name} - Print Power Purpose` : "Product - Print Power Purpose";
+    document.title = product ? `${cleanProductName(product.name)} - Print Power Purpose` : "Product - Print Power Purpose";
   }, [product]);
 
   // Check if product requires configuration
@@ -362,7 +372,7 @@ export default function ProductDetail() {
               </>
             )}
             {" / "}
-            <span className="text-foreground">{product.name}</span>
+            <span className="text-foreground">{cleanProductName(product.name)}</span>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
@@ -405,7 +415,7 @@ export default function ProductDetail() {
             {/* Right: Product Details */}
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+                <h1 className="text-3xl font-bold mb-2">{cleanProductName(product.name)}</h1>
                 
                 {/* Rating */}
                 {reviewCount > 0 && (
