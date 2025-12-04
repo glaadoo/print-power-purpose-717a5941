@@ -624,9 +624,9 @@ serve(async (req) => {
           if (existing.generated_image_url) {
             product.generated_image_url = existing.generated_image_url;
           }
-          // Preserve existing min_price if already computed (background task has limited capacity)
-          // Only products without min_price_variant_key will be computed by background task
-          if (existing.min_price_cents && existing.min_price_variant_key) {
+          // Preserve existing min_price if already computed AND valid (not default 2000)
+          // Only products without valid min_price will be computed by background task
+          if (existing.min_price_cents && existing.min_price_variant_key && existing.min_price_cents !== 2000) {
             product.min_price_cents = existing.min_price_cents;
             product.min_price_variant_key = existing.min_price_variant_key;
           }
