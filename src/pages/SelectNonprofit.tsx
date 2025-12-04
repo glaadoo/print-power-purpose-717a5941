@@ -33,6 +33,7 @@ type Nonprofit = {
   tags?: string[] | null;
   logo_url?: string | null;
   milestone_count?: number;
+  current_progress_cents?: number;
   created_at?: string;
 };
 
@@ -200,10 +201,10 @@ export default function SelectNonprofit() {
     let alive = true;
     (async () => {
       try {
-        // Fetch all nonprofits with milestone_count
+        // Fetch all nonprofits with milestone_count and current_progress_cents
         const { data: nonprofitsData, error: nonprofitsError } = await supabase
           .from("nonprofits")
-          .select("id, name, ein, city, state, description, source, irs_status, tags, logo_url, created_at, milestone_count")
+          .select("id, name, ein, city, state, description, source, irs_status, tags, logo_url, created_at, milestone_count, current_progress_cents")
           .eq("approved", true)
           .order("name", { ascending: true });
 
@@ -815,6 +816,7 @@ export default function SelectNonprofit() {
             nonprofitName={selectedNonprofit.name}
             nonprofitId={selectedNonprofit.id}
             milestoneCount={selectedNonprofit.milestone_count || 0}
+            currentProgressCents={selectedNonprofit.current_progress_cents || 0}
             className="mb-8"
           />
         )}

@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Target, PartyPopper, Sparkles, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
+import { Progress } from "@/components/ui/progress";
 
 interface NonprofitMilestoneProgressProps {
   nonprofitName: string;
   nonprofitId: string;
   milestoneCount: number;
+  currentProgressCents: number;
   className?: string;
 }
 
@@ -16,6 +18,7 @@ export default function NonprofitMilestoneProgress({
   nonprofitName,
   nonprofitId,
   milestoneCount,
+  currentProgressCents,
   className = "",
 }: NonprofitMilestoneProgressProps) {
   const [hasTriggeredCelebration, setHasTriggeredCelebration] = useState(false);
@@ -26,6 +29,20 @@ export default function NonprofitMilestoneProgress({
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
+  });
+
+  // Calculate progress percentage
+  const progressPercent = Math.min((currentProgressCents / MILESTONE_GOAL_CENTS) * 100, 100);
+  const currentProgressUsd = (currentProgressCents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  });
+  const remainingCents = Math.max(MILESTONE_GOAL_CENTS - currentProgressCents, 0);
+  const remainingUsd = (remainingCents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
   });
 
   // Trigger celebration when milestone count increases
@@ -82,7 +99,20 @@ export default function NonprofitMilestoneProgress({
       </div>
 
       {/* Nonprofit Name */}
-      <p className="text-sm text-gray-600 mb-3 font-medium">{nonprofitName}</p>
+      <p className="text-sm text-gray-600 mb-4 font-medium">{nonprofitName}</p>
+
+      {/* Progress toward next milestone */}
+      <div className="mb-4">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="text-muted-foreground">Progress to next {goalUsd} milestone</span>
+          <span className="font-medium text-primary">{progressPercent.toFixed(0)}%</span>
+        </div>
+        <Progress value={progressPercent} className="h-3" />
+        <div className="flex justify-between text-xs mt-2 text-muted-foreground">
+          <span>{currentProgressUsd} raised</span>
+          <span>{remainingUsd} to go</span>
+        </div>
+      </div>
 
       {/* Milestone Count Display */}
       <div className="mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20">
