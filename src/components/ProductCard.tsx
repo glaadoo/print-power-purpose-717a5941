@@ -20,6 +20,16 @@ const cleanDescriptionPreview = (text: string): string => {
     .trim();
 };
 
+// Remove "US" suffix from product names for display
+const cleanProductName = (name: string): string => {
+  return name
+    .replace(/\s*\(US\)\s*/gi, '')
+    .replace(/\s+-\s*US\s*$/gi, '')
+    .replace(/\s+US\s*$/gi, '')
+    .replace(/\s+-\s*US\s+-/gi, ' - ')
+    .trim();
+};
+
 type ProductCardProps = {
   product: {
     id: string;
@@ -230,7 +240,7 @@ export default function ProductCard({ product, categorySlug, subcategorySlug, co
         
         {/* Product Name */}
         <h3 className={`font-bold product-name line-clamp-2 mb-1 ${compact ? 'text-xs min-h-[32px]' : 'text-base min-h-[48px] mb-2'}`}>
-          {product.name}
+          {cleanProductName(product.name)}
         </h3>
         
         
