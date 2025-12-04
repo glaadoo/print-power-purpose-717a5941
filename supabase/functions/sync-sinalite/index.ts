@@ -532,6 +532,11 @@ serve(async (req) => {
           imageUrl = typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url;
         }
 
+        // Determine is_active based on image availability
+        // Products without images will be synced but marked inactive
+        // Admins can later manually fix image_url and flip is_active = true
+        const hasImage = !!imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '';
+
         return {
           name: `${p.name || "Unnamed Product"} (${storeName})`,
           description: p.description || p.sku || null,
@@ -543,6 +548,7 @@ serve(async (req) => {
           vendor_id: `${p.id}_${storeCode}`,
           vendor_product_id: p.id.toString(),
           pricing_data: null,
+          is_active: hasImage, // Auto-set based on image availability
         };
       })
       .filter((p: any) => {
@@ -572,7 +578,7 @@ serve(async (req) => {
       const batchVendorIds = batch.map((p: any) => p.vendor_id);
       const { data: existingProducts, error: fetchError } = await supabase
         .from("products")
-        .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url, min_price_cents, min_price_variant_key")
+        .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url, min_price_cents, min_price_variant_key, is_active")
         .eq("vendor", "sinalite")
         .in("vendor_id", batchVendorIds);
 
@@ -592,6 +598,7 @@ serve(async (req) => {
             generated_image_url: product.generated_image_url,
             min_price_cents: product.min_price_cents,
             min_price_variant_key: product.min_price_variant_key,
+            is_active: product.is_active,
           });
         }
       }
@@ -630,6 +637,17 @@ serve(async (req) => {
             product.min_price_cents = existing.min_price_cents;
             product.min_price_variant_key = existing.min_price_variant_key;
           }
+          
+          // Recalculate is_active based on final image_url:
+          // - Products without images are ALWAYS inactive (can't be manually enabled)
+          // - Products with images preserve admin's is_active setting
+          const finalHasImage = !!product.image_url && typeof product.image_url === 'string' && product.image_url.trim() !== '';
+          if (!finalHasImage) {
+            product.is_active = false; // Force inactive if no image
+          } else if (existing.is_active !== undefined && existing.is_active !== null) {
+            product.is_active = existing.is_active; // Preserve admin setting if has image
+          }
+          // Otherwise keep the new product's is_active (which is true if has image)
         }
       }
       

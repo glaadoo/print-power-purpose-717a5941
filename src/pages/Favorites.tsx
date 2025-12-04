@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart, ShoppingCart, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import CompactMilestoneBar from "@/components/CompactMilestoneBar";
+import { filterProductsWithImages } from "@/lib/product-utils";
 
 type FavoriteProduct = {
   id: string;
@@ -21,6 +22,7 @@ type FavoriteProduct = {
   pricing_data?: any;
   vendor?: string | null;
   vendor_product_id?: string | null;
+  is_active?: boolean | null;
 };
 
 export default function Favorites() {
@@ -88,14 +90,15 @@ export default function Favorites() {
       const productIds = favoriteRecords.map(f => f.product_id);
       const { data: products, error: prodError } = await supabase
         .from("products")
-        .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor, pricing_data, vendor_product_id")
+        .select("id, name, base_cost_cents, price_override_cents, image_url, category, vendor, pricing_data, vendor_product_id, is_active")
         .in("id", productIds)
         .eq("is_active", true);
 
       if (prodError) throw prodError;
 
-      // Filter out Canada products
-      const filteredProducts = (products || []).filter(product => !product.name.toLowerCase().includes('canada'));
+      // Filter out Canada products and ensure all have valid images (safety filter)
+      const safeProducts = filterProductsWithImages(products || []);
+      const filteredProducts = safeProducts.filter(product => !product.name.toLowerCase().includes('canada'));
       setFavorites(filteredProducts);
     } catch (error: any) {
       console.error("Error fetching favorites:", error);

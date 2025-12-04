@@ -988,11 +988,16 @@ export default function AdminProducts() {
                               {product.vendor}
                             </Badge>
                             {!product.is_active && (
-                              <Badge variant="secondary">Inactive</Badge>
+                              <Badge variant="destructive" className="bg-red-500/80">Inactive</Badge>
+                            )}
+                            {!product.image_url && (
+                              <Badge variant="outline" className="text-amber-400 border-amber-400/50">
+                                No Image
+                              </Badge>
                             )}
                           </div>
                           
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4 text-sm">
                             <div>
                               <p className="text-white/60 mb-1">Base Price</p>
                               <p className="text-white font-medium">{formatCurrency(product.base_cost_cents)}</p>
@@ -1010,6 +1015,33 @@ export default function AdminProducts() {
                             <div>
                               <p className="text-white/60 mb-1">Final Price</p>
                               <p className="text-white font-bold text-lg">{formatCurrency(finalPrice)}</p>
+                            </div>
+                            <div>
+                              <p className="text-white/60 mb-1">Visibility</p>
+                              <Button
+                                size="sm"
+                                variant={product.is_active ? "default" : "outline"}
+                                className={product.is_active 
+                                  ? "bg-green-600 hover:bg-green-700 text-white text-xs h-7" 
+                                  : "bg-transparent border-white/30 text-white/70 text-xs h-7 hover:bg-white/10"}
+                                onClick={async () => {
+                                  try {
+                                    const { error } = await supabase
+                                      .from("products")
+                                      .update({ is_active: !product.is_active })
+                                      .eq("id", product.id);
+                                    if (error) throw error;
+                                    setProducts(prev => prev.map(p => 
+                                      p.id === product.id ? { ...p, is_active: !p.is_active } : p
+                                    ));
+                                    toast.success(product.is_active ? "Product hidden from store" : "Product visible in store");
+                                  } catch (err) {
+                                    toast.error("Failed to update visibility");
+                                  }
+                                }}
+                              >
+                                {product.is_active ? "Active" : "Hidden"}
+                              </Button>
                             </div>
                           </div>
                         </div>

@@ -277,6 +277,11 @@ serve(async (req) => {
             }
           }
 
+          // Determine is_active based on image availability
+          // Products without images will be synced but marked inactive
+          // Admins can later manually fix image_url and flip is_active = true
+          const hasImage = !!imageUrl && imageUrl.trim() !== '';
+
           return {
             name: product.name || "Unnamed Product",
             category: product.category,
@@ -285,22 +290,25 @@ serve(async (req) => {
             vendor: "scalablepress",
             vendor_id: product.id,
             vendor_product_id: product.id,
-            is_active: true,
+            is_active: hasImage, // Auto-set based on image availability
             base_cost_cents: baseCostCents,
             pricing_data: pricingData,
           };
         } catch (error) {
           console.error(`[SYNC-SCALABLEPRESS] Error fetching config for ${product.id}:`, error);
           // Return basic product without config data - set price to 0 so it gets filtered out
+          const fallbackImage = product.image?.url || null;
+          const hasFallbackImage = !!fallbackImage && fallbackImage.trim() !== '';
+          
           return {
             name: product.name || "Unnamed Product",
             category: product.category,
-            image_url: product.image?.url || null,
+            image_url: fallbackImage,
             description: null,
             vendor: "scalablepress",
             vendor_id: product.id,
             vendor_product_id: product.id,
-            is_active: true,
+            is_active: hasFallbackImage, // Inactive if no image
             base_cost_cents: 0, // Will be filtered out
             pricing_data: {
               style: product.style,
@@ -332,9 +340,9 @@ serve(async (req) => {
     const vendorIds = productsWithConfig.map(p => p.vendor_id);
     const { data: existingProducts, error: fetchError } = await supabase
       .from("products")
-      .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url")
-      .eq("vendor", "scalablepress")
-      .in("vendor_id", vendorIds);
+        .select("vendor_id, markup_fixed_cents, markup_percent, price_override_cents, image_url, generated_image_url, is_active")
+        .eq("vendor", "scalablepress")
+        .in("vendor_id", vendorIds);
 
     if (fetchError) {
       console.error("[SYNC-SCALABLEPRESS] Error fetching existing products:", fetchError);
@@ -350,6 +358,7 @@ serve(async (req) => {
           price_override_cents: product.price_override_cents,
           image_url: product.image_url,
           generated_image_url: product.generated_image_url,
+          is_active: product.is_active,
         });
       }
       console.log(`[SYNC-SCALABLEPRESS] Found ${existingCustomizations.size} existing products with potential customizations to preserve`);
@@ -378,6 +387,17 @@ serve(async (req) => {
           if (existing.generated_image_url) {
             product.generated_image_url = existing.generated_image_url;
           }
+          
+          // Recalculate is_active based on final image_url:
+          // - Products without images are ALWAYS inactive (can't be manually enabled)
+          // - Products with images preserve admin's is_active setting
+          const finalHasImage = !!product.image_url && product.image_url.trim() !== '';
+          if (!finalHasImage) {
+            product.is_active = false; // Force inactive if no image
+          } else if (existing.is_active !== undefined && existing.is_active !== null) {
+            product.is_active = existing.is_active; // Preserve admin setting if has image
+          }
+          // Otherwise keep the new product's is_active (which is true if has image)
         }
         return product;
       })

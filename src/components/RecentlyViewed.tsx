@@ -15,6 +15,7 @@ type ProductDetails = RecentlyViewedProduct & {
   description?: string | null;
   subcategory?: string | null;
   vendor?: string | null;
+  is_active?: boolean | null;
 };
 
 function RecentlyViewedCard({ product, onClick }: { product: ProductDetails; onClick: () => void }) {
@@ -118,7 +119,7 @@ export default function RecentlyViewed() {
       const productIds = recent.map(p => p.id);
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, image_url, category, base_cost_cents, pricing_data, description, vendor")
+        .select("id, name, image_url, category, base_cost_cents, pricing_data, description, vendor, is_active")
         .in("id", productIds)
         .eq("is_active", true);
 
