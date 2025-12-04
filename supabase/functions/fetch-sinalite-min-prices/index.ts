@@ -13,7 +13,7 @@ serve(async (req) => {
 
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const batchSize = body.batchSize || 10;
+    const batchSize = body.batchSize || body.limit || 20; // Accept both batchSize and limit
     const storeCode = body.storeCode || 9;
     const forceRefresh = body.forceRefresh || false;
 

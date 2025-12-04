@@ -463,40 +463,66 @@ export default function AdminProducts() {
   async function handleFetchMinPrices() {
     const buttonKey = 'fetch-min-prices';
     setFetchingMinPrices(true);
-    setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'loading', text: 'Calculating min prices for SinaLite products...' } }));
+    
+    let totalUpdated = 0;
+    let remaining = 999;
+    let iterations = 0;
+    const maxIterations = 20; // Safety limit
     
     try {
-      const { data, error } = await invokeWithRetry(
-        supabase,
-        'fetch-sinalite-min-prices',
-        { body: { limit: 100 } },
-        {
-          maxAttempts: 2,
-          initialDelayMs: 3000,
-          shouldRetry: (error: any) => {
-            const msg = error?.message?.toLowerCase() || '';
-            return msg.includes('timeout') || msg.includes('fetch') || msg.includes('network');
+      // Loop until all products are processed or max iterations reached
+      while (remaining > 0 && iterations < maxIterations) {
+        iterations++;
+        setButtonMessages(prev => ({ 
+          ...prev, 
+          [buttonKey]: { 
+            type: 'loading', 
+            text: `Calculating min prices... ${totalUpdated} updated${remaining < 999 ? `, ${remaining} remaining` : ''}` 
+          } 
+        }));
+        
+        const { data, error } = await invokeWithRetry(
+          supabase,
+          'fetch-sinalite-min-prices',
+          { body: { batchSize: 20 } }, // Process 20 at a time
+          {
+            maxAttempts: 2,
+            initialDelayMs: 3000,
+            shouldRetry: (error: any) => {
+              const msg = error?.message?.toLowerCase() || '';
+              return msg.includes('timeout') || msg.includes('fetch') || msg.includes('network');
+            }
           }
+        );
+        
+        if (error) throw error;
+        
+        if (data?.success) {
+          totalUpdated += data.updated || 0;
+          remaining = data.remaining || 0;
+          
+          console.log(`[FETCH-MIN-PRICES] Iteration ${iterations}: ${data.updated} updated, ${remaining} remaining`);
+          
+          // Small delay between batches
+          if (remaining > 0) {
+            await new Promise(r => setTimeout(r, 1000));
+          }
+        } else {
+          throw new Error(data?.error || 'Calculation failed');
         }
-      );
-      
-      if (error) throw error;
-      
-      if (data?.success) {
-        toast.success(`Successfully calculated min prices for ${data.updated || 0} products!`);
-        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `Updated min prices for ${data.updated || 0} SinaLite products.` } }));
-        loadProducts();
-      } else {
-        toast.warning(data?.error || 'Min price calculation completed with issues');
-        setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: data?.error || 'Calculation completed with issues' } }));
       }
+      
+      toast.success(`Successfully calculated min prices for ${totalUpdated} products!`);
+      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'success', text: `Updated min prices for ${totalUpdated} SinaLite products.` } }));
+      loadProducts();
+      
     } catch (error: any) {
       console.error('Error fetching min prices:', error);
       const errorMsg = error?.message?.includes('timeout') 
         ? 'Calculation is taking longer than expected. It may still be running in the background.'
         : error.message;
       toast.error(`Failed to fetch min prices: ${errorMsg}`);
-      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: `Failed: ${errorMsg}` } }));
+      setButtonMessages(prev => ({ ...prev, [buttonKey]: { type: 'error', text: `Failed after ${totalUpdated} updates: ${errorMsg}` } }));
     } finally {
       setFetchingMinPrices(false);
     }
