@@ -7,6 +7,7 @@ import MenuOverlay from "@/components/MenuOverlay";
 import useToggle from "@/hooks/useToggle";
 import { Menu } from "lucide-react";
 import Footer from "@/components/Footer";
+import kenzieMascot from "@/assets/kenzie-sitting-smile.png";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -197,11 +198,11 @@ export default function Welcome() {
 
                   <div className="text-center space-y-2">
                     {step >= 1 && (
-                      <div className="w-20 h-20 sm:w-28 sm:h-28 mx-auto">
+                      <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto">
                         <img
-                          src="/IMG_4805.jpeg"
+                          src={kenzieMascot}
                           alt="kenzie-AI the mascot"
-                          className="w-full h-full object-cover rounded-full shadow-lg"
+                          className="w-full h-full object-contain"
                           loading="lazy"
                           decoding="async"
                         />
