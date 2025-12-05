@@ -2,9 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
-import MenuOverlay from "@/components/MenuOverlay";
-import useToggle from "@/hooks/useToggle";
-import { Menu, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 import kenzieMascot from "@/assets/kenzie-power-mascot.jpg";
 
@@ -13,7 +11,7 @@ export default function Welcome() {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { open: menuOpen, toggle: toggleMenu } = useToggle(false);
+  
 
   // Staged reveal logic for kenzie-AI card
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
@@ -117,27 +115,15 @@ export default function Welcome() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0]">
-      {/* Menu Overlay */}
-      <MenuOverlay open={menuOpen} onClose={toggleMenu} showSignOut={!!session} />
-
       {/* Top bar */}
       <header className="fixed top-0 inset-x-0 z-50 px-4 md:px-6 py-3 flex items-center justify-between text-foreground backdrop-blur bg-[#f5f5f0]/90 border-b border-border/20">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate("/")}
-            className="p-2 hover:bg-black/5 rounded-lg transition-colors"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <button
-            onClick={toggleMenu}
-            className="p-2 hover:bg-black/5 rounded-lg transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-        </div>
+        <button
+          onClick={() => navigate("/")}
+          className="p-2 hover:bg-black/5 rounded-lg transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </button>
 
         <Link
           to="/"
