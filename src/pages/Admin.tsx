@@ -789,7 +789,7 @@ export default function Admin() {
             {/* Tab Navigation */}
             <section className="mb-12 md:mb-14">
               <div className="flex justify-center">
-                <TabsList className="bg-white/10 backdrop-blur-sm p-1.5 rounded-xl flex flex-wrap justify-center gap-1 max-w-5xl border border-white/10">
+                <TabsList className="bg-white/10 backdrop-blur-sm p-2 rounded-full flex flex-wrap justify-center gap-1.5 max-w-5xl border border-white/10">
                   {[
                     { value: 'dashboard', label: 'Dashboard' },
                     { value: 'analytics', label: 'Analytics' },
@@ -810,7 +810,7 @@ export default function Admin() {
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="rounded-lg px-3 py-1.5 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm transition-all duration-200"
+                      className="rounded-full px-4 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm transition-all duration-200"
                     >
                       {tab.label}
                     </TabsTrigger>
