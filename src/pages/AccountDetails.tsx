@@ -24,7 +24,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// Password validation schema
 const passwordSchema = z.string()
   .min(12, "Password must be at least 12 characters")
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -46,7 +45,6 @@ interface ProfileData {
 }
 
 export default function AccountDetails() {
-  // Force rebuild
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,7 +64,6 @@ export default function AccountDetails() {
   });
   const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
 
-  // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -75,7 +72,6 @@ export default function AccountDetails() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   
-  // Email change state
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailChangePassword, setEmailChangePassword] = useState("");
@@ -163,7 +159,6 @@ export default function AccountDetails() {
   };
 
   const handleChangePassword = async () => {
-    // Validation
     if (!currentPassword) {
       toast.error("Please enter your current password");
       return;
@@ -179,7 +174,6 @@ export default function AccountDetails() {
       return;
     }
 
-    // Validate password strength
     const passwordValidation = passwordSchema.safeParse(newPassword);
     if (!passwordValidation.success) {
       const errors = passwordValidation.error.errors.map(err => err.message);
@@ -190,7 +184,6 @@ export default function AccountDetails() {
     setChangingPassword(true);
 
     try {
-      // First verify current password by re-authenticating
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.email) {
         toast.error("Session expired. Please sign in again.");
@@ -198,7 +191,6 @@ export default function AccountDetails() {
         return;
       }
 
-      // Try to sign in with current password to verify it's correct
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: session.user.email,
         password: currentPassword,
@@ -210,7 +202,6 @@ export default function AccountDetails() {
         return;
       }
 
-      // Update password
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -223,7 +214,7 @@ export default function AccountDetails() {
         setNewPassword("");
         setConfirmPassword("");
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.error("An error occurred while changing password");
     }
 
@@ -241,7 +232,6 @@ export default function AccountDetails() {
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newEmail)) {
       toast.error("Please enter a valid email address");
@@ -263,7 +253,6 @@ export default function AccountDetails() {
         return;
       }
 
-      // Verify password first
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: session.user.email,
         password: emailChangePassword,
@@ -275,7 +264,6 @@ export default function AccountDetails() {
         return;
       }
 
-      // Update email - Supabase will send verification to new email
       const { error: updateError } = await supabase.auth.updateUser({
         email: newEmail,
       }, {
@@ -285,7 +273,6 @@ export default function AccountDetails() {
       if (updateError) {
         toast.error(updateError.message || "Failed to update email");
       } else {
-        // Send notification email
         try {
           await supabase.functions.invoke('send-verification-email', {
             body: { 
@@ -304,7 +291,7 @@ export default function AccountDetails() {
         setNewEmail("");
         setEmailChangePassword("");
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.error("An error occurred while changing email");
     }
 
@@ -354,7 +341,6 @@ export default function AccountDetails() {
             <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
               
-              {/* Profile Picture */}
               <div className="flex justify-center pb-4 border-b border-gray-200">
                 <ProfilePictureUpload
                   userId={userId}
@@ -618,7 +604,6 @@ export default function AccountDetails() {
               </div>
             </div>
 
-            {/* Two-Factor Authentication */}
             <div className="mt-6">
               <TwoFactorAuth />
             </div>
@@ -626,7 +611,6 @@ export default function AccountDetails() {
         </Tabs>
       </div>
       
-      {/* Email Change Dialog */}
       <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
