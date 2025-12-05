@@ -216,11 +216,8 @@ export function getProgressToNextMilestoneBadge(milestonesCompleted: number): {
     return { nextBadge: null, percentage: 100, remaining: 0 };
   }
 
-  const currentBadge = getCurrentMilestoneBadge(milestonesCompleted);
-  const previousRequired = currentBadge?.milestonesRequired || 0;
-  const tierRange = nextBadge.milestonesRequired - previousRequired;
-  const progressInTier = milestonesCompleted - previousRequired;
-  const percentage = Math.min(100, Math.round((progressInTier / tierRange) * 100));
+  // Calculate overall progress toward next badge (e.g., 3 out of 5 = 60%)
+  const percentage = Math.min(100, Math.round((milestonesCompleted / nextBadge.milestonesRequired) * 100));
   const remaining = nextBadge.milestonesRequired - milestonesCompleted;
 
   return { nextBadge, percentage, remaining };
