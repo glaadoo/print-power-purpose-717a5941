@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, User, Shield, Eye, EyeOff, Calendar, Save, Loader2, Mail } from "lucide-react";
+import { ArrowLeft, User, Shield, Eye, EyeOff, Calendar, Save, Loader2, Mail, Camera } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -13,8 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 import Footer from "@/components/Footer";
-import ProfilePictureUpload from "@/components/ProfilePictureUpload";
-import TwoFactorAuth from "@/components/TwoFactorAuth";
 import {
   Dialog,
   DialogContent,
@@ -93,7 +91,7 @@ export default function AccountDetails() {
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile:", error);
@@ -214,7 +212,7 @@ export default function AccountDetails() {
         setNewPassword("");
         setConfirmPassword("");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while changing password");
     }
 
@@ -274,16 +272,16 @@ export default function AccountDetails() {
         toast.error(updateError.message || "Failed to update email");
       } else {
         try {
-          await supabase.functions.invoke('send-verification-email', {
+          await supabase.functions.invoke("send-verification-email", {
             body: { 
               email: userEmail, 
-              type: 'email_change',
+              type: "email_change",
               newEmail: newEmail,
               firstName: profile.first_name
             }
           });
         } catch (emailError) {
-          console.log('[AccountDetails] Notification email failed:', emailError);
+          console.log("[AccountDetails] Notification email failed:", emailError);
         }
 
         setEmailVerificationSent(true);
@@ -291,7 +289,7 @@ export default function AccountDetails() {
         setNewEmail("");
         setEmailChangePassword("");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while changing email");
     }
 
@@ -342,11 +340,24 @@ export default function AccountDetails() {
               <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
               
               <div className="flex justify-center pb-4 border-b border-gray-200">
-                <ProfilePictureUpload
-                  userId={userId}
-                  currentAvatarUrl={profile.avatar_url}
-                  onAvatarUpdated={(url) => setProfile({ ...profile, avatar_url: url || null })}
-                />
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-2 border-gray-300">
+                      {profile.avatar_url ? (
+                        <img
+                          src={profile.avatar_url}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <Camera className="w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500">Profile picture coming soon</p>
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -513,7 +524,7 @@ export default function AccountDetails() {
             <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">Change Password</h2>
               <p className="text-sm text-gray-500">
-                Update your password to keep your account secure. Password must be at least 12 characters with uppercase, lowercase, number, and special character.
+                Update your password to keep your account secure.
               </p>
 
               <div className="space-y-4">
@@ -603,10 +614,6 @@ export default function AccountDetails() {
                 </Button>
               </div>
             </div>
-
-            <div className="mt-6">
-              <TwoFactorAuth />
-            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -616,7 +623,7 @@ export default function AccountDetails() {
           <DialogHeader>
             <DialogTitle>Change Email Address</DialogTitle>
             <DialogDescription>
-              Enter your new email address and current password. A verification link will be sent to your new email.
+              Enter your new email address and current password.
             </DialogDescription>
           </DialogHeader>
           
