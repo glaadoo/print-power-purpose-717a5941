@@ -13,17 +13,45 @@ serve(async (req) => {
 
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    
+    // ADMIN AUTH: Validate admin session token
+    const adminSessionToken = body.adminSessionToken;
+    if (!adminSessionToken) {
+      console.log("[FETCH-MIN-PRICES] Unauthorized: Missing admin session token");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: session, error: sessionError } = await supabase
+      .from("admin_sessions")
+      .select("*")
+      .eq("token", adminSessionToken)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (sessionError || !session) {
+      console.log("[FETCH-MIN-PRICES] Unauthorized: Invalid or expired session");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid or expired admin session" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("[FETCH-MIN-PRICES] Admin session validated");
+
     const batchSize = body.batchSize || body.limit || 20;
     const storeCode = body.storeCode || 9;
     const forceRefresh = body.forceRefresh || false;
     const offset = body.offset || 0; // Track pagination offset
 
     console.log(`[FETCH-MIN-PRICES] Starting comprehensive min price fetch for batch of ${batchSize} products`);
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
 
     // Get Stripe mode for API credentials
     let sinaliteMode = "test";

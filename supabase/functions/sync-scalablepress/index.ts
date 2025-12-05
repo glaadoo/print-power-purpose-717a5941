@@ -15,24 +15,51 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body for pagination parameters
+    // Parse request body for pagination parameters and admin auth
     let offset = 0;
     let limit = 500; // Process 500 products per run to avoid timeout
+    let adminSessionToken = "";
     
     try {
       const body = await req.json();
       offset = body.offset || 0;
       limit = body.limit || 500;
+      adminSessionToken = body.adminSessionToken || "";
     } catch {
       // Use defaults if no body
     }
 
-    console.log(`[SYNC-SCALABLEPRESS] Starting sync with offset=${offset}, limit=${limit}`);
+    // ADMIN AUTH: Validate admin session token
+    if (!adminSessionToken) {
+      console.log("[SYNC-SCALABLEPRESS] Unauthorized: Missing admin session token");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    const { data: session, error: sessionError } = await supabase
+      .from("admin_sessions")
+      .select("*")
+      .eq("token", adminSessionToken)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (sessionError || !session) {
+      console.log("[SYNC-SCALABLEPRESS] Unauthorized: Invalid or expired session");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid or expired admin session" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("[SYNC-SCALABLEPRESS] Admin session validated");
+    console.log(`[SYNC-SCALABLEPRESS] Starting sync with offset=${offset}, limit=${limit}`);
 
     const apiKey = Deno.env.get("SCALABLEPRESS_API_KEY");
     const apiUrl = "https://api.scalablepress.com/v2";

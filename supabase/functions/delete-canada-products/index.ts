@@ -11,10 +11,39 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Parse request body for admin auth
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    
+    // ADMIN AUTH: Validate admin session token
+    const adminSessionToken = body.adminSessionToken;
+    if (!adminSessionToken) {
+      console.log("[DELETE-CANADA-PRODUCTS] Unauthorized: Missing admin session token");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: session, error: sessionError } = await supabase
+      .from("admin_sessions")
+      .select("*")
+      .eq("token", adminSessionToken)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (sessionError || !session) {
+      console.log("[DELETE-CANADA-PRODUCTS] Unauthorized: Invalid or expired session");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid or expired admin session" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("[DELETE-CANADA-PRODUCTS] Admin session validated");
 
     // First count how many products match
     const { count, error: countError } = await supabase

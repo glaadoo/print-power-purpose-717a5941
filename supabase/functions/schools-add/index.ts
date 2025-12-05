@@ -19,13 +19,67 @@ interface AddSchoolRequest {
   school_level?: string | null;
 }
 
-// Sanitize and normalize text
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 5; // 5 requests per minute per IP
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+
+// Clean up old rate limit entries periodically
+function cleanupRateLimitMap() {
+  const now = Date.now();
+  for (const [ip, data] of rateLimitMap.entries()) {
+    if (now - data.windowStart > RATE_LIMIT_WINDOW_MS * 2) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}
+
+// Check rate limit for an IP
+function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  cleanupRateLimitMap();
+  
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    // New window
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return { allowed: true };
+  }
+  
+  if (entry.count >= MAX_REQUESTS_PER_WINDOW) {
+    const retryAfter = Math.ceil((entry.windowStart + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+  
+  entry.count++;
+  return { allowed: true };
+}
+
+// Sanitize and normalize text - enhanced security
 function sanitize(text: string): string {
   return text
     .trim()
+    .slice(0, 200) // Max 200 chars per field
     .replace(/\s+/g, ' ')
     .replace(/<[^>]*>/g, '') // Strip HTML tags
-    .replace(/[<>]/g, ''); // Strip remaining angle brackets
+    .replace(/[<>'"`;]/g, '') // Strip potential injection chars
+    .replace(/[\x00-\x1F\x7F]/g, ''); // Strip control characters
+}
+
+// Validate text doesn't contain suspicious patterns
+function containsSuspiciousContent(text: string): boolean {
+  const suspiciousPatterns = [
+    /javascript:/i,
+    /on\w+\s*=/i, // onclick=, onerror=, etc.
+    /<script/i,
+    /data:/i,
+    /vbscript:/i,
+    /expression\s*\(/i,
+    /url\s*\(/i,
+  ];
+  
+  return suspiciousPatterns.some(pattern => pattern.test(text));
 }
 
 // Generate slug from name, city, state
@@ -43,6 +97,31 @@ serve(async (req) => {
   }
 
   try {
+    // Extract client IP for rate limiting
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+      || req.headers.get('x-real-ip') 
+      || 'unknown';
+    
+    // Check rate limit
+    const rateLimitResult = checkRateLimit(clientIP);
+    if (!rateLimitResult.allowed) {
+      console.log(`[schools-add] Rate limit exceeded for IP: ${clientIP}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Too many requests. Please try again later.',
+          retryAfter: rateLimitResult.retryAfter 
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': String(rateLimitResult.retryAfter)
+          } 
+        }
+      );
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -54,6 +133,24 @@ serve(async (req) => {
     if (!body.name || !body.address_line1 || !body.city || !body.state || !body.zip) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: name, address_line1, city, state, zip' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate field lengths
+    if (body.name.length > 200 || body.address_line1.length > 200 || body.city.length > 100) {
+      return new Response(
+        JSON.stringify({ error: 'Field exceeds maximum length' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check for suspicious content in all fields
+    const allFields = [body.name, body.address_line1, body.city, body.district, body.county].filter(Boolean);
+    if (allFields.some(field => containsSuspiciousContent(field as string))) {
+      console.log(`[schools-add] Suspicious content detected from IP: ${clientIP}`);
+      return new Response(
+        JSON.stringify({ error: 'Invalid content detected' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -91,7 +188,7 @@ serve(async (req) => {
     // Generate slug
     const slug = generateSlug(sanitizedData.name, sanitizedData.city, sanitizedData.state);
 
-    console.log('[schools-add] Generated slug:', slug);
+    console.log('[schools-add] Generated slug:', slug, 'IP:', clientIP);
 
     // Check if school already exists
     const { data: existing, error: checkError } = await supabase
