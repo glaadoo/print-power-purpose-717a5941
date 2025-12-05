@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,22 @@ import { CheckCircle2, Package, Heart, ArrowRight, Home, Truck, ExternalLink, Sp
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
+
+// Create a scoped client for order lookup with session_id header
+const createOrderClient = (sessionId: string) => {
+  const url = import.meta.env.VITE_SUPABASE_URL || "https://wgohndthjgeqamfuldov.supabase.co";
+  const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnb2huZHRoamdlcWFtZnVsZG92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMDQ1MTYsImV4cCI6MjA3NDc4MDUxNn0.cb9tO9fH93WRlLclJwhhmY03Hck9iyZF6GYXjbYjibw";
+  
+  return createClient(url, anon, {
+    global: {
+      headers: {
+        'x-ppp-session-id': sessionId
+      }
+    }
+  });
+};
 
 const MILESTONE_GOAL_CENTS = 77700; // $777
 const DONATION_RATIO = 77700 / 155400; // $777 donation from $1554 sales (~50%)
@@ -69,7 +86,9 @@ export default function Success() {
       }
 
       try {
-        const { data, error: fetchError } = await supabase
+        // Use scoped client with x-ppp-session-id header for RLS policy
+        const orderClient = createOrderClient(sessionId);
+        const { data, error: fetchError } = await orderClient
           .from("orders")
           .select("*")
           .eq("session_id", sessionId)
