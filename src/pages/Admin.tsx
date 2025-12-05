@@ -551,47 +551,68 @@ export default function Admin() {
   const totalDonations = donations.reduce((sum, d) => sum + d.amount_cents, 0);
   const activeCauses = causes.filter(c => c.raised_cents > 0).length;
 
-  // Aggregate donations by cause AND nonprofit
+  // Aggregate donations by nonprofit from BOTH donations table AND orders.donation_cents
   const donationsByCause = (() => {
-    const aggregated: { name: string; value: number }[] = [];
+    const nonprofitTotals: Record<string, number> = {};
+    
+    // Add from donations table (nonprofit-linked)
+    donations.forEach(d => {
+      if (d.nonprofit_id) {
+        const name = d.nonprofit_name || 'Unknown Nonprofit';
+        nonprofitTotals[name] = (nonprofitTotals[name] || 0) + d.amount_cents;
+      }
+    });
+    
+    // Add from orders.donation_cents (primary source for checkout donations)
+    orders.forEach(o => {
+      if (o.donation_cents > 0 && o.nonprofit_id) {
+        const name = o.nonprofit_name || 'Unknown Nonprofit';
+        nonprofitTotals[name] = (nonprofitTotals[name] || 0) + o.donation_cents;
+      }
+    });
     
     // Add donations linked to causes
     causes.forEach(cause => {
       const causeTotal = donations
         .filter(d => d.cause_id === cause.id)
         .reduce((sum, d) => sum + d.amount_cents, 0);
-      if (causeTotal > 0) {
-        aggregated.push({ name: cause.name, value: causeTotal / 100 });
+      if (causeTotal > 0 && !nonprofitTotals[cause.name]) {
+        nonprofitTotals[cause.name] = causeTotal;
       }
     });
     
-    // Add donations linked to nonprofits (group by nonprofit_name)
-    const nonprofitDonations = donations.filter(d => d.nonprofit_id && d.nonprofit_name);
-    const nonprofitTotals: Record<string, number> = {};
-    nonprofitDonations.forEach(d => {
-      const name = d.nonprofit_name || 'Unknown Nonprofit';
-      nonprofitTotals[name] = (nonprofitTotals[name] || 0) + d.amount_cents;
-    });
-    
-    Object.entries(nonprofitTotals).forEach(([name, total]) => {
-      aggregated.push({ name, value: total / 100 });
-    });
-    
-    // Sort by value descending and take top entries
-    return aggregated.sort((a, b) => b.value - a.value).slice(0, 10);
+    // Convert to array, sort by value descending, take top 10
+    return Object.entries(nonprofitTotals)
+      .map(([name, total]) => ({ name, value: total / 100 }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
   })();
 
-  const ordersByWeek = orders.reduce((acc: any, order) => {
-    const week = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const existing = acc.find((w: any) => w.week === week);
-    if (existing) {
-      existing.count += 1;
-      existing.revenue += order.amount_total_cents / 100;
-    } else {
-      acc.push({ week, count: 1, revenue: order.amount_total_cents / 100 });
-    }
-    return acc;
-  }, []).slice(-8);
+  // Orders by week - dynamically based on current date, last 8 weeks
+  const ordersByWeek = (() => {
+    const now = new Date();
+    const eightWeeksAgo = new Date(now.getTime() - 8 * 7 * 24 * 60 * 60 * 1000);
+    
+    // Filter orders from last 8 weeks
+    const recentOrders = orders.filter(o => new Date(o.created_at) >= eightWeeksAgo);
+    
+    // Group by week
+    const weeklyData: Record<string, { count: number; revenue: number }> = {};
+    recentOrders.forEach(order => {
+      const orderDate = new Date(order.created_at);
+      const weekLabel = orderDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (!weeklyData[weekLabel]) {
+        weeklyData[weekLabel] = { count: 0, revenue: 0 };
+      }
+      weeklyData[weekLabel].count += 1;
+      weeklyData[weekLabel].revenue += order.amount_total_cents / 100;
+    });
+    
+    // Convert to array sorted by date
+    return Object.entries(weeklyData)
+      .map(([week, data]) => ({ week, ...data }))
+      .slice(-8);
+  })();
 
   const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'];
 
