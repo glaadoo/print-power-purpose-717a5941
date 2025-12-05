@@ -789,97 +789,32 @@ export default function Admin() {
             {/* Tab Navigation */}
             <section className="mb-12 md:mb-14">
               <div className="flex justify-center">
-                <TabsList className="bg-[#5a5a5a]/80 p-2.5 rounded-2xl flex flex-wrap justify-center gap-2 max-w-5xl">
-                  <TabsTrigger 
-                    value="dashboard" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Dashboard
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="analytics" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Analytics
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="products" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Products
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="prices"
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Configuration
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="causes" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Causes
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="schools" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Schools
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="nonprofits" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Nonprofits
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="orders" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Orders
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="donations" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Donations
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="errors" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Errors
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="stories" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Stories
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="sync" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Sync
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="videos" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Videos
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="pages" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Pages
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="settings" 
-                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                  >
-                    Settings
-                  </TabsTrigger>
+                <TabsList className="bg-white/10 backdrop-blur-sm p-1.5 rounded-xl flex flex-wrap justify-center gap-1 max-w-5xl border border-white/10">
+                  {[
+                    { value: 'dashboard', label: 'Dashboard' },
+                    { value: 'analytics', label: 'Analytics' },
+                    { value: 'products', label: 'Products' },
+                    { value: 'prices', label: 'Configuration' },
+                    { value: 'causes', label: 'Causes' },
+                    { value: 'schools', label: 'Schools' },
+                    { value: 'nonprofits', label: 'Nonprofits' },
+                    { value: 'orders', label: 'Orders' },
+                    { value: 'donations', label: 'Donations' },
+                    { value: 'errors', label: 'Errors' },
+                    { value: 'stories', label: 'Stories' },
+                    { value: 'sync', label: 'Sync' },
+                    { value: 'videos', label: 'Videos' },
+                    { value: 'pages', label: 'Pages' },
+                    { value: 'settings', label: 'Settings' },
+                  ].map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="rounded-lg px-3 py-1.5 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm transition-all duration-200"
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
                 </TabsList>
               </div>
             </section>
