@@ -1007,8 +1007,15 @@ export default function Admin() {
                             </div>
                             <div className="w-full bg-white/10 rounded-full h-2">
                               <div 
-                                className={`rounded-full h-2 transition-all ${progressCents > 0 ? 'bg-white' : 'bg-white/20'}`}
-                                style={{ width: `${Math.min(progress, 100)}%` }}
+                                className="rounded-full h-2 transition-all"
+                                style={{ 
+                                  width: `${Math.min(progress, 100)}%`,
+                                  backgroundColor: progressCents === 0 
+                                    ? 'rgba(255,255,255,0.2)' 
+                                    : progress >= 80 
+                                      ? '#facc15' // yellow-400
+                                      : '#22c55e' // green-500
+                                }}
                               />
                             </div>
                           </div>
