@@ -933,22 +933,31 @@ export default function Admin() {
                       
                       {/* Legend with values */}
                       <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
-                        {donationsByCause.map((entry, index) => (
-                          <div key={entry.name} className="flex items-center justify-between gap-3 py-2 border-b border-white/10 last:border-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div 
-                                className="w-3 h-3 rounded-full flex-shrink-0" 
-                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                              />
-                              <span className="text-white/80 text-sm truncate" title={entry.name}>
-                                {entry.name.length > 20 ? `${entry.name.substring(0, 20)}...` : entry.name}
-                              </span>
-                            </div>
-                            <span className="text-white font-semibold text-sm whitespace-nowrap">
-                              ${entry.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </span>
-                          </div>
-                        ))}
+                        {(() => {
+                          const total = donationsByCause.reduce((sum, e) => sum + e.value, 0);
+                          return donationsByCause.map((entry, index) => {
+                            const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(1) : '0';
+                            return (
+                              <div key={entry.name} className="flex items-center justify-between gap-3 py-2 border-b border-white/10 last:border-0">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div 
+                                    className="w-3 h-3 rounded-full flex-shrink-0" 
+                                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                  />
+                                  <span className="text-white/80 text-sm truncate" title={entry.name}>
+                                    {entry.name.length > 20 ? `${entry.name.substring(0, 20)}...` : entry.name}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                  <span className="text-white/50 text-xs">{percentage}%</span>
+                                  <span className="text-white font-semibold text-sm">
+                                    ${entry.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     </div>
                   )}
