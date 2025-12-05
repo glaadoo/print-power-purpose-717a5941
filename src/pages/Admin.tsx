@@ -971,32 +971,47 @@ export default function Admin() {
                 </div>
 
                 <GlassCard className="bg-white/5 border-white/20 p-6">
-                  <h3 className="text-xl font-serif font-bold text-white mb-6">Cause Progress</h3>
-                  <div className="space-y-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-serif font-bold text-white">All Causes Progress ({causes.length} total)</h3>
+                    <span className="text-white/60 text-sm">{causes.filter(c => c.raised_cents > 0).length} with donations</span>
+                  </div>
+                  <Input 
+                    placeholder="Search causes..." 
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mb-4"
+                    onChange={(e) => {
+                      const searchInput = e.target.value.toLowerCase();
+                      const container = document.getElementById('causes-scroll-container');
+                      if (container) {
+                        const items = container.querySelectorAll('[data-cause-name]');
+                        items.forEach((item) => {
+                          const name = item.getAttribute('data-cause-name')?.toLowerCase() || '';
+                          (item as HTMLElement).style.display = name.includes(searchInput) ? 'block' : 'none';
+                        });
+                      }
+                    }}
+                  />
+                  <div id="causes-scroll-container" className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                     {[...causes]
-                      .filter(c => c.raised_cents > 0)
                       .sort((a, b) => b.raised_cents - a.raised_cents)
-                      .slice(0, 5)
                       .map(cause => {
                         const progress = cause.goal_cents > 0 ? (cause.raised_cents / cause.goal_cents) * 100 : 0;
                         return (
-                          <div key={cause.id} className="text-white">
-                            <div className="flex justify-between text-sm mb-2">
-                              <span className="text-white/80">{cause.name}</span>
-                              <span className="font-semibold">${(cause.raised_cents / 100).toLocaleString()} / ${(cause.goal_cents / 100).toLocaleString()} ({Math.round(progress)}%)</span>
+                          <div key={cause.id} data-cause-name={cause.name} className="text-white">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="text-white/80 truncate max-w-[200px]" title={cause.name}>{cause.name}</span>
+                              <span className="font-semibold text-xs">
+                                ${(cause.raised_cents / 100).toLocaleString()} / ${(cause.goal_cents / 100).toLocaleString()} ({Math.round(progress)}%)
+                              </span>
                             </div>
-                            <div className="w-full bg-white/10 rounded-full h-2.5">
+                            <div className="w-full bg-white/10 rounded-full h-2">
                               <div 
-                                className="bg-white rounded-full h-2.5 transition-all"
+                                className={`rounded-full h-2 transition-all ${cause.raised_cents > 0 ? 'bg-white' : 'bg-white/20'}`}
                                 style={{ width: `${Math.min(progress, 100)}%` }}
                               />
                             </div>
                           </div>
                         );
                       })}
-                    {causes.filter(c => c.raised_cents > 0).length === 0 && (
-                      <p className="text-white/50 text-center py-4">No causes with donations yet</p>
-                    )}
                   </div>
                 </GlassCard>
               </div>
