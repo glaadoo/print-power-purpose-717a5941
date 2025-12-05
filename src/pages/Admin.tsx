@@ -201,6 +201,31 @@ export default function Admin() {
     };
   }, [isAuthenticated]);
 
+  // Real-time subscription for orders - auto-refresh stats on new orders
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const channel = supabase
+      .channel("orders-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "orders"
+        },
+        () => {
+          console.log("[Admin] New order detected, refreshing stats...");
+          loadAllData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated]);
+
   const verifySession = async (sessionToken: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('verify-admin-key', {
