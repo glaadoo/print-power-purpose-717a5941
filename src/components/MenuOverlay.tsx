@@ -45,7 +45,7 @@ export default function MenuOverlay({ open, onClose, items, showSignOut = false 
     { label: "Insights", href: "/insights" },
     { label: "News", href: "/news" },
     { label: "Contact", href: "/contact" },
-    { label: "Donate", href: "/select/nonprofit?flow=donation" },
+    { label: "Causes", href: "/select/nonprofit?flow=donation" },
   ];
 
   // Handler for Donate button to set guest access and route through nonprofit selection
