@@ -46,6 +46,7 @@ interface ProfileData {
 }
 
 export default function AccountDetails() {
+  // Force rebuild
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
