@@ -9,6 +9,13 @@ export function cn(...inputs: ClassValue[]) {
 export const priceFromBase = (base: number) => Math.max(100, Math.round(base * 1.6));
 
 /**
+ * Formats a price in cents to a display string
+ */
+export function formatPrice(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+/**
  * Maps color names to hex values for display
  * Used as fallback when API doesn't provide hex colors
  */
