@@ -973,23 +973,30 @@ export default function Admin() {
                 <GlassCard className="bg-white/5 border-white/20 p-6">
                   <h3 className="text-xl font-serif font-bold text-white mb-6">Cause Progress</h3>
                   <div className="space-y-4">
-                    {causes.slice(0, 5).map(cause => {
-                      const progress = cause.goal_cents > 0 ? (cause.raised_cents / cause.goal_cents) * 100 : 0;
-                      return (
-                        <div key={cause.id} className="text-white">
-                          <div className="flex justify-between text-sm mb-2">
-                            <span className="text-white/80">{cause.name}</span>
-                            <span className="font-semibold">{Math.round(progress)}%</span>
+                    {[...causes]
+                      .filter(c => c.raised_cents > 0)
+                      .sort((a, b) => b.raised_cents - a.raised_cents)
+                      .slice(0, 5)
+                      .map(cause => {
+                        const progress = cause.goal_cents > 0 ? (cause.raised_cents / cause.goal_cents) * 100 : 0;
+                        return (
+                          <div key={cause.id} className="text-white">
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="text-white/80">{cause.name}</span>
+                              <span className="font-semibold">${(cause.raised_cents / 100).toLocaleString()} / ${(cause.goal_cents / 100).toLocaleString()} ({Math.round(progress)}%)</span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-2.5">
+                              <div 
+                                className="bg-white rounded-full h-2.5 transition-all"
+                                style={{ width: `${Math.min(progress, 100)}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="w-full bg-white/10 rounded-full h-2.5">
-                            <div 
-                              className="bg-white rounded-full h-2.5 transition-all"
-                              style={{ width: `${Math.min(progress, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    {causes.filter(c => c.raised_cents > 0).length === 0 && (
+                      <p className="text-white/50 text-center py-4">No causes with donations yet</p>
+                    )}
                   </div>
                 </GlassCard>
               </div>
