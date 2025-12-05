@@ -34,6 +34,7 @@ interface OrderDetails {
   amount_total_cents: number;
   donation_cents: number;
   subtotal_cents: number;
+  tax_cents: number;
   customer_email: string;
   items: any[];
   cause_name?: string;
@@ -227,7 +228,8 @@ export default function Success() {
     );
   }
 
-  const { order_number, amount_total_cents, subtotal_cents, items, nonprofit_name } = orderDetails;
+  const { order_number, amount_total_cents, subtotal_cents, tax_cents, items, nonprofit_name } = orderDetails;
+  const shippingCents = amount_total_cents - (subtotal_cents || 0) - (tax_cents || 0);
 
   // Calculate progress toward current milestone
   const currentProgressCents = nonprofitProgress?.current_progress_cents || 0;
@@ -443,7 +445,18 @@ export default function Success() {
               <span>Subtotal</span>
               <span>${((subtotal_cents || 0) / 100).toFixed(2)}</span>
             </div>
-
+            {shippingCents > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Shipping</span>
+                <span>${(shippingCents / 100).toFixed(2)}</span>
+              </div>
+            )}
+            {(tax_cents || 0) > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Tax</span>
+                <span>${((tax_cents || 0) / 100).toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-bold text-foreground pt-2 border-t border-border">
               <span>Total</span>
               <span>${(amount_total_cents / 100).toFixed(2)}</span>
