@@ -309,8 +309,6 @@ export default function Admin() {
       setOrders(stats?.orders || []);
       setDonations(stats?.donations || []);
       setCauses(stats?.causes || []);
-      // Products is just a count in stats, keep empty array
-      setProducts([]);
       // StoryRequests is just a count in stats, keep empty array
       setStoryRequests([]);
 
@@ -319,15 +317,17 @@ export default function Admin() {
       console.log('Donations:', stats?.donations?.length || 0, 'Total Donations:', stats?.totalDonations);
 
       // Load other data directly
-      const [schoolsRes, nonprofitsRes, errorLogsRes] = await Promise.all([
+      const [schoolsRes, nonprofitsRes, errorLogsRes, productsRes] = await Promise.all([
         supabase.from("schools").select("*").order("created_at", { ascending: false }),
         supabase.from("nonprofits").select("*").order("created_at", { ascending: false }),
-        supabase.from("error_logs").select("*").order("timestamp", { ascending: false }).limit(50)
+        supabase.from("error_logs").select("*").order("timestamp", { ascending: false }).limit(50),
+        supabase.from("products").select("id, name, vendor, base_cost_cents, image_url, is_active, category").order("name", { ascending: true }).limit(500)
       ]);
 
       if (schoolsRes.data) setSchools(schoolsRes.data);
       if (nonprofitsRes.data) setNonprofits(nonprofitsRes.data);
       if (errorLogsRes.data) setErrorLogs(errorLogsRes.data);
+      if (productsRes.data) setProducts(productsRes.data);
     } catch (err) {
       console.error('Error loading admin data:', err);
       toast.error("Failed to load admin data");
