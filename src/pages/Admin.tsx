@@ -551,12 +551,35 @@ export default function Admin() {
   const totalDonations = donations.reduce((sum, d) => sum + d.amount_cents, 0);
   const activeCauses = causes.filter(c => c.raised_cents > 0).length;
 
-  const donationsByCause = causes.map(cause => ({
-    name: cause.name,
-    value: donations.filter(d => d.cause_id === cause.id).reduce((sum, d) => sum + d.amount_cents, 0) / 100,
-    raised: cause.raised_cents / 100,
-    goal: cause.goal_cents / 100
-  })).filter(c => c.raised > 0).sort((a, b) => b.raised - a.raised);
+  // Aggregate donations by cause AND nonprofit
+  const donationsByCause = (() => {
+    const aggregated: { name: string; value: number }[] = [];
+    
+    // Add donations linked to causes
+    causes.forEach(cause => {
+      const causeTotal = donations
+        .filter(d => d.cause_id === cause.id)
+        .reduce((sum, d) => sum + d.amount_cents, 0);
+      if (causeTotal > 0) {
+        aggregated.push({ name: cause.name, value: causeTotal / 100 });
+      }
+    });
+    
+    // Add donations linked to nonprofits (group by nonprofit_name)
+    const nonprofitDonations = donations.filter(d => d.nonprofit_id && d.nonprofit_name);
+    const nonprofitTotals: Record<string, number> = {};
+    nonprofitDonations.forEach(d => {
+      const name = d.nonprofit_name || 'Unknown Nonprofit';
+      nonprofitTotals[name] = (nonprofitTotals[name] || 0) + d.amount_cents;
+    });
+    
+    Object.entries(nonprofitTotals).forEach(([name, total]) => {
+      aggregated.push({ name, value: total / 100 });
+    });
+    
+    // Sort by value descending and take top entries
+    return aggregated.sort((a, b) => b.value - a.value).slice(0, 10);
+  })();
 
   const ordersByWeek = orders.reduce((acc: any, order) => {
     const week = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
