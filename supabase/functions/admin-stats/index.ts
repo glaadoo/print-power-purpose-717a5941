@@ -48,27 +48,27 @@ serve(async (req) => {
     }
 
     // Fetch aggregated statistics efficiently
-    const [ordersRes, donationsRes, causesRes, productsCountRes, storyRequestsCountRes] = await Promise.all([
-      supabase.from("orders").select("id, status, amount_total_cents, donation_cents, created_at, customer_email, nonprofit_name, order_number").order("created_at", { ascending: false }).limit(100),
-      supabase.from("donations").select("id, amount_cents, created_at, customer_email, nonprofit_name").order("created_at", { ascending: false }).limit(50),
+    const [ordersRes, donationsRes, causesRes, productsCountRes, storyRequestsCountRes, totalOrdersCountRes, totalDonationsCountRes] = await Promise.all([
+      supabase.from("orders").select("id, status, amount_total_cents, donation_cents, created_at, customer_email, nonprofit_name, nonprofit_id, order_number").order("created_at", { ascending: false }).limit(200),
+      supabase.from("donations").select("id, amount_cents, created_at, customer_email, nonprofit_name, nonprofit_id, cause_id").order("created_at", { ascending: false }).limit(100),
       supabase.from("causes").select("id, name, raised_cents, goal_cents"),
       supabase.from("products").select("id", { count: 'exact', head: true }),
-      supabase.from("story_requests").select("id", { count: 'exact', head: true })
+      supabase.from("story_requests").select("id", { count: 'exact', head: true }),
+      supabase.from("orders").select("*", { count: 'exact', head: true }),
+      supabase.from("donations").select("*", { count: 'exact', head: true })
     ]);
 
     const recentOrders = ordersRes.data || [];
     const recentDonations = donationsRes.data || [];
     const causes = causesRes.data || [];
-
-    // Get total counts from all orders and donations
-    const { count: totalOrdersCount } = await supabase.from("orders").select("*", { count: 'exact', head: true });
-    const { count: totalDonationsCount } = await supabase.from("donations").select("*", { count: 'exact', head: true });
+    const totalOrdersCount = totalOrdersCountRes.count || 0;
+    const totalDonationsCount = totalDonationsCountRes.count || 0;
 
     // Calculate revenue from completed orders only
     const { data: completedOrdersData } = await supabase
       .from("orders")
       .select("amount_total_cents, donation_cents")
-      .eq("status", "completed")
+      .in("status", ["completed", "paid"])
       .gt("amount_total_cents", 0);
 
     const completedOrders = completedOrdersData || [];
@@ -83,8 +83,8 @@ serve(async (req) => {
     const stats = {
       totalRevenue,
       totalDonations: directDonations + checkoutDonations,
-      totalOrders: completedOrders.length,
-      totalDonationsCount: totalDonationsCount || 0,
+      totalOrders: totalOrdersCount, // Use actual count, not filtered length
+      totalDonationsCount: totalDonationsCount,
       activeCauses: causes.filter(c => (c.raised_cents || 0) > 0).length,
       orders: recentOrders,
       donations: recentDonations,
