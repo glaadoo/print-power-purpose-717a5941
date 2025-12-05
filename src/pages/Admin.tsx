@@ -779,8 +779,8 @@ export default function Admin() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="dashboard" className="space-y-6">
-            <div className="flex justify-center px-4 relative z-20 pb-4">
+          <Tabs defaultValue="dashboard" className="space-y-8">
+            <div className="flex justify-center px-4 relative z-20 mb-8">
               <TabsList className="bg-[#5a5a5a] p-2 rounded-2xl flex flex-wrap justify-center gap-2 max-w-5xl">
                 <TabsTrigger 
                   value="dashboard" 
