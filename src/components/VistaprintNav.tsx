@@ -102,7 +102,7 @@ export default function VistaprintNav() {
             <div className="hidden md:flex items-center gap-6">
               <Link 
                 to="/" 
-                className={`text-sm font-medium transition-colors ${
+                className={`text-base font-medium transition-colors ${
                   isActive("/") 
                     ? "text-blue-600" 
                     : "text-gray-700 hover:text-blue-600"
@@ -113,7 +113,7 @@ export default function VistaprintNav() {
               
               <Link 
                 to="/products"
-                className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-1 text-base font-medium transition-colors ${
                   isActive("/products") || location.pathname.startsWith("/product/")
                     ? "text-blue-600" 
                     : "text-gray-700 hover:text-blue-600"
@@ -125,7 +125,7 @@ export default function VistaprintNav() {
               
               <Link 
                 to="/select/nonprofit" 
-                className={`text-sm font-medium transition-colors ${
+                className={`text-base font-medium transition-colors ${
                   isActive("/select/nonprofit") 
                     ? "text-blue-600" 
                     : "text-gray-700 hover:text-blue-600"
@@ -135,7 +135,7 @@ export default function VistaprintNav() {
               </Link>
               <Link 
                 to="/contact" 
-                className={`text-sm font-medium transition-colors ${
+                className={`text-base font-medium transition-colors ${
                   isActive("/contact") 
                     ? "text-blue-600" 
                     : "text-gray-700 hover:text-blue-600"
@@ -148,7 +148,7 @@ export default function VistaprintNav() {
               {isAuthenticated && (
                 <Link 
                   to="/donor-profile" 
-                  className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 text-base font-medium transition-colors ${
                     isActive("/donor-profile") 
                       ? "text-blue-600" 
                       : "text-gray-700 hover:text-blue-600"
