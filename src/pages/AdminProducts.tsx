@@ -192,10 +192,11 @@ export default function AdminProducts() {
             } 
           }));
           
+          const adminSessionToken = sessionStorage.getItem("admin_session");
           const { data, error } = await invokeWithRetry(
             supabase,
             functionName,
-            { body: { offset, limit: 500 } },
+            { body: { offset, limit: 500, adminSessionToken } },
             {
               maxAttempts: 2,
               initialDelayMs: 2000,
@@ -207,6 +208,7 @@ export default function AdminProducts() {
           );
           
           if (error) throw error;
+          if (!data?.success && data?.error) throw new Error(data.error);
           
           if (data?.success) {
             totalSynced += data.synced || 0;
@@ -484,10 +486,11 @@ export default function AdminProducts() {
           } 
         }));
         
+        const adminSessionToken = sessionStorage.getItem("admin_session");
         const { data, error } = await invokeWithRetry(
           supabase,
           'fetch-sinalite-min-prices',
-          { body: { batchSize: 20, forceRefresh: forceRecalculate, offset: currentOffset } },
+          { body: { batchSize: 20, forceRefresh: forceRecalculate, offset: currentOffset, adminSessionToken } },
           {
             maxAttempts: 2,
             initialDelayMs: 3000,

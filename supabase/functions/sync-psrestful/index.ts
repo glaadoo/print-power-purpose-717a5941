@@ -12,12 +12,41 @@ serve(async (req) => {
   }
 
   try {
-    console.log("[SYNC-PSRESTFUL] Starting product sync");
+    // Parse request body for admin auth
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    
+    // ADMIN AUTH: Validate admin session token
+    const adminSessionToken = body.adminSessionToken;
+    if (!adminSessionToken) {
+      console.log("[SYNC-PSRESTFUL] Unauthorized: Missing admin session token");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    const { data: session, error: sessionError } = await supabase
+      .from("admin_sessions")
+      .select("*")
+      .eq("token", adminSessionToken)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (sessionError || !session) {
+      console.log("[SYNC-PSRESTFUL] Unauthorized: Invalid or expired session");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid or expired admin session" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("[SYNC-PSRESTFUL] Admin session validated");
+    console.log("[SYNC-PSRESTFUL] Starting product sync");
 
     const apiKey = Deno.env.get("PSRESTFUL_API_KEY");
     const apiUrl = Deno.env.get("PSRESTFUL_API_URL") || "https://api.psrestful.com/v1";

@@ -472,8 +472,12 @@ export default function Admin() {
   const syncSinaLite = async () => {
     setSyncing(prev => ({ ...prev, sinalite: true }));
     try {
-      const { data, error } = await supabase.functions.invoke('sync-sinalite');
+      const adminSessionToken = sessionStorage.getItem("admin_session");
+      const { data, error } = await supabase.functions.invoke('sync-sinalite', {
+        body: { adminSessionToken }
+      });
       if (error) throw error;
+      if (!data.success && data.error) throw new Error(data.error);
       setSyncResults(prev => ({ ...prev, sinalite: { success: true, message: data.message || 'Sync completed successfully' } }));
       toast.success('SinaLite products synced successfully');
       loadAllData();
@@ -488,8 +492,12 @@ export default function Admin() {
   const syncScalablePress = async () => {
     setSyncing(prev => ({ ...prev, scalablepress: true }));
     try {
-      const { data, error } = await supabase.functions.invoke('sync-scalablepress');
+      const adminSessionToken = sessionStorage.getItem("admin_session");
+      const { data, error } = await supabase.functions.invoke('sync-scalablepress', {
+        body: { adminSessionToken }
+      });
       if (error) throw error;
+      if (!data.success && data.error) throw new Error(data.error);
       setSyncResults(prev => ({ ...prev, scalablepress: { success: true, message: data.message || 'Sync completed successfully' } }));
       toast.success('Scalable Press products synced successfully');
       loadAllData();
@@ -504,8 +512,12 @@ export default function Admin() {
   const syncPsRestful = async () => {
     setSyncing(prev => ({ ...prev, psrestful: true }));
     try {
-      const { data, error } = await supabase.functions.invoke('sync-psrestful');
+      const adminSessionToken = sessionStorage.getItem("admin_session");
+      const { data, error } = await supabase.functions.invoke('sync-psrestful', {
+        body: { adminSessionToken }
+      });
       if (error) throw error;
+      if (!data.success && data.error) throw new Error(data.error);
       setSyncResults(prev => ({ ...prev, psrestful: { success: true, message: data.message || 'Sync completed successfully' } }));
       toast.success('PsRestful products synced successfully');
       loadAllData();

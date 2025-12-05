@@ -326,8 +326,41 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body for store selection
+    // Parse request body for store selection and admin auth
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    
+    // ADMIN AUTH: Validate admin session token
+    const adminSessionToken = body.adminSessionToken;
+    if (!adminSessionToken) {
+      console.log("[SYNC-SINALITE] Unauthorized: Missing admin session token");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: session, error: sessionError } = await supabaseAuth
+      .from("admin_sessions")
+      .select("*")
+      .eq("token", adminSessionToken)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (sessionError || !session) {
+      console.log("[SYNC-SINALITE] Unauthorized: Invalid or expired session");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid or expired admin session" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("[SYNC-SINALITE] Admin session validated");
+
     const storeCode = body.storeCode || 9; // Default to US (9)
     const storeName = storeCode === 6 ? "Canada" : "US";
     const skipMinPrices = body.skipMinPrices || false;

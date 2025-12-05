@@ -12,12 +12,50 @@ serve(async (req) => {
   }
 
   try {
-    console.log("[FETCH-SCALABLEPRESS-PRICES] Starting batch price fetch");
+    // Parse request body for options and admin auth
+    let batchSize = 10;
+    let forceRefresh = false;
+    let adminSessionToken = "";
+    try {
+      const body = await req.json();
+      batchSize = body.batchSize || 10;
+      forceRefresh = body.forceRefresh || false;
+      adminSessionToken = body.adminSessionToken || "";
+    } catch {
+      // Use defaults
+    }
+
+    // ADMIN AUTH: Validate admin session token
+    if (!adminSessionToken) {
+      console.log("[FETCH-SCALABLEPRESS-PRICES] Unauthorized: Missing admin session token");
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    const { data: session, error: sessionError } = await supabase
+      .from("admin_sessions")
+      .select("*")
+      .eq("token", adminSessionToken)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (sessionError || !session) {
+      console.log("[FETCH-SCALABLEPRESS-PRICES] Unauthorized: Invalid or expired session");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid or expired admin session" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("[FETCH-SCALABLEPRESS-PRICES] Admin session validated");
+    console.log("[FETCH-SCALABLEPRESS-PRICES] Starting batch price fetch");
 
     const apiKey = Deno.env.get("SCALABLEPRESS_API_KEY");
     const apiUrl = "https://api.scalablepress.com/v2";
@@ -28,17 +66,6 @@ serve(async (req) => {
         JSON.stringify({ success: false, error: "API key not configured" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
-    }
-
-    // Parse request body for options
-    let batchSize = 10;
-    let forceRefresh = false;
-    try {
-      const body = await req.json();
-      batchSize = body.batchSize || 10;
-      forceRefresh = body.forceRefresh || false;
-    } catch {
-      // Use defaults
     }
 
     // Get products that need price updates

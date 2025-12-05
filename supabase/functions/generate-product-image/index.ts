@@ -12,7 +12,38 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, productName } = await req.json();
+    const body = await req.json();
+    const { productId, productName, adminSessionToken } = body;
+
+    // ADMIN AUTH: Validate admin session token
+    if (!adminSessionToken) {
+      console.log("[GENERATE-PRODUCT-IMAGE] Unauthorized: Missing admin session token");
+      return new Response(
+        JSON.stringify({ error: "Admin authentication required" }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAuth = createClient(supabaseUrl, supabaseKey);
+
+    const { data: session, error: sessionError } = await supabaseAuth
+      .from("admin_sessions")
+      .select("*")
+      .eq("token", adminSessionToken)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (sessionError || !session) {
+      console.log("[GENERATE-PRODUCT-IMAGE] Unauthorized: Invalid or expired session");
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired admin session" }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log("[GENERATE-PRODUCT-IMAGE] Admin session validated");
 
     if (!productId || !productName) {
       return new Response(
@@ -70,11 +101,7 @@ serve(async (req) => {
     }
 
     // Update product with generated image URL
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAuth
       .from('products')
       .update({ generated_image_url: imageUrl })
       .eq('id', productId);
