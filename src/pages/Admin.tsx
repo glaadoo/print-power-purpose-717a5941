@@ -574,7 +574,8 @@ export default function Admin() {
   // Analytics calculations
   const totalRevenue = orders.reduce((sum, o) => sum + o.amount_total_cents, 0);
   const totalDonations = donations.reduce((sum, d) => sum + d.amount_cents, 0);
-  const activeNonprofits = nonprofits.filter(n => n.current_progress_cents > 0).length;
+  const activeNonprofits = nonprofits.filter(n => n.approved === true).length;
+  const nonprofitsWithDonations = nonprofits.filter(n => n.current_progress_cents > 0).length;
 
   // Aggregate donations by nonprofit from BOTH donations table AND orders.donation_cents
   const donationsByCause = (() => {
@@ -844,12 +845,12 @@ export default function Admin() {
               <GlassCard className="bg-white/5 border-white/20 p-5">
                 <div className="flex items-center gap-3 mb-3">
                   <TrendingUp className="h-5 w-5 text-white/80" />
-                  <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Active Nonprofits</h3>
+                  <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Nonprofits</h3>
                 </div>
                 <div className="text-3xl font-serif font-bold text-white">
-                  {activeNonprofits}
+                  {activeNonprofits.toLocaleString()}
                 </div>
-                <p className="text-white/50 text-xs mt-1">{nonprofits.length} total in system</p>
+                <p className="text-white/50 text-xs mt-1">{nonprofitsWithDonations} with donations</p>
               </GlassCard>
             </div>
           </section>
