@@ -787,7 +787,7 @@ export default function Admin() {
           {/* Tabs Section */}
           <Tabs defaultValue="dashboard" className="space-y-0">
             {/* Tab Navigation */}
-            <section className="mb-10">
+            <section className="mb-12 md:mb-14">
               <div className="flex justify-center">
                 <TabsList className="bg-[#5a5a5a]/80 p-2.5 rounded-2xl flex flex-wrap justify-center gap-2 max-w-5xl">
                   <TabsTrigger 
@@ -885,7 +885,7 @@ export default function Admin() {
             </section>
 
             {/* Tab Content */}
-            <TabsContent value="dashboard" className="mt-0">
+            <TabsContent value="dashboard" className="pt-2">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 <GlassCard className="bg-white/5 border-white/20 p-6">
                   <h3 className="text-xl font-serif font-bold text-white mb-6">Donations by Cause</h3>
@@ -935,7 +935,7 @@ export default function Admin() {
               </div>
             </TabsContent>
 
-            <TabsContent value="analytics" className="mt-0">
+            <TabsContent value="analytics" className="pt-2">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 <GlassCard className="bg-white/5 border-white/20 p-6">
                   <h3 className="text-xl font-serif font-bold text-white mb-6">Revenue Breakdown</h3>
@@ -1016,7 +1016,7 @@ export default function Admin() {
               </div>
             </TabsContent>
 
-            <TabsContent value="products" className="mt-0">
+            <TabsContent value="products" className="pt-2">
               <div className="space-y-8">
                 <GlassCard className="bg-white/5 border-white/20 p-6">
                   <h2 className="text-2xl font-serif font-semibold text-white mb-6">Add New Product</h2>
