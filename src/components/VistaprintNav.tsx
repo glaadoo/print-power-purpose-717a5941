@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, Heart, User, Menu, ChevronDown, Package, MessageCircle, Loader2, Trophy, Settings, Sun, Moon } from "lucide-react";
+import { ShoppingCart, Heart, User, Menu, ChevronDown, Package, MessageCircle, Loader2, Trophy, Settings } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,41 +20,6 @@ export default function VistaprintNav() {
   
   const isHomePage = location.pathname === "/";
   const { unseenCount: unseenMilestones } = useUnseenMilestones();
-  const [theme, setTheme] = useState<'default' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('ppp_theme') as 'default' | 'dark') || 'default';
-    }
-    return 'default';
-  });
-
-  // Apply theme on mount and when it changes
-  useEffect(() => {
-    const root = document.documentElement;
-    const body = document.body;
-    
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      // Apply dark theme CSS variables
-      root.style.setProperty('--app-bg', '#0f172a');
-      root.style.setProperty('--app-text', '#f1f5f9');
-      root.style.setProperty('--app-accent', '#60a5fa');
-      body.style.backgroundColor = '#0f172a';
-      body.style.color = '#f1f5f9';
-    } else {
-      root.classList.remove('dark');
-      // Apply default theme CSS variables
-      root.style.setProperty('--app-bg', '#F5F7FF');
-      root.style.setProperty('--app-text', '#111827');
-      root.style.setProperty('--app-accent', '#2563EB');
-      body.style.backgroundColor = '#F5F7FF';
-      body.style.color = '#111827';
-    }
-    localStorage.setItem('ppp_theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'default' ? 'dark' : 'default');
-  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -120,7 +85,7 @@ export default function VistaprintNav() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-300">
+    <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Logo/Mascot + Menu */}
@@ -139,8 +104,8 @@ export default function VistaprintNav() {
                 to="/" 
                 className={`text-lg font-medium transition-colors ${
                   isActive("/") 
-                    ? "text-blue-600 dark:text-blue-400" 
-                    : "text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+                    ? "text-blue-600" 
+                    : "text-gray-700 hover:text-blue-600"
                 }`}
               >
                 Home
@@ -150,8 +115,8 @@ export default function VistaprintNav() {
                 to="/products"
                 className={`flex items-center gap-1 text-lg font-medium transition-colors ${
                   isActive("/products") || location.pathname.startsWith("/product/")
-                    ? "text-blue-600 dark:text-blue-400" 
-                    : "text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+                    ? "text-blue-600" 
+                    : "text-gray-700 hover:text-blue-600"
                 }`}
               >
                 <Package className="w-5 h-5" />
@@ -162,8 +127,8 @@ export default function VistaprintNav() {
                 to="/select/nonprofit" 
                 className={`text-lg font-medium transition-colors ${
                   isActive("/select/nonprofit") 
-                    ? "text-blue-600 dark:text-blue-400" 
-                    : "text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+                    ? "text-blue-600" 
+                    : "text-gray-700 hover:text-blue-600"
                 }`}
               >
                 Causes
@@ -172,8 +137,8 @@ export default function VistaprintNav() {
                 to="/contact" 
                 className={`text-lg font-medium transition-colors ${
                   isActive("/contact") 
-                    ? "text-blue-600 dark:text-blue-400" 
-                    : "text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+                    ? "text-blue-600" 
+                    : "text-gray-700 hover:text-blue-600"
                 }`}
               >
                 Contact
@@ -185,8 +150,8 @@ export default function VistaprintNav() {
                   to="/donor-profile" 
                   className={`flex items-center gap-1.5 text-lg font-medium transition-colors ${
                     isActive("/donor-profile") 
-                      ? "text-blue-600 dark:text-blue-400" 
-                      : "text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+                      ? "text-blue-600" 
+                      : "text-gray-700 hover:text-blue-600"
                   }`}
                 >
                   <Trophy className="w-4 h-4 text-amber-500" />
@@ -207,7 +172,7 @@ export default function VistaprintNav() {
             {(isAuthenticated || !isHomePage) && (
               <button 
                 onClick={() => navigate("/favorites")}
-                className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5" />
@@ -223,7 +188,7 @@ export default function VistaprintNav() {
             {(isAuthenticated || !isHomePage) && (
               <button 
                 onClick={() => navigate("/cart")}
-                className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
                 aria-label="Shopping cart"
               >
                 <ShoppingCart className="w-5 h-5" />
@@ -235,25 +200,11 @@ export default function VistaprintNav() {
               </button>
             )}
 
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={theme === 'dark' ? 'Default Theme' : 'Dark Theme'}
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-5 h-5" />
-              ) : (
-                <Moon className="w-5 h-5" />
-              )}
-            </button>
-
             {/* Account with Dropdown Menu */}
             <div className="relative" ref={menuRef}>
               <button 
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors rounded-lg hover:bg-gray-50"
                 aria-label="Account menu"
               >
                 <div className="relative">
@@ -264,7 +215,7 @@ export default function VistaprintNav() {
                 </div>
                 <span className="hidden sm:inline">
                   {loadingUserName ? (
-                    <span className="inline-block h-4 w-20 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-600 dark:via-gray-500 dark:to-gray-600 rounded animate-pulse bg-[length:200%_100%]" style={{ animation: 'shimmer 1.5s infinite' }} />
+                    <span className="inline-block h-4 w-20 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse bg-[length:200%_100%]" style={{ animation: 'shimmer 1.5s infinite' }} />
                   ) : (
                     isAuthenticated && userName ? `Hi, ${userName}` : isAuthenticated ? "Account" : "Sign In"
                   )}
@@ -274,7 +225,7 @@ export default function VistaprintNav() {
 
               {/* Dropdown Menu */}
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                   {/* Chat with kenzie-AI - Available to everyone */}
                   <button
                     onClick={() => {
@@ -285,13 +236,13 @@ export default function VistaprintNav() {
                       }
                       setMenuOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                   >
                     <MessageCircle className="w-4 h-4" />
                     Chat with kenzie-AI
                   </button>
                   
-                  <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                  <div className="border-t border-gray-200 my-2"></div>
                   
                   {!isAuthenticated ? (
                     <button
@@ -299,7 +250,7 @@ export default function VistaprintNav() {
                         navigate("/auth");
                         setMenuOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 transition-colors"
                     >
                       Sign In
                     </button>
@@ -310,7 +261,7 @@ export default function VistaprintNav() {
                           navigate("/account");
                           setMenuOpen(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                       >
                         <Settings className="w-4 h-4" />
                         Account Details
@@ -320,7 +271,7 @@ export default function VistaprintNav() {
                           navigate("/orders");
                           setMenuOpen(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         My Orders
                       </button>
@@ -329,7 +280,7 @@ export default function VistaprintNav() {
                           navigate("/favorites");
                           setMenuOpen(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         My Favorites
                       </button>
@@ -338,7 +289,7 @@ export default function VistaprintNav() {
                           navigate("/donor-profile");
                           setMenuOpen(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                       >
                         <Trophy className="w-4 h-4 text-amber-500" />
                         My Impact
@@ -348,7 +299,7 @@ export default function VistaprintNav() {
                           </span>
                         )}
                       </button>
-                      <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                      <div className="border-t border-gray-200 my-2"></div>
                       <button
                         onClick={async () => {
                           await supabase.auth.signOut();
@@ -357,7 +308,7 @@ export default function VistaprintNav() {
                           setMenuOpen(false);
                           navigate("/");
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
                         Sign Out
                       </button>
