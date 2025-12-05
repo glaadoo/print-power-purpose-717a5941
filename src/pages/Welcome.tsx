@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 import Footer from "@/components/Footer";
 import kenzieMascot from "@/assets/kenzie-power-mascot.jpg";
+import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -147,8 +148,22 @@ export default function Welcome() {
                 <div className="p-3 sm:p-4">
 
                   <div className="text-center space-y-2">
-                    {step >= 1 && (
-                      <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto">
+                    {/* Profile Picture Section */}
+                    {session?.user && (
+                      <div className="mb-6">
+                        <ProfilePictureUpload
+                          userId={session.user.id}
+                          currentAvatarUrl={userProfile?.avatar_url || null}
+                          onAvatarUpdated={(url) => {
+                            setUserProfile((prev: any) => ({ ...prev, avatar_url: url || null }));
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Kenzie Mascot for guests */}
+                    {!session?.user && step >= 1 && (
+                      <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4">
                         <img
                           src={kenzieMascot}
                           alt="kenzie-AI the mascot"

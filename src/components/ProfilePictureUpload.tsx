@@ -1,15 +1,27 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Camera, Loader2, X, Check, RotateCcw } from "lucide-react";
+import { Camera, Loader2, X, Check, RotateCcw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ProfilePictureUploadProps {
   userId: string;
@@ -29,15 +41,14 @@ export default function ProfilePictureUpload({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
     // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
@@ -69,6 +80,30 @@ export default function ProfilePictureUpload({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // If user already has an avatar, show replace confirmation
+    if (currentAvatarUrl) {
+      // Store file temporarily for after confirmation
+      pendingFileRef.current = file;
+      setShowReplaceConfirm(true);
+    } else {
+      processFile(file);
+    }
+  };
+  
+  const pendingFileRef = useRef<File | null>(null);
+  
+  const confirmReplace = () => {
+    if (pendingFileRef.current) {
+      processFile(pendingFileRef.current);
+      pendingFileRef.current = null;
+    }
+    setShowReplaceConfirm(false);
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -312,10 +347,11 @@ export default function ProfilePictureUpload({
             <Button
               variant="outline"
               size="sm"
-              onClick={removeAvatar}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={uploading}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
+              <Trash2 className="w-4 h-4 mr-1" />
               Remove
             </Button>
           )}
@@ -432,6 +468,51 @@ export default function ProfilePictureUpload({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Profile Picture</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove your profile picture? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                removeAvatar();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Replace Confirmation Dialog */}
+      <AlertDialog open={showReplaceConfirm} onOpenChange={(open) => {
+        if (!open) pendingFileRef.current = null;
+        setShowReplaceConfirm(open);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace Profile Picture</AlertDialogTitle>
+            <AlertDialogDescription>
+              You already have a profile picture. Do you want to replace it with a new one?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmReplace}>
+              Replace
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
