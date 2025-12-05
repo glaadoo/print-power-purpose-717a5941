@@ -972,40 +972,42 @@ export default function Admin() {
 
                 <GlassCard className="bg-white/5 border-white/20 p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-serif font-bold text-white">All Causes Progress ({causes.length} total)</h3>
-                    <span className="text-white/60 text-sm">{causes.filter(c => c.raised_cents > 0).length} with donations</span>
+                    <h3 className="text-xl font-serif font-bold text-white">Nonprofit Progress ({nonprofits.length} total)</h3>
+                    <span className="text-white/60 text-sm">{nonprofits.filter(n => n.current_progress_cents > 0).length} with donations</span>
                   </div>
                   <Input 
-                    placeholder="Search causes..." 
+                    placeholder="Search nonprofits..." 
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50 mb-4"
                     onChange={(e) => {
                       const searchInput = e.target.value.toLowerCase();
-                      const container = document.getElementById('causes-scroll-container');
+                      const container = document.getElementById('nonprofits-scroll-container');
                       if (container) {
-                        const items = container.querySelectorAll('[data-cause-name]');
+                        const items = container.querySelectorAll('[data-nonprofit-name]');
                         items.forEach((item) => {
-                          const name = item.getAttribute('data-cause-name')?.toLowerCase() || '';
+                          const name = item.getAttribute('data-nonprofit-name')?.toLowerCase() || '';
                           (item as HTMLElement).style.display = name.includes(searchInput) ? 'block' : 'none';
                         });
                       }
                     }}
                   />
-                  <div id="causes-scroll-container" className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                    {[...causes]
-                      .sort((a, b) => b.raised_cents - a.raised_cents)
-                      .map(cause => {
-                        const progress = cause.goal_cents > 0 ? (cause.raised_cents / cause.goal_cents) * 100 : 0;
+                  <div id="nonprofits-scroll-container" className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                    {[...nonprofits]
+                      .sort((a, b) => (b.current_progress_cents || 0) - (a.current_progress_cents || 0))
+                      .map(nonprofit => {
+                        const goalCents = nonprofit.goal_cents || 77700; // Default to $777 milestone
+                        const progressCents = nonprofit.current_progress_cents || 0;
+                        const progress = goalCents > 0 ? (progressCents / goalCents) * 100 : 0;
                         return (
-                          <div key={cause.id} data-cause-name={cause.name} className="text-white">
+                          <div key={nonprofit.id} data-nonprofit-name={nonprofit.name} className="text-white">
                             <div className="flex justify-between text-sm mb-1">
-                              <span className="text-white/80 truncate max-w-[200px]" title={cause.name}>{cause.name}</span>
+                              <span className="text-white/80 truncate max-w-[200px]" title={nonprofit.name}>{nonprofit.name}</span>
                               <span className="font-semibold text-xs">
-                                ${(cause.raised_cents / 100).toLocaleString()} / ${(cause.goal_cents / 100).toLocaleString()} ({Math.round(progress)}%)
+                                ${(progressCents / 100).toLocaleString()} / ${(goalCents / 100).toLocaleString()} ({Math.round(progress)}%) {nonprofit.milestone_count > 0 && `• ${nonprofit.milestone_count} milestones`}
                               </span>
                             </div>
                             <div className="w-full bg-white/10 rounded-full h-2">
                               <div 
-                                className={`rounded-full h-2 transition-all ${cause.raised_cents > 0 ? 'bg-white' : 'bg-white/20'}`}
+                                className={`rounded-full h-2 transition-all ${progressCents > 0 ? 'bg-white' : 'bg-white/20'}`}
                                 style={{ width: `${Math.min(progress, 100)}%` }}
                               />
                             </div>
