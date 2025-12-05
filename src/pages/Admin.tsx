@@ -892,27 +892,66 @@ export default function Admin() {
             <TabsContent value="dashboard" className="pt-2">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 <GlassCard className="bg-white/5 border-white/20 p-6">
-                  <h3 className="text-xl font-serif font-bold text-white mb-6">Donations by Cause</h3>
-                  <div className="w-full" style={{ minHeight: '320px' }}>
-                    <ResponsiveContainer width="100%" height={320}>
-                      <PieChart>
-                        <Pie
-                          data={donationsByCause}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                          label
-                        >
-                          {donationsByCause.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <h3 className="text-xl font-serif font-bold text-white mb-2">Donations by Nonprofit</h3>
+                  <p className="text-white/60 text-sm mb-6">Top {donationsByCause.length} nonprofits by total donations</p>
+                  
+                  {donationsByCause.length === 0 ? (
+                    <div className="flex items-center justify-center h-64 text-white/50">
+                      No donation data available
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Pie Chart */}
+                      <div className="flex items-center justify-center" style={{ minHeight: '200px' }}>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie
+                              data={donationsByCause}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={80}
+                              innerRadius={40}
+                            >
+                              {donationsByCause.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              formatter={(value: number) => [`$${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 'Total']}
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0,0,0,0.9)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '8px',
+                                padding: '8px 12px'
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      
+                      {/* Legend with values */}
+                      <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                        {donationsByCause.map((entry, index) => (
+                          <div key={entry.name} className="flex items-center justify-between gap-3 py-2 border-b border-white/10 last:border-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div 
+                                className="w-3 h-3 rounded-full flex-shrink-0" 
+                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                              />
+                              <span className="text-white/80 text-sm truncate" title={entry.name}>
+                                {entry.name.length > 20 ? `${entry.name.substring(0, 20)}...` : entry.name}
+                              </span>
+                            </div>
+                            <span className="text-white font-semibold text-sm whitespace-nowrap">
+                              ${entry.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </GlassCard>
 
                 <GlassCard className="bg-white/5 border-white/20 p-6">
