@@ -6,7 +6,8 @@ import { useCause } from "../context/CauseContext";
 import { useCart } from "../context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Trash2, Heart } from "lucide-react";
+import { useFavorites } from "@/context/FavoritesContext";
 
 import { withRetry } from "@/lib/api-retry";
 import { calculateOrderShipping, getShippingTierLabel } from "@/lib/shipping-tiers";
@@ -57,7 +58,8 @@ function getFromLocalStorage() {
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation() as any;
-  const { items: cartItems } = useCart();
+  const { items: cartItems, setQty, remove } = useCart();
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   // Optional hooks (guarded)
   const toast = (() => {
@@ -426,7 +428,7 @@ export default function Checkout() {
           {/* Order summary */}
           <div className="space-y-4 mb-6">
             {cartItems.map((item) => (
-              <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div key={item.cartItemId} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                 <div className="flex gap-4">
                   {/* Product Image */}
                   {item.imageUrl && (
@@ -461,10 +463,75 @@ export default function Checkout() {
                       </div>
                     )}
                     
-                    {/* Quantity & Unit Price */}
-                    <div className="flex gap-4 text-sm text-gray-600">
-                      <span>Quantity: <span className="font-semibold">{item.quantity}</span></span>
-                      <span>Unit Price: <span className="font-semibold">${(item.priceCents / 100).toFixed(2)}</span></span>
+                    {/* Quantity Controls & Unit Price */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {/* Quantity Controls */}
+                        <div className="flex items-center border border-gray-300 rounded-lg bg-white">
+                          <button
+                            onClick={() => setQty(item.cartItemId, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            className="p-2 hover:bg-gray-100 rounded-l-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="w-4 h-4 text-gray-600" />
+                          </button>
+                          <span className="px-4 py-1 font-semibold text-gray-900 min-w-[40px] text-center">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => setQty(item.cartItemId, item.quantity + 1)}
+                            className="p-2 hover:bg-gray-100 rounded-r-lg transition-colors"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="w-4 h-4 text-gray-600" />
+                          </button>
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          @ ${(item.priceCents / 100).toFixed(2)} ea
+                        </span>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2">
+                        {/* Move to Wishlist */}
+                        <button
+                          onClick={async () => {
+                            try {
+                              await toggleFavorite(item.id);
+                              toast.push({
+                                title: isFavorite(item.id) ? "Removed from wishlist" : "Added to wishlist",
+                                body: `${item.name} has been ${isFavorite(item.id) ? 'removed from' : 'saved to'} your favorites.`,
+                              });
+                            } catch {
+                              toast.push({
+                                title: "Sign in required",
+                                body: "Please sign in to save items to your wishlist.",
+                              });
+                            }
+                          }}
+                          className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          aria-label={isFavorite(item.id) ? "Remove from wishlist" : "Add to wishlist"}
+                          title={isFavorite(item.id) ? "Remove from wishlist" : "Add to wishlist"}
+                        >
+                          <Heart className={`w-4 h-4 ${isFavorite(item.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                        </button>
+                        
+                        {/* Remove Item */}
+                        <button
+                          onClick={() => {
+                            remove(item.cartItemId);
+                            toast.push({
+                              title: "Item removed",
+                              body: `${item.name} has been removed from your cart.`,
+                            });
+                          }}
+                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     
                     {/* Artwork Preview */}

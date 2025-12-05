@@ -6,11 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef } from "react";
 import kenzieMascot from "@/assets/kenzie-mascot.png";
 import { useUnseenMilestones } from "@/hooks/useUnseenMilestones";
+import { formatPrice } from "@/lib/utils";
 
 export default function VistaprintNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { count: cartCount } = useCart();
+  const { count: cartCount, totalCents } = useCart();
   const { count: favoritesCount } = useFavorites();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
@@ -188,13 +189,20 @@ export default function VistaprintNav() {
             {(isAuthenticated || !isHomePage) && (
               <button 
                 onClick={() => navigate("/cart")}
-                className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                className="relative flex items-center gap-2 p-2 text-gray-600 hover:text-gray-900 transition-colors"
                 aria-label="Shopping cart"
               >
-                <ShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {cartCount}
+                <div className="relative">
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </div>
+                {totalCents > 0 && (
+                  <span className="hidden sm:inline text-sm font-semibold text-blue-600">
+                    {formatPrice(totalCents)}
                   </span>
                 )}
               </button>
