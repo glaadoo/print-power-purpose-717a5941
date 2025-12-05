@@ -678,257 +678,277 @@ export default function Admin() {
 
       {/* Main Content */}
       <div className="relative flex-1 overflow-y-auto pt-16">
-        <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-3xl font-bold text-white">Dashboard Overview</h2>
-              <p className="text-white/70">Manage your Print Power Purpose platform</p>
+        <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-10 py-6 md:py-8">
+          
+          {/* Page Title Section */}
+          <section className="mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-bold text-white">Dashboard Overview</h2>
+                <p className="text-white/70 mt-1">Manage your Print Power Purpose platform</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link to="/admin/nonprofits">
+                  <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20 relative">
+                    <Heart className="h-4 w-4" />
+                    Nonprofits
+                    {pendingCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center p-1 bg-red-500 text-white text-xs font-bold border-2 border-background">
+                        {pendingCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+                <Link to="/admin/legal">
+                  <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                    <FileText className="h-4 w-4" />
+                    Legal Docs
+                  </Button>
+                </Link>
+                <Link to="/admin/pricing">
+                  <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                    <DollarSign className="h-4 w-4" />
+                    Pricing
+                  </Button>
+                </Link>
+                <Link to="/admin/settings">
+                  <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                    <KeyRound className="h-4 w-4" />
+                    Settings
+                  </Button>
+                </Link>
+                <Link to="/admin/access-logs">
+                  <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                    <Activity className="h-4 w-4" />
+                    Access Logs
+                  </Button>
+                </Link>
+                <Link to="/system-logs">
+                  <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                    <Activity className="h-4 w-4" />
+                    System Logs
+                  </Button>
+                </Link>
+                <Link to="/admin/vendor-fulfillment">
+                  <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
+                    <Package className="h-4 w-4" />
+                    Vendor Orders
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Link to="/admin/nonprofits">
-                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20 relative">
-                  <Heart className="h-4 w-4" />
-                  Nonprofits
-                  {pendingCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center p-1 bg-red-500 text-white text-xs font-bold border-2 border-background">
-                      {pendingCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-              <Link to="/admin/legal">
-                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
-                  <FileText className="h-4 w-4" />
-                  Legal Docs
-                </Button>
-              </Link>
-              <Link to="/admin/pricing">
-                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
-                  <DollarSign className="h-4 w-4" />
-                  Pricing
-                </Button>
-              </Link>
-              <Link to="/admin/settings">
-                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
-                  <KeyRound className="h-4 w-4" />
-                  Settings
-                </Button>
-              </Link>
-              <Link to="/admin/access-logs">
-                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
-                  <Activity className="h-4 w-4" />
-                  Access Logs
-                </Button>
-              </Link>
-              <Link to="/system-logs">
-                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
-                  <Activity className="h-4 w-4" />
-                  System Logs
-                </Button>
-              </Link>
-              <Link to="/admin/vendor-fulfillment">
-                <Button variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20">
-                  <Package className="h-4 w-4" />
-                  Vendor Orders
-                </Button>
-              </Link>
+          </section>
+
+          {/* Stats Cards Section */}
+          <section className="mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <GlassCard className="bg-white/5 border-white/20 p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <DollarSign className="h-5 w-5 text-white/80" />
+                  <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Revenue</h3>
+                </div>
+                <div className="text-3xl font-serif font-bold text-white">
+                  ${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+              </GlassCard>
+
+              <GlassCard className="bg-white/5 border-white/20 p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <Heart className="h-5 w-5 text-white/80" />
+                  <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Donations</h3>
+                </div>
+                <div className="text-3xl font-serif font-bold text-white">
+                  ${(totalDonations / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+              </GlassCard>
+
+              <GlassCard className="bg-white/5 border-white/20 p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <ShoppingCart className="h-5 w-5 text-white/80" />
+                  <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Orders</h3>
+                </div>
+                <div className="text-3xl font-serif font-bold text-white">
+                  {orders.length}
+                </div>
+              </GlassCard>
+
+              <GlassCard className="bg-white/5 border-white/20 p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <TrendingUp className="h-5 w-5 text-white/80" />
+                  <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Active Causes</h3>
+                </div>
+                <div className="text-3xl font-serif font-bold text-white">
+                  {activeCauses}
+                </div>
+              </GlassCard>
             </div>
-          </div>
+          </section>
 
-          {/* Analytics Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <GlassCard className="bg-white/5 border-white/20">
-              <div className="flex items-center gap-3 mb-2">
-                <DollarSign className="h-5 w-5 text-white/80" />
-                <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Revenue</h3>
+          {/* Tabs Section */}
+          <Tabs defaultValue="dashboard" className="space-y-0">
+            {/* Tab Navigation */}
+            <section className="mb-10">
+              <div className="flex justify-center">
+                <TabsList className="bg-[#5a5a5a]/80 p-2.5 rounded-2xl flex flex-wrap justify-center gap-2 max-w-5xl">
+                  <TabsTrigger 
+                    value="dashboard" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Dashboard
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="analytics" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Analytics
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="products" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Products
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="prices"
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Configuration
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="causes" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Causes
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="schools" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Schools
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="nonprofits" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Nonprofits
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="orders" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Orders
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="donations" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Donations
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="errors" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Errors
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="stories" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Stories
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="sync" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Sync
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="videos" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Videos
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="pages" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Pages
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="settings" 
+                    className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
+                  >
+                    Settings
+                  </TabsTrigger>
+                </TabsList>
               </div>
-              <div className="text-3xl font-serif font-bold text-white">
-                ${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </div>
-            </GlassCard>
+            </section>
 
-            <GlassCard className="bg-white/5 border-white/20">
-              <div className="flex items-center gap-3 mb-2">
-                <Heart className="h-5 w-5 text-white/80" />
-                <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Donations</h3>
-              </div>
-              <div className="text-3xl font-serif font-bold text-white">
-                ${(totalDonations / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </div>
-            </GlassCard>
-
-            <GlassCard className="bg-white/5 border-white/20">
-              <div className="flex items-center gap-3 mb-2">
-                <ShoppingCart className="h-5 w-5 text-white/80" />
-                <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Total Orders</h3>
-              </div>
-              <div className="text-3xl font-serif font-bold text-white">
-                {orders.length}
-              </div>
-            </GlassCard>
-
-            <GlassCard className="bg-white/5 border-white/20">
-              <div className="flex items-center gap-3 mb-2">
-                <TrendingUp className="h-5 w-5 text-white/80" />
-                <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">Active Causes</h3>
-              </div>
-              <div className="text-3xl font-serif font-bold text-white">
-                {activeCauses}
-              </div>
-            </GlassCard>
-          </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="dashboard" className="space-y-8">
-            <div className="flex justify-center px-4 relative z-20 mb-8">
-              <TabsList className="bg-[#5a5a5a] p-2 rounded-2xl flex flex-wrap justify-center gap-2 max-w-5xl">
-                <TabsTrigger 
-                  value="dashboard" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Dashboard
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="analytics" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Analytics
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="products" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Products
-                </TabsTrigger>
-                <TabsTrigger
-                  value="prices"
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Configuration
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="causes" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Causes
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="schools" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Schools
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="nonprofits" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Nonprofits
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="orders" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Orders
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="donations" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Donations
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="errors" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Errors
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="stories" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Stories
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="sync" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Sync
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="videos" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Videos
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="pages" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Pages
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="settings" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-black text-white/80 transition-all text-sm"
-                >
-                  Settings
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="dashboard">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <GlassCard className="bg-white/5 border-white/20">
-                  <h3 className="text-xl font-serif font-bold text-white mb-4">Donations by Cause</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={donationsByCause}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        label
-                      >
-                        {donationsByCause.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
-                    </PieChart>
-                  </ResponsiveContainer>
+            {/* Tab Content */}
+            <TabsContent value="dashboard" className="mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                <GlassCard className="bg-white/5 border-white/20 p-6">
+                  <h3 className="text-xl font-serif font-bold text-white mb-6">Donations by Cause</h3>
+                  <div className="w-full" style={{ minHeight: '320px' }}>
+                    <ResponsiveContainer width="100%" height={320}>
+                      <PieChart>
+                        <Pie
+                          data={donationsByCause}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          label
+                        >
+                          {donationsByCause.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </GlassCard>
 
-                <GlassCard className="bg-white/5 border-white/20">
-                  <h3 className="text-xl font-serif font-bold text-white mb-4">Orders by Week</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={ordersByWeek}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="week" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#8b5cf6" name="Orders" />
-                      <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <GlassCard className="bg-white/5 border-white/20 p-6">
+                  <h3 className="text-xl font-serif font-bold text-white mb-6">Orders by Week</h3>
+                  <div className="w-full" style={{ minHeight: '320px' }}>
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={ordersByWeek}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis dataKey="week" stroke="rgba(255,255,255,0.6)" fontSize={12} />
+                        <YAxis stroke="rgba(255,255,255,0.6)" fontSize={12} />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'rgba(0,0,0,0.8)', 
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Bar dataKey="count" fill="#8b5cf6" name="Orders" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="revenue" fill="#10b981" name="Revenue" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </GlassCard>
               </div>
             </TabsContent>
 
-            <TabsContent value="analytics">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <GlassCard className="bg-white/5 border-white/20">
-                  <h3 className="text-xl font-serif font-bold text-white mb-4">Revenue Breakdown</h3>
+            <TabsContent value="analytics" className="mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                <GlassCard className="bg-white/5 border-white/20 p-6">
+                  <h3 className="text-xl font-serif font-bold text-white mb-6">Revenue Breakdown</h3>
                   <div className="space-y-4 text-white">
-                    <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <div className="flex justify-between items-center py-3 border-b border-white/10">
                       <span className="text-white/80">Product Sales</span>
                       <span className="font-semibold">${((totalRevenue - totalDonations) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <div className="flex justify-between items-center py-3 border-b border-white/10">
                       <span className="text-white/80">Total Donations</span>
                       <span className="font-semibold">${(totalDonations / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2">
+                    <div className="flex justify-between items-center py-3">
                       <span className="text-white/80 font-bold">Total Revenue</span>
                       <span className="font-bold text-lg">${(totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
@@ -936,7 +956,7 @@ export default function Admin() {
                 </GlassCard>
 
                 <div onClick={() => navigate("/admin/stripe-analytics")} className="cursor-pointer">
-                  <GlassCard className="bg-white/5 border-white/20 hover:bg-white/10 transition-all">
+                  <GlassCard className="bg-white/5 border-white/20 hover:bg-white/10 transition-all p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-serif font-bold text-white">Stripe Analytics</h3>
                       <CreditCard className="h-6 w-6 text-white/60" />
@@ -954,7 +974,7 @@ export default function Admin() {
                 </div>
 
                 <div onClick={() => navigate("/admin/transactions")} className="cursor-pointer">
-                  <GlassCard className="bg-white/5 border-white/20 hover:bg-white/10 transition-all">
+                  <GlassCard className="bg-white/5 border-white/20 hover:bg-white/10 transition-all p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-serif font-bold text-white">Transaction Dashboard</h3>
                       <Activity className="h-6 w-6 text-white/60" />
@@ -971,20 +991,20 @@ export default function Admin() {
                   </GlassCard>
                 </div>
 
-                <GlassCard className="bg-white/5 border-white/20">
-                  <h3 className="text-xl font-serif font-bold text-white mb-4">Cause Progress</h3>
-                  <div className="space-y-3">
+                <GlassCard className="bg-white/5 border-white/20 p-6">
+                  <h3 className="text-xl font-serif font-bold text-white mb-6">Cause Progress</h3>
+                  <div className="space-y-4">
                     {causes.slice(0, 5).map(cause => {
                       const progress = cause.goal_cents > 0 ? (cause.raised_cents / cause.goal_cents) * 100 : 0;
                       return (
                         <div key={cause.id} className="text-white">
-                          <div className="flex justify-between text-sm mb-1">
+                          <div className="flex justify-between text-sm mb-2">
                             <span className="text-white/80">{cause.name}</span>
                             <span className="font-semibold">{Math.round(progress)}%</span>
                           </div>
-                          <div className="w-full bg-white/10 rounded-full h-2">
+                          <div className="w-full bg-white/10 rounded-full h-2.5">
                             <div 
-                              className="bg-white rounded-full h-2 transition-all"
+                              className="bg-white rounded-full h-2.5 transition-all"
                               style={{ width: `${Math.min(progress, 100)}%` }}
                             />
                           </div>
@@ -996,65 +1016,67 @@ export default function Admin() {
               </div>
             </TabsContent>
 
-            <TabsContent value="products">
-              <GlassCard className="bg-white/5 border-white/20">
-                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Add New Product</h2>
-                <form onSubmit={handleAddProduct} className="space-y-4 max-w-md">
-                  <div>
-                    <Label htmlFor="productName" className="text-white">Name</Label>
-                    <Input id="productName" value={productName} onChange={e => setProductName(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
-                  </div>
-                  <div>
-                    <Label htmlFor="productCost" className="text-white">Cost (USD)</Label>
-                    <Input id="productCost" type="number" min="0" step="0.01" value={productCost} onChange={e => setProductCost(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
-                  </div>
-                  <div>
-                    <Label htmlFor="productCategory" className="text-white">Category</Label>
-                    <Input id="productCategory" value={productCategory} onChange={e => setProductCategory(e.target.value)} className="bg-white/10 border-white/20 text-white" />
-                  </div>
-                  <div>
-                    <Label htmlFor="productImage" className="text-white">Image URL</Label>
-                    <Input id="productImage" value={productImage} onChange={e => setProductImage(e.target.value)} className="bg-white/10 border-white/20 text-white" />
-                  </div>
-                  <div>
-                    <Label htmlFor="productVendorId" className="text-white">Vendor ID</Label>
-                    <Input id="productVendorId" value={productVendorId} onChange={e => setProductVendorId(e.target.value)} className="bg-white/10 border-white/20 text-white" />
-                  </div>
-                  <Button type="submit" className="bg-white text-black hover:bg-white/90">Add Product</Button>
-                </form>
-              </GlassCard>
+            <TabsContent value="products" className="mt-0">
+              <div className="space-y-8">
+                <GlassCard className="bg-white/5 border-white/20 p-6">
+                  <h2 className="text-2xl font-serif font-semibold text-white mb-6">Add New Product</h2>
+                  <form onSubmit={handleAddProduct} className="space-y-4 max-w-md">
+                    <div>
+                      <Label htmlFor="productName" className="text-white">Name</Label>
+                      <Input id="productName" value={productName} onChange={e => setProductName(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="productCost" className="text-white">Cost (USD)</Label>
+                      <Input id="productCost" type="number" min="0" step="0.01" value={productCost} onChange={e => setProductCost(e.target.value)} required className="bg-white/10 border-white/20 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="productCategory" className="text-white">Category</Label>
+                      <Input id="productCategory" value={productCategory} onChange={e => setProductCategory(e.target.value)} className="bg-white/10 border-white/20 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="productImage" className="text-white">Image URL</Label>
+                      <Input id="productImage" value={productImage} onChange={e => setProductImage(e.target.value)} className="bg-white/10 border-white/20 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="productVendorId" className="text-white">Vendor ID</Label>
+                      <Input id="productVendorId" value={productVendorId} onChange={e => setProductVendorId(e.target.value)} className="bg-white/10 border-white/20 text-white" />
+                    </div>
+                    <Button type="submit" className="bg-white text-black hover:bg-white/90">Add Product</Button>
+                  </form>
+                </GlassCard>
 
-              <GlassCard className="bg-white/5 border-white/20 mt-6">
-                <h2 className="text-2xl font-serif font-semibold text-white mb-4">Products List</h2>
-                <ScrollArea className="max-h-[400px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-white/80">Name</TableHead>
-                        <TableHead className="text-white/80">Cost</TableHead>
-                        <TableHead className="text-white/80">Category</TableHead>
-                        <TableHead className="text-white/80">Vendor</TableHead>
-                        <TableHead className="text-white/80">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {products.map(product => (
-                        <TableRow key={product.id}>
-                          <TableCell className="text-white">{product.name}</TableCell>
-                          <TableCell className="text-white">${(product.base_cost_cents / 100).toFixed(2)}</TableCell>
-                          <TableCell className="text-white">{product.category || "-"}</TableCell>
-                          <TableCell className="text-white">{product.vendor}</TableCell>
-                          <TableCell>
-                            <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id)} className="flex items-center gap-1">
-                              <Trash2 size={16} /> Delete
-                            </Button>
-                          </TableCell>
+                <GlassCard className="bg-white/5 border-white/20 p-6">
+                  <h2 className="text-2xl font-serif font-semibold text-white mb-6">Products List</h2>
+                  <ScrollArea className="max-h-[400px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-white/80">Name</TableHead>
+                          <TableHead className="text-white/80">Cost</TableHead>
+                          <TableHead className="text-white/80">Category</TableHead>
+                          <TableHead className="text-white/80">Vendor</TableHead>
+                          <TableHead className="text-white/80">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-              </GlassCard>
+                      </TableHeader>
+                      <TableBody>
+                        {products.map(product => (
+                          <TableRow key={product.id}>
+                            <TableCell className="text-white">{product.name}</TableCell>
+                            <TableCell className="text-white">${(product.base_cost_cents / 100).toFixed(2)}</TableCell>
+                            <TableCell className="text-white">{product.category || "-"}</TableCell>
+                            <TableCell className="text-white">{product.vendor}</TableCell>
+                            <TableCell>
+                              <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id)} className="flex items-center gap-1">
+                                <Trash2 size={16} /> Delete
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                </GlassCard>
+              </div>
             </TabsContent>
 
             <TabsContent value="prices">
