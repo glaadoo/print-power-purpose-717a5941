@@ -74,30 +74,35 @@ export default function AdminVendorFulfillment() {
     try {
       setLoading(true);
       
-      // Build query with filters
-      let query = supabase
-        .from("orders")
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false });
-
-      if (statusFilter !== "all") {
-        query = query.eq("vendor_status", statusFilter);
+      const sessionToken = sessionStorage.getItem("admin_session");
+      if (!sessionToken) {
+        toast({
+          title: "Error",
+          description: "Admin session expired. Please log in again.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      if (vendorFilter !== "all") {
-        query = query.eq("vendor_key", vendorFilter);
-      }
-
-      // Apply pagination
-      const from = (currentPage - 1) * ordersPerPage;
-      const to = from + ordersPerPage - 1;
-      
-      const { data, error, count } = await query.range(from, to);
+      // Use edge function with admin session for service role access
+      const { data, error } = await supabase.functions.invoke('admin-vendor-orders', {
+        body: {
+          sessionToken,
+          statusFilter,
+          vendorFilter,
+          page: currentPage,
+          pageSize: ordersPerPage
+        }
+      });
 
       if (error) throw error;
       
-      setOrders(data || []);
-      setTotalCount(count || 0);
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      
+      setOrders(data?.orders || []);
+      setTotalCount(data?.totalCount || 0);
     } catch (err) {
       console.error("Error loading orders:", err);
       toast({
@@ -112,13 +117,23 @@ export default function AdminVendorFulfillment() {
 
   async function markAsExported(orderId: string) {
     try {
-      const { error } = await supabase
-        .from("orders")
-        .update({
-          vendor_status: "exported_manual",
-          vendor_exported_at: new Date().toISOString(),
-        })
-        .eq("id", orderId);
+      const sessionToken = sessionStorage.getItem("admin_session");
+      if (!sessionToken) {
+        toast({
+          title: "Error",
+          description: "Admin session expired. Please log in again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-vendor-orders', {
+        body: {
+          sessionToken,
+          action: "markExported",
+          orderId
+        }
+      });
 
       if (error) throw error;
 
@@ -145,25 +160,32 @@ export default function AdminVendorFulfillment() {
         description: "Fetching all orders for export",
       });
 
-      // Fetch ALL orders matching filters (not just current page)
-      let query = supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (statusFilter !== "all") {
-        query = query.eq("vendor_status", statusFilter);
+      const sessionToken = sessionStorage.getItem("admin_session");
+      if (!sessionToken) {
+        toast({
+          title: "Error",
+          description: "Admin session expired. Please log in again.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      if (vendorFilter !== "all") {
-        query = query.eq("vendor_key", vendorFilter);
-      }
-
-      const { data: allOrders, error } = await query;
+      // Fetch ALL orders matching filters using edge function with large page size
+      const { data, error } = await supabase.functions.invoke('admin-vendor-orders', {
+        body: {
+          sessionToken,
+          statusFilter,
+          vendorFilter,
+          page: 1,
+          pageSize: 10000 // Large number to get all orders
+        }
+      });
 
       if (error) throw error;
+      
+      const allOrders = data?.orders || [];
 
-      if (!allOrders || allOrders.length === 0) {
+      if (allOrders.length === 0) {
         toast({
           title: "No orders",
           description: "No orders available to export",
@@ -186,7 +208,7 @@ export default function AdminVendorFulfillment() {
         "Created At",
       ];
 
-      const rows = allOrders.map((order) => {
+      const rows = allOrders.map((order: any) => {
         const items = order.items as any[] || [];
         const firstItem = items[0] || {};
         const shippingAddr = firstItem.shipping_address || {};
